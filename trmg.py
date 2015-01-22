@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from optparse import OptionParser
+
 #
 # verilogParse.py
 #
@@ -113,6 +115,9 @@ class VerilogParser:
         self.outputs={}
         self.inouts={}
         self.parameters={}
+        self.nba=set()
+        self.ba=set()
+
         # compiler directives
         compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
@@ -218,10 +223,27 @@ class VerilogParser:
         delay = Group( "#" + delayArg ).setName("delay")#.setDebug()
         delayOrEventControl = delay | eventControl
 
-        assgnmt   = Group( lvalue + "=" + Optional( delayOrEventControl ) + self.expr ).setName( "assgnmt" )
-        nbAssgnmt = Group(( lvalue + "<=" + Optional( delay ) + self.expr ) |
-                     ( lvalue + "<=" + Optional( eventControl ) + self.expr )).setName( "nbassgnmt" )
+        assgnmt   = ( lvalue + "=" + Optional( delayOrEventControl ) + self.expr ).setName( "assgnmt" )
+        def gotAssgnmt(s,loc,toks):
+            lhs=toks[0]
+            if len(lhs)>=1 and lhs[0]=="{": #concatenation
+                for v in lhs[1:-1]:
+                    self.ba.add(v[0])
+            else:
+                self.ba.add(lhs[0])
 
+        assgnmt.setParseAction(gotAssgnmt)
+        nbAssgnmt = (( lvalue + "<=" + Optional( delay ) + self.expr ) |
+                     ( lvalue + "<=" + Optional( eventControl ) + self.expr )).setName( "nbassgnmt" )
+        def gotNbAssgnmt(s,loc,toks):
+            lhs=toks[0]
+            if len(lhs)>=1 and lhs[0]=="{": #concatenation
+                for v in lhs[1:-1]:
+                    self.nba.add(v[0])
+            else:
+                self.nba.add(lhs[0])
+
+        nbAssgnmt.setParseAction(gotNbAssgnmt)
         range = "[" + self.expr + ":" + self.expr + "]"
 
         def gotParameter(s,loc,toks):
@@ -646,8 +668,8 @@ class VerilogParser:
         verilogbnf.ignore( compilerDirective )
 
         self.verilogbnf=verilogbnf
-    def parseString( self,strng ):
 
+    def parseString( self,strng ):
         def show(l,space=""):
             if isinstance(l, str):
                 print "%s%s"%(space,l),type(l)
@@ -672,19 +694,31 @@ class VerilogParser:
         return tokens
     def printInfo(self):
         def printDict(d,dname=""):
-            print dname
+            print "%-12s:"%dname,
             for k in d:
-                print "  %s %s"%(k,d[k])
-        printDict(self.registers,"Registers")
-        printDict(self.inputs,"Inputs")
-        printDict(self.outputs,"Outputs")
-        printDict(self.inouts,"InOuts")
-        printDict(self.parameters,"Parameters")
+                if d[k]!="":
+                  print "%s(%s)"%(k,d[k]),
+                else:
+                  print "%s"%(k),
+            print
+        def printSet(s,sname=""):
+            print "%-12s:"%sname,
+            for k in s:
+                  print "%s"%(k),
+            print
 
+        printDict(self.registers, "Registers")
+        printDict(self.inputs,    "Inputs")
+        printDict(self.outputs,   "Outputs")
+        printDict(self.inouts,    "InOuts")
+        printDict(self.parameters,"Parameters")
+        printSet(self.nba,        "Non Blocking")
+        printSet(self.ba,         "Blocking")
     def dtmr(self):
         f=sys.stdout
         def p(s):
-            f.write(s+"\n")
+            #f.write(s+"\n")
+            pass
 
         mod_tmr=self.module_name+"_dtmr"
         p("module %s"%mod_tmr)
@@ -783,17 +817,51 @@ module TOP();
    parameter N=2,M=1;
    input [2:1] i2;
    output [2:1] o1;
+   input clk;
    inout io1,dd021;
    reg d;
    reg [211:1] d1;
    reg signed [3:2] d2;
    reg [2:1] d3,d4;
+
+   always @(posedge clk)
+   begin
+     d1<=i2;
+     d3[2:0]<=i2;
+     {d1,d2[1:0],o1}<=i2;
+   end
+
+   always
+   begin
+     d4=i1;
+   end
+
 endmodule"""
 
 
-vp=VerilogParser()
-vp.parseString(toptest)
-print vp.module_name
-vp.printInfo()
+def main():
+    parser = OptionParser(version="%prog 1.0")
+    parser.add_option("", "--input-file",   dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
+    parser.add_option("", "--output-file",  dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 
-vp.dtmr()
+    parser.add_option("", "--triplicate-inputs",  action="store_true", dest="tInp", default=True, help="Triplicate inputs.")
+    parser.add_option("", "--triplicate-outputs", action="store_true", dest="tOut", default=True, help="Triplicate outputs.")
+    parser.add_option("", "--triplicate-reg",     action="store_true", dest="tReg", default=True, help="Triplicate registers.")
+    parser.add_option("", "--triplicate-comb",    action="store_true", dest="tCom", default=True, help="Triplicate combinatorial logic.")
+
+    parser.add_option("", "--vote-inputs",        action="store_true", dest="vInp", default=True, help="Add majority voters at inputs.")
+    parser.add_option("", "--vote-outputs",       action="store_true", dest="vOut", default=True, help="Add majority voters at outputs.")
+    parser.add_option("", "--vote-reg",           action="store_true", dest="vReg", default=True, help="Add majority voters at .")
+    parser.add_option("", "--vote-comb",          action="store_true", dest="vCom", default=True, help="Add majority voters at .")
+
+
+    (options, args) = parser.parse_args()
+
+    vp=VerilogParser()
+    vp.parseString(toptest)
+    print vp.module_name
+    vp.printInfo()
+    vp.dtmr()
+
+if __name__=="__main__":
+    main()
