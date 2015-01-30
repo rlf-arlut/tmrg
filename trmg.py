@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
+import tempita
+import pygraphviz as pgv
 
 #
 # verilogParse.py
@@ -73,13 +75,12 @@ __version__ = "1.0.10"
 
 import functools
 
-from pyparsing import Literal, CaselessLiteral, Keyword, Word, Upcase, OneOrMore, ZeroOrMore, \
-        Forward, NotAny, delimitedList, Group, Optional, Combine, alphas, nums, restOfLine, cStyleComment, \
-        alphanums, printables, dblQuotedString, empty, ParseException, ParseResults, MatchFirst, oneOf, GoToColumn, \
-        ParseResults,StringEnd, FollowedBy, ParserElement, And, Regex, cppStyleComment#,__version__
+from pyparsing import *
 import pyparsing
 usePackrat = True
 usePsyco = False
+
+import glob
 
 packratOn = False
 psycoOn = False
@@ -117,7 +118,8 @@ class VerilogParser:
         self.parameters={}
         self.nba=set()
         self.ba=set()
-
+        self.instances={}
+        self.module_name=""
         # compiler directives
         compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
@@ -253,16 +255,33 @@ class VerilogParser:
                 self.parameters[pname]=pval
 
         paramAssgnmt = Group( identifier + "=" + self.expr ).setName("paramAssgnmt")
+
         parameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + semi).setName("paramDecl")
         parameterDecl.setParseAction(gotParameter)
+        localParameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + semi).setName("paramDecl")
+        localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
+            toks=toks[0]
+#            print toks
+            last=len(toks)-1
+            if toks[last]==';':
+                last-=1
+#            print "  ->",toks[:last+1]
+            start=1
+            type=""
+            if toks[start] in ('reg','wire'):
+                type=toks[start]
+                start+=1
             atrs=""
-            for a in toks[0][1:-2]:
+            for a in toks[start:last]:
                 atrs+=a+" "
             atrs=atrs.rstrip()
-            for regnames in toks[0][-2]:
+#            print "  A",atrs
+            for regnames in toks[last]:
                 resdict[regnames]=atrs
+                if type=='reg':
+                    self.registers[regnames]=atrs
 
         inputDecl = Group( "input" + Optional( range ) + Group(delimitedList( identifier )) + semi )
         inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
@@ -391,12 +410,14 @@ class VerilogParser:
         netDecl1Arg = ( nettype +
             Optional( expandRange ) +
             Optional( delay ) +
-            Group( delimitedList( ~inputOutput + identifier ) ) )
+#            Group( delimitedList( ~inputOutput + identifier ) ) )
+            Group( delimitedList( identifier ) ) )
         netDecl2Arg = ( "trireg" +
             Optional( chargeStrength ) +
             Optional( expandRange ) +
             Optional( delay ) +
-            Group( delimitedList( ~inputOutput + identifier ) ) )
+#            Group( delimitedList( ~inputOutput + identifier ) ) )
+            Group( delimitedList(  identifier ) ) )
         netDecl3Arg = ( nettype +
             Optional( driveStrength ) +
             Optional( expandRange ) +
@@ -440,7 +461,17 @@ class VerilogParser:
             Optional( parameterValueAssignment ) +
             delimitedList( moduleInstance ).setName("moduleInstanceList") +
             semi ).setName("moduleInstantiation")
+        def gotModuleInstantiation(s,loc,toks):
+            toks=toks[0]
+            module=toks[0]
+            instname=toks[1][0][0]
+            #print modid, modname
+            self.instances[instname]=module
+            self.G.add_edge(self.module_name,module)
+            #self.instances.add(modid)
+            #pass
 
+        moduleInstantiation.setParseAction(gotModuleInstantiation)
         parameterOverride = Group( "defparam" + delimitedList( paramAssgnmt ) + semi )
         task = Group( "task" + identifier + semi +
             ZeroOrMore( tfDecl ) +
@@ -612,11 +643,18 @@ class VerilogParser:
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
         port = portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) )
 
+        inputOutput = oneOf("input output")
+        portIn   = Group( "input"  + Optional( "wire" ) + Optional( range ) + Group(identifier))
+        portOut  = Group( "output" + Optional( "reg" )  + Optional( range )+ Group(identifier))
+        portInOut= Group( "inout"                       + Optional( range ) + Group(identifier))
+
+        portIn.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
+        portOut.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
+        portInOut.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
+
+
         moduleHdr = Group ( oneOf("module macromodule") + identifier +
-                 Optional( "(" + Group( Optional( delimitedList( 
-                                    Group(oneOf("input output") + 
-                                            (netDecl1Arg | netDecl2Arg | netDecl3Arg) ) |
-                                    port ) ) ) + 
+                            Optional( "(" + Group( Optional( delimitedList( portIn | portOut | portInOut | port ) ) ) +
                             ")" ) + semi ).setName("moduleHdr")
         def gotModuleHdr(s,loc,toks):
             self.module_name=toks[0][1]
@@ -661,13 +699,87 @@ class VerilogParser:
             udpTableDefn +
             "endprimitive" )
 
-        #verilogbnf = OneOrMore( module | udp ) + StringEnd()
-        verilogbnf = ( module | udp ) + StringEnd()
+        verilogbnf = OneOrMore( module | udp ) + StringEnd()
+        #verilogbnf = ( module | udp ) + StringEnd()
 
         verilogbnf.ignore( cppStyleComment )
         verilogbnf.ignore( compilerDirective )
 
         self.verilogbnf=verilogbnf
+    def toHTML(self,fname):
+        self.tmpl = tempita.Template("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Final//EN">
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</script>
+<title>{{title}}</title>
+</head>
+<body>
+<!--
+<table class="companion_banner"><tr><td align=center><a class="companion_banner" href="http://www.hdlworks.com">Generated by <b>HDL Companion</b> for <i>willem</i> on Mon May 31 16:49:38 2010</a></td></tr></table>
+<br><center><table class="index_tab">
+<tr class="index_row">
+<td class="index_col">
+<a href="index.htm">Object View</a>
+</td>
+<td class="index_col">
+<a href="toc_file.htm">File View</a>
+</td>
+<td class="index_col">
+<a href="toc_top.htm">Top Level View</a>
+</td>
+<td class="index_col">
+<a href="index_hier.htm">Hierarchical View</a>
+</td>
+<td class="index_col">
+<a href="toc.htm">Index</a>
+</td>
+</tr>
+</table>
+</center>
+-->
+<h1>File: {{file}}</h1>
+<!-- Scriptum 10.1 Revision 1 Copyright (c) 2010 HDL Works B.V. All rights reserved. -->
+
+<pre class="DefaultText">{{body}}</pre>
+</body>
+</html>
+""")
+        verilog=self.verilog
+        keywords = Word(alphas, alphanums+"_")
+        # or a crude pre-processor (use parse actions to replace matching text)
+        def substituteMacro(s,l,t):
+            if t[0] in ("if","else","edge","posedge","negedge","wire","input","output","module","wire","reg","endmodule",
+                        "specify","endspecify","fork","join","begin","end","default","always", "initial",
+                        "forever","repeat", "while","for", "case","casez","casex",
+                        "endcase","wait","disable","deassign","force","release","assign"):
+                return '<span class="DefaultGroup1">%s</span>'%t[0]
+        keywords.setParseAction( substituteMacro )
+        keywords.ignore( cppStyleComment )
+        verilog=keywords.transformString(verilog)
+
+        def substituteComment(s,l,t):
+            s=""
+            if t[0].find('\n')>=0:
+                for l in t[0].split('\n'):
+                    s+='<span class="DefaultComment">%s</span>\n'%l
+            else:
+                s='<span class="DefaultComment">%s</span>'%t[0]
+            return s
+
+        #comment=Regex(r"/(?:\*(?:[^*]*\*+)+?/|/[^\n]*(?:\n[^\n]*)*?(?:(?<!\\)|\Z))").setName("C++ style comment")
+        comment=Regex(r"/(?:\*([^*]*\*+)+?/|/[^\n]*(\n[^\n]*)*?((?<!\\)|\Z))").setName("C++ style comment")
+        comment.setParseAction( substituteComment )
+        verilog=comment.transformString(verilog)
+
+        body=""
+        for lno,l in enumerate(verilog.split('\n')):
+            body+='<span class="DefaultMargin"> %4d </span><a name="l%d"></a> %s\n'%(lno+1,lno,l)
+
+        vars={"title":self.module_name,"body":body, "file":self.module_name}
+        f=open(fname,"w")
+        f.write(self.tmpl.substitute(vars))
+        f.close()
 
     def parseString( self,strng ):
         def show(l,space=""):
@@ -684,29 +796,38 @@ class VerilogParser:
                     show(ll,space=space+"__")
 
         tokens = []
+        self.verilog=strng
         try:
             tokens=self.verilogbnf.parseString( strng )
+            self.printInfo()
+
             #show(tokens)
         except ParseException, err:
             print err.line
             print " "*(err.column-1) + "^"
             print err
+        except ParseSyntaxException, err:
+            print err.line
+            print " "*(err.column-1) + "^"
+            print err
+            print
         return tokens
+
     def printInfo(self):
         def printDict(d,dname=""):
-            print "%-12s:"%dname,
+            if len(d)==0: return
+            print "%-12s:"%dname
             for k in d:
                 if d[k]!="":
-                  print "%s(%s)"%(k,d[k]),
+                  print "  -> %s(%s)"%(k,d[k])
                 else:
-                  print "%s"%(k),
-            print
+                  print "  -> %s"%(k)
         def printSet(s,sname=""):
-            print "%-12s:"%sname,
+            if len(s)==0: return
+            print "%-12s:"%sname
             for k in s:
-                  print "%s"%(k),
-            print
-
+                  print "  -> %s"%(k)
+        print "** Module %s **"%self.module_name
         printDict(self.registers, "Registers")
         printDict(self.inputs,    "Inputs")
         printDict(self.outputs,   "Outputs")
@@ -714,6 +835,7 @@ class VerilogParser:
         printDict(self.parameters,"Parameters")
         printSet(self.nba,        "Non Blocking")
         printSet(self.ba,         "Blocking")
+        printDict(self.instances, "Instantiations")
     def dtmr(self):
         f=sys.stdout
         def p(s):
@@ -812,7 +934,7 @@ toptest = """
         endmodule"""
 
 toptest = """
-module TOP();
+module TOP( input k1, output [2:3] ok2, inout xx1, x1, output reg or1, input wire iw1, output reg [2:1] oreg2);
    input i1;
    parameter N=2,M=1;
    input [2:1] i2;
@@ -855,13 +977,35 @@ def main():
     parser.add_option("", "--vote-comb",          action="store_true", dest="vCom", default=True, help="Add majority voters at .")
 
 
-    (options, args) = parser.parse_args()
+    sys.setrecursionlimit(2000)
 
-    vp=VerilogParser()
-    vp.parseString(toptest)
-    print vp.module_name
-    vp.printInfo()
-    vp.dtmr()
+    (options, args) = parser.parse_args()
+    if 0:
+        vp=VerilogParser()
+        vp.parseString(toptest)
+#        vp.dtmr()
+    else:
+        G=pgv.AGraph(strict=False,directed=True)
+
+
+        for fname in glob.glob("source/*.v"):#[:20]:
+        #for fname in ("source/ePortRxSampler.v",):
+            print "*"*120
+            print "* %s"%fname
+            print "*"*120
+            f=open(fname)
+            text=f.read()
+            f.close()
+            #print text
+            vp=VerilogParser()
+            vp.G=G
+            vp.parseString(text)
+#            vp.dtmr()
+            if vp.module_name!="":
+                vp.toHTML(fname+".html")
+        G.write('simple.dot')
+        G.layout() # layout with default (neato)
+        G.draw('simple.png')
 
 if __name__=="__main__":
     main()
