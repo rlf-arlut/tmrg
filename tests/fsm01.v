@@ -22,7 +22,7 @@ parameter SIZE = 3           ;
 parameter IDLE  = 3'b001,GNT0 = 3'b010,GNT1 = 3'b100 ;
 
 //=============Internal Variables======================
-reg   [SIZE-1:0] state;
+reg   [1:0] state;
 
 //==========Code startes Here==========================
 always @ (posedge clock)
@@ -33,33 +33,33 @@ always @ (posedge clock)
       gnt1 <= 0;
     end else
      case(state)
-       IDLE : if (req_0 == 1'b1) 
+       IDLE : if (req_0 == 1'b1)
                 begin
                   state <=  #1  GNT0;
                   gnt_0 <= 1;
-                end 
-              else if (req_1 == 1'b1) 
+                end
+              else if (req_1 == 1'b1)
                 begin
                   gnt_1 <= 1;
                   state <=  #1  GNT1;
-              end else 
+              end else
                 begin
                   state <=  #1  IDLE;
                 end
-       GNT0 : if (req_0 == 1'b1) 
+       GNT0 : if (req_0 == 1'b1)
                  begin
                   state <=  #1  GNT0;
-                end 
-              else 
+                end
+              else
                 begin
                   gnt_0 <= 0;
                   state <=  #1  IDLE;
                 end
-       GNT1 : if (req_1 == 1'b1) 
+       GNT1 : if (req_1 == 1'b1)
                 begin
                   state <=  #1  GNT1;
-                end 
-              else 
+                end
+              else
                 begin
                   gnt_1 <= 0;
                   state <=  #1  IDLE;
