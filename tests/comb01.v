@@ -6,11 +6,9 @@ module comb01(
   );
   output [1:2] out5, x2;
   output x,y;
+
   input [1:2] out5,x2;
 
-  assign out= #1 fun(in)
-  +in2,out2=i1+in2;
-  assign out4=fun(in)+in2, out3=i1+in2;
   always @(in1)
   begin
     out1=in1;
@@ -30,6 +28,8 @@ module comb01(
   always
     out1=in1;
   
+  assign out= #1 fun(in)   +in2,out2=i1+in2;
+  assign out4=fun(in)+in2, out3=i1+in2;
   modulename inst1 (.d(s)) , inst2 (.d(s) , ds );
 endmodule
 

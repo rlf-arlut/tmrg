@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-from optparse import OptionParser
-import tempita
-import pygraphviz as pgv
-
-#
 # verilogParse.py
 #
 # an example of using the pyparsing module to be able to process Verilog files
@@ -264,17 +259,19 @@ class VerilogParser:
         range = ("[" + self.expr + ":" + self.expr + "]").setResultsName("range")
 
         def gotParameter(s,loc,toks):
-            for p in toks[1]:
-                pname=p[0]
-                pval=" ".join(p[2:])
-                self.parameters[pname]=pval
-                self.parametersList.append(pname)
+            #for p in toks[1]:
+            #    pname=p[0]
+            #    pval=" ".join(p[2:])
+            #    self.parameters[pname]=pval
+            #    self.parametersList.append(pname)
             return toks
 
         paramAssgnmt = Group( identifier + "=" + self.expr ).setName("paramAssgnmt")
 
-        parameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setName("paramDecl")
+
+        parameterDecl = Group( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
         parameterDecl.setParseAction(gotParameter)
+        localParameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setName("paramDecl")
         localParameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setName("paramDecl")
         localParameterDecl.setParseAction(gotParameter)
 
@@ -323,8 +320,8 @@ class VerilogParser:
 
         regDecl.setParseAction(gotReg)
 
-        timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi )
-        integerDecl = Group( "integer" + delimitedList( regIdentifier ) + self.semi )
+        timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
+        integerDecl = Group( "integer" + delimitedList( regIdentifier ) + self.semi ).setResultsName("integerDecl")
 
         strength0 = oneOf("supply0  strong0  pull0  weak0  highz0")
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
@@ -355,8 +352,8 @@ class VerilogParser:
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("if-else").setResultsName("if-else") |
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |
             Group( delayOrEventControl + stmtOrNull ) |
-            Group( case + "(" + self.expr + ")" + OneOrMore( caseItem ) + endcase ) |
-            Group( forever + self.stmt ) |
+            Group( case + "(" + self.expr + ")" + OneOrMore( caseItem ) + endcase ).setResultsName("case") |
+            Group( forever + self.stmt ).setResultsName("forever") |
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |
             Group( for_ + "(" + assgnmt + self.semi + Group( self.expr ) + self.semi + assgnmt + ")" + self.stmt ) |
@@ -365,7 +362,7 @@ class VerilogParser:
             Group( wait + "(" + self.expr + ")" + stmtOrNull ) |
             Group( "->" + identifier + self.semi ) |
             Group( disable + identifier + self.semi ) |
-            Group( assign + assgnmt + self.semi ) |
+            Group( assign + assgnmt + self.semi ).setResultsName("assign") |
             Group( deassign + lvalue + self.semi ) |
             Group( force + assgnmt + self.semi ) |
             Group( release + lvalue + self.semi ) |
@@ -402,7 +399,7 @@ class VerilogParser:
         x||= release <lvalue> ;
         """
         alwaysStmt = Group( Suppress("always") + Optional(eventControl) + self.stmt ).setName("alwaysStmt").setResultsName("always")
-        initialStmt = Group( "initial" + self.stmt ).setName("initialStmt")
+        initialStmt = Group( "initial" + self.stmt ).setName("initialStmt").setResultsName("initialStmt")
 
         chargeStrength = Group( "(" + oneOf( "small medium large" ) + ")" ).setName("chargeStrength")
 
@@ -427,25 +424,25 @@ class VerilogParser:
             Group( OneOrMore( tfDecl ) ) +
             Group( ZeroOrMore( self.stmt ) ) +
             "endfunction"
-            )
+            ).setResultsName("functionDecl")
 
         inputOutput = oneOf("input output")
         netDecl1Arg = ( nettype +
             Optional( expandRange ) +
             Optional( delay ) +
 #            Group( delimitedList( ~inputOutput + identifier ) ) )
-            Group( delimitedList( identifier ) ) )
+            Group( delimitedList( identifier ) ) ).setResultsName("net1")
         netDecl2Arg = ( "trireg" +
             Optional( chargeStrength ) +
             Optional( expandRange ) +
             Optional( delay ) +
 #            Group( delimitedList( ~inputOutput + identifier ) ) )
-            Group( delimitedList(  identifier ) ) )
+            Group( delimitedList(  identifier ) ) ).setResultsName("net2")
         netDecl3Arg = ( nettype +
             Optional( driveStrength ) +
             Optional( expandRange ) +
             Optional( delay ) +
-            Group( delimitedList( assgnmt ) ) )
+            Group( delimitedList( assgnmt ) ) ).setResultsName("net3")
         netDecl1 = Group(netDecl1Arg + self.semi)
         netDecl2 = Group(netDecl2Arg + self.semi)
         netDecl3 = Group(netDecl3Arg + self.semi)
@@ -460,7 +457,7 @@ class VerilogParser:
             Optional( driveStrength ) +
             Optional( delay ) +
             delimitedList( gateInstance) +
-            self.semi )
+            self.semi ).setResultsName("gate")
 
         udpInstance = Group( Group( identifier + Optional(range | subscrRef) ) +
             "(" + Group( delimitedList( self.expr ) ) + ")" )
@@ -506,7 +503,7 @@ class VerilogParser:
         task = Group( "task" + identifier + self.semi +
             ZeroOrMore( tfDecl ) +
             stmtOrNull +
-            "endtask" )
+            "endtask" ).setResultsName("task")
 
         specparamDecl = Group( "specparam" + delimitedList( paramAssgnmt ) + self.semi )
 

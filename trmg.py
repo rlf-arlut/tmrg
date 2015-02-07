@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 from optparse import OptionParser
-import tempita
-import pygraphviz as pgv
+#import tempita
+#import pygraphviz as pgv
 from vp import *
 
 toptest = """
@@ -136,9 +136,10 @@ def prettyPrint(f,tokens, ident = 0):
             prettyPrint(f,ifact, ident+1)
         elif name=="if-else":
             stm=tokens[0]
+            print tokens
             cond=stm[1]
             f.write(IS*ident+"if %s\n"%(resultLine(cond)))
-            ifact=stm[2][0]
+            ifact=stm[2]
             prettyPrint(f,ifact, ident+1)
             f.write(IS*ident+"else %s\n"%(resultLine(cond)))
             elseact=stm[4][0]
