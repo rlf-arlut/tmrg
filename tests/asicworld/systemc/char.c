@@ -1,0 +1,4 @@
+ {
+        char Letter;
+        Letter = 'x';
+    }

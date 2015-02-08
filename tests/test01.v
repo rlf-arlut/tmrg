@@ -1,8 +1,9 @@
 // comment
-module test01( in, out, in1, out1, in2, out2 );
-  input        in;
+module test01( in, out, in1, out1, in2, out2 , input iz1, input [1:0] iz2);
+  input        in,in2;
   output [5:0] out; //comment
-  inout        io3;
+  inout        io3;/* huh
+  */
   input [7:0]  inc;
   input        in2;
   output [1:0] out1; //comment
@@ -12,12 +13,54 @@ module test01( in, out, in1, out1, in2, out2 );
   output       out2; //comment
   inout        io2;
   input [7:0]  inb;
-  reg d;
+  reg r1,r2,r3;
+  reg [2:0] r4,r5;
   parameter N=8;
   parameter N1=5;
   parameter N2=3;
   wire K=2&d;
   integer ddd;
+
+  assign a=r1 & r2, //bit-wise AND operator
+    b=&s, //unary reduction AND operator
+    c=r1 && r2, //logical AND operator
+    d=~&u, //unary reduction NAND operator
+    e=r2 | r3, //bit-wise OR operator
+    f=r3 || r4, //logical OR operator
+    g=|u, //unary reduction OR operator
+    h=~|u, //unary reduction NOR operator
+    i=r4 ^ r5, //bit-wise XOR operator
+    j=^u,//unary reduction XNOR operator
+    l=~^v,//unary reduction XNOR operator
+    m=~j,//bit-wise NOT operator
+    n = !r1,//logical NOT operator
+    w={a,b},//concatenation operator
+    y={2{r7}},//duplicate concatenation operator
+    q=r1 ? a : b,//conditional operator
+    s= r1 == r2,//logical equality operator
+    t= r3 != r4;//logical inequality operator
+//k=r5 ~^r6,
+
+  assign a = 1 + p1;         //expression with addition operator and constant operands
+  assign b = r1 | (p2 << 1); //sub-expression with shift operator and constant operands
+  assign c = {r1,(p2 % p1)}; //sub-expression with modulo operator and constant operands
+
+  parameter p=10;
+  assign #p q = ~(a & qb); //delay is a constant
+  assign #(p+1) qb = ~(b & q); //delay expression with constant operands
+
+assign m1=~(({a,b}&{d,e})|({c,d}^{e,f}));
+assign m={e,f};
+assign m3=~{i,j};
+assign m4=~({m,n}|{a,b});
+assign m5=((q & r)^(p | t)|{q,r});
+
+reg r1,r2;
+assign #r1 a=c; //delay is not a constant
+assign #(a & r2) b=d; //operands in delay expression are variables
+
+
+
 
   always @(posedge clk)
     begin
@@ -114,4 +157,21 @@ module test01( in, out, in1, out1, in2, out2 );
   end  else begin
     q <= data;
   end
+
+  initial begin
+    f = $fopen("output.txt","w");
+
+    @(negedge reset); //Wait for reset to be released
+    @(posedge clk);   //Wait for fisrt clock out of reset
+
+    for (i = 0; i<14; i=i+1) begin
+      $fwrite(f,"%b\n",lfsr[i]);
+    end
+
+    $fclose(f);  
+  end
+  always
+    {carry_out, sum_out} = #10 ina + inb + carry_in;
+
+
 endmodule
