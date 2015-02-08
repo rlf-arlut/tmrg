@@ -236,6 +236,7 @@ class VerilogParser:
 
         assgnmt   = ( lvalue + "=" + Optional( delayOrEventControl ) + self.expr ).setName( "assgnmt" ).setResultsName( "assgnmt" )
         def gotAssgnmt(s,loc,toks):
+            print "assgmnt", toks
             lhs=toks[0]
             if len(lhs)>=1 and lhs[0]=="{": #concatenation
                 for v in lhs[1:-1]:
@@ -276,45 +277,46 @@ class VerilogParser:
         localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
-#             toks=toks[0]
-# #            print toks
-#             last=len(toks)-1
-#             if toks[last]==';':
-#                 last-=1
-# #            print "  ->",toks[:last+1]
-#             start=1
-#             type=""
-#             if toks[start] in ('reg','wire'):
-#                 type=toks[start]
-#                 start+=1
-#             atrs=""
-#             for a in toks[start:last]:
-#                 atrs+=a+" "
-#             atrs=atrs.rstrip()
-# #            print "  A",atrs
-#             for regnames in toks[last]:
-#                 resdict[regnames]=atrs
-#                 self.portList.append(regnames)
-#                 if type=='reg':
-#                     self.registers[regnames]=atrs
-            return toks
-
+             #print "gotIO",toks.toVerilog()
+             #print type(toks), dir(toks)
+             toks=toks[0]
+             #print toks
+             start=1
+             _type=""
+             if toks[start] in ('reg','wire'):
+                 _type=toks[start]
+                 start+=1
+             atrs=""
+             for a in toks[1]:
+                 print str(a)
+                 atrs+=str(a)+" "
+             atrs=atrs.rstrip()
+             for regnames in toks[-1]:
+                 resdict[regnames]=atrs
+                 self.portList.append(regnames)
+                 if type=='reg':
+                     self.registers[regnames]=atrs
+             return toks
+        def printIo(self):
+            return "kuio"
         inputDecl = Group( "input" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
+        inputDecl.setToVerilog(printIo)
         outputDecl = Group( "output" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
         outputDecl.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
         inoutDecl = Group( "inout" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
         inoutDecl.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
 
         regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
-        regDecl = Group( "reg" + Optional("signed") + Optional( range ) + Group( delimitedList( regIdentifier )) + self.semi ).setName("regDecl").setResultsName("regDecl")
+        regDecl = Group( "reg" + Group(Optional("signed") + Optional( range )) + Group( delimitedList( regIdentifier )) + self.semi ).setName("regDecl").setResultsName("regDecl")
         def gotReg(s,loc,toks):
-            #self.registers
+            toks=toks[0] #self.registers
             atrs=""
-            for a in toks[0][1:-2]:
-                atrs+=a+" "
+            print toks
+            for a in toks[1]:
+                atrs+=str(a)+" "
             atrs=atrs.rstrip()
-            for regnames in toks[0][-2]:
+            for regnames in toks[-1]:
                 self.registers[regnames[0]]=atrs
             return toks
 
@@ -504,6 +506,10 @@ class VerilogParser:
             ZeroOrMore( tfDecl ) +
             stmtOrNull +
             "endtask" ).setResultsName("task")
+        def gotTask(s,l,t):
+            print "taks"
+            return t
+        task.setParseAction(gotTask)
 
         specparamDecl = Group( "specparam" + delimitedList( paramAssgnmt ) + self.semi )
 
@@ -733,7 +739,16 @@ class VerilogParser:
         #verilogbnf = OneOrMore( self.module | udp ) + StringEnd()
         verilogbnf = (( self.module | udp ) + StringEnd()).setName("top").setResultsName("top")
 
-        verilogbnf.ignore( cppStyleComment )
+#        specialComment = '//##' + Word(alphanums) + '##' + Word(alphanums+'.') + "::" + Word(nums)
+#        def dontMatchSpecialComments(tokens):
+#            if tokens[0] == specialComment:
+#                raise ParseException("don't match special comments")
+#        cppStyleComment.setParseAction(dontMatchSpecialComments)
+
+        def gotComment(s,l,t):
+            print t
+            return None
+        verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
         verilogbnf.ignore( self.compilerDirective )
 
         self.verilogbnf=verilogbnf
@@ -829,20 +844,7 @@ class VerilogParser:
 
         tokens = []
         self.verilog=strng
-        try:
-            tokens=self.verilogbnf.parseString( strng )
-            #self.printInfo()
-
-            #show(tokens)
-        except ParseException, err:
-            print err.line
-            print " "*(err.column-1) + "^"
-            print err
-        except ParseSyntaxException, err:
-            print err.line
-            print " "*(err.column-1) + "^"
-            print err
-            print
+        tokens=self.verilogbnf.parseString( strng )
         return tokens
 
     def printInfo(self):

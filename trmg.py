@@ -77,6 +77,7 @@ def prettyPrint(f,tokens, ident = 0):
 
     if isinstance(tokens, ParseResults):
         name=tokens.getName()
+        print name, tokens.toVerilog()
         if name=="top":
             f.write("// file automaticly generated\n")
             for i in tokens:
@@ -116,7 +117,7 @@ def prettyPrint(f,tokens, ident = 0):
             for stmt in body:
                 prettyPrint(f,stmt, ident +1)
         elif name=="begin-end":
-            f.write(IS*ident+"begin\n")
+            f.write(IS*ident+"begin (%d)\n"%(len(tokens)))
             for stmt in tokens:
                 prettyPrint(f,stmt, ident +1)
             f.write(IS*ident+"end\n")
@@ -129,26 +130,37 @@ def prettyPrint(f,tokens, ident = 0):
             for token in tokens[0]:
                 prettyPrint(f,token, ident)
         elif name=="if":
-            stm=tokens[0]
+            if len(tokens)==1:
+                stm=tokens[0]
+            else:
+                stm=tokens
             cond=stm[1]
             f.write(IS*ident+"if %s\n"%(resultLine(cond)))
             ifact=stm[2][0]
             prettyPrint(f,ifact, ident+1)
         elif name=="if-else":
-            stm=tokens[0]
-            print tokens
+            if len(tokens)==1:
+                stm=tokens[0]
+            else:
+                stm=tokens
+#            print tokens
             cond=stm[1]
             f.write(IS*ident+"if %s\n"%(resultLine(cond)))
             ifact=stm[2]
             prettyPrint(f,ifact, ident+1)
-            f.write(IS*ident+"else %s\n"%(resultLine(cond)))
+            f.write(IS*ident+"else\n")
             elseact=stm[4][0]
             prettyPrint(f,elseact, ident+1)
 
         else:
-            print ident,"#",tokens.getName() ," : %s"%str(tokens)
+            if isinstance(tokens,ParseResults):
+                for stmt in tokens:
+                    prettyPrint(f,stmt, ident +1)
+
+            else:
+                print IS*ident,"#",tokens.getName() ," : %s"%str(tokens)
     else:
-        print ident,"$",tokens
+        print IS*ident,"$",tokens
     #print type(value)
     #if isinstance(value, list):
   #      print ident+"  <LEN :%d"%(len(value))
@@ -190,6 +202,7 @@ class TMR(VerilogParser):
     def triplicate(self):
         tokens=self.verilogbnf.parseString( self.verilog)
 
+
         prettyPrint(sys.stdout,tokens)
         #print pprint.PrettyPrinter(2).pprint( tokens.asList() )
         #print "%"*80
@@ -219,7 +232,19 @@ def main():
 
         fname = args[0]
         vp=TMR()
-        vp.parseString(readFile(fname))
+        try:
+            vp.parseString(readFile(fname))
+        except ParseException, err:
+            print err.line
+            print " "*(err.column-1) + "^"
+            print err
+            return
+        except ParseSyntaxException, err:
+            print err.line
+            print " "*(err.column-1) + "^"
+            print err
+            print
+            return
         vp.printInfo()
         vp.triplicate()
 
