@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from optparse import OptionParser
+from optparse import *
 #import tempita
 #import pygraphviz as pgv
 from vp import *
@@ -62,6 +62,182 @@ def resultLine(tokens,sep=""):
         s+=tokens
     return s
 
+class VerilogFormater:
+    formater={}
+    def formatTop(self,tokens):
+        oStr="// file automaticly generated\n"
+        for i in tokens:
+            oStr+=self.format(i)
+        return oStr
+
+    def formatDefault(self,tokens):
+        return "default (%s)"%(tokens.getName())
+
+    def formatId(self,tokens):
+        oStr=str(tokens[0])
+        return oStr
+
+    def _formatIo(self,tokens):
+        oStr=""
+        label=str(tokens[0])
+        spec=self.format(tokens[1])
+        ports=tokens[2]
+        for port in ports:
+            oStr+="%s %s %s;\n"%(label,spec,port)
+        return oStr
+
+    def formatInput(self,tokens):
+        return self._formatIo(tokens)
+
+    def formatInOut(self,tokens):
+        return self._formatIo(tokens)
+
+    def formatOutput(self,tokens):
+        return self._formatIo(tokens)
+
+    def formatRegDecl(self,tokens):
+        return self._formatIo(tokens)
+
+    def formatRange(self,tokens):
+        oStr=""
+        for t in tokens:
+            oStr+=self.format(t)
+        return oStr
+
+    def formatAlways(self,tokens):
+        oStr=""
+        eventCtrl=self.format(tokens[0])
+        stmt=self.format(tokens[1])
+        oStr+="always %s\n"%eventCtrl
+        oStr+="%s\n"%stmt
+        return oStr
+
+    def formatBeginEnd(self,tokens):
+        oStr="begin\n"
+        for stmt in tokens[0]:
+            oStr+=self.format(stmt)
+        oStr+="end\n"
+        return oStr
+
+    def formatEventCtrl(self,tokens):
+        oStr=""
+        for el in tokens[0]:
+            oStr+=self.format(el)
+        return oStr
+
+    def formatDelimitedList(self,tokens):
+        oStr=""
+        print tokens
+        for el in tokens:
+            oStr+=self.format(el)
+        return oStr
+    def formatEventTerm(self,tokens):
+        oStr=""
+        for el in tokens:
+            oStr+=self.format(el)+" "
+        return oStr
+    def formatIf(self,tokens):
+        oStr=""
+        return oStr
+    def formatIfElse(self,tokens):
+        oStr=""
+        print tokens
+        if len(tokens)==1:
+            stm=tokens[0]
+        else:
+            stm=tokens
+        cond=stm[1]
+        ifAction=stm[2]
+        elseAction=stm[4]
+        oStr+="if %s\n"%self.format(cond)
+        oStr+="\t%s"%self.format(ifAction)
+        oStr+="else\n\t%s"%self.format(elseAction)
+# #             prettyPrint(f,ifact, ident+1)
+# #             f.write(IS*ident+"else\n")
+#             prettyPrint(f,elseact, ident+1)
+        return oStr
+
+    def formatModule(self,tokens):
+        header=tokens[0]
+        modname=header[1][0]
+        oStr="module %s"%modname
+        sep=""
+        if len(header)>2:
+            ports=header[2]
+            oStr+="(\n"
+            for port in ports:
+                oStr+=sep+"\t"+self.format(port)
+                sep=",\n"
+            oStr+="\n)"
+        oStr+=";\n"
+
+        moduleBody=tokens[1]
+        for moduleItem in moduleBody:
+            oStr+=self.format(moduleItem)
+        oStr+="endmodule\n"
+        return oStr
+
+
+    def formatNbAssgnmt(self,tokens):
+        tokens=tokens[0]
+        lval=self.format(tokens[0])
+        delay=self.format(tokens[2])
+        expr=self.format(tokens[3])
+        oStr="%s <= %s%s;\n"%(lval,delay,expr)
+
+        return oStr
+
+    def formatExpr(self,tokens):
+        oStr=""
+        for t in tokens:
+            oStr+=self.format(t)
+        return oStr
+    def formatDelay(self,tokens):
+        oStr=""
+        for t in tokens:
+            oStr+=self.format(t)
+        return oStr
+    def formatCondition(self,tokens):
+        oStr=""
+        for t in tokens:
+            oStr+=self.format(t)
+        return oStr
+
+    def __init__(self):
+        self.formater["top"]=self.formatTop
+        self.formater["default"]=self.formatDefault
+        self.formater["module"]=self.formatModule
+
+        self.formater["id"]=self.formatId
+        self.formater["input"]=self.formatInput
+        self.formater["inout"]=self.formatInOut
+        self.formater["output"]=self.formatOutput
+        self.formater["regDecl"]=self.formatRegDecl
+        self.formater["always"]=self.formatAlways
+        self.formater["range"]=self.formatRange
+        self.formater["begin-end"]=self.formatBeginEnd
+        self.formater["eventCtrl"]=self.formatEventCtrl
+        self.formater["delimitedList"]=self.formatDelimitedList
+        self.formater["eventTerm"]=self.formatEventTerm
+        self.formater["if"]=self.formatIf
+        self.formater["if-else"]=self.formatIfElse
+        self.formater["nbAssgnmt"]=self.formatNbAssgnmt
+        self.formater["expr"]=self.formatExpr
+        self.formater["delay"]=self.formatDelay
+        self.formater["condition"]=self.formatCondition
+
+    def format(self,tokens):
+        if isinstance(tokens, ParseResults):
+            name=tokens.getName()
+            print "<format %s '%s'>"%(name,str(tokens)[:50])
+            if name in self.formater:
+                outStr=self.formater[name](tokens)
+            else:
+                outStr=self.formater["default"](tokens)
+        else:
+            outStr=tokens
+        return outStr
+
 def prettyPrint(f,tokens, ident = 0):
     IS="  "
 
@@ -77,29 +253,11 @@ def prettyPrint(f,tokens, ident = 0):
 
     if isinstance(tokens, ParseResults):
         name=tokens.getName()
-        print name, tokens.toVerilog()
+        print "#PP# %-20s %-60s %s %s"%(name, tokens.toVerilog()[:50], hex(id(tokens)),str(tokens.__toverilog))
         if name=="top":
             f.write("// file automaticly generated\n")
             for i in tokens:
                 prettyPrint(f,i, 0 )
-        elif name=="module":
-            header=tokens[0]
-            modname=header[1][0]
-            f.write(IS*ident+"module %s"%modname)
-            ports=[]
-            if len(header)>2:
-                ports=header[2]
-                s="(\n"
-                for port in ports:
-                    s+=IS*(ident+1) +resultLine(port,sep=" ").rstrip()+",\n"
-                s=s.rstrip()[:-1]+"\n"+IS*(ident)+")"
-                f.write(s)
-            f.write(";\n")
-
-            moduleBody=tokens[1]
-            for moduleItem in moduleBody:
-                prettyPrint(f,moduleItem, ident +1)
-            f.write("endmodule\n")
         elif name in ("output", "input","inout"):
             formInputOutput(f,tokens, ident = ident,label=name)
         elif name=="continuousAssign":
@@ -201,8 +359,6 @@ class TMR(VerilogParser):
         self.expr.setParseAction(gotExpr)
     def triplicate(self):
         tokens=self.verilogbnf.parseString( self.verilog)
-
-
         prettyPrint(sys.stdout,tokens)
         #print pprint.PrettyPrinter(2).pprint( tokens.asList() )
         #print "%"*80
@@ -214,15 +370,10 @@ def main():
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
-    parser.add_option("", "--triplicate-inputs",  action="store_true", dest="tInp", default=True, help="Triplicate inputs.")
-    parser.add_option("", "--triplicate-outputs", action="store_true", dest="tOut", default=True, help="Triplicate outputs.")
-    parser.add_option("", "--triplicate-reg",     action="store_true", dest="tReg", default=True, help="Triplicate registers.")
-    parser.add_option("", "--triplicate-comb",    action="store_true", dest="tCom", default=True, help="Triplicate combinatorial logic.")
-
-    parser.add_option("", "--vote-inputs",        action="store_true", dest="vInp", default=True, help="Add majority voters at inputs.")
-    parser.add_option("", "--vote-outputs",       action="store_true", dest="vOut", default=True, help="Add majority voters at outputs.")
-    parser.add_option("", "--vote-reg",           action="store_true", dest="vReg", default=True, help="Add majority voters at .")
-    parser.add_option("", "--vote-comb",          action="store_true", dest="vCom", default=True, help="Add majority voters at .")
+    parser.add_option("-t", "--triplicate",       action="store_true", dest="tmr", default=False, help="Triplicate.")
+    parser.add_option("-p", "--parse",            action="store_true", dest="parse", default=True, help="Parse")
+    parser.add_option("-f", "--format",           action="store_true", dest="format", default=True, help="Parse")
+    parser.add_option("-i", "--info",             action="store_true", dest="info",  default=False, help="Info")
 
 
     try:
@@ -231,9 +382,20 @@ def main():
             parser.error("You have to specify filename!")
 
         fname = args[0]
-        vp=TMR()
         try:
-            vp.parseString(readFile(fname))
+            print options
+            vp=TMR()
+            if options.parse or options.tmr or options.format:
+                tokens=vp.parseString(readFile(fname))
+            if options.info:
+                vp.printInfo()
+            if options.format:
+                #prettyPrint(sys.stdout,tokens)
+                vf=VerilogFormater()
+                print vf.format(tokens)
+            if options.tmr:
+                vp.triplicate()
+
         except ParseException, err:
             print err.line
             print " "*(err.column-1) + "^"
@@ -245,15 +407,11 @@ def main():
             print err
             print
             return
-        vp.printInfo()
-        vp.triplicate()
 
 #            if vp.module_name!="":
 #                vp.toHTML(fname+".html")
-
     except ValueError:
-        raise OptionValueError(
-            "option %s: invalid complex value: %r" % (opt, value))
+        raise
 #        G.write('simple.dot')
 #        G.layout() # layout with default (neato)
 #        G.draw('simple.png')

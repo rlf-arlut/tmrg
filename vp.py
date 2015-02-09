@@ -77,6 +77,10 @@ usePsyco = False
 
 import glob
 
+
+from prettytable import PrettyTable
+
+
 packratOn = False
 psycoOn = False
 
@@ -221,7 +225,7 @@ class VerilogParser:
         assign     = Keyword("assign").setResultsName("keyword")
 
         eventExpr = Forward()
-        eventTerm = ( posedge + self.expr ) | ( negedge + self.expr ) | self.expr | ( "(" + eventExpr + ")" )
+        eventTerm = Group (( posedge + self.expr ) | ( negedge + self.expr ) | self.expr | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
             Group( delimitedList( eventTerm, "or" ) )
             )
@@ -245,8 +249,8 @@ class VerilogParser:
                 self.ba.add(lhs[0])
             return toks
         assgnmt.setParseAction(gotAssgnmt)
-        nbAssgnmt = (( lvalue + "<=" + Optional( delay ) + self.expr ) |
-                     ( lvalue + "<=" + Optional( eventControl ) + self.expr )).setName( "nbassgnmt" )
+        nbAssgnmt = (( lvalue + "<=" + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
+                     ( lvalue + "<=" + Group(Optional( eventControl)).setResultsName("eventCtrl") + Group(self.expr) )).setName( "nbassgnmt" )
         def gotNbAssgnmt(s,loc,toks):
             lhs=toks[0]
             if len(lhs)>=1 and lhs[0]=="{": #concatenation
@@ -277,7 +281,6 @@ class VerilogParser:
         localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
-             #print "gotIO",toks.toVerilog()
              #print type(toks), dir(toks)
              toks=toks[0]
              #print toks
@@ -296,29 +299,25 @@ class VerilogParser:
                  self.portList.append(regnames)
                  if type=='reg':
                      self.registers[regnames]=atrs
-             return toks
-        def printIo(self):
-            return "kuio"
-        inputDecl = Group( "input" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
+#             return toks
+        inputDecl = Group( "input" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
-        inputDecl.setToVerilog(printIo)
-        outputDecl = Group( "output" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
+        outputDecl = Group( "output" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
         outputDecl.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
-        inoutDecl = Group( "inout" + Group(Optional( range )) + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
+        inoutDecl = Group( "inout" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
         inoutDecl.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
 
         regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
-        regDecl = Group( "reg" + Group(Optional("signed") + Optional( range )) + Group( delimitedList( regIdentifier )) + self.semi ).setName("regDecl").setResultsName("regDecl")
+        regDecl = Group( "reg" + Group(Optional("signed") + Optional( range )).setResultsName("range") + Group( delimitedList( regIdentifier )) +  Suppress(self.semi) ).setName("regDecl").setResultsName("regDecl")
         def gotReg(s,loc,toks):
             toks=toks[0] #self.registers
             atrs=""
-            print toks
             for a in toks[1]:
                 atrs+=str(a)+" "
             atrs=atrs.rstrip()
             for regnames in toks[-1]:
-                self.registers[regnames[0]]=atrs
-            return toks
+                self.registers[regnames[0]]=atrs ## co z opcjami ?
+#            return toks
 
         regDecl.setParseAction(gotReg)
 
@@ -400,7 +399,7 @@ class VerilogParser:
         x||= force <assignment> ;
         x||= release <lvalue> ;
         """
-        alwaysStmt = Group( Suppress("always") + Optional(eventControl) + self.stmt ).setName("alwaysStmt").setResultsName("always")
+        alwaysStmt = Group( Suppress("always") + Group(Optional(eventControl)) + self.stmt ).setName("alwaysStmt").setResultsName("always")
         initialStmt = Group( "initial" + self.stmt ).setName("initialStmt").setResultsName("initialStmt")
 
         chargeStrength = Group( "(" + oneOf( "small medium large" ) + ")" ).setName("chargeStrength")
@@ -678,9 +677,9 @@ class VerilogParser:
         port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output")
-        portIn   = Group( "input"  + Optional( "wire" ) + Group(Optional( range )) + Group(identifier).setResultsName("names")).setResultsName("input")
-        portOut  = Group( "output" + Optional( "reg" )  + Group(Optional( range )) + Group(identifier).setResultsName("names")).setResultsName("output")
-        portInOut= Group( "inout"                       + Group(Optional( range )) + Group(identifier).setResultsName("names")).setResultsName("inout")
+        portIn   = Group( "input"  +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("input")
+        portOut  = Group( "output" +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("output")
+        portInOut= Group( "inout"  +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inout")
 
         portIn.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
         portOut.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
@@ -697,9 +696,11 @@ class VerilogParser:
             return toks
         moduleHdr.addParseAction(gotModuleHdr)
 
+
         self.module = Group(  moduleHdr +
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
                  "endmodule" ).setName("module").setResultsName("module")#.setDebug()
+
 
         udpDecl = outputDecl | inputDecl | regDecl
         #~ udpInitVal = oneOf("1'b0 1'b1 1'bx 1'bX 1'B0 1'B1 1'Bx 1'BX 1 0 x X")
@@ -850,18 +851,28 @@ class VerilogParser:
     def printInfo(self):
         def printDict(d,dname=""):
             if len(d)==0: return
-            print "%-12s:"%dname
+            tab = PrettyTable([dname, "type", "tmr"])
+            tab.min_width[dname]=50;
+            tab.min_width["type"]=20;
+            tab.min_width["tmr"]=10;
+            tab.align[dname] = "l" # Left align city names
+
+            #print "%-12s:"%dname
             for k in d:
-                if d[k]!="":
-                  print "  -> %s(%s)"%(k,d[k])
-                else:
-                  print "  -> %s"%(k)
+                parameter=d[k]
+                tab.add_row([k,parameter, 0])
+            tab.padding_width = 1 # One space between column edges and contents (default)
+            print tab
+
         def printSet(s,sname=""):
             if len(s)==0: return
-            print "%-12s:"%sname
+            tab = PrettyTable([sname])
+            tab.align[sname] = "l" # Left align city names
+            tab.min_width[sname]=80+6;
             for k in s:
-                  print "  -> %s"%(k)
-        print "** Module %s **"%self.module_name
+                  tab.add_row([k])
+            print tab
+
         printDict(self.registers, "Registers")
         printDict(self.inputs,    "Inputs")
         printDict(self.outputs,   "Outputs")

@@ -459,22 +459,22 @@ class ParseResults(object):
         return out
 
     def __str__( self ):
-        # out = "["
-        # sep = ""
-        # for i in self.__toklist:
-        #     if isinstance(i, ParseResults):
-        #         out += sep + _ustr(i)
-        #     else:
-        #         out += sep + repr(i)
-        #     sep = ", "
-        # out += "]"
-        out = ""
-        sep = " "
+        out = "["
+        sep = ""
         for i in self.__toklist:
             if isinstance(i, ParseResults):
                 out += sep + _ustr(i)
             else:
-                out += sep + str(i)
+                out += sep + repr(i)
+            sep = ", "
+        out += "]"
+        # out = ""
+        # sep = " "
+        # for i in self.__toklist:
+        #     if isinstance(i, ParseResults):
+        #         out += sep + _ustr(i)
+        #     else:
+        #         out += sep + str(i)
         return out
 
     def _asStringList( self, sep='' ):
