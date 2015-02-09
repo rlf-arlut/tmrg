@@ -98,12 +98,29 @@ Output of the synthesis:
 As one can see on the image above, the logic and register were triplicated properly. 
 The only non-triplicated item is voting logic itself.
 
+
+Using RTL compiler pragmas
+=======================
+
+If we ask RTL compier not to optimize output of the voters, like:
+
+.. literalinclude:: tmr13.v
+
+Output of the synthesis:
+
+.. image:: web_tmr13.png
+   :align: center
+   :width: 900px
+
+
 Conclusions
 ===========
 
 In general, the triplication in verilog code works fine; primitives like combinatorial logic and flip flops are not optimized out during synthesis.
 This behavior is to be expected, as inputs to the combinatorial logic are different (and the tool can not assume anything about them).
 Unfortunately, the voting circuit is optimized out in all considered cases, becoming single point of failure. 
-If a single event transient occurs during clock transition, the invalid state is written to all registers, which makes the triplication effort pointless. 
+Using RTL compiler pragmas one can prevent this optimization. 
+
+
 
 
