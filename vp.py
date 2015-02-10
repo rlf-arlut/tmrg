@@ -242,24 +242,31 @@ class VerilogParser:
                              + Group(self.expr) ).setName( "assgnmt" ).setResultsName( "assgnmt" )
         def gotAssgnmt(s,loc,toks):
             lhs=toks[0]
+#            print toks
             if toks[0].getName()=="subscrIdentifier":
-                varid=toks[0][0][0]
-                self.ba.add(toks[0][0][0])
-                print ">%s<"%varid
+                varid=str(toks[0][0])
+                self.ba.add(varid)
+#                print ">%s<"%varid
             elif toks[0].getName()=="concat":
 #                print "concat", toks[0][0]
                 for v in toks[0][0]:
                     varid=v[0]
                     self.ba.add(varid)
-                    print ">%s<"%varid
+#                    print ">%s<"%varid
 #            print self.ba
             return toks
         assgnmt.setParseAction(gotAssgnmt)
-        nbAssgnmt = (( lvalue + "<=" + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
+        self.nbAssgnmt = (( lvalue + "<=" + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
                      ( lvalue + "<=" + Group(Optional( eventControl)).setResultsName("eventCtrl")
-                       + Group(self.expr) )).setName( "nbassgnmt" )
+                       + Group(self.expr) )).setResultsName( "nbassgnmt" )
         def gotNbAssgnmt(s,loc,toks):
             lhs=toks[0]
+#            print "NBA~~",toks,toks.getName()
+            if toks[0].getName()=="subscrIdentifier":
+                varid=str(toks[0][0])
+                self.nba.add(varid)
+#               print "nba>%s<"%varid
+
             if len(lhs)>=1 and lhs[0]=="{": #concatenation
                 for v in lhs[1:-1]:
                     self.nba.add(v[0])
@@ -267,7 +274,8 @@ class VerilogParser:
                 self.nba.add(lhs[0])
             return toks
 
-        nbAssgnmt.setParseAction(gotNbAssgnmt)
+        self.nbAssgnmt.setParseAction(gotNbAssgnmt)
+
         range = ("[" + self.expr + ":" + self.expr + "]").setResultsName("range")
 
         def gotParameter(s,loc,toks):
@@ -307,10 +315,10 @@ class VerilogParser:
                  if type=='reg':
                      self.registers[regnames]=atrs
 #             return toks
-        inputDecl = Group( "input" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
-        inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
-        outputDecl = Group( "output" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
-        outputDecl.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
+        self.inputDecl = Group( "input" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
+        self.inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
+        self.outputDecl = Group( "output" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
+        self.outputDecl.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
         inoutDecl = Group( "inout" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
         inoutDecl.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
 
@@ -375,7 +383,7 @@ class VerilogParser:
             Group( release + lvalue + self.semi ) |\
             Group( begin + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ).setName("begin:label-end").setResultsName("begin:label-end") |\
             Group( Group(assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
-            Group( nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
+            Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )
             # these  *have* to go at the end of the list!!!
 
@@ -419,8 +427,8 @@ class VerilogParser:
 
         tfDecl = (
             parameterDecl |
-            inputDecl |
-            outputDecl |
+            self.inputDecl |
+            self.outputDecl |
             inoutDecl |
             regDecl |
             timeDecl |
@@ -634,8 +642,8 @@ class VerilogParser:
 
         self.moduleItem = ~Keyword("endmodule") + (
             parameterDecl |
-            inputDecl |
-            outputDecl |
+            self.inputDecl |
+            self.outputDecl |
             inoutDecl |
             regDecl |
             netDecl3 |
@@ -710,7 +718,7 @@ class VerilogParser:
                  "endmodule" ).setName("module").setResultsName("module")#.setDebug()
 
 
-        udpDecl = outputDecl | inputDecl | regDecl
+        udpDecl = self.outputDecl | self.inputDecl | regDecl
         #~ udpInitVal = oneOf("1'b0 1'b1 1'bx 1'bX 1'B0 1'B1 1'Bx 1'BX 1 0 x X")
         udpInitVal = (Regex("1'[bB][01xX]") | Regex("[01xX]")).setName("udpInitVal")
         udpInitialStmt = Group( "initial" +
@@ -840,6 +848,18 @@ class VerilogParser:
     def parseString( self,strng ):
         self.verilog=strng
         self.tokens=self.verilogbnf.parseString( strng )
+
+        self.toTMR=set()
+        for v in self.registers : self.toTMR.add(v)
+        for v in self.inputs : self.toTMR.add(v)
+        for v in self.outputs : self.toTMR.add(v)
+        for v in self.inouts : self.toTMR.add(v)
+        for v in self.registers : self.toTMR.add(v)
+        for v in self.nba : self.toTMR.add(v)
+        for v in self.ba : self.toTMR.add(v)
+        for v in self.instances : self.toTMR.add(v)
+
+        print self.toTMR
         return self.tokens
 
     def printInfo(self):
@@ -863,9 +883,9 @@ class VerilogParser:
             tab = PrettyTable([sname])
             tab.align[sname] = "l" # Left align city names
             tab.min_width[sname]=80+6;
-            print s
+            #print s
             for k in s:
-                print k
+                #print k
                 tab.add_row([k])
             print tab
 
@@ -874,8 +894,8 @@ class VerilogParser:
         printDict(self.outputs,   "Outputs")
         printDict(self.inouts,    "InOuts")
         printDict(self.parameters,"Parameters")
-        #printSet(self.nba,        "Non Blocking")
-        #printSet(self.ba,         "Blocking")
+        printSet(self.nba,        "Non Blocking")
+        printSet(self.ba,         "Blocking")
         printDict(self.instances, "Instantiations")
     def dtmr(self):
         f=sys.stdout

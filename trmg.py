@@ -237,7 +237,7 @@ class VerilogFormater:
         delay=self.format(tokens[2])
         if delay!="": delay+=" "
         expr=self.format(tokens[3])
-        oStr="%s <= %s%s;\n"%(lval,delay,expr)
+        oStr="%s <= %s%s;"%(lval,delay,expr)
 
         return oStr
 
@@ -381,6 +381,7 @@ def prettyPrint(f,tokens, ident = 0):
 class TMR(VerilogParser):
     def __init__(self):
         VerilogParser.__init__(self)
+        self.EXT=('A','B','C')
 
     def _triplicate(self,tokens):
         print "t",type(tokens),tokens
@@ -399,21 +400,89 @@ class TMR(VerilogParser):
                 print "x"
         return tokens
 
+    def checkIfContains(self,tokens,label):
+        def _check(tokens,label):
+            if isinstance(tokens, ParseResults):
+                for tok in tokens:
+                    res=_check(tok,label)
+                    if res:return True
+                return False
+            else:
+                return label==tokens
+        return _check(tokens,label)
+
+    def replace(self,tokens,_from,_to):
+        def _replace(tokens,_from,_to):
+            if isinstance(tokens, ParseResults):
+                for i in range(len(tokens)):
+                    if isinstance(tokens[i], ParseResults):
+                        res=_replace(tokens[i],_from,_to)
+                    else:
+                        if tokens[i]==_from:
+                            tokens[i]=_to
+        return _replace(tokens,_from,_to)
+
 
     def tmrAlways(self,t):
-        cpy=t.deepcopy()
         #self.naiveCopy(t)
-        x=cpy[0][0][0][2][0]
-        x[0]="dupa"
-
-        print "t",t,len(t)
-        print "c",cpy
-        print cpy.asList()
+        #x=cpy[0][0][0][2][0]
+        #x[0]="dupa"
+        result=ParseResults([])
+        for i in ('A','B','C'):
+            cpy=t.deepcopy()
+            if self.checkIfContains(cpy,"rst"):
+                self.replace(cpy,"rst","rst"+i)
+            result+=cpy
         #print "cpy",cpy,len(cpy)
-        return t+cpy+cpy
+        return result
 
+    def tmrNbAssgnmt(self,t):
+        cpy=t.deepcopy()
+        #print cpy
+        #cpy[3]="dupa";
+        for v in self.toTMR:
+        #if self.checkIfContains(cpy,"rst"):
+            self.replace(cpy,v,v+"A")
+        return cpy
+
+    def tmrOutput(self,tokens):
+        return tokens
+
+    def tmrInput(self,tokens):
+        print tokens
+
+        return tokens
+
+    def tmrModule(self,tokens):
+        header=tokens[0][0]
+        print header
+        header[1][0]=str(header[1][0])+"TMR"
+        #print "H!", tokens[0]
+        if len(header)>2:
+            ports=header[2]
+            newports=ParseResults([],name=ports.getName())
+            for port in ports:
+                print str(port)
+                for varToTMR in self.toTMR:
+                    if self.checkIfContains(port,varToTMR):
+                        for ext in self.EXT:
+                            cpy=port.deepcopy()
+                            self.replace(cpy,varToTMR,varToTMR+ext)
+                            newports.append(cpy)
+                        print "bang",cpy
+                        break
+            header[2]=newports
+        return tokens
+
+    def tmrTop(self,tokens):
+        return tokens
     def triplicate(self):
-        self.alwaysStmt.addParseAction( self.tmrAlways )
+        self.alwaysStmt.setParseAction( self.tmrAlways )
+        self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
+        self.module.setParseAction(self.tmrModule)
+        self.verilogbnf.setParseAction(self.tmrTop)
+        self.outputDecl.setParseAction(self.tmrOutput)
+        self.inputDecl.setParseAction(self.tmrInput)
         tmrt=self.verilogbnf.parseString(self.verilog)
         return tmrt
 
@@ -455,7 +524,7 @@ def main():
                 tmrtokens=vp.triplicate()
                 vf=VerilogFormater()
                 vf.setTrace(options.trace)
-                print vf.format(tmrtokens)
+                print vf.format(tmrtokens).replace("\t","  ")
 
         except ParseException, err:
             print err.line
