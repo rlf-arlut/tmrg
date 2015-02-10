@@ -15,8 +15,8 @@ module test01( in, out, in1, out1, in2, out2 , input iz1, input [1:0] iz2);
   input [7:0]  inb;
   reg r1,r2,r3;
   reg [2:0] r4,r5;
-  parameter N=8;
-  parameter N1=5;
+  parameter  N=8,M=5;
+  parameter [1:2] N1=5;
   parameter N2=3;
   wire K=2&d;
   integer ddd;
@@ -50,7 +50,7 @@ module test01( in, out, in1, out1, in2, out2 , input iz1, input [1:0] iz2);
   assign #(p+1) qb = ~(b & q); //delay expression with constant operands
 
 assign m1=~(({a,b}&{d,e})|({c,d}^{e,f}));
-assign m={e,f};
+assign (strong0,weak1) m={e,f};
 assign m3=~{i,j};
 assign m4=~({m,n}|{a,b});
 assign m5=((q & r)^(p | t)|{q,r});
@@ -84,6 +84,7 @@ assign #(a & r2) b=d; //operands in delay expression are variables
     ce = 0;
     addr = 0;
     data_wr = 0;
+    #1;
     data_rd = 0;
     // Call the write and read tasks here
      #1  cpu_write(8'h11,8'hAA);

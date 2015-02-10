@@ -5,8 +5,7 @@ module tmr(in1, in2, out1, clk, rst);
   always @(posedge clk or posedge rst)
   begin
     if (rst)
-     begin
-      out1<=1'b0; end
+      out1<=1'b0;
     else
       out1<= in1 & (in2 ^ out1);
   end

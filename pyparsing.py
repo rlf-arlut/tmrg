@@ -271,7 +271,7 @@ class ParseResults(object):
        - by list index (results[0], results[1], etc.)
        - by attribute (results.<resultsName>)
        """
-    __slots__ = ( "__toklist", "__tokdict", "__doinit", "__name", "__parent", "__accumNames", "__weakref__" , "__toverilog", "__tohtml")
+    __slots__ = ( "__toklist", "__tokdict", "__doinit", "__name", "__parent", "__accumNames", "__weakref__" )
     def __new__(cls, toklist, name=None, asList=True, modal=True ):
         if isinstance(toklist, cls):
             return toklist
@@ -282,8 +282,6 @@ class ParseResults(object):
     # Performance tuning: we construct a *lot* of these, so keep this
     # constructor as small and fast as possible
     def __init__( self, toklist, name=None, asList=True, modal=True ):
-        self.__toverilog=None
-        self.__tohtml=None
         if self.__doinit:
             self.__doinit = False
             self.__name = None
@@ -315,7 +313,8 @@ class ParseResults(object):
                         self[name] = toklist[0]
                     except (KeyError,TypeError,IndexError):
                         self[name] = toklist
-
+    def append(self,o):
+        self.__toklist.append(o)
     def __getitem__( self, i ):
         if isinstance( i, (int,slice) ):
             return self.__toklist[i]
@@ -439,24 +438,6 @@ class ParseResults(object):
 
     def __repr__( self ):
         return "(%s, %s)" % ( repr( self.__toklist ), repr( self.__tokdict ) )
-    def setToVerilog(self, f):
-    #    print "****** set",f,type(f)
-        self.__toverilog=f
-        #if self.__toverilog:
-        #    print self.__toverilog(self)
-    def toVerilog( self ):
-        out = ""
-        if self.__toverilog!=None:
-         #   print type(self.__toverilog)
-            return out+self.__toverilog(self)
-        out+="!!"
-        sep = " "
-        for i in self.__toklist:
-            if isinstance(i, ParseResults):
-                out += sep + _ustr(i)
-            else:
-                out += sep + str(i)
-        return out
 
     def __str__( self ):
         out = "["
@@ -510,6 +491,23 @@ class ParseResults(object):
         ret.__accumNames.update( self.__accumNames )
         ret.__name = self.__name
         return ret
+
+    def deepcopy( self ):
+        """kulis. Returns a new copy of a ParseResults object (not references!)"""
+        def naiveCopy(tokens):
+            if isinstance(tokens, ParseResults):
+                name=str(tokens.getName())
+                newtokens=ParseResults(toklist=list(),name=name)
+                for tok in tokens:
+                    if isinstance(tok, ParseResults):
+                        nn=naiveCopy(tok)
+                        newtokens.append(nn)
+                    else:
+                        newtokens.append(tok)
+                return newtokens
+            else:
+                raise "Unknown object to copy!"
+        return naiveCopy(self)
 
     def asXML( self, doctag=None, namedItemsOnly=False, indent="", formatted=True ):
         """Returns the parse results as XML. Tags are created for tokens and lists that have defined results names."""
@@ -896,13 +894,7 @@ class ParserElement(object):
         self.callDuringTry = self.callDuringTry or ("callDuringTry" in kwargs and kwargs["callDuringTry"])
         return self
 
-    def setToVerilog( self, fns ):
-        self.toVerilog = fns
-        return self
 
-    def setToHtls( self, *fns, **kwargs ):
-        self.toHtml = list(fns)
-        return self
 
     def setFailAction( self, fn ):
         """Define action to perform if parsing fails at this expression.
@@ -1019,7 +1011,6 @@ class ParserElement(object):
             #~ print ("Matched",self,"->",retTokens.asList())
             if (self.debugActions[1] ):
                 self.debugActions[1]( instring, tokensStart, loc, self, retTokens )
-        retTokens.setToVerilog(self.toVerilog)
         return loc, retTokens
 
     def tryParse( self, instring, loc ):
