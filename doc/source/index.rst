@@ -7,5 +7,6 @@ Content:
    :maxdepth: 2
 
    synthesis_tests
-
+   general_assumptions
+   examples
 

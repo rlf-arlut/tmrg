@@ -13,6 +13,8 @@ Synthesis was performed with **Cadence Encounter RTL Compiler** (version RC11.21
 Unmodified set of scripts from Sandro Bonacini (**THE RECIPE**) was used in order to perform synthesis.
 
 
+.. _sec-fsm-triplication:
+
 Finite State Machine triplication
 =================================
 
