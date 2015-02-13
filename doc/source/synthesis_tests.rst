@@ -10,8 +10,7 @@ General remarks
 
 Several simple circuits were designed in order to determine strategy for triplication 
 Synthesis was performed with **Cadence Encounter RTL Compiler** (version RC11.21 - v11.20-s012_1, 64-bit).
-Unmodified set of scripts from Sandro Bonacini (**THE RECIPE**) was used in order to perform synthesis.
-
+Unmodified set of scripts from Sandro Bonacini (**THE RECIPE**) was used in order to perform the esynthesis.
 
 .. _sec-fsm-triplication:
 
@@ -53,7 +52,7 @@ Triplication at the flip flop output
 ------------------------------------
 
 This approach is very similar to the previous one (with voting at the input of the flip flop), however this time
-voting happens at the output of the flip flops. The verilog code representing circuit:
+voting happens at the output of the flip flops. The verilog code representing the circuit:
 
 .. literalinclude:: tmr3.v
 

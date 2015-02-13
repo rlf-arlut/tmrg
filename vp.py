@@ -227,7 +227,7 @@ class VerilogParser:
         eventExpr = Forward()
         eventTerm = Group (( posedge + self.expr ) | ( negedge + self.expr ) | self.expr | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
-            Group( delimitedList( eventTerm, "or" ) )
+            Group( delimitedList( eventTerm, "or" ).setResultsName("delimitedOrList") )
             )
         eventControl = Group( "@" + ( ( "(" + eventExpr + ")" ) | identifier | "*" ) ).setName("eventCtrl").setResultsName("eventCtrl")
 
@@ -310,10 +310,11 @@ class VerilogParser:
                  atrs+=str(a)+" "
              atrs=atrs.rstrip()
              for regnames in toks[-1]:
-                 resdict[regnames]=atrs
+                 resdict[regnames]={"atributes":atrs,"tmr":True}
                  self.portList.append(regnames)
                  if type=='reg':
-                     self.registers[regnames]=atrs
+                     self.registers[regnames]={"atributes":atrs,"tmr":True}
+
 #             return toks
         self.inputDecl = Group( "input" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         self.inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
@@ -323,7 +324,12 @@ class VerilogParser:
         inoutDecl.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
 
         regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
-        regDecl = Group( "reg" + Group(Optional("signed") + Optional( range )).setResultsName("range") + Group( delimitedList( regIdentifier )) +  Suppress(self.semi) ).setName("regDecl").setResultsName("regDecl")
+        self.regDecl = Group( "reg" +
+                              Group(Optional("signed") +
+                              Optional( range )).setResultsName("range") +
+                              Group( delimitedList( regIdentifier )) +
+                              Suppress(self.semi)
+                            ).setName("regDecl").setResultsName("regDecl")
         def gotReg(s,loc,toks):
             toks=toks[0] #self.registers
             atrs=""
@@ -331,10 +337,11 @@ class VerilogParser:
                 atrs+=str(a)+" "
             atrs=atrs.rstrip()
             for regnames in toks[-1]:
-                self.registers[regnames[0]]=atrs ## co z opcjami ?
+                self.registers[regnames[0]]={"atributes":atrs,"tmr":True} ## co z opcjami ?
+
 #            return toks
 
-        regDecl.setParseAction(gotReg)
+        self.regDecl.setParseAction(gotReg)
 
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
         integerDecl = Group( "integer" + delimitedList( regIdentifier ) + Suppress(self.semi) ).setResultsName("integerDecl")
@@ -351,7 +358,7 @@ class VerilogParser:
 
         blockDecl = (
             parameterDecl |
-            regDecl |
+            self.regDecl |
             integerDecl |
             realDecl |
             timeDecl |
@@ -430,7 +437,7 @@ class VerilogParser:
             self.inputDecl |
             self.outputDecl |
             inoutDecl |
-            regDecl |
+            self.regDecl |
             timeDecl |
             integerDecl |
             realDecl
@@ -455,14 +462,23 @@ class VerilogParser:
             Optional( delay ) +
 #            Group( delimitedList( ~inputOutput + identifier ) ) )
             Group( delimitedList(  identifier ) ) ).setResultsName("net2")
-        netDecl3Arg = ( nettype +
-            Optional( driveStrength ) +
-            Optional( expandRange ) +
-            Optional( delay ) +
-            Group( delimitedList( assgnmt ) ) ).setResultsName("net3")
         netDecl1 = Group(netDecl1Arg + self.semi)
         netDecl2 = Group(netDecl2Arg + self.semi)
-        netDecl3 = Group(netDecl3Arg + self.semi)
+
+        # self.regDecl = Group( "reg" +
+        #                       Group(Optional("signed") +
+        #                       Optional( range )).setResultsName("range") +
+        #                       Group( delimitedList( regIdentifier )) +
+        #                       Suppress(self.semi)
+        #                     ).setName("regDecl").setResultsName("regDecl")
+        #
+        self.netDecl3 = Group(nettype +
+                              Group(Optional( driveStrength )) +
+                              Group(Optional( expandRange )).setResultsName("range") +
+                              Group(Optional( delay )) +
+                              Group( delimitedList( Group(assgnmt) ) ) +
+                              Suppress(self.semi)
+                             ).setResultsName("netDecl3")
 
         gateType = oneOf("and  nand  or  nor xor  xnor buf  bufif0 bufif1 "
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
@@ -509,8 +525,9 @@ class VerilogParser:
             toks=toks[0]
             module=toks[0]
             instname=toks[1][0][0]
+
             #print modid, modname
-            self.instances[instname]=module
+            self.instances[instname]={"atributes":module,"tmr":True}
             #self.G.add_edge(self.module_name,module)
             #self.instances.add(modid)
             #pass
@@ -645,8 +662,8 @@ class VerilogParser:
             self.inputDecl |
             self.outputDecl |
             inoutDecl |
-            regDecl |
-            netDecl3 |
+            self.regDecl |
+            self.netDecl3 |
             netDecl1 |
             netDecl2 |
             timeDecl |
@@ -718,7 +735,7 @@ class VerilogParser:
                  "endmodule" ).setName("module").setResultsName("module")#.setDebug()
 
 
-        udpDecl = self.outputDecl | self.inputDecl | regDecl
+        udpDecl = self.outputDecl | self.inputDecl | self.regDecl
         #~ udpInitVal = oneOf("1'b0 1'b1 1'bx 1'bX 1'B0 1'B1 1'Bx 1'BX 1 0 x X")
         udpInitVal = (Regex("1'[bB][01xX]") | Regex("[01xX]")).setName("udpInitVal")
         udpInitialStmt = Group( "initial" +
@@ -763,13 +780,36 @@ class VerilogParser:
 #        cppStyleComment.setParseAction(dontMatchSpecialComments)
 
         def gotComment(s,l,t):
-            print t
-            return None
+            #print t
+            return t
         verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
         verilogbnf.ignore( self.compilerDirective )
 
         self.verilogbnf=verilogbnf
+    def applyDntConstrains(self,labels):
+        if labels:
+            for l in labels:
+                if l in self.toTMR:
+                    print "Removing %s"%l
+                    self.toTMR.remove(l)
+                else:
+                    print "Unknown %s"%l
+    def checkIfContainsParseResult(self,tokens,name):
+        def _check(tokens,name):
+            if isinstance(tokens, ParseResults):
+                if tokens.getName():
+                    if tokens.getName().lower() ==name:
+                        return True
+                for tok in tokens:
+                    res=_check(tok,name)
+                    if res:return True
+                return False
+            else:
+                return False
+        return _check(tokens,name)
 
+    def _isAlwaysSeq(self,tokens):
+        return self.checkIfContainsParseResult(tokens,"nbassgnmt")
     def toHTML(self,fname):
         self.tmpl = tempita.Template("""<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Final//EN">
 <html>
@@ -844,11 +884,23 @@ class VerilogParser:
         f=open(fname,"w")
         f.write(self.tmpl.substitute(vars))
         f.close()
+    def _detectFsm(self):
+        self.fsm=False
+        self.fsm_regs=[]
+        for r1 in self.registers:
+            for r2 in self.registers:
+                if r1+"next"==r2:
+                    self.fsm=True
+                    self.fsm_regs.append((r1,r2))
+                    if self.registers[r1]["atributes"]!=self.registers[r2]["atributes"]:
+                        print "Warning! Inconsistent register declaration "
+                        print "  %s -> %s"%(r1,self.registers[r1]["atributes"])
+                        print "  %s -> %s"%(r2,self.registers[r2]["atributes"])
 
     def parseString( self,strng ):
         self.verilog=strng
         self.tokens=self.verilogbnf.parseString( strng )
-
+        self._detectFsm()
         self.toTMR=set()
         for v in self.registers : self.toTMR.add(v)
         for v in self.inputs : self.toTMR.add(v)
@@ -858,8 +910,7 @@ class VerilogParser:
         for v in self.nba : self.toTMR.add(v)
         for v in self.ba : self.toTMR.add(v)
         for v in self.instances : self.toTMR.add(v)
-
-        print self.toTMR
+        #print self.toTMR
         return self.tokens
 
     def printInfo(self):
@@ -873,8 +924,10 @@ class VerilogParser:
 
             #print "%-12s:"%dname
             for k in d:
-                parameter=d[k]
-                tab.add_row([k,parameter, 0])
+                item=d[k]
+                atributes=item["atributes"]
+                tmr=item["tmr"]
+                tab.add_row([k,atributes, tmr])
             tab.padding_width = 1 # One space between column edges and contents (default)
             print tab
 
@@ -897,6 +950,15 @@ class VerilogParser:
         printSet(self.nba,        "Non Blocking")
         printSet(self.ba,         "Blocking")
         printDict(self.instances, "Instantiations")
+        if self.fsm:
+            l=[]
+            for r1,r2 in self.fsm_regs:
+                atrs=""
+                if self.registers[r1]["atributes"]!="":
+                    atrs="(%s)"%self.registers[r1]["atributes"]
+                l.append("%s <- %s %s"%(r1,r2,atrs))
+            printSet(l,   "FSM")
+
     def dtmr(self):
         f=sys.stdout
         def p(s):

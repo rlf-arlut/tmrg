@@ -1,5 +1,8 @@
-Examples
-********
+
+.. _exaple_verilog_formatting:
+
+Examples of Verilog code formatting
+***********************************
 
 Input file
 ----------
@@ -42,7 +45,7 @@ Output file (non triplicated)
 
 .. code-block:: verilog
 
-   // file automaticly generated
+   // file automatically generated
    module tmr(
      in1,
      in2,

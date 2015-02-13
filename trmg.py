@@ -31,6 +31,8 @@ class VerilogFormater:
         for i in tokens:
             oStr+=self.format(i)
         return oStr
+    def _format_lineComment(self,tokens,i=""):
+        return i+"// %s\n"%tokens[0]
 
     def _format_Default(self,tokens,i=""):
         return "default (%s)\n"%(tokens.getName())
@@ -82,6 +84,21 @@ class VerilogFormater:
         ports=tokens[2]
         for port in ports:
             oStr+="%s %s%s;\n"%(label,spec,port[0])
+        return oStr
+
+    def _format_netDecl3(self,tokens,i=""):
+        oStr=""
+        label=str(tokens[0])
+        drives=self.format(tokens[1])
+        spec=self.format(tokens[2])
+        delay=self.format(tokens[3])
+        if drives!="":drives+=" "
+        if spec!="":spec+=" "
+        if delay!="":delay+=" "
+        ports=tokens[4]
+        for port in ports:
+            port_str=self.format(port)
+            oStr+="%s %s%s%s%s;\n"%(label,drives,spec,delay,port_str)
         return oStr
 
     def _format_Range(self,tokens,i=""):
@@ -147,15 +164,27 @@ class VerilogFormater:
 
     def _format_DelimitedList(self,tokens,i=""):
         oStr=""
+        sep=""
 #        print tokens
         for el in tokens:
-            oStr+=self.format(el)
+            oStr+=sep+self.format(el)
+            sep+=", "
+        return oStr
+
+    def _format_DelimitedOrList(self,tokens,i=""):
+        oStr=""
+        sep=""
+        for el in tokens:
+            oStr+=sep+self.format(el)
+            sep+=" or "
         return oStr
 
     def _format_EventTerm(self,tokens,i=""):
         oStr=""
+        sep=""
         for el in tokens:
-            oStr+=self.format(el)+" "
+            oStr+=sep+self.format(el)
+            sep=" "
         return oStr
 
     def _format_if(self,tokens,i=""):
@@ -303,7 +332,6 @@ class VerilogFormater:
 
         oStr="%s = %s%s"%(lvalue,delayOrEventControl,expr)
         return oStr
-
     def _format_driveStrength(self,tokens,i=""):
         oStr=""
         for t in tokens:
@@ -424,54 +452,125 @@ class TMR(VerilogParser):
 
 
     def tmrAlways(self,t):
+        seq=self._isAlwaysSeq(t)
+
         #self.naiveCopy(t)
         #x=cpy[0][0][0][2][0]
         #x[0]="dupa"
         result=ParseResults([])
-        for i in ('A','B','C'):
+        #check if the module needs triplication
+        needsTmr=False
+        for name in self.toTMR:
+            if self.checkIfContains(t,name):
+                needsTmr=True
+                break
+#        print t,needsTmr
+
+        # if we dont need to triplicate we just return input tokens
+        if not needsTmr:
+            return t
+
+        for i in self.EXT:
             cpy=t.deepcopy()
-            if self.checkIfContains(cpy,"rst"):
-                self.replace(cpy,"rst","rst"+i)
+            for name in self.toTMR:
+#                print name
+                if self.checkIfContains(cpy,name):
+                    _to_name=name+i
+
+                    if seq:
+                        state_reg=""
+                        for regName,regNameNext in self.fsm_regs:
+                            if name==regNameNext:
+                                state_reg=regName
+#                        print "state ",state_reg
+                        if state_reg!="":
+                            _to_name=state_reg+"Voted"+i
+#                    print "->",_to_name
+
+                    self.replace(cpy,name,_to_name)
             result+=cpy
         #print "cpy",cpy,len(cpy)
         return result
 
     def tmrNbAssgnmt(self,t):
-        cpy=t.deepcopy()
-        #print cpy
-        #cpy[3]="dupa";
-        for v in self.toTMR:
-        #if self.checkIfContains(cpy,"rst"):
-            self.replace(cpy,v,v+"A")
-        return cpy
+        # cpy=t.deepcopy()
+        # #print cpy
+        # #cpy[3]="dupa";
+        # for v in self.toTMR:
+        # #if self.checkIfContains(cpy,"rst"):
+        #     print "shot!"
+        #     self.replace(cpy,v,v+"A")
+        return t
+
+    def _tmr_list(self,tokens):
+        newtokens=ParseResults([],name=tokens.getName())
+        for element in tokens:
+            if element in self.toTMR:
+                for post in self.EXT:
+                    newtokens.append(element+post)
+            else:
+                newtokens.append(element)
+        return newtokens
 
     def tmrOutput(self,tokens):
+        tokens[0][2]=self._tmr_list(tokens[0][2])
         return tokens
 
     def tmrInput(self,tokens):
-        print tokens
+        tokens[0][2]=self._tmr_list(tokens[0][2])
+        return tokens
 
+    def tmrRegDecl(self,tokens):
+        def tmr_reg_list(tokens):
+            newtokens=ParseResults([],name=tokens.getName())
+            for element in tokens:
+#                print element
+                if element[0] in self.toTMR:
+                    for post in self.EXT:
+                        newtokens2=element.deepcopy()
+                        newtokens2[0]=element[0]+post
+                        newtokens.append(newtokens2)
+                else:
+                    newtokens.append(element)
+            return newtokens
+#        print tokens
+        tokens[0][2]=tmr_reg_list(tokens[0][2])
+#        print tokens
         return tokens
 
     def tmrModule(self,tokens):
         header=tokens[0][0]
-        print header
         header[1][0]=str(header[1][0])+"TMR"
         #print "H!", tokens[0]
         if len(header)>2:
             ports=header[2]
             newports=ParseResults([],name=ports.getName())
             for port in ports:
-                print str(port)
+                triplicated=False
                 for varToTMR in self.toTMR:
                     if self.checkIfContains(port,varToTMR):
                         for ext in self.EXT:
                             cpy=port.deepcopy()
                             self.replace(cpy,varToTMR,varToTMR+ext)
                             newports.append(cpy)
-                        print "bang",cpy
+                        triplicated=True
                         break
+                if not triplicated:
+                    newports.append(port)
+
             header[2]=newports
+        body=tokens[0][1]
+        if self.fsm:
+            for r1,r2 in self.fsm_regs:
+                if r2 in self.toTMR:
+                    a=r2+self.EXT[0]
+                    b=r2+self.EXT[1]
+                    c=r2+self.EXT[2]
+                    for ext in self.EXT:
+                        name_voted="%sVoted%s"%(r1,ext)
+                        comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
+                        body.append(comment)
+                        body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
         return tokens
 
     def tmrTop(self,tokens):
@@ -483,6 +582,7 @@ class TMR(VerilogParser):
         self.verilogbnf.setParseAction(self.tmrTop)
         self.outputDecl.setParseAction(self.tmrOutput)
         self.inputDecl.setParseAction(self.tmrInput)
+        self.regDecl.setParseAction(self.tmrRegDecl)
         tmrt=self.verilogbnf.parseString(self.verilog)
         return tmrt
 
@@ -491,12 +591,13 @@ def main():
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
-    parser.add_option("-t", "--triplicate",       action="store_true", dest="tmr", default=False, help="Triplicate.")
-    parser.add_option("-p", "--parse",            action="store_true", dest="parse", default=True, help="Parse")
-    parser.add_option("-f", "--format",           action="store_true", dest="format", default=True, help="Parse")
-    parser.add_option("-i", "--info",             action="store_true", dest="info",  default=False, help="Info")
+    parser.add_option("-t", "--triplicate",        action="store_true", dest="tmr", default=False, help="Triplicate.")
+    parser.add_option("-p", "--parse",             action="store_true", dest="parse", default=True, help="Parse")
+    parser.add_option("-f", "--format",            action="store_true", dest="format", default=True, help="Parse")
+    parser.add_option("-i", "--info",              action="store_true", dest="info",  default=False, help="Info")
     parser.add_option("-q", "--trace",             action="store_true", dest="trace",  default=False, help="Trace formating")
-
+    parser.add_option("-d", "--do-not-triplicate", action="append", dest="dnt",type="str")
+    parser.add_option("","--spaces",               dest="spaces", default=2, type=int )
 
     try:
         (options, args) = parser.parse_args()
@@ -508,14 +609,16 @@ def main():
             vp=TMR()
             if options.parse or options.tmr or options.format:
                 tokens=vp.parseString(readFile(fname))
+
+            vp.applyDntConstrains(options.dnt)
+
             if options.info:
                 vp.printInfo()
 
             if options.format:
-                #prettyPrint(sys.stdout,tokens)
                 vf=VerilogFormater()
                 vf.setTrace(options.trace)
-                print vf.format(tokens)
+                print vf.format(tokens).replace("\t"," "*options.spaces)
 
             if options.tmr:
                 print "/"+"*"*80
@@ -524,7 +627,7 @@ def main():
                 tmrtokens=vp.triplicate()
                 vf=VerilogFormater()
                 vf.setTrace(options.trace)
-                print vf.format(tmrtokens).replace("\t","  ")
+                print vf.format(tmrtokens).replace("\t"," "*options.spaces)
 
         except ParseException, err:
             print err.line
