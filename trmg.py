@@ -108,7 +108,7 @@ class VerilogFormater:
         return oStr
 
     def _format_Always(self,tokens,i=""):
-        oStr=""
+        oStr="\n"+i
         eventCtrl=self.format(tokens[0])
         stmt=self.format(tokens[1],i+"\t")
         oStr+="always %s\n"%eventCtrl
@@ -158,7 +158,9 @@ class VerilogFormater:
 
     def _format_EventCtrl(self,tokens,i=""):
         oStr=""
+#        print tokens
         for el in tokens[0]:
+#            print el,self.format(el)
             oStr+=self.format(el)
         return oStr
 
@@ -176,7 +178,7 @@ class VerilogFormater:
         sep=""
         for el in tokens:
             oStr+=sep+self.format(el)
-            sep+=" or "
+            sep=" or "
         return oStr
 
     def _format_EventTerm(self,tokens,i=""):
@@ -210,13 +212,21 @@ class VerilogFormater:
 #        print oStr
         return oStr
 
+    def _format_caseItem(self,tokens,i=""):
+        print "caseitem",tokens
+        expr=self.format(tokens[0])
+        stm=self.format(tokens[2],i+"\t")
+        if stm.find("\n")>=0:
+            stm="\n%s%s"%(i+"\t",stm)
+        return "%s : %s"%(expr,stm)
+
     def _format_case(self,tokens,i=""):
 #        print tokens
         label=tokens[0]
         cond=self.format(tokens[1])
         oStr="%s (%s)\n"%(label,cond)
         for t in tokens[2]:
-            oStr+=i+"\t"+self.format(t)+"\n"
+            oStr+=i+"\t"+self.format(t,i+"\t")+"\n"
         oStr+=i+tokens[3]
         return oStr
 
@@ -238,6 +248,10 @@ class VerilogFormater:
 # #             f.write(IS*ident+"else\n")
 #             prettyPrint(f,elseact, ident+1)
         return oStr
+
+    def _format_moduleInstantiation(self,tokens,i=""):
+        print tokens
+        return ""
 
     def _format_Module(self,tokens,i=""):
         header=tokens[0]
@@ -295,7 +309,7 @@ class VerilogFormater:
         return oStr.rstrip()
 
     def _format_paramdecl(self,tokens,i=""):
-#        print tokens
+        print tokens
         oStr=""
         range=self.format(tokens[1])
 #        print tokens[2]
@@ -306,6 +320,9 @@ class VerilogFormater:
             oStr+=self.format(p)+";\n"
 #            print p
         return oStr
+
+    def _format_localparamdecl(self,tokens,i=""):
+        return self._format_paramdecl(tokens)
 
     def _format_delayOrEventControl(self,tokens,i=""):
         oStr=""
@@ -593,7 +610,7 @@ def main():
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
     parser.add_option("-t", "--triplicate",        action="store_true", dest="tmr", default=False, help="Triplicate.")
     parser.add_option("-p", "--parse",             action="store_true", dest="parse", default=True, help="Parse")
-    parser.add_option("-f", "--format",            action="store_true", dest="format", default=True, help="Parse")
+    parser.add_option("-f", "--format",            action="store_true", dest="format", default=False, help="Parse")
     parser.add_option("-i", "--info",              action="store_true", dest="info",  default=False, help="Info")
     parser.add_option("-q", "--trace",             action="store_true", dest="trace",  default=False, help="Trace formating")
     parser.add_option("-d", "--do-not-triplicate", action="append", dest="dnt",type="str")

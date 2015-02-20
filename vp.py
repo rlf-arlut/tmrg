@@ -131,6 +131,7 @@ class VerilogParser:
         self.nba=set()
         self.ba=set()
         self.instances={}
+        self.dnt_from_source=set()
         self.module_name=""
         # compiler directives
         self.compilerDirective = Combine( "`" + \
@@ -289,10 +290,9 @@ class VerilogParser:
         paramAssgnmt = Group( identifier + "=" + self.expr ).setResultsName("paramAssgnmt")
 
 
-        parameterDecl = Group( "parameter" + Group(Optional( range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
+        parameterDecl      = Group( "parameter" + Group(Optional( range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
         parameterDecl.setParseAction(gotParameter)
-        #localParameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setName("paramDecl")
-        #localParameterDecl = ( "parameter" + Optional( range ) + Group(delimitedList( paramAssgnmt )) + self.semi).setName("paramDecl")
+        localParameterDecl = Group("localparam" + Group( Optional( range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
         #localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
@@ -306,7 +306,7 @@ class VerilogParser:
                  start+=1
              atrs=""
              for a in toks[1]:
-                 print str(a)
+#                 print str(a)
                  atrs+=str(a)+" "
              atrs=atrs.rstrip()
              for regnames in toks[-1]:
@@ -358,6 +358,7 @@ class VerilogParser:
 
         blockDecl = (
             parameterDecl |
+            localParameterDecl |
             self.regDecl |
             integerDecl |
             realDecl |
@@ -367,7 +368,7 @@ class VerilogParser:
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
         stmtOrNull = self.stmt | self.semi
-        caseItem = Group( delimitedList( self.expr ) + ":" + stmtOrNull ) | \
+        caseItem = Group( delimitedList( self.expr ) + ":" + stmtOrNull ).setResultsName("caseItem") | \
                    Group( default + Optional(":") + stmtOrNull )
         condition=Group("(" + self.expr + ")").setResultsName("condition")
         self.stmt <<  ( Group( Suppress(begin) +  ZeroOrMore( self.stmt )  + Suppress(end) ).setName("beginend").setResultsName("beginend") | \
@@ -434,6 +435,7 @@ class VerilogParser:
 
         tfDecl = (
             parameterDecl |
+            localParameterDecl |
             self.inputDecl |
             self.outputDecl |
             inoutDecl |
@@ -659,6 +661,7 @@ class VerilogParser:
 
         self.moduleItem = ~Keyword("endmodule") + (
             parameterDecl |
+            localParameterDecl |
             self.inputDecl |
             self.outputDecl |
             inoutDecl |
@@ -779,8 +782,13 @@ class VerilogParser:
 #                raise ParseException("don't match special comments")
 #        cppStyleComment.setParseAction(dontMatchSpecialComments)
 
+        self.do_not_triplicate=( Suppress("do_not_triplicate") + identifier)
         def gotComment(s,l,t):
-            #print t
+#            print t
+            res=self.do_not_triplicate.searchString(t[0])
+            for tokens in  res:
+#                print tokens
+                self.dnt_from_source.add(tokens[0])
             return t
         verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
         verilogbnf.ignore( self.compilerDirective )
@@ -910,6 +918,7 @@ class VerilogParser:
         for v in self.nba : self.toTMR.add(v)
         for v in self.ba : self.toTMR.add(v)
         for v in self.instances : self.toTMR.add(v)
+        self.applyDntConstrains(self.dnt_from_source)
         #print self.toTMR
         return self.tokens
 
