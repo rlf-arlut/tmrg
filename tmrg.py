@@ -665,9 +665,9 @@ class TMR(VerilogParser):
                     for ext in self.EXT:
                         name_voted="%sVoted%s"%(r1,ext)
                         comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
-                        #body.append(comment)
-                        #body.append(self.netDecl1.parseString("wire [1:0] %s;"%(name_voted))[0])
-                        #body.append(self.moduleInstantiation.parseString("module a(.a(a));" )[0]);
+                        body.append(comment)
+                        body.append(self.netDecl1.parseString("wire [1:0] %s;"%(name_voted))[0])
+                        body.append(self.moduleInstantiation.parseString("module a(.a(a));" )[0]);
                        # body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
         return tokens
 
