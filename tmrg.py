@@ -101,6 +101,23 @@ class VerilogFormater:
             oStr+="%s %s%s%s%s;\n"%(label,drives,spec,delay,port_str)
         return oStr
 
+    def _format_netDecl1(self,tokens,i=""):
+        oStr=""
+        print ">",tokens
+        nettype=str(tokens[0])
+        range=self.format(tokens[1])
+        delay=self.format(tokens[2])
+        if range!="":range+=" "
+        if delay!="":delay+=" "
+        ports=tokens[3]
+
+        for port in ports:
+            port_str=self.format(port)
+            print nettype,range,delay,port_str
+            oStr+="%s %s%s%s;\n"%(nettype,range,delay,port_str)
+        return oStr
+
+
     def _format_Range(self,tokens,i=""):
         oStr=""
         for t in tokens:
@@ -230,6 +247,16 @@ class VerilogFormater:
         oStr+=i+tokens[3]
         return oStr
 
+
+    def _format_funcCall(self,tokens,i=""):
+        identifier = tokens[0]
+        oStr="%s("%identifier
+        for expr in tokens[2]:
+            oStr+=self.format(expr,i=i)
+        oStr+=")"
+        return oStr
+
+
     def _format_IfElse(self,tokens,i=""):
         oStr=""
 #        print tokens
@@ -249,9 +276,60 @@ class VerilogFormater:
 #             prettyPrint(f,elseact, ident+1)
         return oStr
 
+    def _format_parameterValueAssignment(self,tokens,i=""):
+        if len(tokens[0])>1:
+            oStr="#(\n"+i
+            sep=""
+            for param in tokens[0]:
+                oStr+=sep+self.format(param)
+                sep=",\n"+i
+            oStr+="\n)\n"
+            return oStr
+        else:
+            oStr="#("
+            oStr+=self.format(tokens[0][0])
+            oStr+=") "
+            return oStr
+
+
+    def _format_moduleInstance(self,tokens,i=""):
+#        moduleInstance = Group( Group ( identifier + Group(Optional(range)) ) + moduleArgs ).setResultsName("moduleInstance")
+        id=self.format(tokens[0][0])
+        range=self.format(tokens[0][1])
+        args=self.format(tokens[1])
+        return "%s %s%s"%(id,range,args);
+
+    def _format_moduleArgs(self,tokens,i=""):
+        i+="\t"
+        oStr="(\n"+i
+        sep=""
+        for t in tokens:
+            oStr+=sep+self.format(t,i)
+            sep=",\n"+i
+        oStr+="\n)"
+        return oStr
+
+    def _format_modulePortConnection(self,tokens,i=""):
+
+        return self.format(tokens[0],i)
+
     def _format_moduleInstantiation(self,tokens,i=""):
-        print tokens
-        return ""
+        ostr=""
+        identifier=self.format(tokens[0])
+        if len(tokens)>2:
+          parameterValueAssignment = self.format(tokens[1],i=i+"\t")
+          modulesList=tokens[2]
+        else:
+          parameterValueAssignment=""
+          modulesList=tokens[1]
+
+        for modIns in modulesList:
+
+              modInsStr=self.format(modIns)
+              print "##########",modIns
+              ostr+="\n%s %s%s;\n"%(identifier,parameterValueAssignment,modInsStr);
+
+        return ostr
 
     def _format_Module(self,tokens,i=""):
         header=tokens[0]
@@ -391,7 +469,7 @@ class VerilogFormater:
     def format(self,tokens,i=""):
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
-            if self.trace: print "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:50])
+            if self.trace: print "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80])
             if len(tokens)==0: return ""
             if name in self.formater:
                 outStr=self.formater[name](tokens,i)
@@ -558,9 +636,9 @@ class TMR(VerilogParser):
     def tmrModule(self,tokens):
         header=tokens[0][0]
         header[1][0]=str(header[1][0])+"TMR"
-        #print "H!", tokens[0]
         if len(header)>2:
             ports=header[2]
+            print ports.getName()
             newports=ParseResults([],name=ports.getName())
             for port in ports:
                 triplicated=False
@@ -574,7 +652,8 @@ class TMR(VerilogParser):
                         break
                 if not triplicated:
                     newports.append(port)
-
+            if self.errorOut:
+                newports.append("tmrError" )
             header[2]=newports
         body=tokens[0][1]
         if self.fsm:
@@ -586,8 +665,10 @@ class TMR(VerilogParser):
                     for ext in self.EXT:
                         name_voted="%sVoted%s"%(r1,ext)
                         comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
-                        body.append(comment)
-                        body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
+                        #body.append(comment)
+                        #body.append(self.netDecl1.parseString("wire [1:0] %s;"%(name_voted))[0])
+                        #body.append(self.moduleInstantiation.parseString("module a(.a(a));" )[0]);
+                       # body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
         return tokens
 
     def tmrTop(self,tokens):

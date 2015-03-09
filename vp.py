@@ -131,6 +131,7 @@ class VerilogParser:
         self.nba=set()
         self.ba=set()
         self.instances={}
+        self.errorOut=False
         self.dnt_from_source=set()
         self.module_name=""
         # compiler directives
@@ -165,11 +166,11 @@ class VerilogParser:
                   ).setName("numeric")
         #~ decnums = nums + "_"
         #~ octnums = "01234567" + "_"
-        self.expr = Forward().setResultsName("expr")
+        self.expr = Forward()
 
         concat = Group( Suppress("{") + delimitedList( self.expr ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
-        funcCall = Group(identifier + "(" + Optional( delimitedList( self.expr ) ) + ")").setName("funcCall")
+        funcCall = Group(identifier + "(" + Group(Optional( delimitedList( self.expr ) )) + ")").setResultsName("funcCall")
 
         subscrRef = Group("[" + delimitedList( self.expr, ":" ) + "]")
         subscrIdentifier = Group( identifier + Optional( subscrRef ) ).setResultsName("subscrIdentifier")
@@ -196,7 +197,7 @@ class VerilogParser:
                 ( primary + "?" + self.expr + ":" + self.expr ) |
                 ( primary + Optional( binop + self.expr ) )
                 )
-
+        self.expr=self.expr.setResultsName("expr")
         lvalue = subscrIdentifier | Group(concat)
 
         # keywords
@@ -453,27 +454,21 @@ class VerilogParser:
             ).setResultsName("functionDecl")
 
         inputOutput = oneOf("input output")
-        netDecl1Arg = ( nettype +
-            Optional( expandRange ) +
-            Optional( delay ) +
-#            Group( delimitedList( ~inputOutput + identifier ) ) )
-            Group( delimitedList( identifier ) ) ).setResultsName("net1")
-        netDecl2Arg = ( "trireg" +
-            Optional( chargeStrength ) +
-            Optional( expandRange ) +
-            Optional( delay ) +
-#            Group( delimitedList( ~inputOutput + identifier ) ) )
-            Group( delimitedList(  identifier ) ) ).setResultsName("net2")
-        netDecl1 = Group(netDecl1Arg + self.semi)
-        netDecl2 = Group(netDecl2Arg + self.semi)
 
-        # self.regDecl = Group( "reg" +
-        #                       Group(Optional("signed") +
-        #                       Optional( range )).setResultsName("range") +
-        #                       Group( delimitedList( regIdentifier )) +
-        #                       Suppress(self.semi)
-        #                     ).setName("regDecl").setResultsName("regDecl")
-        #
+        self.netDecl1 = Group(nettype +
+                              Group(Optional( expandRange )).setResultsName("range") +
+                              Group(Optional( delay )) +
+                              Group( delimitedList( identifier ) ) +
+                              Suppress(self.semi)
+                             ).setResultsName("netDecl1")
+        self.netDecl2 = Group("trireg" +
+                              Group(Optional( chargeStrength )) +
+                              Group(Optional( expandRange )) +
+                              Group(Optional( delay )) +
+                              Group( delimitedList(  identifier ) )+
+                              Suppress(self.semi)
+                              ).setResultsName("netDecl2")
+
         self.netDecl3 = Group(nettype +
                               Group(Optional( driveStrength )) +
                               Group(Optional( expandRange )).setResultsName("range") +
@@ -502,26 +497,36 @@ class VerilogParser:
             delimitedList( udpInstance ) +
             self.semi ).setName("udpInstantiation")#.setParseAction(dumpTokens).setDebug()
 
-        parameterValueAssignment = Group( Literal("#") + "(" + Group( delimitedList( self.expr ) ) + ")" ).setResultsName("parameterValueAssignment")
+        parameterValueAssignment = Group ( Suppress(Literal("#")) +
+                                           Suppress("(") +
+                                           Group( delimitedList( self.expr ) ) +
+                                           Suppress(")")
+                                         ).setResultsName("parameterValueAssignment")
 
         namedPortConnection = Group( "." + identifier + "(" + self.expr + ")" ).setResultsName("namedPortConnection")
-        modulePortConnection = self.expr | empty
-        moduleArgs = Group( "(" + (delimitedList( modulePortConnection ) |
-                    delimitedList( namedPortConnection )) + ")").setName("inst_args").setResultsName("moduleArgs")#.setDebug()
+        modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
+        moduleArgs = Group( Suppress("(") +
+                            (delimitedList( modulePortConnection ) | delimitedList( namedPortConnection )) +
+                            Suppress(")")
+                          ).setResultsName("moduleArgs")#.setDebug()
 
-        parameterValueAssignment = Group( Literal("#") + "(" + Group( delimitedList( self.expr ) ) + ")" ).setResultsName("parameterValueAssignment")
-        namedPortConnection = Group( "." + identifier + "(" + self.expr + ")" ).setResultsName("namedPortConnection")
-        modulePortConnection = namedPortConnection | Group(self.expr).setResultsName("unnamedPortConnection")
-        #~ moduleInstance = Group( Group ( identifier + Optional(range) ) +
-            #~ ( delimitedList( modulePortConnection ) |
-              #~ delimitedList( namedPortConnection ) ) )
-        moduleArgs = Group( "(" + (delimitedList( modulePortConnection ) |
-                    delimitedList( modulePortConnection )) + ")").setName("inst_args").setResultsName("moduleArgs")#.setDebug()
-        moduleInstance = Group( Group ( identifier + Optional(range) ) + moduleArgs ).setResultsName("moduleInstance")
+        #parameterValueAssignment = Group( Literal("#") + "(" + Group( delimitedList( self.expr ) ) + ")" ).setResultsName("parameterValueAssignment")
+        #namedPortConnection = Group( "." + identifier + "(" + self.expr + ")" ).setResultsName("namedPortConnection")
+        #modulePortConnection = namedPortConnection | Group(self.expr).setResultsName("unnamedPortConnection")
 
-        moduleInstantiation = Group( identifier +  Optional( parameterValueAssignment ) +
-                            delimitedList( moduleInstance ).setName("moduleInstanceList").setResultsName("moduleInstantiation") +
-            self.semi ).setName("moduleInstantiation").setResultsName("moduleInstantiation")
+        #moduleArgs = Group( "(" + (delimitedList( modulePortConnection ) |
+                    #delimitedList( modulePortConnection )) + ")").setName("inst_args").setResultsName("moduleArgs")#.setDebug()
+
+        moduleInstance = Group( Group ( identifier +
+                                        Group(Optional(range)).setResultsName("range") ) +
+                                moduleArgs
+                              ).setResultsName("moduleInstance")
+
+        self.moduleInstantiation = Group( identifier +
+                                          Optional( parameterValueAssignment ) +
+                                          Group(delimitedList( moduleInstance )).setResultsName("moduleInstantiation") +
+                                          Suppress(self.semi)
+                                        ).setResultsName("moduleInstantiation")
 
         def gotModuleInstantiation(s,loc,toks):
             toks=toks[0]
@@ -534,7 +539,7 @@ class VerilogParser:
             #self.instances.add(modid)
             #pass
 
-        moduleInstantiation.setParseAction(gotModuleInstantiation)
+        self.moduleInstantiation.setParseAction(gotModuleInstantiation)
         parameterOverride = Group( "defparam" + delimitedList( paramAssgnmt ) + self.semi )
         task = Group( Suppress("task") + identifier + Suppress(self.semi) +
             Group(ZeroOrMore( tfDecl )) +
@@ -667,8 +672,8 @@ class VerilogParser:
             inoutDecl |
             self.regDecl |
             self.netDecl3 |
-            netDecl1 |
-            netDecl2 |
+            self.netDecl1 |
+            self.netDecl2 |
             timeDecl |
             integerDecl |
             realDecl |
@@ -682,7 +687,7 @@ class VerilogParser:
             task |
             functionDecl |
             # these have to be at the end - they start with identifiers
-            moduleInstantiation
+            self.moduleInstantiation
             )
 #            udpInstantiation
 
@@ -892,18 +897,22 @@ class VerilogParser:
         f=open(fname,"w")
         f.write(self.tmpl.substitute(vars))
         f.close()
+
     def _detectFsm(self):
+        print "detect fsm"
         self.fsm=False
         self.fsm_regs=[]
         for r1 in self.registers:
             for r2 in self.registers:
-                if r1+"next"==r2:
+                if r1+"Next"==r2:
                     self.fsm=True
                     self.fsm_regs.append((r1,r2))
                     if self.registers[r1]["atributes"]!=self.registers[r2]["atributes"]:
                         print "Warning! Inconsistent register declaration "
                         print "  %s -> %s"%(r1,self.registers[r1]["atributes"])
                         print "  %s -> %s"%(r2,self.registers[r2]["atributes"])
+        if self.fsm:
+            self.errorOut=1
 
     def parseString( self,strng ):
         self.verilog=strng
