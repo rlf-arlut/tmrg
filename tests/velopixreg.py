@@ -1,7 +1,5 @@
 
-module BunchCounterConfigurationRegister #(
-    parameter int ADDRESS = 'h0CAA
-)
+module BunchCounterConfigurationRegister 
 (
     input clk,
     input [15:0] data_in,
@@ -21,7 +19,7 @@ reg gray_or_bin;
 reg overflow_control;
 reg[11:0] preset_val;
 
-always_ff@(posedge clk or negedge rst_n)
+always @(posedge clk or negedge rst_n)
 if (rst_n == 1'b0) begin
     gray_or_bin      <= 0;
     enable           <= 0;
@@ -39,4 +37,4 @@ if (we) begin
 end
 end
 
-endmodule: BunchCounterConfigurationRegister
+endmodule
