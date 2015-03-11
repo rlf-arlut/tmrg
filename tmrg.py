@@ -103,7 +103,7 @@ class VerilogFormater:
 
     def _format_netDecl1(self,tokens,i=""):
         oStr=""
-        print ">",tokens
+       # print ">",tokens
         nettype=str(tokens[0])
         range=self.format(tokens[1])
         delay=self.format(tokens[2])
@@ -113,12 +113,13 @@ class VerilogFormater:
 
         for port in ports:
             port_str=self.format(port)
-            print nettype,range,delay,port_str
+            #print nettype,range,delay,port_str
             oStr+="%s %s%s%s;\n"%(nettype,range,delay,port_str)
         return oStr
 
 
     def _format_Range(self,tokens,i=""):
+        #print "~~~~~~~~",tokens
         oStr=""
         for t in tokens:
             oStr+=self.format(t)
@@ -131,8 +132,31 @@ class VerilogFormater:
         oStr+="always %s\n"%eventCtrl
         oStr+=i+"\t%s\n"%stmt
         return oStr
+
+    def _format_subscrRef(self,tokens,i=""):
+        if len(tokens)==0:
+            return ""
+        oStr="["
+        sep=""
+        for t in tokens:
+            oStr+=sep+self.format(t,i)
+            sep+=":"
+        oStr+="]"
+        return oStr
+
+    def _format_subscrIndxRef(self,tokens,i=""):
+        if len(tokens)==0:
+            return ""
+        oStr="["
+        for t in tokens:
+            oStr+=self.format(t,i)
+        oStr+="]"
+        return oStr
     def _format_subscrIdentifier(self,tokens,i=""):
-        oStr=tokens[0]
+
+        oStr=""
+        for sid in tokens:
+            oStr+=self.format(sid)
         return oStr
 
     def _format_BeginEnd(self,tokens,i=""):
@@ -230,7 +254,7 @@ class VerilogFormater:
         return oStr
 
     def _format_caseItem(self,tokens,i=""):
-        print "caseitem",tokens
+        #print "caseitem",tokens
         expr=self.format(tokens[0])
         stm=self.format(tokens[2],i+"\t")
         if stm.find("\n")>=0:
@@ -326,7 +350,6 @@ class VerilogFormater:
         for modIns in modulesList:
 
               modInsStr=self.format(modIns)
-              print "##########",modIns
               ostr+="\n%s %s%s;\n"%(identifier,parameterValueAssignment,modInsStr);
 
         return ostr
@@ -387,7 +410,7 @@ class VerilogFormater:
         return oStr.rstrip()
 
     def _format_paramdecl(self,tokens,i=""):
-        print tokens
+#        print tokens
         oStr=""
         range=self.format(tokens[1])
 #        print tokens[2]
@@ -505,9 +528,12 @@ class TMR(VerilogParser):
     def __init__(self):
         VerilogParser.__init__(self)
         self.EXT=('A','B','C')
+        self.tmrErr={}
+        for ext in self.EXT:
+           self.tmrErr[ext]=[]
 
     def _triplicate(self,tokens):
-        print "t",type(tokens),tokens
+#        print "t",type(tokens),tokens
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return tokens
@@ -545,6 +571,23 @@ class TMR(VerilogParser):
                             tokens[i]=_to
         return _replace(tokens,_from,_to)
 
+    def replaceDot(self,tokens,post):
+        def _replace(tokens,post):
+            if isinstance(tokens, ParseResults):
+                for i in range(len(tokens)):
+                    if isinstance(tokens[i], ParseResults):
+                        res=_replace(tokens[i],post)
+                    else:
+                        if tokens[i][0]=='.':
+                            tokens[i]+=post
+        return _replace(tokens,post)
+
+
+    def replaceAll(self,tokens,post):
+        for var in self.toTMR:
+            self.replace(tokens,var,var+post)
+        self.replaceDot(tokens,post)
+        return tokens
 
     def tmrAlways(self,t):
         seq=self._isAlwaysSeq(t)
@@ -607,12 +650,76 @@ class TMR(VerilogParser):
                 newtokens.append(element)
         return newtokens
 
+
+
     def tmrOutput(self,tokens):
         tokens[0][2]=self._tmr_list(tokens[0][2])
         return tokens
 
     def tmrInput(self,tokens):
         tokens[0][2]=self._tmr_list(tokens[0][2])
+        return tokens
+
+    def hasAnythingToTMR(self,tokens):
+        toTMR=0
+        for varToTMR in self.toTMR:
+            if self.checkIfContains(tokens,varToTMR):
+                toTMR=1
+                break
+        return toTMR
+
+
+    def tmrContinuousAssign(self,tokens):
+        dList=tokens[0][2]
+        newtokens=ParseResults([],name=dList.getName())
+        for ca in dList:
+            leftHand=ca[0]
+            if self.hasAnythingToTMR(leftHand):
+               for post in self.EXT:
+#                   print ca
+                   ca2=ca.deepcopy()
+                   for var in self.toTMR:
+#                       print var
+                       self.replace(ca2,var,var+post)
+                   newtokens.append(ca2)
+            else:
+                newtokens.append(ca)
+        tokens[0][2]=newtokens
+        #print "TMR",delimitedList
+        return tokens
+
+    def tmrNetDecl3(self,tokens):
+        def tmr_reg_list(tokens):
+            newtokens=ParseResults([],name=tokens.getName())
+            for element in tokens:
+                if self.hasAnythingToTMR(element):
+                    for post in self.EXT:
+                        element2=element.deepcopy()
+                        for var in self.toTMR:
+                           self.replace(element2,var,var+post)
+                        newtokens.append(element2)
+                else:
+                       newtokens.append(element)
+            return newtokens
+        tokens[0][4]=tmr_reg_list(tokens[0][4])
+#        print tokens
+        return tokens
+
+    def tmrNetDecl1(self,tokens):
+#         def tmr_reg_list(tokens):
+#             newtokens=ParseResults([],name=tokens.getName())
+#             for element in tokens:
+#                 if self.hasAnythingToTMR(element):
+#                     for post in self.EXT:
+#                         element2=element.deepcopy()
+#                         for var in self.toTMR:
+#                            self.replace(element2,var,var+post)
+#                         newtokens.append(element2)
+#                 else:
+#                        newtokens.append(element)
+#             return newtokens
+#         tokens[0][4]=tmr_reg_list(tokens[0][4])
+# #        print tokens
         return tokens
 
     def tmrRegDecl(self,tokens):
@@ -633,12 +740,46 @@ class TMR(VerilogParser):
 #        print tokens
         return tokens
 
+    def tmrModuleInstantiation(self,tokens):
+#        print "\n\n*************"
+        moduleName=tokens[0][0]
+        print moduleName
+        if moduleName=="powerOnReset":# triplicate module
+            newIns=ParseResults([],name=tokens.getName())
+            for inst in tokens:
+                for post in self.EXT:
+                    instCpy=inst.deepcopy()
+                    self.replaceAll(instCpy,post)
+                    newIns.append(instCpy)
+            tokens=newIns
+        else: #triplicate IO
+            tokensIns=ParseResults([],name=tokens[0][2].getName())
+            for instance in tokens[0][2]:
+                    iname=instance[0][0]
+                    instance2=instance.deepcopy()
+                    newPorts=ParseResults([],name=instance2[1].getName())
+                    for port in instance2[1]:
+                        for post in self.EXT:
+                            portCpy=port.deepcopy()
+                            newPorts.append(self.replaceAll(portCpy,post))
+                    if 1:
+                        for post in self.EXT:
+                            netName="%stmrError%s"%(iname,post)
+                            tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
+                            self.tmrErr[post].append(netName)
+                            newPorts.append(tmrErrOut)
+
+                    instance2[1]=newPorts
+                    tokensIns.append(instance2)
+            tokens[0][2]=tokensIns
+        return tokens
+
     def tmrModule(self,tokens):
         header=tokens[0][0]
         header[1][0]=str(header[1][0])+"TMR"
         if len(header)>2:
             ports=header[2]
-            print ports.getName()
+#            print ports.getName()
             newports=ParseResults([],name=ports.getName())
             for port in ports:
                 triplicated=False
@@ -653,23 +794,59 @@ class TMR(VerilogParser):
                 if not triplicated:
                     newports.append(port)
             if self.errorOut:
-                newports.append("tmrError" )
+                newports.append("tmrErrorA" )
+                newports.append("tmrErrorB" )
+                newports.append("tmrErrorC" )
             header[2]=newports
         body=tokens[0][1]
+
         if self.fsm:
             for r1,r2 in self.fsm_regs:
                 if r2 in self.toTMR:
                     a=r2+self.EXT[0]
                     b=r2+self.EXT[1]
                     c=r2+self.EXT[2]
+
+                    atrs=self.registers[r1]["atributes"]
+                    rangeLen=1
+
+                    if len(atrs.strip())>0:
+                        print atrs
+                        prange=self.range.parseString(atrs)
+                        rangeLen=int(prange[1])-int(prange[3] ) +1
                     for ext in self.EXT:
                         name_voted="%sVoted%s"%(r1,ext)
                         comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
-                        body.append(comment)
-                        body.append(self.netDecl1.parseString("wire [1:0] %s;"%(name_voted))[0])
-                        body.append(self.moduleInstantiation.parseString("module a(.a(a));" )[0]);
+                        body.insert(0,comment)
+                        voterInstName="%sVoter%s"%(r1,ext)
+                        netErrorName="%sTmrError%s"%(r1,ext)
+                        body.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
+                        body.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
+
+                        width=""
+                        if rangeLen>1:
+                            width+="#(.WIDTH(%d)) "%rangeLen
+                        body.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                                                                         (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
+
+                        self.tmrErr[ext].append(netErrorName)
+
+        if self.errorOut:
+            for ext in self.EXT:
+                body.insert(0,self.outputDecl.parseString("output tmrError%s;"%ext)[0])
+                sep=""
+                asgnStr="assign tmrError%s="%ext
+                for signal in self.tmrErr[ext]:
+                    asgnStr+=sep+signal
+                    sep="|"
+                asgnStr+=";"
+                #print asgnStr
+                body.append(self.continuousAssign.parseString(asgnStr)[0])
+        print self.errorOut
+        print self.tmrErr
                        # body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
         return tokens
+
 
     def tmrTop(self,tokens):
         return tokens
@@ -681,6 +858,10 @@ class TMR(VerilogParser):
         self.outputDecl.setParseAction(self.tmrOutput)
         self.inputDecl.setParseAction(self.tmrInput)
         self.regDecl.setParseAction(self.tmrRegDecl)
+        self.continuousAssign.setParseAction(self.tmrContinuousAssign)
+        self.netDecl3.setParseAction(self.tmrNetDecl3)
+        self.netDecl1.setParseAction(self.tmrNetDecl1)
+        self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
         tmrt=self.verilogbnf.parseString(self.verilog)
         return tmrt
 

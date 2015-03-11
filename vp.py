@@ -133,7 +133,9 @@ class VerilogParser:
         self.instances={}
         self.errorOut=False
         self.dnt_from_source=set()
+        self.tmr_from_source=set()
         self.module_name=""
+        self.errorOut=1
         # compiler directives
         self.compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
@@ -172,8 +174,19 @@ class VerilogParser:
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
         funcCall = Group(identifier + "(" + Group(Optional( delimitedList( self.expr ) )) + ")").setResultsName("funcCall")
 
-        subscrRef = Group("[" + delimitedList( self.expr, ":" ) + "]")
-        subscrIdentifier = Group( identifier + Optional( subscrRef ) ).setResultsName("subscrIdentifier")
+        subscrRef =      ( Suppress("[") +
+                            (delimitedList( self.expr, ":" ) )  +
+                           Suppress("]")
+                         ).setResultsName("subscrRef")
+
+        subscrIndxRef =      ( Suppress("[") +
+                           (self.expr + oneOf("+ -") +  ":" + self.expr) +
+                           Suppress("]")
+                         ).setResultsName("subscrIndxRef")
+
+        subscrIdentifier = Group( identifier +
+                                  Group( Optional( subscrIndxRef | subscrRef ))
+                                ).setResultsName("subscrIdentifier")
         #~ scalarConst = "0" | (( FollowedBy('1') + oneOf("1'b0 1'b1 1'bx 1'bX 1'B0 1'B1 1'Bx 1'BX 1") ))
         scalarConst = Regex("0|1('[Bb][01xX])?")
         mintypmaxExpr = Group( self.expr + ":" + self.expr + ":" + self.expr ).setName("mintypmax")
@@ -186,7 +199,7 @@ class VerilogParser:
                   dblQuotedString |
                   funcCall |
                   subscrIdentifier
-                  )
+                  ).setResultsName("primary")
 
         unop  = oneOf( "+  -  !  ~  &  ~&  |  ^|  ^  ~^" ).setName("unop")
         binop = oneOf( "+  -  *  /  %  ==  !=  ===  !==  &&  "
@@ -241,7 +254,7 @@ class VerilogParser:
         delayOrEventControl = delay | eventControl
 
         assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
-                             + Group(self.expr) ).setName( "assgnmt" ).setResultsName( "assgnmt" )
+                             + Group(self.expr) ).setResultsName( "assgnmt" )
         def gotAssgnmt(s,loc,toks):
             lhs=toks[0]
 #            print toks
@@ -278,7 +291,7 @@ class VerilogParser:
 
         self.nbAssgnmt.setParseAction(gotNbAssgnmt)
 
-        range = ("[" + self.expr + ":" + self.expr + "]").setResultsName("range")
+        self.range = ("[" + self.expr + ":" + self.expr + "]").setResultsName("range")
 
         def gotParameter(s,loc,toks):
             #for p in toks[1]:
@@ -291,9 +304,9 @@ class VerilogParser:
         paramAssgnmt = Group( identifier + "=" + self.expr ).setResultsName("paramAssgnmt")
 
 
-        parameterDecl      = Group( "parameter" + Group(Optional( range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
+        parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
         parameterDecl.setParseAction(gotParameter)
-        localParameterDecl = Group("localparam" + Group( Optional( range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
+        localParameterDecl = Group("localparam" + Group( Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
         #localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
@@ -317,17 +330,17 @@ class VerilogParser:
                      self.registers[regnames]={"atributes":atrs,"tmr":True}
 
 #             return toks
-        self.inputDecl = Group( "input" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
+        self.inputDecl = Group( "input" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         self.inputDecl.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
-        self.outputDecl = Group( "output" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
+        self.outputDecl = Group( "output" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
         self.outputDecl.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
-        inoutDecl = Group( "inout" + Group(Optional( range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
+        inoutDecl = Group( "inout" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
         inoutDecl.setParseAction(lambda s,loc,toks : gotIO(self.inouts,s,loc,toks))
 
         regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
         self.regDecl = Group( "reg" +
                               Group(Optional("signed") +
-                              Optional( range )).setResultsName("range") +
+                              Optional( self.range )).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
                               Suppress(self.semi)
                             ).setName("regDecl").setResultsName("regDecl")
@@ -352,7 +365,7 @@ class VerilogParser:
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
         nettype = oneOf("wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
-        expandRange = Optional( oneOf("scalared vectored") ) + range
+        expandRange = Optional( oneOf("scalared vectored") ) + self.range
         realDecl = Group( "real" + delimitedList( identifier ) + self.semi )
 
         eventDecl = Group( "event" + delimitedList( identifier ) + self.semi )
@@ -431,7 +444,7 @@ class VerilogParser:
               + Group(Optional( driveStrength )).setResultsName("driveStrength")
               + Group(Optional( delay )).setResultsName("delay")
               + Group(delimitedList( Group(assgnmt) )) + Suppress(self.semi)
-            ).setName("continuousAssign").setResultsName("continuousAssign")#.setDebug()
+            ).setResultsName("continuousAssign")#.setDebug()
 
 
         tfDecl = (
@@ -447,7 +460,7 @@ class VerilogParser:
             ).setResultsName("tfDecl")
 
         functionDecl = Group(
-            "function" + Optional( range | "integer" | "real" ) + identifier + self.semi +
+            "function" + Optional( self.range | "integer" | "real" ) + identifier + self.semi +
             Group( OneOrMore( tfDecl ) ) +
             Group( ZeroOrMore( self.stmt ) ) +
             "endfunction"
@@ -481,7 +494,7 @@ class VerilogParser:
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
                          "pmos rpmos cmos rcmos   tran rtran  tranif0  "
                          "rtranif0  tranif1 rtranif1"  )
-        gateInstance = Optional( Group( identifier + Optional( range ) ) ) + \
+        gateInstance = Optional( Group( identifier + Optional( self.range ) ) ) + \
                         "(" + Group( delimitedList( self.expr ) ) + ")"
         gateDecl = Group( gateType +
             Optional( driveStrength ) +
@@ -489,7 +502,7 @@ class VerilogParser:
             delimitedList( gateInstance) +
             self.semi ).setResultsName("gate")
 
-        udpInstance = Group( Group( identifier + Optional(range | subscrRef) ) +
+        udpInstance = Group( Group( identifier + Optional(self.range | subscrRef) ) +
             "(" + Group( delimitedList( self.expr ) ) + ")" )
         udpInstantiation = Group( identifier -
             Optional( driveStrength ) +
@@ -504,9 +517,9 @@ class VerilogParser:
                                          ).setResultsName("parameterValueAssignment")
 
         namedPortConnection = Group( "." + identifier + "(" + self.expr + ")" ).setResultsName("namedPortConnection")
-        modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
+        self.modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
         moduleArgs = Group( Suppress("(") +
-                            (delimitedList( modulePortConnection ) | delimitedList( namedPortConnection )) +
+                            (delimitedList( self.modulePortConnection ) | delimitedList( namedPortConnection )) +
                             Suppress(")")
                           ).setResultsName("moduleArgs")#.setDebug()
 
@@ -518,12 +531,12 @@ class VerilogParser:
                     #delimitedList( modulePortConnection )) + ")").setName("inst_args").setResultsName("moduleArgs")#.setDebug()
 
         moduleInstance = Group( Group ( identifier +
-                                        Group(Optional(range)).setResultsName("range") ) +
+                                        Group(Optional(self.range)).setResultsName("range") ) +
                                 moduleArgs
                               ).setResultsName("moduleInstance")
 
         self.moduleInstantiation = Group( identifier +
-                                          Optional( parameterValueAssignment ) +
+                                          Group(Optional( parameterValueAssignment )) +
                                           Group(delimitedList( moduleInstance )).setResultsName("moduleInstantiation") +
                                           Suppress(self.semi)
                                         ).setResultsName("moduleInstantiation")
@@ -531,10 +544,11 @@ class VerilogParser:
         def gotModuleInstantiation(s,loc,toks):
             toks=toks[0]
             module=toks[0]
-            instname=toks[1][0][0]
+            instname = toks[2][0][0][0]
 
-            #print modid, modname
+            print "+",instname, module
             self.instances[instname]={"atributes":module,"tmr":True}
+
             #self.G.add_edge(self.module_name,module)
             #self.instances.add(modid)
             #pass
@@ -718,9 +732,9 @@ class VerilogParser:
         port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output")
-        portIn   = Group( "input"  +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
-        portOut  = Group( "output" +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
-        portInOut= Group( "inout"  +  Group(Optional( range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
+        portIn   = Group( "input"  +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
+        portOut  = Group( "output" +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
+        portInOut= Group( "inout"  +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
 
         portIn.setParseAction(lambda s,loc,toks : gotIO(self.inputs,s,loc,toks))
         portOut.setParseAction(lambda s,loc,toks : gotIO(self.outputs,s,loc,toks))
@@ -787,18 +801,24 @@ class VerilogParser:
 #                raise ParseException("don't match special comments")
 #        cppStyleComment.setParseAction(dontMatchSpecialComments)
 
-        self.do_not_triplicate=( Suppress("do_not_triplicate") + identifier)
+        self.directive_do_not_triplicate=( Suppress("do_not_triplicate") + identifier)
+        self.directive_triplicate=( Suppress("triplicate") + identifier)
         def gotComment(s,l,t):
 #            print t
-            res=self.do_not_triplicate.searchString(t[0])
+            res=self.directive_do_not_triplicate.searchString(t[0])
             for tokens in  res:
-#                print tokens
                 self.dnt_from_source.add(tokens[0])
+            res=self.directive_triplicate.searchString(t[0])
+            for tokens in  res:
+                print "+",tokens[0]
+                self.tmr_from_source.add(tokens[0])
+
             return t
         verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
         verilogbnf.ignore( self.compilerDirective )
 
         self.verilogbnf=verilogbnf
+
     def applyDntConstrains(self,labels):
         if labels:
             for l in labels:
@@ -807,6 +827,7 @@ class VerilogParser:
                     self.toTMR.remove(l)
                 else:
                     print "Unknown %s"%l
+
     def checkIfContainsParseResult(self,tokens,name):
         def _check(tokens,name):
             if isinstance(tokens, ParseResults):
@@ -899,7 +920,6 @@ class VerilogParser:
         f.close()
 
     def _detectFsm(self):
-        print "detect fsm"
         self.fsm=False
         self.fsm_regs=[]
         for r1 in self.registers:
@@ -926,9 +946,9 @@ class VerilogParser:
         for v in self.registers : self.toTMR.add(v)
         for v in self.nba : self.toTMR.add(v)
         for v in self.ba : self.toTMR.add(v)
-        for v in self.instances : self.toTMR.add(v)
+        for v in self.instances : self.toTMR.add(v[0])
+        for v in self.tmr_from_source:self.toTMR.add(v)
         self.applyDntConstrains(self.dnt_from_source)
-        #print self.toTMR
         return self.tokens
 
     def printInfo(self):
@@ -942,6 +962,7 @@ class VerilogParser:
 
             #print "%-12s:"%dname
             for k in d:
+                #print k
                 item=d[k]
                 atributes=item["atributes"]
                 tmr=item["tmr"]
@@ -968,6 +989,12 @@ class VerilogParser:
         printSet(self.nba,        "Non Blocking")
         printSet(self.ba,         "Blocking")
         printDict(self.instances, "Instantiations")
+        if 1:
+            print "TMR:"
+            for x in  sorted(self.toTMR):
+                print x,
+            print
+
         if self.fsm:
             l=[]
             for r1,r2 in self.fsm_regs:
