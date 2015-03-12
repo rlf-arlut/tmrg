@@ -706,20 +706,7 @@ class TMR(VerilogParser):
         return tokens
 
     def tmrNetDecl1(self,tokens):
-#         def tmr_reg_list(tokens):
-#             newtokens=ParseResults([],name=tokens.getName())
-#             for element in tokens:
-#                 if self.hasAnythingToTMR(element):
-#                     for post in self.EXT:
-#                         element2=element.deepcopy()
-#                         for var in self.toTMR:
-#                            self.replace(element2,var,var+post)
-#                         newtokens.append(element2)
-#                 else:
-#                        newtokens.append(element)
-#             return newtokens
-#         tokens[0][4]=tmr_reg_list(tokens[0][4])
-# #        print tokens
+        tokens[0][3]=self._tmr_list(tokens[0][3])
         return tokens
 
     def tmrRegDecl(self,tokens):

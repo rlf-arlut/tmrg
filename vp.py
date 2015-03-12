@@ -126,6 +126,7 @@ class VerilogParser:
         self.outputs={}
         self.inouts={}
         self.parameters={}
+        self.nets={}
         self.portList=[]
         self.parametersList=[]
         self.nba=set()
@@ -468,12 +469,23 @@ class VerilogParser:
 
         inputOutput = oneOf("input output")
 
+        def gotNet1(toks):
+            #range=toks[0][1]
+            atrs=""
+            names=toks[0][3]
+            for name in names:
+                self.nets[name]={"atributes":atrs,"tmr":True}
+
+
         self.netDecl1 = Group(nettype +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
                               Group( delimitedList( identifier ) ) +
                               Suppress(self.semi)
                              ).setResultsName("netDecl1")
+
+        self.netDecl1.setParseAction(gotNet1)
+
         self.netDecl2 = Group("trireg" +
                               Group(Optional( chargeStrength )) +
                               Group(Optional( expandRange )) +
@@ -940,6 +952,7 @@ class VerilogParser:
         self._detectFsm()
         self.toTMR=set()
         for v in self.registers : self.toTMR.add(v)
+        for v in self.nets : self.toTMR.add(v)
         for v in self.inputs : self.toTMR.add(v)
         for v in self.outputs : self.toTMR.add(v)
         for v in self.inouts : self.toTMR.add(v)
@@ -982,6 +995,7 @@ class VerilogParser:
             print tab
 
         printDict(self.registers, "Registers")
+        printDict(self.nets, "Nets")
         printDict(self.inputs,    "Inputs")
         printDict(self.outputs,   "Outputs")
         printDict(self.inouts,    "InOuts")
