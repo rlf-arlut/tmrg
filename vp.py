@@ -69,6 +69,7 @@ import sys
 __version__ = "1.0.10"
 
 import functools
+import logging
 
 from pyparsing import *
 import pyparsing
@@ -121,6 +122,7 @@ def delimitedList( expr, delim=",",name="" ):
 class VerilogParser:
     def __init__(self):
         sys.setrecursionlimit(2000)
+        self.logger = logging.getLogger('VP ')
         self.registers={}
         self.inputs={}
         self.outputs={}
@@ -558,7 +560,7 @@ class VerilogParser:
             module=toks[0]
             instname = toks[2][0][0][0]
 
-            print "+",instname, module
+#            print "+",instname, module
             self.instances[instname]={"atributes":module,"tmr":True}
 
             #self.G.add_edge(self.module_name,module)
@@ -572,7 +574,7 @@ class VerilogParser:
             stmtOrNull +
             "endtask" ).setResultsName("task")
         def gotTask(s,l,t):
-            print "taks"
+            #print "taks"
             return t
         task.setParseAction(gotTask)
 
@@ -759,7 +761,8 @@ class VerilogParser:
                                             Suppress(")") )).setResultsName("ports") +
                             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
         def gotModuleHdr(s,loc,toks):
-            self.module_name=toks[0][1]
+            self.module_name=toks[0][1][0]
+#            print ">",self.module_name
             return toks
         moduleHdr.addParseAction(gotModuleHdr)
 
@@ -822,7 +825,7 @@ class VerilogParser:
                 self.dnt_from_source.add(tokens[0])
             res=self.directive_triplicate.searchString(t[0])
             for tokens in  res:
-                print "+",tokens[0]
+#                print "+",tokens[0]
                 self.tmr_from_source.add(tokens[0])
 
             return t
