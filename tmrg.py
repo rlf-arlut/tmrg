@@ -6,7 +6,9 @@ from optparse import *
 from vp import *
 import traceback
 import pprint
-
+import os
+import glob
+import logging
 
 def readFile(fname):
     f=open(fname,"r")
@@ -932,6 +934,17 @@ class TMR(VerilogParser):
         tmrt=self.verilogbnf.parseString(self.verilog)
         return tmrt
 
+def args2files(args):
+    files=[]
+    for name in args:
+        if os.path.isfile(name):
+            files.append(name)
+        elif os.path.isdir(name):
+            for fname in glob.glob("%s/*.v"%name):
+                files.append(fname)
+    return files
+
+
 def main():
     parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
@@ -945,55 +958,56 @@ def main():
     parser.add_option("",   "--single2tmr",        action="store_true", dest="s2t",  default=False, help="Single ended to TMR")
     parser.add_option("-d", "--do-not-triplicate", action="append", dest="dnt",type="str")
     parser.add_option("","--spaces",               dest="spaces", default=2, type=int )
-
+    parser.add_option("","--rtl-dir",              dest="rtldir", default="./rtl")
     #FORMAT = '%(message)s'
     logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.DEBUG)
 
     try:
         (options, args) = parser.parse_args()
-        if len(args)!=1:
-            parser.error("You have to specify filename!")
+        if len(args)==0:
+            args=[options.rtldir]
 
-        fname = args[0]
-        try:
-            vp=TMR()
-            if options.parse or options.tmr or options.format:
-                tokens=vp.parseString(readFile(fname))
+        for fname in args2files(args):
+            try:
+                logging.info("Processing file %s"%fname)
+                vp=TMR()
+                if options.parse or options.tmr or options.format:
+                    tokens=vp.parseString(readFile(fname))
 
-            vp.applyDntConstrains(options.dnt)
+                vp.applyDntConstrains(options.dnt)
 
-            if options.info:
-                vp.printInfo()
+                if options.info:
+                    vp.printInfo()
 
-            if options.format:
-                vf=VerilogFormater()
-                vf.setTrace(options.trace)
-                print vf.format(tokens).replace("\t"," "*options.spaces)
+                if options.format:
+                    vf=VerilogFormater()
+                    vf.setTrace(options.trace)
+                    print vf.format(tokens).replace("\t"," "*options.spaces)
 
-            if options.tmr:
-                tmrtokens=vp.triplicate()
-                vf=VerilogFormater()
-                vf.setTrace(options.trace)
-                print vf.format(tmrtokens).replace("\t"," "*options.spaces)
-            elif options.s2t:
-                tmrtokens=vp.single2tmr()
-                vf=VerilogFormater()
-                vf.setTrace(options.trace)
-                print vf.format(tmrtokens).replace("\t"," "*options.spaces)
+                if options.tmr:
+                    tmrtokens=vp.triplicate()
+                    vf=VerilogFormater()
+                    vf.setTrace(options.trace)
+                    print vf.format(tmrtokens).replace("\t"," "*options.spaces)
+                elif options.s2t:
+                    tmrtokens=vp.single2tmr()
+                    vf=VerilogFormater()
+                    vf.setTrace(options.trace)
+                    print vf.format(tmrtokens).replace("\t"," "*options.spaces)
 
 
-        except ParseException, err:
-            print err.line
-            print " "*(err.column-1) + "^"
-            print err
-            print traceback.format_exc()
-            return
-        except ParseSyntaxException, err:
-            print err.line
-            print " "*(err.column-1) + "^"
-            print err
-            print
-            return
+            except ParseException, err:
+                print err.line
+                print " "*(err.column-1) + "^"
+                print err
+                print traceback.format_exc()
+                return
+            except ParseSyntaxException, err:
+                print err.line
+                print " "*(err.column-1) + "^"
+                print err
+                print
+                return
 
 #            if vp.module_name!="":
 #                vp.toHTML(fname+".html")
