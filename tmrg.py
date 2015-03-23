@@ -956,17 +956,27 @@ def main():
     parser.add_option("-i", "--info",              action="store_true", dest="info",  default=False, help="Info")
     parser.add_option("-q", "--trace",             action="store_true", dest="trace",  default=False, help="Trace formating")
     parser.add_option("",   "--single2tmr",        action="store_true", dest="s2t",  default=False, help="Single ended to TMR")
-    parser.add_option("-d", "--do-not-triplicate", action="append", dest="dnt",type="str")
-    parser.add_option("","--spaces",               dest="spaces", default=2, type=int )
-    parser.add_option("","--rtl-dir",              dest="rtldir", default="./rtl")
+    parser.add_option("-d", "--do-not-triplicate", action="append",     dest="dnt",type="str")
+    parser.add_option("","--spaces",               dest="spaces",       default=2, type=int )
+    parser.add_option("","--rtl-dir",              dest="rtldir",       default="./rtl")
+    parser.add_option("","--tmr-dir",              dest="tmrdir",       default="./tmr")
+    parser.add_option("","--tmr-suffix",           dest="tmrSuffix",    default="TMR")
+    parser.add_option("-v",  "--verbose",          action="store_true", dest="verbose",  default=False, help="More verbose output")
+
     #FORMAT = '%(message)s'
-    logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
 
     try:
         (options, args) = parser.parse_args()
+
+
+        if options.verbose:
+            logging.getLogger().setLevel(logging.DEBUG)
+
         if len(args)==0:
             args=[options.rtldir]
 
+        modules={}
         for fname in args2files(args):
             try:
                 logging.info("Processing file %s"%fname)
@@ -983,34 +993,44 @@ def main():
                     vf=VerilogFormater()
                     vf.setTrace(options.trace)
                     print vf.format(tokens).replace("\t"," "*options.spaces)
-
-                if options.tmr:
-                    tmrtokens=vp.triplicate()
-                    vf=VerilogFormater()
-                    vf.setTrace(options.trace)
-                    print vf.format(tmrtokens).replace("\t"," "*options.spaces)
-                elif options.s2t:
-                    tmrtokens=vp.single2tmr()
-                    vf=VerilogFormater()
-                    vf.setTrace(options.trace)
-                    print vf.format(tmrtokens).replace("\t"," "*options.spaces)
-
-
+                modules[vp.module_name]=vp
             except ParseException, err:
-                print err.line
-                print " "*(err.column-1) + "^"
-                print err
-                print traceback.format_exc()
-                return
-            except ParseSyntaxException, err:
-                print err.line
-                print " "*(err.column-1) + "^"
-                print err
-                print
-                return
+                logging.error("")
+                logging.error(err.line)
+                logging.error( " "*(err.column-1) + "^")
+                logging.error( err)
+                for l in traceback.format_exc().split("\n"):
+                    logging.error(l)
 
-#            if vp.module_name!="":
-#                vp.toHTML(fname+".html")
+        if len(modules)>1:
+            logging.info("Modules found %d"%len(modules))
+
+        if options.tmr:
+            logging.info("Triplciation starts here")
+            vf=VerilogFormater()
+
+            for module_name in modules:
+                vp=modules[module_name]
+                logging.info("Triplicating module '%s'"%module_name)
+                tmrtokens=vp.triplicate()
+                vf.setTrace(options.trace)
+                fout=os.path.join(options.tmrdir,module_name+options.tmrSuffix+".v")
+                if os.path.exists(fout):
+                    foutnew=fout+'.new'
+                    logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
+                    fout=foutnew
+                else:
+                    logging.warning("Saving output to '%s'"%(fout))
+                f=open(fout,"w")
+                f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
+                f.close()
+
+        # elif options.s2t:
+        #     tmrtokens=vp.single2tmr()
+        #     vf=VerilogFormater()
+        #     vf.setTrace(options.trace)
+        #     print vf.format(tmrtokens).replace("\t"," "*options.spaces)
+
     except ValueError:
         raise
 #        G.write('simple.dot')

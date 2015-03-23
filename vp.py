@@ -118,8 +118,14 @@ def delimitedList( expr, delim=",",name="" ):
     """
     return ( (expr) + ZeroOrMore( Suppress(delim) + (expr) ) ).setResultsName("delimitedList")
 
+DESIGN={}
 
 class VerilogParser:
+    def debugInModule(self,s,type=""):
+        if self.current_module:
+            self.logger.debug("%s:%-10s:%s"%(self.current_module["name"],type,s))
+        else:
+            self.logger.warning("No current module in debugInModule")
     def __init__(self):
         sys.setrecursionlimit(2000)
         self.logger = logging.getLogger('VP ')
@@ -139,6 +145,7 @@ class VerilogParser:
         self.tmr_from_source=set()
         self.module_name=""
         self.errorOut=1
+        self.current_module=None
         # compiler directives
         self.compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
@@ -326,11 +333,18 @@ class VerilogParser:
 #                 print str(a)
                  atrs+=str(a)+" "
              atrs=atrs.rstrip()
+             sep=""
+             oStr=""
              for regnames in toks[-1]:
                  resdict[regnames]={"atributes":atrs,"tmr":True}
+                 oStr+=sep+regnames
                  self.portList.append(regnames)
                  if type=='reg':
                      self.registers[regnames]={"atributes":atrs,"tmr":True}
+                 sep=","
+                 if not regnames in  self.current_module["nets"]:
+                     self.current_module["nets"].append(regnames)
+             self.debugInModule(oStr,type=toks[0] )
 
 #             return toks
         self.inputDecl = Group( "input" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
@@ -475,8 +489,12 @@ class VerilogParser:
             #range=toks[0][1]
             atrs=""
             names=toks[0][3]
+
+            self.debugInModule("%s" % (",".join(names)), type="nets")
             for name in names:
                 self.nets[name]={"atributes":atrs,"tmr":True}
+                if not name in  self.current_module["nets"]:
+                     self.current_module["nets"].append(name)
 
 
         self.netDecl1 = Group(nettype +
@@ -557,12 +575,13 @@ class VerilogParser:
 
         def gotModuleInstantiation(s,loc,toks):
             toks=toks[0]
-            module=toks[0]
-            instname = toks[2][0][0][0]
-
+            identifier=toks[0]
+            instance = toks[2][0][0][0]
+            self.debugInModule("'%s' (type:%s)"%(instance,identifier),type="instance")
 #            print "+",instname, module
-            self.instances[instname]={"atributes":module,"tmr":True}
-
+            self.instances[instance]={"atributes":identifier,"tmr":True}
+            self.current_module["instances"].append({"identifier":identifier, "instance":instance})
+            self.current_module["instantiated"]=0
             #self.G.add_edge(self.module_name,module)
             #self.instances.add(modid)
             #pass
@@ -762,14 +781,24 @@ class VerilogParser:
                             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
         def gotModuleHdr(s,loc,toks):
             self.module_name=toks[0][1][0]
+
+            self.current_module={"instances":[],"nets":[],"name":toks[0][1][0]}
+
+            self.debugInModule("New module found")
 #            print ">",self.module_name
             return toks
         moduleHdr.addParseAction(gotModuleHdr)
 
+        def gotEndModule(s,loc,toks):
+            if self.current_module:
+                self.logger.info("Parsed module %s"%self.current_module["name"])
+                DESIGN[self.current_module["name"]]=self.current_module
+        self.endmodule=Keyword("endmodule").setResultsName("endModule").addParseAction(gotEndModule)
+
 
         self.module = Group(  moduleHdr +
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
-                 "endmodule" ).setName("module").setResultsName("module")#.setDebug()
+                 self.endmodule ).setName("module").setResultsName("module")#.setDebug()
 
 
         udpDecl = self.outputDecl | self.inputDecl | self.regDecl
@@ -808,7 +837,7 @@ class VerilogParser:
             "endprimitive" )
 
         #verilogbnf = OneOrMore( self.module | udp ) + StringEnd()
-        verilogbnf = (( self.module | udp ) + StringEnd()).setName("top").setResultsName("top")
+        verilogbnf = (OneOrMore( self.module | udp ) + StringEnd()).setName("top").setResultsName("top")
 
 #        specialComment = '//##' + Word(alphanums) + '##' + Word(alphanums+'.') + "::" + Word(nums)
 #        def dontMatchSpecialComments(tokens):
@@ -943,9 +972,9 @@ class VerilogParser:
                     self.fsm=True
                     self.fsm_regs.append((r1,r2))
                     if self.registers[r1]["atributes"]!=self.registers[r2]["atributes"]:
-                        print "Warning! Inconsistent register declaration "
-                        print "  %s -> %s"%(r1,self.registers[r1]["atributes"])
-                        print "  %s -> %s"%(r2,self.registers[r2]["atributes"])
+                        self.logger.warning( "Warning! Inconsistent register declaration ")
+                        self.logger.warning( "  %s -> %s"%(r1,self.registers[r1]["atributes"]))
+                        self.logger.warning( "  %s -> %s"%(r2,self.registers[r2]["atributes"]))
         if self.fsm:
             self.errorOut=1
 
