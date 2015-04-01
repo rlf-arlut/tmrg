@@ -11,6 +11,7 @@ import glob
 import logging
 from tmrg import VerilogFormater,args2files,readFile,resultLine
 import random
+import re
 
 class SEU(VerilogParser):
     def __init__(self):
@@ -41,7 +42,8 @@ def main():
     parser.add_option("","--spaces",               dest="spaces",       default=2, type=int )
     parser.add_option("","--rtl-dir",              dest="rtldir",       default="./rtl")
     parser.add_option("-v",  "--verbose",          action="store_true", dest="verbose",  default=False, help="More verbose output")
-
+    parser.add_option("-e",   "--exclude",         dest="exlude",       default="", help="Exlude nets from output file")
+    parser.add_option("","--sequences",                dest="sequences",       default=1, type=int )
     #FORMAT = '%(message)s'
     logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
 
@@ -102,16 +104,42 @@ def main():
             return res
         nets=outputNets(topModule,"DUT.")
         logging.info("Found %d nest in the design"%len(nets))
+        if options.exlude!="":
+            logging.info("Exluding nets from '%s'"%options.exlude)
+            f=open(options.exlude,"r")
+            toExlude=[]
+            for l in f.readlines():
+                if len(l.strip())==0: continue
+                if l[0]=="#":continue
+                toExlude.append(l.rstrip())
+            f.close()
+            logging.info("Found %d exluding rules"%len(toExlude))
+            reducedNets=[]
+            for port in sorted(nets):
+                matched=0
+                for pattern in toExlude:
+                    result = re.match(pattern,port)
+                    if result:
+                        logging.debug("Exluding net '%s' because of rule '%s'"%(port,pattern))
+                        matched=1
+                        break
+                if not matched:
+                    reducedNets.append(port)
 
-        # elif options.s2t:
-        #     tmrtokens=vp.single2tmr()
-        #     vf=VerilogFormater()
-        #     vf.setTrace(options.trace)
-        #     print vf.format(tmrtokens).replace("\t"," "*options.spaces)
+            nets=reducedNets
+
+        logging.debug("Nets to be affected by SEU:")
+        l="  "
+        for n in nets:
+            l+=n+" "
+            if len(l)>100:
+                logging.debug(l)
+                l="  "
+        logging.debug(l)
 
         ofile=open("seu.v","w")
-
-        for loop in range(1):
+        seuCnt=0
+        for loop in range(options.sequences):
           added=[]
           while len(added)!=len(nets):
             port=""
@@ -130,12 +158,10 @@ def main():
   #(SEUDEL+nextSEUtime);"""
             s=s.replace("PORT",port)
             ofile.write(s+"\n")
-
-          print
+            seuCnt+=1
+          #print
         ofile.close()
-        for port in sorted(nets):
-            print port
-
+        logging.info("SEU generated : %d"%seuCnt)
         #for port in ports:
         #    s="""always @(DUT.PORT)
         #  $fwrite(f,"PORT %d %d\\n",$time,DUT.PORT);"""
