@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import sys
 from optparse import OptionParser
 import pdb
 import time
@@ -11,7 +11,10 @@ import pyparsing
 
 
 def main():
-    f=open("GBTX_tsmc65.v")
+    if len(sys.argv)<2:
+        print './prog filename'
+        return
+    f=open(sys.argv[1])
     mod=0
     for l in f.readlines():
         if l.find("module")==0:

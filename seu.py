@@ -94,6 +94,7 @@ def main():
         def outputNets(module,prefix=""):
             res=[]
             for net in DESIGN[module]["nets"]:
+                if "[" in  net: net="\\"+net+" "
                 res.append(prefix+net)
             for inst in DESIGN[module]["instances"]:
                 instName=inst['instance']
@@ -125,7 +126,7 @@ def main():
                         break
                 if not matched:
                     reducedNets.append(port)
-
+             
             nets=reducedNets
 
         logging.debug("Nets to be affected by SEU:")
@@ -136,9 +137,30 @@ def main():
                 logging.debug(l)
                 l="  "
         logging.debug(l)
-
+       
         ofile=open("seu.v","w")
-        seuCnt=0
+        seuCnt=1
+        force="""task seu_force_net;
+  input wireid;
+  integer wireid;
+  begin
+  case (wireid)
+"""
+
+        release="""task seu_release_net;
+  input wireid;
+  integer wireid;
+  begin
+  case (wireid)
+"""
+ 
+        display="""task seu_display_net;
+  input wireid;
+  integer wireid;
+  begin
+  case (wireid)
+"""
+       
         for loop in range(options.sequences):
           added=[]
           while len(added)!=len(nets):
@@ -148,19 +170,66 @@ def main():
               if port in added:
                 port=""
             added.append(port)
-            s="""  // PORT
+            
+            s="""  // SEQ PORT
+  nextSEUtime = ($random & 'hffff)*SEUDEL/65536;
+  #(SEUDEL/2+nextSEUtime);
   SEUduration = ($random & 'hffff)*MAX_UPSET_TIME/65536;
   force PORT = ~PORT; // force procedural statement
   seu=1;
   #(SEUduration) release PORT;    // release procedural statement
   seu=0;
-  nextSEUtime = ($random & 'hffff)*MAX_UPSET_TIME/65536;
-  #(SEUDEL+nextSEUtime);"""
+"""
             s=s.replace("PORT",port)
+            s=s.replace("SEQ","%d"%seuCnt)
             ofile.write(s+"\n")
+
+            s="""   SEQ : force PORT = ~PORT; """
+            s=s.replace("PORT",port)
+            s=s.replace("SEQ","%4d"%seuCnt)
+            force+=s+"\n"
+
+            s="""   SEQ : release PORT = ~PORT; """
+            s=s.replace("PORT",port)
+            s=s.replace("SEQ","%4d"%seuCnt)
+            release+=s+"\n"
+
+            s="""   SEQ : $display("PORT"); """
+            s=s.replace("PORT",port)
+            s=s.replace("SEQ","%4d"%seuCnt)
+            display+=s+"\n"
+
+
             seuCnt+=1
           #print
         ofile.close()
+
+        force+="""  endcase
+end
+endtask"""    
+
+        release+="""  endcase
+end
+endtask""" 
+
+        display+="""  endcase
+end
+endtask"""   
+
+        seu_max=""" task seu_display_net;
+  output wireid;
+  integer wireid;
+  begin
+    wireid=SEQ;
+  end
+endtask
+"""
+        seu_max=seu_max.replace("SEQ","%4d"%seuCnt)
+        
+        ofile=open("force.v","w")
+        ofile.write(force+"\n"*3+release+"\n"*3+display+"\n"*3+seu_max)
+        ofile.close()
+
         logging.info("SEU generated : %d"%seuCnt)
         #for port in ports:
         #    s="""always @(DUT.PORT)
