@@ -147,6 +147,7 @@ class VerilogParser:
         self.errorOut=1
         self.current_module=None
         # compiler directives
+        self.EXT=("A","B","C")
         self.compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
                   "include resetall timescale unconnected_drive "
@@ -977,16 +978,30 @@ class VerilogParser:
         if self.fsm:
             self.errorOut=1
 
+    def _detectPost(self):
+        for r1 in self.current_module["nets"].keys():
+            for r2 in sorted(self.ba.union(self.nba)):
+                for post in self.EXT:
+                    if r1+post==r2:
+                        print r1,r2
+                        if r2 in self.toTMR:
+                            self.logger.info("Net %s will not be triplicated"%r2)
+                            self.toTMR.remove(r2)
+
     def _detectAsyncVoting(self):
         self.avoting=False
         self.avoting_nets=[]
-        for r1 in self.ba.union(self.nba):
-            for r2 in self.ba.union(self.nba):
+        #for r1 in self.ba.union(self.nba):
+        #    for r2 in self.ba.union(self.nba):
+        for r1 in self.current_module["nets"].keys():
+            for r2 in sorted(self.ba.union(self.nba)):
                 if r1+"Voted"==r2:
                     self.avoting=True
                     self.avoting_nets.append((r1,r2))
-        if self.fsm:
-            self.errorOut=1
+        if self.avoting:
+            self.logger.info("Asynchronous voting present")
+#        if self.fsm:
+#            self.errorOut=1
 
     def parseString( self,strng ):
         self.verilog=strng
@@ -1004,6 +1019,7 @@ class VerilogParser:
         for v in self.ba : self.toTMR.add(v)
         for v in self.instances : self.toTMR.add(v[0])
         for v in self.tmr_from_source:self.toTMR.add(v)
+        self._detectPost()
         self.applyDntConstrains(self.dnt_from_source)
         return self.tokens
 
@@ -1038,7 +1054,7 @@ class VerilogParser:
             print tab
 
         printDict(self.registers, "Registers")
-        printDict(self.nets, "Nets")
+        printDict(self.nets,      "Nets")
         printDict(self.inputs,    "Inputs")
         printDict(self.outputs,   "Outputs")
         printDict(self.inouts,    "InOuts")
@@ -1051,7 +1067,10 @@ class VerilogParser:
             for x in  sorted(self.toTMR):
                 print x,
             print
-
+            print "NETS:"
+            for x in  sorted(self.current_module["nets"]):
+                print x,
+            print
         if self.fsm:
             l=[]
             for r1,r2 in self.fsm_regs:

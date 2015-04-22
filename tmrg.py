@@ -584,10 +584,11 @@ class TMR(VerilogParser):
         return _replace(tokens,post)
 
 
-    def replaceAll(self,tokens,post):
+    def replaceAll(self,tokens,post,dot=1):
         for var in self.toTMR:
             self.replace(tokens,var,var+post)
-        self.replaceDot(tokens,post)
+        if dot:
+            self.replaceDot(tokens,post)
         return tokens
 
     def tmrAlways(self,t):
@@ -708,14 +709,16 @@ class TMR(VerilogParser):
         left=tokens[0][4][0][0][0]
         right=tokens[0][4][0][2][0][0]
 
-        if left.find("TmrError")>=0:
+        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
+        if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
             self.logger.info("Removing declaration of %s"%(left))
             print tokens
             return ParseResults([],name=tokens.getName())
 
-
+        print left,right,self.avoting_nets
         if self.avoting:
 #            self.logger.info("!!!!!!! %s %s"%(str(self.avoting), str(self.avoting_nets)))
+
             if (right, left) in self.avoting_nets:
                 vote=True
         if vote:
@@ -778,20 +781,25 @@ class TMR(VerilogParser):
         try:
             moduleName=tokens[0][0]
             if moduleName in ("majorityVoter"): return
-            newModuleName=moduleName+"TMR"
-            tokens[0][0]=newModuleName
-            self.tmrlogger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
 
             #print moduleName
             if moduleName in ("powerOnReset","memoryAddrDec"):# triplicate module
                 newIns=ParseResults([],name=tokens.getName())
                 for inst in tokens:
+                    name=inst[2][0][0][0]
                     for post in self.EXT:
+#                        =inst[2][0][0][0]+post
+#                        print inst
                         instCpy=inst.deepcopy()
-                        self.replaceAll(instCpy,post)
+                        instCpy[2][0][0][0]=name+post
+                        self.replaceAll(instCpy[2],post,dot=0)
                         newIns.append(instCpy)
                 tokens=newIns
             else: #triplicate IO
+                newModuleName=moduleName+"TMR"
+                tokens[0][0]=newModuleName
+                self.tmrlogger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
+
                 tokensIns=ParseResults([],name=tokens[0][2].getName())
                 for instance in tokens[0][2]:
                         iname=instance[0][0]
