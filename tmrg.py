@@ -702,7 +702,53 @@ class TMR(VerilogParser):
                 else:
                        newtokens.append(element)
             return newtokens
-        tokens[0][4]=tmr_reg_list(tokens[0][4])
+        vote=False
+
+        #left=tokens[0][4][0][0][0]
+        left=tokens[0][4][0][0][0]
+        right=tokens[0][4][0][2][0][0]
+
+        if left.find("TmrError")>=0:
+            self.logger.info("Removing declaration of %s"%(left))
+            print tokens
+            return ParseResults([],name=tokens.getName())
+
+
+        if self.avoting:
+#            self.logger.info("!!!!!!! %s %s"%(str(self.avoting), str(self.avoting_nets)))
+            if (right, left) in self.avoting_nets:
+                vote=True
+        if vote:
+              self.logger.info("Asynchronous voting %s -> %s"%(right,left))
+              newtokens=ParseResults([],name=tokens.getName())
+
+              a=right+self.EXT[0]
+              b=right+self.EXT[1]
+              c=right+self.EXT[2]
+
+              for ext in self.EXT:
+                            atrs="" #temproray FIXME
+                            rangeLen=1 #temproray FIXME
+                            name_voted="%s%s"%(left,ext)
+                            comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
+                            newtokens.insert(0,comment)
+                            voterInstName="%sVoter%s"%(right,ext)
+                            netErrorName="%sTmrError%s"%(right,ext)
+                            newtokens.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
+                            newtokens.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
+
+                            width=""
+                            if rangeLen>1:
+                                width+="#(.WIDTH(%d)) "%rangeLen
+                            newtokens.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                                                                             (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
+                            self.tmrErr[ext].append(netErrorName)
+
+              tokens=newtokens
+
+        else:
+            tokens[0][4]=tmr_reg_list(tokens[0][4])
+
 #        print tokens
         return tokens
 

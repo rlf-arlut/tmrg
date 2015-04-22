@@ -336,6 +336,7 @@ class VerilogParser:
              sep=""
              oStr=""
              for regnames in toks[-1]:
+                 self.debugInModule("gotIO: %s"%(regnames))
                  resdict[regnames]={"atributes":atrs,"tmr":True}
                  oStr+=sep+regnames
                  self.portList.append(regnames)
@@ -344,7 +345,6 @@ class VerilogParser:
                  sep=","
                  if not regnames in  self.current_module["nets"]:
                      self.current_module["nets"].append(regnames)
-             self.debugInModule(oStr,type=toks[0] )
 
 #             return toks
         self.inputDecl = Group( "input" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
@@ -978,10 +978,22 @@ class VerilogParser:
         if self.fsm:
             self.errorOut=1
 
+    def _detectAsyncVoting(self):
+        self.avoting=False
+        self.avoting_nets=[]
+        for r1 in self.ba.union(self.nba):
+            for r2 in self.ba.union(self.nba):
+                if r1+"Voted"==r2:
+                    self.avoting=True
+                    self.avoting_nets.append((r1,r2))
+        if self.fsm:
+            self.errorOut=1
+
     def parseString( self,strng ):
         self.verilog=strng
         self.tokens=self.verilogbnf.parseString( strng )
         self._detectFsm()
+        self._detectAsyncVoting()
         self.toTMR=set()
         for v in self.registers : self.toTMR.add(v)
         for v in self.nets : self.toTMR.add(v)
