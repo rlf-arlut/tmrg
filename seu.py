@@ -94,8 +94,21 @@ def main():
         def outputNets(module,prefix=""):
             res=[]
             for net in DESIGN[module]["nets"]:
+                atr=DESIGN[module]["nets"][net]["atributes"]
                 if "[" in  net: net="\\"+net+" "
-                res.append(prefix+net)
+
+                if atr!="": 
+  #                print net,atr
+                  #work around
+                  nn=atr.split()
+                  i1= int(nn[1])
+                  i2= int(nn[3])
+                  mmin = min ( (i1,i2) )
+                  mmax = max ( (i1,i2) )
+                  for i in range(mmin,mmax+1):
+                    res.append(prefix+net+"[%d]"%i)
+                else:                    
+                  res.append(prefix+net)
             for inst in DESIGN[module]["instances"]:
                 instName=inst['instance']
                 if "[" in  instName: instName="\\"+instName+" "
@@ -121,7 +134,7 @@ def main():
                 for pattern in toExlude:
                     result = re.match(pattern,port)
                     if result:
-                        logging.debug("Exluding net '%s' because of rule '%s'"%(port,pattern))
+                        logging.info("Exluding net '%s' because of rule '%s'"%(port,pattern))
                         matched=1
                         break
                 if not matched:
@@ -138,7 +151,7 @@ def main():
                 l="  "
         logging.debug(l)
        
-        ofile=open("seu.v","w")
+        ofile=open("seuOld.v","w")
         seuCnt=1
         force="""task seu_force_net;
   input wireid;
@@ -189,7 +202,7 @@ def main():
             s=s.replace("SEQ","%4d"%seuCnt)
             force+=s+"\n"
 
-            s="""   SEQ : release PORT = ~PORT; """
+            s="""   SEQ : release PORT; """
             s=s.replace("PORT",port)
             s=s.replace("SEQ","%4d"%seuCnt)
             release+=s+"\n"
@@ -216,7 +229,7 @@ endtask"""
 end
 endtask"""   
 
-        seu_max=""" task seu_display_net;
+        seu_max=""" task seu_max_net;
   output wireid;
   integer wireid;
   begin
@@ -226,7 +239,7 @@ endtask
 """
         seu_max=seu_max.replace("SEQ","%4d"%seuCnt)
         
-        ofile=open("force.v","w")
+        ofile=open("seu.v","w")
         ofile.write(force+"\n"*3+release+"\n"*3+display+"\n"*3+seu_max)
         ofile.close()
 

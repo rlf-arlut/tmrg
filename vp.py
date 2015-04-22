@@ -344,7 +344,7 @@ class VerilogParser:
                      self.registers[regnames]={"atributes":atrs,"tmr":True}
                  sep=","
                  if not regnames in  self.current_module["nets"]:
-                     self.current_module["nets"].append(regnames)
+                     self.current_module["nets"][regnames]={"atributes":atrs}
 
 #             return toks
         self.inputDecl = Group( "input" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
@@ -494,8 +494,7 @@ class VerilogParser:
             for name in names:
                 self.nets[name]={"atributes":atrs,"tmr":True}
                 if not name in  self.current_module["nets"]:
-                     self.current_module["nets"].append(name)
-
+                     self.current_module["nets"][name]={"atributes":atrs}
 
         self.netDecl1 = Group(nettype +
                               Group(Optional( expandRange )).setResultsName("range") +
@@ -782,7 +781,7 @@ class VerilogParser:
         def gotModuleHdr(s,loc,toks):
             self.module_name=toks[0][1][0]
 
-            self.current_module={"instances":[],"nets":[],"name":toks[0][1][0]}
+            self.current_module={"instances":[],"nets":{},"name":toks[0][1][0]}
 
             self.debugInModule("New module found")
 #            print ">",self.module_name
