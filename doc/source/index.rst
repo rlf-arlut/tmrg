@@ -1,3 +1,6 @@
+Triple Modular Redundancy Generator
+###################################
+
 This website describes the **Triple Modular Redundancy Generator** tool.
 
 .. note:: Before you start reading further, you should understand the purpose of the tool. 
@@ -13,9 +16,12 @@ Content:
    :maxdepth: 2
 
    general_assumptions
+   installation
+   getting_started
    triplication
    implementation
    verification
-   synthesis_tests
-   examples
+
+..   synthesis_tests
+..   examples
 
