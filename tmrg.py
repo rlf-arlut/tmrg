@@ -9,6 +9,7 @@ import pprint
 import os
 import glob
 import logging
+from verilogFormater import VerilogFormater
 
 def readFile(fname):
     f=open(fname,"r")
@@ -25,512 +26,13 @@ def resultLine(tokens,sep=""):
         s+=tokens
     return s
 
-class VerilogFormater:
-    formater={}
-    def setTrace(self,t):
-        self.trace=t
-    def _format_Top(self,tokens,i=""):
-        oStr="// file automaticly generated\n"
-        for i in tokens:
-            oStr+=self.format(i)
-        return oStr
-    def _format_lineComment(self,tokens,i=""):
-        return i+"// %s\n"%tokens[0]
-
-    def _format_Default(self,tokens,i=""):
-        return "default (%s)\n"%(tokens.getName())
-
-    def _format_Id(self,tokens,i=""):
-        oStr=str(tokens[0])
-        return oStr
-    def _formatIo(self,tokens,i=""):
-        oStr=""
-        label=str(tokens[0])
-        spec=self.format(tokens[1])
-        if spec!="":spec+=" "
-        ports=tokens[2]
-        for port in ports:
-            oStr+="%s %s%s;\n"%(label,spec,port)
-        return oStr
-
-    def _format_Input(self,tokens,i=""):
-        return self._formatIo(tokens)
-
-    def _format_InOut(self,tokens,i=""):
-        return self._formatIo(tokens)
-
-    def _format_Output(self,tokens,i=""):
-        return self._formatIo(tokens)
-
-    def _formatIoHdr(self,tokens,i=""):
-        oStr=""
-        label=str(tokens[0])
-        spec=self.format(tokens[1])
-        ports=tokens[2]
-        for port in ports:
-            oStr+="%s %s %s"%(label,spec,port)
-        return oStr
-
-
-    def _format_inputhdr(self,tokens,i=""):
-        return self._formatIoHdr(tokens)
-    def _format_outputhdr(self,tokens,i=""):
-        return self._formatIoHdr(tokens)
-    def _format_inouthdr(self,tokens,i=""):
-        return self._formatIoHdr(tokens)
-
-    def _format_RegDecl(self,tokens,i=""):
-        oStr=""
-        label=str(tokens[0])
-        spec=self.format(tokens[1])
-        if spec!="":spec+=" "
-        ports=tokens[2]
-        for port in ports:
-            oStr+="%s %s%s;\n"%(label,spec,port[0])
-        return oStr
-
-    def _format_netDecl3(self,tokens,i=""):
-        oStr=""
-        label=str(tokens[0])
-        drives=self.format(tokens[1])
-        spec=self.format(tokens[2])
-        delay=self.format(tokens[3])
-        if drives!="":drives+=" "
-        if spec!="":spec+=" "
-        if delay!="":delay+=" "
-        ports=tokens[4]
-        for port in ports:
-            port_str=self.format(port)
-            oStr+="%s %s%s%s%s;\n"%(label,drives,spec,delay,port_str)
-        return oStr
-
-    def _format_netDecl1(self,tokens,i=""):
-        oStr=""
-       # print ">",tokens
-        nettype=str(tokens[0])
-        range=self.format(tokens[1])
-        delay=self.format(tokens[2])
-        if range!="":range+=" "
-        if delay!="":delay+=" "
-        ports=tokens[3]
-
-        for port in ports:
-            port_str=self.format(port)
-            #print nettype,range,delay,port_str
-            oStr+="%s %s%s%s;\n"%(nettype,range,delay,port_str)
-        return oStr
-
-
-    def _format_Range(self,tokens,i=""):
-        #print "~~~~~~~~",tokens
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t)
-        return oStr
-
-    def _format_Always(self,tokens,i=""):
-        oStr="\n"+i
-        eventCtrl=self.format(tokens[0])
-        stmt=self.format(tokens[1],i+"\t")
-        oStr+="always %s\n"%eventCtrl
-        oStr+=i+"\t%s\n"%stmt
-        return oStr
-
-    def _format_subscrRef(self,tokens,i=""):
-        if len(tokens)==0:
-            return ""
-        oStr="["
-        sep=""
-        for t in tokens:
-            oStr+=sep+self.format(t,i)
-            sep+=":"
-        oStr+="]"
-        return oStr
-
-    def _format_subscrIndxRef(self,tokens,i=""):
-        if len(tokens)==0:
-            return ""
-        oStr="["
-        for t in tokens:
-            oStr+=self.format(t,i)
-        oStr+="]"
-        return oStr
-    def _format_subscrIdentifier(self,tokens,i=""):
-
-        oStr=""
-        for sid in tokens:
-            oStr+=self.format(sid)
-        return oStr
-
-    def _format_BeginEnd(self,tokens,i=""):
-        oStr="begin\n"
-        for stmt in tokens:
-            oStr+=i+"\t"+self.format(stmt,i+"\t")+"\n"
-        oStr+=i+"end"
-        return oStr
-    def _format_taskEnable(self,tokens,i=""):
-        oStr=""
-        id=tokens[0]
-        oStr="%s"%id
-        if len(tokens[1]):
-            oStr+="("
-            sep=""
-            for v in tokens[1]:
-                oStr+=sep+self.format(v,i)
-                sep=", "
-            oStr+=")"
-        oStr+=";"
-        return oStr
-
-    def _format_delayStm(self,tokens,i=""):
-        oStr=""
-        delay=self.format(tokens[0])
-        stm=self.format(tokens[1])
-        oStr+="%s %s"%(delay,stm)
-        return oStr
-
-    def _format_task(self,tokens,i=""):
-#        print "task tokens",tokens
-        tid=self.format(tokens[0])
-        oStr="task %s;\n"%tid
-        for tfDecl in tokens[1]:
-            oStr+="\t"+self.format(tfDecl,i+"\t")
-        stmt = tokens[2]
-        oStr+="\t"+self.format(stmt,i+"\t")+"\n"
-        oStr+="endtask\n"
-        return oStr
-
-    def _format_EventCtrl(self,tokens,i=""):
-        oStr=""
-#        print tokens
-        for el in tokens[0]:
-#            print el,self.format(el)
-            oStr+=self.format(el)
-        return oStr
-
-    def _format_DelimitedList(self,tokens,i=""):
-        oStr=""
-        sep=""
-#        print tokens
-        for el in tokens:
-            oStr+=sep+self.format(el)
-            sep+=", "
-        return oStr
-
-    def _format_DelimitedOrList(self,tokens,i=""):
-        oStr=""
-        sep=""
-        for el in tokens:
-            oStr+=sep+self.format(el)
-            sep=" or "
-        return oStr
-
-    def _format_EventTerm(self,tokens,i=""):
-        oStr=""
-        sep=""
-        for el in tokens:
-            oStr+=sep+self.format(el)
-            sep=" "
-        return oStr
-
-    def _format_if(self,tokens,i=""):
-        oStr=""
-#        print tokens
-        if len(tokens)==1:
-            stm=tokens[0]
-        else:
-            stm=tokens
-        cond=stm[1]
-        ifAction=stm[2]
-        oStr+="if %s\n"%self.format(cond)
-        oStr+=i+"\t%s"%self.format(ifAction,i+"\t")
-        return oStr
-
-    def _format_concat(self,tokens,i=""):
-        oStr="{"
-        sep=""
-        for t in tokens:
-            oStr+=sep+self.format(t)
-            sep=","
-        oStr+="}"
-#        print oStr
-        return oStr
-
-    def _format_caseItem(self,tokens,i=""):
-        #print "caseitem",tokens
-        expr=self.format(tokens[0])
-        stm=self.format(tokens[2],i+"\t")
-        if stm.find("\n")>=0:
-            stm="\n%s%s"%(i+"\t",stm)
-        return "%s : %s"%(expr,stm)
-
-    def _format_case(self,tokens,i=""):
-#        print tokens
-        label=tokens[0]
-        cond=self.format(tokens[1])
-        oStr="%s (%s)\n"%(label,cond)
-        for t in tokens[2]:
-            oStr+=i+"\t"+self.format(t,i+"\t")+"\n"
-        oStr+=i+tokens[3]
-        return oStr
-
-
-    def _format_funcCall(self,tokens,i=""):
-        identifier = tokens[0]
-        oStr="%s("%identifier
-        for expr in tokens[2]:
-            oStr+=self.format(expr,i=i)
-        oStr+=")"
-        return oStr
-
-
-    def _format_IfElse(self,tokens,i=""):
-        oStr=""
-#        print tokens
-        if len(tokens)==1:
-            stm=tokens[0]
-        else:
-            stm=tokens
-        cond=stm[1]
-        ifAction=stm[2]
-        elseAction=stm[4]
-        oStr+="if %s\n"%self.format(cond)
-        oStr+=i+"\t%s\n"%self.format(ifAction,i+"\t")
-        oStr+=i+"else\n"
-        oStr+=i+"\t%s"%self.format(elseAction,i+"\t")
-# #             prettyPrint(f,ifact, ident+1)
-# #             f.write(IS*ident+"else\n")
-#             prettyPrint(f,elseact, ident+1)
-        return oStr
-
-    def _format_parameterValueAssignment(self,tokens,i=""):
-        if len(tokens[0])>1:
-            oStr="#(\n"+i
-            sep=""
-            for param in tokens[0]:
-                oStr+=sep+self.format(param)
-                sep=",\n"+i
-            oStr+="\n)\n"
-            return oStr
-        else:
-            oStr="#("
-            oStr+=self.format(tokens[0][0])
-            oStr+=") "
-            return oStr
-
-    def _format_primary(self,tokens,i=""):
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t,i="")
-        return oStr
-    def _format_moduleInstance(self,tokens,i=""):
-#        moduleInstance = Group( Group ( identifier + Group(Optional(range)) ) + moduleArgs ).setResultsName("moduleInstance")
-        id=self.format(tokens[0][0])
-        range=self.format(tokens[0][1])
-        args=self.format(tokens[1])
-        return "%s %s%s"%(id,range,args);
-
-    def _format_moduleArgs(self,tokens,i=""):
-        i+="\t"
-        oStr="(\n"+i
-        sep=""
-        for t in tokens:
-            oStr+=sep+self.format(t,i)
-            sep=",\n"+i
-        oStr+="\n)"
-        return oStr
-
-    def _format_modulePortConnection(self,tokens,i=""):
-
-        return self.format(tokens[0],i)
-
-    def _format_moduleInstantiation(self,tokens,i=""):
-        ostr=""
-        identifier=self.format(tokens[0])
-        if len(tokens)>2:
-          parameterValueAssignment = self.format(tokens[1],i=i+"\t")
-          modulesList=tokens[2]
-        else:
-          parameterValueAssignment=""
-          modulesList=tokens[1]
-
-        for modIns in modulesList:
-
-              modInsStr=self.format(modIns)
-              ostr+="\n%s %s%s;\n"%(identifier,parameterValueAssignment,modInsStr);
-
-        return ostr
-
-    def _format_Module(self,tokens,i=""):
-        header=tokens[0]
-        modname=header[1][0]
-        oStr="module %s"%modname
-        sep=""
-        if len(header)>2:
-            ports=header[2]
-            oStr+="(\n"
-            for port in ports:
-                oStr+=sep+"\t"+self.format(port)
-                sep=",\n"
-            oStr+="\n)"
-        oStr+=";\n"
-
-        moduleBody=tokens[1]
-        for moduleItem in moduleBody:
-            oStr+=self.format(moduleItem)
-        oStr+="endmodule\n"
-        return oStr
-
-
-    def _format_NbAssgnmt(self,tokens,i=""):
-        #tokens=tokens[0]
-        lval=self.format(tokens[0])
-        delay=self.format(tokens[2])
-        if delay!="": delay+=" "
-        expr=self.format(tokens[3])
-        oStr="%s <= %s%s;"%(lval,delay,expr)
-
-        return oStr
-
-    def _format_Expr(self,tokens,i=""):
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t)
-        return oStr
-
-    def _format_Delay(self,tokens,i=""):
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t)
-        return oStr
-    
-    def _format_Condition(self,tokens,i=""):
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t)
-        return oStr
-
-    def _format_paramAssgnmt(self,tokens,i=""):
-        id=self.format(tokens[0])
-        val=self.format(tokens[2])
-        oStr="%s=%s"%(id,val)
-        return oStr.rstrip()
-
-    def _format_paramdecl(self,tokens,i=""):
-#        print tokens
-        oStr=""
-        range=self.format(tokens[1])
-#        print tokens[2]
-        for p in tokens[2]:
-            oStr+=tokens[0]+" "
-            if range:
-                oStr+="%s "%range
-            oStr+=self.format(p)+";\n"
-#            print p
-        return oStr
-
-    def _format_localparamdecl(self,tokens,i=""):
-        return self._format_paramdecl(tokens)
-
-    def _format_delayOrEventControl(self,tokens,i=""):
-        oStr=""
-#        print tokens
-        return oStr
-
-    def _format_integerDecl(self,tokens,i=""):
-        oStr=""
-        label=tokens[0]
-        for var in tokens[1]:
-            oStr+="%s %s;\n"%(label,self.format(var))
-        return oStr
-
-    def _format_assgnmtStm(self,tokens,i=""):
-        oStr=self.format(tokens[0])+";"
-        return oStr
-
-    def _format_assgnmt(self,tokens,i=""):
-        oStr=""
-#        print "!!!!!!!",len(tokens),tokens
-        lvalue=self.format(tokens[0])
-        delayOrEventControl=self.format(tokens[1])+" "
-        expr=self.format(tokens[2])
-
-        oStr="%s = %s%s"%(lvalue,delayOrEventControl,expr)
-        return oStr
-    def _format_driveStrength(self,tokens,i=""):
-        oStr=""
-        for t in tokens:
-            oStr+=self.format(t)
-        return oStr
-
-    def _format_continuousAssign(self,tokens,i=""):
-        oStr=""
-        driveStrength = self.format(tokens[0])
-        if driveStrength:driveStrength+=" "
-        delay = self.format(tokens[1])
-        if delay:delay+=" "
-        for asg in tokens[2]:
-            asg_str=self.format(asg)
-            oStr+="assign %s%s%s;\n"%(driveStrength,delay,asg_str)
-        return oStr
-
-    def _format_net3(self,tokens,i=""):
-        oStr=""
-#        print tokens
-        return oStr
-
-    def _format_initialStmt(self,tokens,i=""):
-        oStr="initial\n\t%s\n"%self.format(tokens[1],i+"\t")
-        return oStr
-
-    def _format_gate(self,tokens,i=""):
-        oStr=""
- #       print tokens
-        return oStr
-
-    def __init__(self):
-        #scan class looking for formater functions
-        for member in dir(self):
-            if member.find("_format_")==0:
-                token=member[len("_format_"):].lower()
-                self.formater[token]=getattr(self,member)
-        self.trace=False
-
-    def format(self,tokens,i=""):
-        if isinstance(tokens, ParseResults):
-            name=str(tokens.getName()).lower()
-            if self.trace: print "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80])
-            if len(tokens)==0: return ""
-            if name in self.formater:
-                outStr=self.formater[name](tokens,i)
-            else:
-                outStr=self.formater["default"](tokens,i)
-        else:
-            outStr=tokens
-        return outStr
-
-def prettyPrint(f,tokens, ident = 0):
-    IS="  "
-
-    def formInputOutput(f,tokens, ident = 0,label="input"):
-            spec=""
-            if len(tokens)>2:
-                spec=resultLine(tokens[1]).rstrip()
-                ports=tokens[2]
-            else:
-                ports=tokens[1];
-            for port in ports:
-                f.write(IS*ident+"%s %s %s;\n"%(label,spec,port))
-
-
 
 class TMR(VerilogParser):
     def __init__(self):
         VerilogParser.__init__(self)
         self.EXT=('A','B','C')
-        self.tmrErr={}
-        for ext in self.EXT:
-           self.tmrErr[ext]=[]
+        self.voters={}
+        self.fanout={}
         self.tmrlogger = logging.getLogger('TMR')
 
     def _triplicate(self,tokens):
@@ -591,23 +93,93 @@ class TMR(VerilogParser):
             self.replaceDot(tokens,post)
         return tokens
 
+
+    def getLeftRightHandSide(self,t,res=None):
+        #print "getLeftRightHandSide", res, t
+        if res==None: res={"left":set(),"right":set()}
+
+        def _extractID(t,res=None):
+            if res==None: res=set()
+            if isinstance(t, ParseResults):
+               name=str(t.getName()).lower()
+               if name=="subscridentifier":
+                   res.add(t[0])
+               else:
+                   for i in range(len(t)):
+                       res=_extractID(t[i],res=res)
+            return res
+#        print "#",type(t),t
+        if isinstance(t, ParseResults):
+            name=str(t.getName()).lower()
+#            print name, len(t), t
+            if len(t)==0: return res
+            if name in ("assgnmt", "nbassgnmt"):
+                left_id=t[0][0]
+                res["left"].add(left_id)
+                #print   _extractID(t[2])
+                res["right"].update( _extractID(t[2]))
+            elif name == "subscridentifier":
+                res["right"].add( t[0] )
+            else:
+                for i in range(len(t)):
+#                    print "#(%d)>"%i,t[i]
+                    res=self.getLeftRightHandSide(t[i],res=res)
+
+        return res
+
+
+    def checkIfTmrNeeded(self,t):
+        res=self.getLeftRightHandSide(t)
+        leftTMR=False
+        leftNoTMR=False
+
+        for i in res["left"]:
+            if i in self.toTMR:
+                leftTMR=True
+            else:
+                leftNoTMR=True
+        if leftTMR and leftNoTMR:
+            self.logger.error("Block contains both type of elements (should and should not be triplicated!). ")
+            self.logger.error("This request will not be properly processed!")
+            self.logger.error("Elements: %s"%(" ".join(sorted(res["left"]))))
+            return False
+        return leftTMR
+
     def tmrAlways(self,t):
         seq=self._isAlwaysSeq(t)
-
-        #self.naiveCopy(t)
-        #x=cpy[0][0][0][2][0]
-        #x[0]="dupa"
         result=ParseResults([])
         #check if the module needs triplication
-        needsTmr=False
-        for name in self.toTMR:
-            if self.checkIfContains(t,name):
-                needsTmr=True
-                break
-#        print t,needsTmr
+        #print t,self.checkIfTmrNeeded(t)
+        tmr=self.checkIfTmrNeeded(t)
+        ids=self.getLeftRightHandSide(t)
 
-        # if we dont need to triplicate we just return input tokens
-        if not needsTmr:
+        self.logger.debug("[Always block]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+        if not tmr:
+            for rid in ids["right"]:
+                if rid in self.toTMR:
+                    group=""
+                    if group in self.voters and rid in self.voters[group]:
+                        continue
+                    self.logger.debug("      voter needed for sigbak %s"%rid)
+
+                    voterInstName="%sVoter"%(rid)
+                    name_voted="%s"%(rid)
+                    netErrorName="%sTmrError"%(rid)
+                    a=rid+self.EXT[0]
+                    b=rid+self.EXT[1]
+                    c=rid+self.EXT[2]
+                    self._addVoter(inst=voterInstName,
+                                     inA=a,
+                                     inB=b,
+                                     inC=c,
+                                     out=name_voted,
+                                     tmrError=netErrorName,
+                                     range=self.properties["nets"][rid]["range"],
+                                     len=self.properties["nets"][rid]["len"],
+                                     group=group)
             return t
 
         for i in self.EXT:
@@ -617,16 +189,16 @@ class TMR(VerilogParser):
                 if self.checkIfContains(cpy,name):
                     _to_name=name+i
 
-                    if seq:
-                        state_reg=""
-                        for regName,regNameNext in self.fsm_regs:
-                            if name==regNameNext:
-                                state_reg=regName
-#                        print "state ",state_reg
-                        if state_reg!="":
-                            _to_name=state_reg+"Voted"+i
-#                    print "->",_to_name
-
+#                     if seq:
+#                         state_reg=""
+#                         for regName,regNameNext in self.fsm_regs:
+#                             if name==regNameNext:
+#                                 state_reg=regName
+# #                        print "state ",state_reg
+#                         if state_reg!="":
+#                             _to_name=state_reg+"Voted"+i
+# #                    print "->",_to_name
+#
                     self.replace(cpy,name,_to_name)
             result+=cpy
         #print "cpy",cpy,len(cpy)
@@ -658,7 +230,7 @@ class TMR(VerilogParser):
         return tokens
 
     def tmrInput(self,tokens):
-        self.tmrlogger.debug("Input %s"%str(tokens[0][2]))
+        self.tmrlogger.debug("input %s"%str(tokens[0][2]))
         tokens[0][2]=self._tmr_list(tokens[0][2])
         return tokens
 
@@ -690,6 +262,40 @@ class TMR(VerilogParser):
         #print "TMR",delimitedList
         return tokens
 
+    def _addFanout(self,inst,_in,outA,outB,outC,out,range="",len="1"):
+        if not inst in self.fanout:
+            self.logger.debug("Adding fanout %s"%inst)
+            self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
+            self.fanout[inst]={"in":_in,
+                               "outA":outA,
+                               "outB":outB,
+                               "outC":outC,
+                               "range":range,
+                               "len":len}
+#        else:
+#            self.logger.error("Unable to add fanout %s (name already exists)"%inst)
+#            self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
+
+    def _addVoter(self,inst,inA,inB,inC,out,tmrError,range="",len="1",group=""):
+        if not group in self.voters:
+            self.voters[group]={}
+            self.logger.info("Creating TMR error group %s"%group)
+        if not inst in self.voters[group]:
+            self.logger.debug("Adding voter %s"%inst)
+            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
+            self.voters[group][inst]={"inA":inA,
+                               "inB":inB,
+                               "inC":inC,
+                               "out":out,
+                               "err":tmrError,
+                               "range":range,
+                               "len":len,
+                               "group":group}
+#        else:
+#            self.logger.error("Unable to add volter %s (name already exists)"%inst)
+#            self.logger.error("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
+
+
     def tmrNetDecl3(self,tokens):
         def tmr_reg_list(tokens):
             newtokens=ParseResults([],name=tokens.getName())
@@ -712,40 +318,53 @@ class TMR(VerilogParser):
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
         if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
             self.logger.info("Removing declaration of %s"%(left))
-            print tokens
+#            print tokens
             return ParseResults([],name=tokens.getName())
 
-        print left,right,self.avoting_nets
-        if self.avoting:
+#        print left,right, self.voting_nets
+        if len(self.voting_nets):
 #            self.logger.info("!!!!!!! %s %s"%(str(self.avoting), str(self.avoting_nets)))
 
-            if (right, left) in self.avoting_nets:
+            if (right, left) in self.voting_nets:
                 vote=True
+
         if vote:
-              self.logger.info("Asynchronous voting %s -> %s"%(right,left))
+              self.logger.info("TMR voting %s -> %s"%(right,left))
               newtokens=ParseResults([],name=tokens.getName())
 
               a=right+self.EXT[0]
               b=right+self.EXT[1]
               c=right+self.EXT[2]
-
               for ext in self.EXT:
-                            atrs="" #temproray FIXME
-                            rangeLen=1 #temproray FIXME
-                            name_voted="%s%s"%(left,ext)
-                            comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
-                            newtokens.insert(0,comment)
-                            voterInstName="%sVoter%s"%(right,ext)
-                            netErrorName="%sTmrError%s"%(right,ext)
-                            newtokens.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
-                            newtokens.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
+                  voterInstName="%sVoter%s"%(right,ext)
+                  name_voted="%s%s"%(left,ext)
+                  netErrorName="%sTmrError%s"%(right,ext)
+#                  print self.properties["nets"][right]
+                  self._addVoter(inst=voterInstName,
+                                 inA=a,
+                                 inB=b,
+                                 inC=c,
+                                 out=name_voted,
+                                 tmrError=netErrorName,
+                                 range=self.properties["nets"][right]["range"],
+                                 len=self.properties["nets"][right]["len"],
+                                 group=ext)
 
-                            width=""
-                            if rangeLen>1:
-                                width+="#(.WIDTH(%d)) "%rangeLen
-                            newtokens.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
-                                                                             (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
-                            self.tmrErr[ext].append(netErrorName)
+#                    atrs="" #temproray FIXME
+#                    rangeLen=1 #temproray FIXME
+#                     name_voted="%s%s"%(left,ext)
+#                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
+#                     newtokens.insert(0,comment)
+#                     voterInstName="%sVoter%s"%(right,ext)
+#
+#                     newtokens.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
+#                     newtokens.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
+
+#                    width=""
+#                    if rangeLen>1:
+#                        width+="#(.WIDTH(%d)) "%rangeLen
+#                    newtokens.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+#                                                                     (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
 
               tokens=newtokens
 
@@ -822,6 +441,7 @@ class TMR(VerilogParser):
             return tokens
         except:
             self.exc()
+
     def exc(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
         self.tmrlogger.error("")
@@ -829,6 +449,7 @@ class TMR(VerilogParser):
         for l in traceback.format_tb(exc_traceback):
             for ll in l.split("\n"):
               self.tmrlogger.error(ll)
+
     def tmrModule(self,tokens):
         try:
             header=tokens[0][0]
@@ -850,14 +471,13 @@ class TMR(VerilogParser):
                             break
                     if not triplicated:
                         newports.append(port)
-                if self.errorOut:
-                    newports.append("tmrErrorA" )
-                    newports.append("tmrErrorB" )
-                    newports.append("tmrErrorC" )
+                if self.constraints["tmr_error"]:
+                    for group in self.voters:
+                        newports.append("tmrError%s"%group )
                 header[2]=newports
             body=tokens[0][1]
 
-            if self.fsm:
+            if 0 and self.fsm:
                 for r1,r2 in self.fsm_regs:
                     if r2 in self.toTMR:
                         a=r2+self.EXT[0]
@@ -889,31 +509,61 @@ class TMR(VerilogParser):
 
                             self.tmrErr[ext].append(netErrorName)
 
-            if self.errorOut:
-                for ext in self.EXT:
-                    if len(self.tmrErr[ext]):
-                        body.insert(0,self.outputDecl.parseString("output tmrError%s;"%ext)[0])
-                        sep=""
-                        asgnStr="assign tmrError%s="%ext
-                        for signal in self.tmrErr[ext]:
-                            asgnStr+=sep+signal
-                            sep="|"
-                        asgnStr+=";"
-                        #self.tmrlogger.debug(asgnStr)
-                        body.append(self.continuousAssign.parseString(asgnStr)[0])
-            #print self.errorOut
-            #print self.tmrErr
-                           # body.append(self.netDecl3.parseString("wire [1:0] %s = (%s&%s) | (%s&%s) | (%s&%s);"%(name_voted,a,b,b,c,a,c))[0])
+
+            for group in sorted(self.voters):
+                errSignals=[]
+                for voter in self.voters[group]:
+                    inst=voter
+                    voter=self.voters[group][voter]
+    #                print voter
+                    self.logger.info("Instializaing voter %s"%inst)
+                    _range=voter["range"]
+                    _len=voter["len"]
+                    _out=voter["out"]
+                    _err=voter["err"]
+                    _a=voter["inA"]
+                    _b=voter["inB"]
+                    _c=voter["inC"]
+    #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
+    #                   newtokens.insert(0,comment)
+    #                   voterInstName="%sVoter%s"%(right,ext)
+
+                    body.insert(0,self.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+                    body.insert(0,self.netDecl1.parseString("wire %s;"%(_err))[0])
+
+                    width=""
+                    if _len!="1":
+                        width+="#(.WIDTH(%s)) "%_len
+                    body.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                                                                       (width,inst,_a,_b,_c,_out,_err) )[0]);
+                    errSignals.append(_err)
+
+                body.insert(0,self.netDecl1.parseString("wire tmrError%s;"%group)[0])
+                #after all voters are added, we can create or them all
+                if self.constraints["tmr_error"]:
+                    body.insert(0,self.outputDecl.parseString("output tmrError%s;"%group)[0])
+
+                sep=""
+                asgnStr="assign tmrError%s="%group
+                if len(errSignals):
+                    for signal in errSignals:
+                        asgnStr+=sep+signal
+                        sep="|"
+                else:
+                    asgnStr+="1'b0"
+                asgnStr+=";"
+                body.append(self.continuousAssign.parseString(asgnStr)[0])
             return tokens
         except:
             self.exc()
 
 
-
-
     def tmrTop(self,tokens):
         return tokens
+
     def triplicate(self):
+        self.properties=self.current_module
+
         self.alwaysStmt.setParseAction( self.tmrAlways )
         self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
         self.module.setParseAction(self.tmrModule)
@@ -1047,7 +697,9 @@ def main():
                     vf=VerilogFormater()
                     vf.setTrace(options.trace)
                     print vf.format(tokens).replace("\t"," "*options.spaces)
+
                 modules[vp.module_name]=vp
+
             except ParseException, err:
                 logging.error("")
                 logging.error(err.line)

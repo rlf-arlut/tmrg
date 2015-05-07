@@ -70,9 +70,11 @@ __version__ = "1.0.10"
 
 import functools
 import logging
+import textwrap
 
 from pyparsing import *
 import pyparsing
+
 usePackrat = True
 usePsyco = False
 
@@ -80,7 +82,7 @@ import glob
 
 
 from prettytable import PrettyTable
-
+from verilogFormater import VerilogFormater
 
 packratOn = False
 psycoOn = False
@@ -128,6 +130,7 @@ class VerilogParser:
             self.logger.warning("No current module in debugInModule")
     def __init__(self):
         sys.setrecursionlimit(2000)
+        self.formater=VerilogFormater()
         self.logger = logging.getLogger('VP ')
         self.registers={}
         self.inputs={}
@@ -140,11 +143,9 @@ class VerilogParser:
         self.nba=set()
         self.ba=set()
         self.instances={}
-        self.errorOut=False
         self.dnt_from_source=set()
         self.tmr_from_source=set()
         self.module_name=""
-        self.errorOut=1
         self.current_module=None
         # compiler directives
         self.EXT=("A","B","C")
@@ -159,6 +160,7 @@ class VerilogParser:
         self.lpar = Literal("(")
         self.rpar = Literal(")")
         self.equals = Literal("=")
+        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":False}
 
         identLead = alphas+"$_"
         identBody = alphanums+"$_"
@@ -282,8 +284,8 @@ class VerilogParser:
 #            print self.ba
             return toks
         assgnmt.setParseAction(gotAssgnmt)
-        self.nbAssgnmt = (( lvalue + "<=" + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
-                     ( lvalue + "<=" + Group(Optional( eventControl)).setResultsName("eventCtrl")
+        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
+                     ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl")
                        + Group(self.expr) )).setResultsName( "nbassgnmt" )
         def gotNbAssgnmt(s,loc,toks):
             lhs=toks[0]
@@ -302,7 +304,21 @@ class VerilogParser:
 
         self.nbAssgnmt.setParseAction(gotNbAssgnmt)
 
-        self.range = ("[" + self.expr + ":" + self.expr + "]").setResultsName("range")
+        def _getLenStr(toks):
+            rangeLen="1"
+            if len(toks)<2:
+                return rangeLen
+            left=toks[-2]
+            right=toks[-1]
+            rangeLen="%s - %s + 1"%(self.formater.format(left), self.formater.format(right))
+            try:
+                rangeInt=eval(rangeLen)
+                rangeLen="%d"%rangeInt
+            except:
+                pass
+            return rangeLen
+
+        self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
 
         def gotParameter(s,loc,toks):
             #for p in toks[1]:
@@ -321,31 +337,38 @@ class VerilogParser:
         #localParameterDecl.setParseAction(gotParameter)
 
         def gotIO(resdict,s,loc,toks):
-             #print type(toks), dir(toks)
+
              toks=toks[0]
-             #print toks
-             start=1
+             _dir=toks[0]
+             _atrs=""
+             _range=self.formater.format(toks[1])
+             _len=_getLenStr(toks[1])
+
+             if _len!="1":
+                 details="(range:%s len:%s)"%(_range,_len)
+             else:
+                 details=""
+
+
+#             start=1
              _type=""
-             if toks[start] in ('reg','wire'):
-                 _type=toks[start]
-                 start+=1
-             atrs=""
-             for a in toks[1]:
+#             if toks[start] in ('reg','wire'):
+#                 _type=toks[start]
+#                 start+=1
+#             atrs=""
+#             for a in toks[1]:
 #                 print str(a)
-                 atrs+=str(a)+" "
-             atrs=atrs.rstrip()
-             sep=""
-             oStr=""
-             for regnames in toks[-1]:
-                 self.debugInModule("gotIO: %s"%(regnames))
-                 resdict[regnames]={"atributes":atrs,"tmr":True}
-                 oStr+=sep+regnames
-                 self.portList.append(regnames)
-                 if type=='reg':
-                     self.registers[regnames]={"atributes":atrs,"tmr":True}
-                 sep=","
-                 if not regnames in  self.current_module["nets"]:
-                     self.current_module["nets"][regnames]={"atributes":atrs}
+#                 atrs+=str(a)+" "
+#             atrs=atrs.rstrip()
+
+             for name in toks[-1]:
+                 self.debugInModule("gotIO: %s %s"%(name,details),type=_dir)
+                 resdict[name]={"atributes":_atrs,"tmr":True,"range":_range, "len":_len }
+                 self.portList.append(name)
+#                 if type=='reg':
+#                     self.registers[name]={"atributes":_atrs,"tmr":True}
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len }
 
 #             return toks
         self.inputDecl = Group( "input" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
@@ -357,21 +380,30 @@ class VerilogParser:
 
         regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
         self.regDecl = Group( "reg" +
-                              Group(Optional("signed") +
-                              Optional( self.range )).setResultsName("range") +
+                              Group(Optional("signed")) +
+                              Group(Optional( self.range)).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
                               Suppress(self.semi)
                             ).setName("regDecl").setResultsName("regDecl")
         def gotReg(s,loc,toks):
-            toks=toks[0] #self.registers
-            atrs=""
-            for a in toks[1]:
-                atrs+=str(a)+" "
-            atrs=atrs.rstrip()
-            for regnames in toks[-1]:
-                self.registers[regnames[0]]={"atributes":atrs,"tmr":True} ## co z opcjami ?
 
-#            return toks
+            toks=toks[0] #self.registers
+            _atrs=""
+            _range=self.formater.format(toks[1])
+            _len=_getLenStr(toks[1])
+
+            if _len!="1":
+                details="(range:%s len:%s)"%(_range,_len)
+            else:
+                details=""
+            for reg in toks[-1]:
+                 name=reg[0]
+                 self.registers[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
+
+                 self.debugInModule("gotReg: %s %s" % (name,details), type="regs")
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len }
+
 
         self.regDecl.setParseAction(gotReg)
 
@@ -383,7 +415,7 @@ class VerilogParser:
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
         nettype = oneOf("wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
-        expandRange = Optional( oneOf("scalared vectored") ) + self.range
+        expandRange = Group(Optional( oneOf("scalared vectored") )) + self.range
         realDecl = Group( "real" + delimitedList( identifier ) + self.semi )
 
         eventDecl = Group( "event" + delimitedList( identifier ) + self.semi )
@@ -487,15 +519,21 @@ class VerilogParser:
         inputOutput = oneOf("input output")
 
         def gotNet1(toks):
-            #range=toks[0][1]
-            atrs=""
-            names=toks[0][3]
+            toks=toks[0]
 
-            self.debugInModule("%s" % (",".join(names)), type="nets")
-            for name in names:
-                self.nets[name]={"atributes":atrs,"tmr":True}
+            _atrs=""
+            _range=self.formater.format(toks[1])
+            _len=_getLenStr(toks[1])
+
+            for name in toks[3]:
+                self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
+                if _len!="1":
+                    details="(range:%s len:%s)"%(_range,_len)
+                else:
+                    details=""
+                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
                 if not name in  self.current_module["nets"]:
-                     self.current_module["nets"][name]={"atributes":atrs}
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len}
 
         self.netDecl1 = Group(nettype +
                               Group(Optional( expandRange )).setResultsName("range") +
@@ -514,6 +552,24 @@ class VerilogParser:
                               Suppress(self.semi)
                               ).setResultsName("netDecl2")
 
+
+        def gotNet3(s,l,toks):
+            toks=toks[0]
+            _atrs=""
+            _range=self.formater.format(toks[2])
+            _len=_getLenStr(toks[2])
+
+            for assgmng in toks[4]:
+                name=assgmng[0][0]
+                self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
+                if _len!="1":
+                    details="(range:%s len:%s)"%(_range,_len)
+                else:
+                    details=""
+                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
+                if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len }
+
         self.netDecl3 = Group(nettype +
                               Group(Optional( driveStrength )) +
                               Group(Optional( expandRange )).setResultsName("range") +
@@ -521,6 +577,7 @@ class VerilogParser:
                               Group( delimitedList( Group(assgnmt) ) ) +
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
+        self.netDecl3.setParseAction(gotNet3)
 
         gateType = oneOf("and  nand  or  nor xor  xnor buf  bufif0 bufif1 "
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
@@ -844,20 +901,48 @@ class VerilogParser:
 #            if tokens[0] == specialComment:
 #                raise ParseException("don't match special comments")
 #        cppStyleComment.setParseAction(dontMatchSpecialComments)
+        tmrg=Suppress("tmrg")
 
-        self.directive_do_not_triplicate=( Suppress("do_not_triplicate") + identifier)
-        self.directive_triplicate=( Suppress("triplicate") + identifier)
+        self.directive_doNotTriplicate  =( tmrg + Suppress("do_not_triplicate") + OneOrMore(identifier)                ).setResultsName("directive_do_not_triplicate")
+        self.directive_triplicate       =( tmrg + Suppress("triplicate")        + OneOrMore(identifier)                ).setResultsName("directive_triplicate")
+        self.directive_default          =( tmrg + Suppress("default")           + oneOf("triplicate do_not_triplicate")).setResultsName("directive_default")
+        self.directive_tmr_error        =( tmrg + Suppress("tmr_error")         + oneOf("true false")                  ).setResultsName("directive_tmr_error")
+
+        self.directiveItem =  ( self.directive_triplicate |
+                                self.directive_doNotTriplicate |
+                                self.directive_default |
+                                self.directive_tmr_error
+                                )
+
+
         def gotComment(s,l,t):
-#            print t
-            res=self.directive_do_not_triplicate.searchString(t[0])
-            for tokens in  res:
-                self.dnt_from_source.add(tokens[0])
-            res=self.directive_triplicate.searchString(t[0])
-            for tokens in  res:
+            #res=self.directive_do_not_triplicate.searchString(t[0])
+            #for tokens in  res:
+            #    self.dnt_from_source.add(tokens[0])
+            #res=self.directive_triplicate.searchString(t[0])
+            #for tokens in  res:
 #                print "+",tokens[0]
-                self.tmr_from_source.add(tokens[0])
+            #    self.tmr_from_source.add(tokens[0])
+            #print s,l,t
+            res=self.directiveItem.searchString(t[0])
+            for tokens in  res:
+                constraint=tokens.getName()[len("directive_"):]
+                if constraint in ("triplicate","do_not_triplicate"):
+                    for token in tokens:
+                        self.constraints[constraint].add(token)
+                elif constraint=="default":
+                    if tokens[0]=="triplicate":
+                        self.constraints["default"]=True
+                    else:
+                        self.constraints["default"]=False
+                elif constraint=="tmr_error":
+                    if tokens[0]=="true":
+                        self.constraints["tmr_error"]=True
+                    else:
+                        self.constraints["tmr_error"]=False
 
-            return t
+
+#           return t
         verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
         verilogbnf.ignore( self.compilerDirective )
 
@@ -988,57 +1073,88 @@ class VerilogParser:
                             self.logger.info("Net %s will not be triplicated"%r2)
                             self.toTMR.remove(r2)
 
-    def _detectAsyncVoting(self):
-        self.avoting=False
-        self.avoting_nets=[]
+    def _detectVoting(self):
+        self.voting_nets=[]
         #for r1 in self.ba.union(self.nba):
         #    for r2 in self.ba.union(self.nba):
         for r1 in self.current_module["nets"].keys():
             for r2 in sorted(self.ba.union(self.nba)):
                 if r1+"Voted"==r2:
-                    self.avoting=True
-                    self.avoting_nets.append((r1,r2))
-        if self.avoting:
-            self.logger.info("Asynchronous voting present")
+                    self.voting_nets.append((r1,r2))
+        if len(self.voting_nets):
+            self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 #        if self.fsm:
 #            self.errorOut=1
+
+    def applyConstraints(self):
+        self.logger.debug("Applying constraints")
+        wrapper = textwrap.TextWrapper(width=80)
+        self.logger.debug("  Default          : %s"%("triplicate" if self.constraints["default"] else "do_not_triplicate"))
+        wrapper.initial_indent   ="  Triplicate       : "
+        wrapper.subsequent_indent=" "*4
+        map( self.logger.debug,  wrapper.wrap(" ".join(sorted(self.constraints["triplicate"]))))
+        wrapper.initial_indent   ="  Do not triplicate: "
+        map( self.logger.debug,  wrapper.wrap(" ".join(sorted(self.constraints["do_not_triplicate"]))))
+
+        self.toTMR=set()
+        self.ids=set()
+        for v in self.registers : self.ids.add(v)
+        for v in self.nets : self.ids.add(v)
+        for v in self.inputs : self.ids.add(v)
+        for v in self.outputs : self.ids.add(v)
+        for v in self.inouts : self.ids.add(v)
+        for v in self.registers : self.ids.add(v)
+        for v in self.nba : self.ids.add(v)
+        for v in self.ba : self.ids.add(v)
+        for v in self.instances : self.ids.add(v[0])
+        #for v in self.tmr_from_source:self.ids.add(v)
+
+        wrapper.initial_indent   ="  IDs found        : "
+        map( self.logger.debug,  wrapper.wrap(" ".join(sorted(self.ids))))
+
+        if self.constraints["default"] : #triplicate
+            for i in self.ids:
+                if i not in self.constraints["do_not_triplicate"]:
+                    self.toTMR.add(i)
+        else: # do not triplicate by default
+            for i in self.constraints["triplicate"]:
+                if i in self.ids:
+                    self.toTMR.add(i)
+                else:
+                    self.logger.warning("Unable to apply constrain for '%s' as it has not been found in the design."%i)
+
+        wrapper.initial_indent   ="  IDs to TMR       : "
+        map( self.logger.debug,  wrapper.wrap(" ".join(sorted(self.toTMR))))
+
+
+        self.applyDntConstrains(self.dnt_from_source)
+
 
     def parseString( self,strng ):
         self.verilog=strng
         self.tokens=self.verilogbnf.parseString( strng )
-        self._detectFsm()
-        self._detectAsyncVoting()
-        self.toTMR=set()
-        for v in self.registers : self.toTMR.add(v)
-        for v in self.nets : self.toTMR.add(v)
-        for v in self.inputs : self.toTMR.add(v)
-        for v in self.outputs : self.toTMR.add(v)
-        for v in self.inouts : self.toTMR.add(v)
-        for v in self.registers : self.toTMR.add(v)
-        for v in self.nba : self.toTMR.add(v)
-        for v in self.ba : self.toTMR.add(v)
-        for v in self.instances : self.toTMR.add(v[0])
-        for v in self.tmr_from_source:self.toTMR.add(v)
+        #self._detectFsm()
+        self._detectVoting()
+        self.applyConstraints()
         self._detectPost()
-        self.applyDntConstrains(self.dnt_from_source)
         return self.tokens
 
     def printInfo(self):
         def printDict(d,dname=""):
             if len(d)==0: return
-            tab = PrettyTable([dname, "type", "tmr"])
+            tab = PrettyTable([dname, "range", "tmr"])
             tab.min_width[dname]=50;
-            tab.min_width["type"]=20;
+            tab.min_width["range"]=20;
             tab.min_width["tmr"]=10;
             tab.align[dname] = "l" # Left align city names
 
             #print "%-12s:"%dname
             for k in d:
-                #print k
                 item=d[k]
-                atributes=item["atributes"]
+#                print k,item
+                range=item["range"]
                 tmr=item["tmr"]
-                tab.add_row([k,atributes, tmr])
+                tab.add_row([k,range, tmr])
             tab.padding_width = 1 # One space between column edges and contents (default)
             print tab
 
@@ -1071,98 +1187,16 @@ class VerilogParser:
             for x in  sorted(self.current_module["nets"]):
                 print x,
             print
-        if self.fsm:
-            l=[]
-            for r1,r2 in self.fsm_regs:
-                atrs=""
-                if self.registers[r1]["atributes"]!="":
-                    atrs="(%s)"%self.registers[r1]["atributes"]
-                l.append("%s <- %s %s"%(r1,r2,atrs))
-            printSet(l,   "FSM")
+#        if self.fsm:
+#            l=[]
+#            for r1,r2 in self.fsm_regs:
+#                atrs=""
+#                if self.registers[r1]["atributes"]!="":
+#                    atrs="(%s)"%self.registers[r1]["atributes"]
+#                l.append("%s <- %s %s"%(r1,r2,atrs))
+#            printSet(l,   "FSM")
 
-    def dtmr(self):
-        f=sys.stdout
-        def p(s):
-            #f.write(s+"\n")
-            pass
-
-        mod_tmr=self.module_name+"_dtmr"
-        p("module %s"%mod_tmr)
-        p("  (")
-        TMR_SUFFIX=("A","B","C")
-        ports=self.inouts.keys() + self.outputs.keys() + self.inputs.keys()
-        plen=len(max(ports, key=len))
-
-        fmr_str="%%-%ds"%(plen+2)
-        for pid,port in enumerate(ports):
-            for s in TMR_SUFFIX:
-                pn=port+s
-                if pid!=len(ports)-1: pn+=","
-                pn=fmr_str%pn
-                p("    %s // %s (%s)"%(pn,port,s))
-        p("  );")
-
-        def putIO(type,d,fmr_str="%s"):
-            for k in d:
-                p("  // -- %s --"%(k))
-                for s in TMR_SUFFIX:
-                    atr=fmr_str%d[k]
-                    p("  %s %s %s%s;"%(type,atr,k,s))
-
-        ports_atr=self.inouts.values() + self.outputs.values() + self.inputs.values()
-        vlen=len(max(ports_atr, key=len))
-
-        fmr_str="%%-%ds"%(vlen+2)
-        putIO("input ",self.inputs,fmr_str)
-        putIO("output",self.outputs,fmr_str)
-        putIO("inout ",self.inouts,fmr_str)
-
-        p("  // -- params --")
-        for param in self.parameters:
-            pv=self.parameters[param];
-            p("  %s=%s;"%(param,pv))
-
-        p("  // -- input voters --")
-        def busWidth(atr):
-            w=1
-            range = "[" + self.expr + ":" + self.expr + "]"
-            if atr:
-                return  "%s - %s + 1"%(range.parseString(atr)[1] ,range.parseString(atr)[3])
-            return "1"
-
-        for port in self.inputs:
-            pwidth=busWidth(self.inputs[port])
-            for s in TMR_SUFFIX:
-                p("  wire %s_v%s;"%(port,s))
-                p("  voter #(.WIDTH(%s)) %s_v%s "%(pwidth,port,s))
-                p("  (")
-                for ss in TMR_SUFFIX:
-                    p("    .in%s(%s%s),"%(ss,port,ss))
-                p("    .out(%s_v%s),"%(port,s))
-                p("  );")
-
-        p("  // -- logic --")
-
-        parameters_str=""
-        if len(self.parameters):
-            parameters_str+="#(\n"
-            for pid,param in enumerate(self.parameters):
-                comma=""
-                if pid!=len(self.parameters)-1: comma+=","
-                parameters_str+="    .%s(%s)%s\n"%(param,param,comma)
-
-            parameters_str+="  )"
-        for s in TMR_SUFFIX:
-            p("  %s %s inst%s"%(self.module_name,parameters_str,s))
-            p("  (")
-            for pid,port in enumerate(ports):
-                comma=""
-                if pid!=len(ports)-1: comma+=","
-                p("    .%s(%s)%s"%(port,port+s,comma))
-            p("  ); ")
-        p("  // -- output voters --")
-
-        p("endmodule //%s"%mod_tmr)
 
 if __name__=="__main__":
     print "This module is not ment to be run!"
+
