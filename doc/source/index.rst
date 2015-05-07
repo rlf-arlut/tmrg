@@ -13,6 +13,9 @@ Content:
    :maxdepth: 2
 
    general_assumptions
+   triplication
+   implementation
+   verification
    synthesis_tests
    examples
 
