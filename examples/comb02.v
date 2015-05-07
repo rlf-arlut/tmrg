@@ -1,4 +1,4 @@
-module comb02 (in1,in2,out1,out2);
+module comb02 (in,out);
   // tmrg default triplicate
   input in;
   output out;
