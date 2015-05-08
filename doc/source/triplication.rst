@@ -224,6 +224,11 @@ Single event transient appearing in the voting element of combinatorial block cl
    :language: verilog
    :linenos:
 
+Module instantiations
+#####################
+
+
+
 Accessing individual signals from a triplicated bus
 ###################################################
 

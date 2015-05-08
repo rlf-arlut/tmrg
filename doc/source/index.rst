@@ -15,6 +15,7 @@ Content:
 .. toctree::
    :maxdepth: 2
 
+   flow
    general_assumptions
    installation
    getting_started
