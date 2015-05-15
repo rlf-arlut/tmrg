@@ -79,7 +79,7 @@ usePackrat = True
 usePsyco = False
 
 import glob
-
+import copy
 
 from prettytable import PrettyTable
 from verilogFormater import VerilogFormater
@@ -128,10 +128,7 @@ class VerilogParser:
             self.logger.debug("%s:%-10s:%s"%(self.current_module["name"],type,s))
         else:
             self.logger.warning("No current module in debugInModule")
-    def __init__(self):
-        sys.setrecursionlimit(2000)
-        self.formater=VerilogFormater()
-        self.logger = logging.getLogger('VP ')
+    def _initModule(self):
         self.registers={}
         self.inputs={}
         self.outputs={}
@@ -147,8 +144,17 @@ class VerilogParser:
         self.tmr_from_source=set()
         self.module_name=""
         self.current_module=None
+
+    def __init__(self):
+        sys.setrecursionlimit(2000)
+        self.formater=VerilogFormater()
+        self.logger = logging.getLogger('VP ')
+
+        self._initModule()
         # compiler directives
         self.EXT=("A","B","C")
+
+
         self.compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
                   "include resetall timescale unconnected_drive "
@@ -160,7 +166,7 @@ class VerilogParser:
         self.lpar = Literal("(")
         self.rpar = Literal(")")
         self.equals = Literal("=")
-        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":False}
+        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":True}
 
         identLead = alphas+"$_"
         identBody = alphanums+"$_"
@@ -266,7 +272,7 @@ class VerilogParser:
         delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")#.setDebug()
         delayOrEventControl = delay | eventControl
 
-        assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
+        self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
                              + Group(self.expr) ).setResultsName( "assgnmt" )
         def gotAssgnmt(s,loc,toks):
             lhs=toks[0]
@@ -283,7 +289,8 @@ class VerilogParser:
 #                    print ">%s<"%varid
 #            print self.ba
             return toks
-        assgnmt.setParseAction(gotAssgnmt)
+        self.assgnmt.setParseAction(gotAssgnmt)
+
         self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
                      ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl")
                        + Group(self.expr) )).setResultsName( "nbassgnmt" )
@@ -386,16 +393,16 @@ class VerilogParser:
                               Suppress(self.semi)
                             ).setName("regDecl").setResultsName("regDecl")
         def gotReg(s,loc,toks):
-
             toks=toks[0] #self.registers
             _atrs=""
-            _range=self.formater.format(toks[1])
-            _len=_getLenStr(toks[1])
+            _range=self.formater.format(toks[2])
+            _len=_getLenStr(toks[2])
 
             if _len!="1":
                 details="(range:%s len:%s)"%(_range,_len)
             else:
                 details=""
+
             for reg in toks[-1]:
                  name=reg[0]
                  self.registers[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
@@ -443,18 +450,18 @@ class VerilogParser:
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
-            Group( for_ + "(" + assgnmt + self.semi + Group( self.expr ) + self.semi + assgnmt + ")" + self.stmt ) |\
+            Group( for_ + "(" + self.assgnmt + self.semi + Group( self.expr ) + self.semi + self.assgnmt + ")" + self.stmt ) |\
             Group( fork + ZeroOrMore( self.stmt ) + join ) |\
             Group( fork + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ) |\
             Group( wait + "(" + self.expr + ")" + stmtOrNull ) |\
             Group( "->" + identifier + self.semi ) |\
             Group( disable + identifier + self.semi ) |\
-            Group( assign + assgnmt + self.semi ).setResultsName("assign") |\
+            Group( assign + self.assgnmt + self.semi ).setResultsName("assign") |\
             Group( deassign + lvalue + self.semi ) |\
-            Group( force + assgnmt + self.semi ) |\
+            Group( force + self.assgnmt + self.semi ) |\
             Group( release + lvalue + self.semi ) |\
             Group( begin + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ).setName("begin:label-end").setResultsName("begin:label-end") |\
-            Group( Group(assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
+            Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )
             # these  *have* to go at the end of the list!!!
@@ -493,7 +500,7 @@ class VerilogParser:
         self.continuousAssign = Group(  Suppress(assign)
               + Group(Optional( driveStrength )).setResultsName("driveStrength")
               + Group(Optional( delay )).setResultsName("delay")
-              + Group(delimitedList( Group(assgnmt) )) + Suppress(self.semi)
+              + Group(delimitedList( Group(self.assgnmt) )) + Suppress(self.semi)
             ).setResultsName("continuousAssign")#.setDebug()
 
 
@@ -574,7 +581,7 @@ class VerilogParser:
                               Group(Optional( driveStrength )) +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
-                              Group( delimitedList( Group(assgnmt) ) ) +
+                              Group( delimitedList( Group(self.assgnmt) ) ) +
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
         self.netDecl3.setParseAction(gotNet3)
@@ -847,15 +854,34 @@ class VerilogParser:
         moduleHdr.addParseAction(gotModuleHdr)
 
         def gotEndModule(s,loc,toks):
-            if self.current_module:
-                self.logger.info("Parsed module %s"%self.current_module["name"])
-                DESIGN[self.current_module["name"]]=self.current_module
+#            if self.current_module:
+#                self.logger.info("Parsed module %s"%self.current_module["name"])
+#                DESIGN[self.current_module["name"]]=self.current_module
+#                self._detectVoting()
+#                self.applyConstraints()
+#                self._detectPost()
+#                self._initModule()
+#
+#  print "!END"
+            pass
         self.endmodule=Keyword("endmodule").setResultsName("endModule").addParseAction(gotEndModule)
 
+        def gotModule(s,loc,toks):
+            if self.current_module:
+                moduleName=self.current_module["name"]
+                self.logger.info("Parsed module %s"%moduleName)
+                print toks
+                self.current_module["tokens"]=toks
+                self._detectVoting()
+                self.applyConstraints()
+                self._detectPost()
+                DESIGN[moduleName]=self.current_module
+#                print DESIGN[moduleName]
+                self._initModule()
 
         self.module = Group(  moduleHdr +
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
-                 self.endmodule ).setName("module").setResultsName("module")#.setDebug()
+                 self.endmodule ).setName("module").setResultsName("module").addParseAction(gotModule)
 
 
         udpDecl = self.outputDecl | self.inputDecl | self.regDecl
@@ -1128,20 +1154,24 @@ class VerilogParser:
 
 
         self.applyDntConstrains(self.dnt_from_source)
+    def parseFile(self,fname):
+        self.logger.info("Processing file %s"%fname)
+        self.fname=fname
+        f=open(fname,"r")
+        body=f.read()
+        f.close()
+        return self.parseString(body)
 
 
     def parseString( self,strng ):
         self.verilog=strng
         self.tokens=self.verilogbnf.parseString( strng )
-        #self._detectFsm()
-        self._detectVoting()
-        self.applyConstraints()
-        self._detectPost()
         return self.tokens
 
     def printInfo(self):
         def printDict(d,dname=""):
             if len(d)==0: return
+
             tab = PrettyTable([dname, "range", "tmr"])
             tab.min_width[dname]=50;
             tab.min_width["range"]=20;
@@ -1151,7 +1181,7 @@ class VerilogParser:
             #print "%-12s:"%dname
             for k in d:
                 item=d[k]
-#                print k,item
+                print k,item
                 range=item["range"]
                 tmr=item["tmr"]
                 tab.add_row([k,range, tmr])
@@ -1177,7 +1207,7 @@ class VerilogParser:
         printDict(self.parameters,"Parameters")
         printSet(self.nba,        "Non Blocking")
         printSet(self.ba,         "Blocking")
-        printDict(self.instances, "Instantiations")
+        #printDict(self.instances, "Instantiations")
         if 1:
             print "TMR:"
             for x in  sorted(self.toTMR):

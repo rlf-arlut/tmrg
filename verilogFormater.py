@@ -4,7 +4,7 @@ class VerilogFormater:
     def setTrace(self,t):
         self.trace=t
     def _format_Top(self,tokens,i=""):
-        oStr="// file automaticly generated\n"
+        oStr=""#"// file automaticly generated\n"
         for i in tokens:
             oStr+=self.format(i)
         return oStr

@@ -10,6 +10,8 @@ import os
 import glob
 import logging
 from verilogFormater import VerilogFormater
+import filecmp
+import copy
 
 def readFile(fname):
     f=open(fname,"r")
@@ -33,6 +35,7 @@ class TMR(VerilogParser):
         self.EXT=('A','B','C')
         self.voters={}
         self.fanout={}
+        self.tmrErr={}
         self.tmrlogger = logging.getLogger('TMR')
 
     def _triplicate(self,tokens):
@@ -111,13 +114,18 @@ class TMR(VerilogParser):
 #        print "#",type(t),t
         if isinstance(t, ParseResults):
             name=str(t.getName()).lower()
-#            print name, len(t), t
+            #print name, len(t), t
             if len(t)==0: return res
             if name in ("assgnmt", "nbassgnmt"):
                 left_id=t[0][0]
                 res["left"].add(left_id)
                 #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
+            elif name in ("regdecl"):
+                for tt in t[0][3]:
+                    left_id=tt[0]
+                    res["left"].add(left_id)
+
             elif name == "subscridentifier":
                 res["right"].add( t[0] )
             else:
@@ -158,28 +166,7 @@ class TMR(VerilogParser):
         self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
         self.logger.debug("      TMR  :"+str(tmr))
         if not tmr:
-            for rid in ids["right"]:
-                if rid in self.toTMR:
-                    group=""
-                    if group in self.voters and rid in self.voters[group]:
-                        continue
-                    self.logger.debug("      voter needed for sigbak %s"%rid)
-
-                    voterInstName="%sVoter"%(rid)
-                    name_voted="%s"%(rid)
-                    netErrorName="%sTmrError"%(rid)
-                    a=rid+self.EXT[0]
-                    b=rid+self.EXT[1]
-                    c=rid+self.EXT[2]
-                    self._addVoter(inst=voterInstName,
-                                     inA=a,
-                                     inB=b,
-                                     inC=c,
-                                     out=name_voted,
-                                     tmrError=netErrorName,
-                                     range=self.properties["nets"][rid]["range"],
-                                     len=self.properties["nets"][rid]["len"],
-                                     group=group)
+            self._addVotersIfNeeded(ids["right"])
             return t
 
         for i in self.EXT:
@@ -212,6 +199,7 @@ class TMR(VerilogParser):
         # #if self.checkIfContains(cpy,"rst"):
         #     print "shot!"
         #     self.replace(cpy,v,v+"A")
+        print t
         return t
 
     def _tmr_list(self,tokens):
@@ -242,27 +230,106 @@ class TMR(VerilogParser):
                 break
         return toTMR
 
+    def _addVotersIfNeeded(self,right):
+            for rid in right:
+                if rid in self.toTMR:
+                    group=""
+                    if group in self.voters and rid in self.voters[group]:
+                        continue
+                    self.logger.debug("      voter needed for signal %s"%rid)
+
+                    voterInstName="%sVoter"%(rid)
+                    name_voted="%s"%(rid)
+                    netErrorName="%sTmrError"%(rid)
+                    a=rid+self.EXT[0]
+                    b=rid+self.EXT[1]
+                    c=rid+self.EXT[2]
+                    self._addVoter(inst=voterInstName,
+                                     inA=a,
+                                     inB=b,
+                                     inC=c,
+                                     out=name_voted,
+                                     tmrError=netErrorName,
+                                     range=self.properties["nets"][rid]["range"],
+                                     len=self.properties["nets"][rid]["len"],
+                                     group=group)
+
+    # right - list of IDs
+    def _addFanoutIfNeeded(self,right):
+            for rid in right:
+                if not rid in self.toTMR:
+                    group=""
+                    if group in self.fanout and rid in self.fanout[group]:
+                        continue
+                    self.logger.debug("      fanout needed for signal %s"%rid)
+
+                    inst=rid+"Fanout"
+                    _in=rid
+                    outA=rid+self.EXT[0]
+                    outB=rid+self.EXT[1]
+                    outC=rid+self.EXT[2]
+                    range=self.properties["nets"][rid]["range"]
+                    len=self.properties["nets"][rid]["len"]
+                    self._addFanout(inst,_in,outA,outB,outC,range=range,len=len)
+
+    def _appendToAllIds(self,t,post):
+        if isinstance(t, ParseResults):
+            name=str(t.getName()).lower()
+            #print name, len(t), t
+            if len(t)==0: return
+            elif name == "subscridentifier":
+                t[0]=t[0]+post
+            else:
+                for i in range(len(t)):
+                    res=self._appendToAllIds(t[i],post=post)
+
+
 
     def tmrContinuousAssign(self,tokens):
-        dList=tokens[0][2]
-        newtokens=ParseResults([],name=dList.getName())
-        for ca in dList:
-            leftHand=ca[0]
-            if self.hasAnythingToTMR(leftHand):
-               for post in self.EXT:
-#                   print ca
-                   ca2=ca.deepcopy()
-                   for var in self.toTMR:
+
+
+        #check if the module needs triplication
+        tmr=self.checkIfTmrNeeded(tokens)
+        ids=self.getLeftRightHandSide(tokens)
+
+        self.logger.debug("[Continuous Assign block]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+
+        if not tmr:
+            self._addVotersIfNeeded(ids["right"])
+            return tokens
+
+        self._addFanoutIfNeeded(ids["right"])
+
+        result=ParseResults([])
+        for i in self.EXT:
+            cpy=tokens.deepcopy()
+            self._appendToAllIds(cpy,post=i)
+            result+=cpy
+        return result
+
+#        dList=tokens[0][2]
+#        newtokens=ParseResults([],name=dList.getName())
+#        for ca in dList:
+#            print ca
+#            leftHand=ca[0]
+#            if self.hasAnythingToTMR(leftHand):
+#               for post in self.EXT:
+##                   print ca
+#                   ca2=ca.deepcopy()
+#                   for var in self.toTMR:
 #                       print var
-                       self.replace(ca2,var,var+post)
-                   newtokens.append(ca2)
-            else:
-                newtokens.append(ca)
-        tokens[0][2]=newtokens
+#                       self.replace(ca2,var,var+post)
+#                   newtokens.append(ca2)
+#            else:
+#                newtokens.append(ca)
+#        tokens[0][2]=newtokens
         #print "TMR",delimitedList
         return tokens
 
-    def _addFanout(self,inst,_in,outA,outB,outC,out,range="",len="1"):
+    def _addFanout(self,inst,_in,outA,outB,outC,range="",len="1"):
         if not inst in self.fanout:
             self.logger.debug("Adding fanout %s"%inst)
             self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
@@ -329,7 +396,7 @@ class TMR(VerilogParser):
                 vote=True
 
         if vote:
-              self.logger.info("TMR voting %s -> %s"%(right,left))
+              self.logger.info("TMR voting %s -> %s (bits:%s)"%(right,left,self.properties["nets"][right]["len"]))
               newtokens=ParseResults([],name=tokens.getName())
 
               a=right+self.EXT[0]
@@ -391,15 +458,30 @@ class TMR(VerilogParser):
                 else:
                     newtokens.append(element)
             return newtokens
+
+        tmr=self.checkIfTmrNeeded(tokens)
+        ids=self.getLeftRightHandSide(tokens)
+
+        self.logger.debug("[reg block]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+
+
 #        print tokens
-        tokens[0][2]=tmr_reg_list(tokens[0][2])
+        tokens[0][3]=tmr_reg_list(tokens[0][3])
+
 #        print tokens
         return tokens
+    def _addTmrErrorWire(self,post,netName):
+        if not post in self.tmrErr:
+            self.tmrErr[post]=set()
+        self.tmrErr[post].add(netName)
 
     def tmrModuleInstantiation(self,tokens):
         try:
             moduleName=tokens[0][0]
-            if moduleName in ("majorityVoter"): return
+            if moduleName in ("majorityVoter","fanout"): return
 
             #print moduleName
             if moduleName in ("powerOnReset","memoryAddrDec"):# triplicate module
@@ -432,7 +514,7 @@ class TMR(VerilogParser):
                             for post in self.EXT:
                                 netName="%stmrError%s"%(iname,post)
                                 tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
-                                self.tmrErr[post].append(netName)
+                                self._addTmrErrorWire(post,netName)
                                 newPorts.append(tmrErrOut)
 
                         instance2[1]=newPorts
@@ -492,9 +574,10 @@ class TMR(VerilogParser):
                             prange=self.range.parseString(atrs)
                             rangeLen=int(prange[1])-int(prange[3] ) +1
 
+
                         for ext in self.EXT:
                             name_voted="%sVoted%s"%(r1,ext)
-                            comment=ParseResults(["cadance set_dont_touch %s"%name_voted],name="lineComment")
+                            comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
                             body.insert(0,comment)
                             voterInstName="%sVoter%s"%(r1,ext)
                             netErrorName="%sTmrError%s"%(r1,ext)
@@ -509,10 +592,14 @@ class TMR(VerilogParser):
 
                             self.tmrErr[ext].append(netErrorName)
 
+            groups = set(self.voters.keys()) | set(self.tmrErr.keys())
+            for group in sorted(groups):
+                errSignals=set()
 
-            for group in sorted(self.voters):
-                errSignals=[]
-                for voter in self.voters[group]:
+#                comment=ParseResults(["TMR group %s"%group],name="lineComment")
+#                body.append(comment)
+                if group in self.voters:
+                  for voter in self.voters[group]:
                     inst=voter
                     voter=self.voters[group][voter]
     #                print voter
@@ -536,23 +623,51 @@ class TMR(VerilogParser):
                         width+="#(.WIDTH(%s)) "%_len
                     body.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
                                                                        (width,inst,_a,_b,_c,_out,_err) )[0]);
-                    errSignals.append(_err)
+                    errSignals.add(_err)
+
+
 
                 body.insert(0,self.netDecl1.parseString("wire tmrError%s;"%group)[0])
                 #after all voters are added, we can create or them all
                 if self.constraints["tmr_error"]:
                     body.insert(0,self.outputDecl.parseString("output tmrError%s;"%group)[0])
-
+                if group in self.tmrErr:
+                    errSignals=errSignals |self.tmrErr[group]
                 sep=""
                 asgnStr="assign tmrError%s="%group
                 if len(errSignals):
-                    for signal in errSignals:
+                    for signal in sorted(errSignals):
                         asgnStr+=sep+signal
                         sep="|"
                 else:
                     asgnStr+="1'b0"
                 asgnStr+=";"
                 body.append(self.continuousAssign.parseString(asgnStr)[0])
+
+            for fanout in self.fanout:
+                    inst=fanout
+                    fanout=self.fanout[inst]
+    #                print voter
+                    self.logger.info("Instializaing voter %s"%inst)
+                    _range=fanout["range"]
+                    _len=fanout["len"]
+                    _in=fanout["in"]
+                    _a=fanout["outA"]
+                    _b=fanout["outB"]
+                    _c=fanout["outC"]
+    #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
+    #                   newtokens.insert(0,comment)
+    #                   voterInstName="%sVoter%s"%(right,ext)
+
+#                    body.insert(0,self.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+#                    body.insert(0,self.netDecl1.parseString("wire %s;"%(_err))[0])
+
+                    width=""
+                    if _len!="1":
+                        width+="#(.WIDTH(%s)) "%_len
+                    body.append(self.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
+                                                                       (width,inst,_in,_a,_b,_c) )[0]);
+
             return tokens
         except:
             self.exc()
@@ -562,10 +677,10 @@ class TMR(VerilogParser):
         return tokens
 
     def triplicate(self):
-        self.properties=self.current_module
-
+        self.properties=copy.deepcopy(self.current_module)
         self.alwaysStmt.setParseAction( self.tmrAlways )
         self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
+
         self.module.setParseAction(self.tmrModule)
         self.verilogbnf.setParseAction(self.tmrTop)
         self.outputDecl.setParseAction(self.tmrOutput)
@@ -579,64 +694,6 @@ class TMR(VerilogParser):
         return tmrt
 ########################################################################################################################
 
-    def s2tOutput(self,tokens):
-#        print tokens
-        for name in tokens[0][2]:
-            a=name+self.EXT[0]
-            b=name+self.EXT[1]
-            c=name+self.EXT[2]
-
-            atrs=self.outputs[name]["atributes"]
-            tokens.append(self.netDecl1.parseString("wire %s %s;"%(atrs,a))[0])
-            tokens.append(self.netDecl1.parseString("wire %s %s;"%(atrs,b))[0])
-            tokens.append(self.netDecl1.parseString("wire %s %s;"%(atrs,c))[0])
-
-            voted=name
-            voterInstName=name+"Voter"
-
-            rangeLen=1
-
-            width=""
-            rangeLen=1
-            if len(atrs.strip())>0:
-                 #print atrs
-                 prange=self.range.parseString(atrs)
-                 rangeLen=int(prange[1])-int(prange[3] ) +1
-            if rangeLen>1:
-                width+="#(.WIDTH(%d)) "%rangeLen
-            vstr="majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%(width,voterInstName,a,b,c,voted)
-            voter=self.moduleInstantiationCpy.parseString(vstr)[0]
-            print vstr
-            #print "x",xx
-            tokens.append(voter)
-        #tokens.append
-        return tokens
-
-    def s2tInput(self,tokens):
-#        print tokens
-        for name in tokens[0][2]:
-            for ext in self.EXT:
-                asgnStr="wire %s%s=%s;"%(name,ext,name)
-                tokens.append(self.netDecl3.parseString(asgnStr)[0])
-
-        return tokens
-
-    def s2tModule(self,tokens):
-        return tokens
-
-    def single2tmr(self):
-
-        self.outputDecl.setParseAction(self.s2tOutput)
-        self.inputDecl.setParseAction(self.s2tInput)
-
-        self.module.setParseAction(self.s2tModule)
-        #self.moduleInstantiation.setParseAction(lambda: [])
-        #self.netDecl3.setParseAction(lambda: [])
-        #self.netDecl1.setParseAction(lambda: [])
-        self.regDecl.setParseAction(lambda:[])
-
-        tmrt=self.verilogbnf.parseString(self.verilog)
-        return tmrt
 
 def args2files(args):
     files=[]
@@ -648,6 +705,17 @@ def args2files(args):
                 files.append(fname)
     return files
 
+def readLinesFromFile(fname):
+    f=open(fname,"r")
+    lines=f.readlines()
+    f.close()
+    return lines
+
+def diffFiles(fname1,fname2):
+    path=os.path.realpath(__file__)
+    dir=os.path.dirname(path)
+    icdiff=os.path.join(dir,'icdiff')
+    os.system("%s %s %s"%(icdiff,fname1,fname2))
 
 def main():
     parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
@@ -666,6 +734,7 @@ def main():
     parser.add_option("","--tmr-dir",              dest="tmrdir",       default="./tmr")
     parser.add_option("","--tmr-suffix",           dest="tmrSuffix",    default="TMR")
     parser.add_option("-v",  "--verbose",          action="store_true", dest="verbose",  default=False, help="More verbose output")
+    parser.add_option("",  "--diff",               action="store_true", dest="showdiff",  default=False, help="Show diff")
 
     #FORMAT = '%(message)s'
     logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
@@ -686,19 +755,15 @@ def main():
                 logging.info("Processing file %s"%fname)
                 vp=TMR()
                 if options.parse or options.tmr or options.format:
-                    tokens=vp.parseString(readFile(fname))
-
+                    tokens=vp.parseFile (fname)
                 vp.applyDntConstrains(options.dnt)
-
-                if options.info:
-                    vp.printInfo()
 
                 if options.format:
                     vf=VerilogFormater()
                     vf.setTrace(options.trace)
                     print vf.format(tokens).replace("\t"," "*options.spaces)
 
-                modules[vp.module_name]=vp
+#                modules[vp.module_name]=vp
 
             except ParseException, err:
                 logging.error("")
@@ -707,29 +772,38 @@ def main():
                 logging.error( err)
                 for l in traceback.format_exc().split("\n"):
                     logging.error(l)
-
-        if len(modules)>1:
+        if len(DESIGN)>1:
             logging.info("Modules found %d"%len(modules))
+            for module in DESIGN:
+                logging.info(" - %s"%module)
+
 
         if options.tmr:
             logging.info("Triplciation starts here")
             vf=VerilogFormater()
 
-            for module_name in modules:
-                vp=modules[module_name]
+            for module_name in DESIGN:
+                print DESIGN[module_name]["tokens"]
+#                vp=modules[module_name]
                 logging.info("Triplicating module '%s'"%module_name)
                 tmrtokens=vp.triplicate()
                 vf.setTrace(options.trace)
                 fout=os.path.join(options.tmrdir,module_name+options.tmrSuffix+".v")
                 if os.path.exists(fout):
                     foutnew=fout+'.new'
-                    logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
-                    fout=foutnew
+#                    logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
+                    f=open(foutnew,"w")
+                    f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
+                    f.close()
+                    if not filecmp.cmp(fout,foutnew):
+                        logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
+                        if options.showdiff:
+                            diffFiles(fout,foutnew)
                 else:
                     logging.warning("Saving output to '%s'"%(fout))
-                f=open(fout,"w")
-                f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
-                f.close()
+                    f=open(fout,"w")
+                    f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
+                    f.close()
 
         # elif options.s2t:
         #     tmrtokens=vp.single2tmr()
