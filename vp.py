@@ -246,9 +246,9 @@ class VerilogParser:
         self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
                              + Group(self.expr) ).setResultsName( "assgnmt" )
 
-        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
-                     ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl")
-                       + Group(self.expr) )).setResultsName( "nbassgnmt" )
+        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay")            + Group(self.expr) ) |
+                          ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl") + Group(self.expr) )
+                         ).setResultsName( "nbassgnmt" )
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
 
@@ -567,6 +567,23 @@ class VerilogParser:
             systemTimingCheck |
             sdpd
             )
+
+        self.directive = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
+        self.directiveEOL = ( Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums)) + restOfLine ).setResultsName("directive")
+        assert "// tmrg xyzzy df" == self.directiveEOL
+        #assert "// tmrg default triplicate" == self.directiveEOL
+
+        def gotDirective(s,l,t):
+            print "#DIR#",t.getName(),t
+            #if t[4]=='t':
+            #if t[0] == self.directive:#.searchString(t[0])
+             #print "~",res
+            #if tokens[0] == directive:
+                #raise ParseException("don't match special comments")
+           # print res
+#
+        self.directive.setParseAction(gotDirective)
+        self.directiveEOL.setParseAction(gotDirective)
         """
         x::= <specparam_declaration>
         x||= <path_declaration>
@@ -599,6 +616,7 @@ class VerilogParser:
             self.alwaysStmt |
             task |
             functionDecl |
+            self.directiveEOL |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -637,7 +655,7 @@ class VerilogParser:
 
 
 
-        moduleHdr = Group ( oneOf("module macromodule") + Group(identifier).setResultsName("moduleName") +
+        moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
                             Group(Optional( Suppress("(") +
                                              Optional( delimitedList( portIn | portOut | portInOut | port ) )  +
                                             Suppress(")") )).setResultsName("ports") +
@@ -707,8 +725,17 @@ class VerilogParser:
                                 )
 
 
-        def gotComment(s,l,t):
-            res=self.directiveItem.searchString(t[0])
+        def gotComment(t):
+           # print "#COM#>",t[0],type(t[0])
+           pass
+           # if t[0]== self.directive:
+           #       print "X"
+           #       raise
+            #if t[0] == self.directive:#.searchString(t[0])
+            #  print "~",res
+            #if tokens[0] == directive:
+            #    raise ParseException("don't match special comments")
+            #print res
 #            for tokens in  res:
 #                constraint=tokens.getName()[len("directive_"):]
 #                if constraint in ("triplicate","do_not_triplicate"):
@@ -728,7 +755,7 @@ class VerilogParser:
 
 #           return t
         verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
-        verilogbnf.ignore( self.compilerDirective )
+        #verilogbnf.ignore( self.compilerDirective )
 
         self.verilogbnf=verilogbnf
 

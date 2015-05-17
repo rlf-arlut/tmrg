@@ -292,7 +292,7 @@ class VerilogParser:
         self.assgnmt.setParseAction(gotAssgnmt)
 
         self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay") + Group(self.expr) ) |
-                     ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl")
+                          ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl")
                        + Group(self.expr) )).setResultsName( "nbassgnmt" )
         def gotNbAssgnmt(s,loc,toks):
             lhs=toks[0]

@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import logging
 from optparse import *
-#import tempita
-#import pygraphviz as pgv
 from vp import *
 import traceback
 import pprint
@@ -12,6 +10,8 @@ import logging
 from verilogFormater import VerilogFormater
 import filecmp
 import copy
+import ConfigParser
+
 
 def readFile(fname):
     f=open(fname,"r")
@@ -29,14 +29,35 @@ def resultLine(tokens,sep=""):
     return s
 
 
-class TMR(VerilogParser):
+class TMR():
     def __init__(self):
-        VerilogParser.__init__(self)
+        self.vp=VerilogParser()
+        self.vf=VerilogFormater()
         self.EXT=('A','B','C')
         self.voters={}
         self.fanout={}
         self.tmrErr={}
-        self.tmrlogger = logging.getLogger('TMR')
+        self.logger = logging.getLogger('TMR')
+        self.files={}
+        self.elaborator={}
+        #scan class looking for formater functions
+        for member in dir(self):
+            if member.find("_TMR__elaborate_")==0:
+                token=member[len("_TMR__elaborate_"):].lower()
+                self.elaborator[token]=getattr(self,member)
+                self.logger.debug("Found elaborator for %s"%token)
+        self.trace=True
+
+    def __elaborate(self,tokens):
+        if isinstance(tokens, ParseResults):
+            name=str(tokens.getName()).lower()
+            if self.trace: self.logger.debug( "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
+            if len(tokens)==0: return ""
+            if name in self.elaborator:
+                self.elaborator[name](tokens)
+            else:
+                self.logger.debug("No elaborator for %s"%name)
+
 
     def _triplicate(self,tokens):
 #        print "t",type(tokens),tokens
@@ -213,12 +234,12 @@ class TMR(VerilogParser):
         return newtokens
 
     def tmrOutput(self,tokens):
-        self.tmrlogger.debug("Output %s"%str(tokens[0][2]))
+        self.logger.debug("Output %s"%str(tokens[0][2]))
         tokens[0][2]=self._tmr_list(tokens[0][2])
         return tokens
 
     def tmrInput(self,tokens):
-        self.tmrlogger.debug("input %s"%str(tokens[0][2]))
+        self.logger.debug("input %s"%str(tokens[0][2]))
         tokens[0][2]=self._tmr_list(tokens[0][2])
         return tokens
 
@@ -499,7 +520,7 @@ class TMR(VerilogParser):
             else: #triplicate IO
                 newModuleName=moduleName+"TMR"
                 tokens[0][0]=newModuleName
-                self.tmrlogger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
+                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
 
                 tokensIns=ParseResults([],name=tokens[0][2].getName())
                 for instance in tokens[0][2]:
@@ -526,17 +547,17 @@ class TMR(VerilogParser):
 
     def exc(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        self.tmrlogger.error("")
-        self.tmrlogger.error("TMR exception:")
+        self.logger.error("")
+        self.logger.error("TMR exception:")
         for l in traceback.format_tb(exc_traceback):
             for ll in l.split("\n"):
-              self.tmrlogger.error(ll)
+              self.logger.error(ll)
 
     def tmrModule(self,tokens):
         try:
             header=tokens[0][0]
             header[1][0]=str(header[1][0])+"TMR"
-            self.tmrlogger.debug("Module")
+            self.logger.debug("Module")
             if len(header)>2:
                 ports=header[2]
     #            print ports.getName()
@@ -676,22 +697,191 @@ class TMR(VerilogParser):
     def tmrTop(self,tokens):
         return tokens
 
-    def triplicate(self):
-        self.properties=copy.deepcopy(self.current_module)
-        self.alwaysStmt.setParseAction( self.tmrAlways )
-        self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
+    def triplicate(self,tokens):
+        #self.properties=copy.deepcopy(self.current_module)
+        #self.alwaysStmt.setParseAction( self.tmrAlways )
+        #self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
 
-        self.module.setParseAction(self.tmrModule)
-        self.verilogbnf.setParseAction(self.tmrTop)
-        self.outputDecl.setParseAction(self.tmrOutput)
-        self.inputDecl.setParseAction(self.tmrInput)
-        self.regDecl.setParseAction(self.tmrRegDecl)
-        self.continuousAssign.setParseAction(self.tmrContinuousAssign)
-        self.netDecl3.setParseAction(self.tmrNetDecl3)
-        self.netDecl1.setParseAction(self.tmrNetDecl1)
-        self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
-        tmrt=self.verilogbnf.parseString(self.verilog)
-        return tmrt
+        #self.module.setParseAction(self.tmrModule)
+        #self.verilogbnf.setParseAction(self.tmrTop)
+        #self.outputDecl.setParseAction(self.tmrOutput)
+        #self.inputDecl.setParseAction(self.tmrInput)
+        #self.regDecl.setParseAction(self.tmrRegDecl)
+        #self.continuousAssign.setParseAction(self.tmrContinuousAssign)
+        #self.netDecl3.setParseAction(self.tmrNetDecl3)
+        #self.netDecl1.setParseAction(self.tmrNetDecl1)
+        #self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
+        #tmrt=self.verilogbnf.parseString(self.verilog)
+        return tokens
+
+    def addFile(self,fname):
+        tokens=self.vp.parseFile(fname)
+#        print tokens
+        self.files[fname]=tokens
+
+    def __getLenStr(self,toks):
+            rangeLen="1"
+            if len(toks)<2:
+                return rangeLen
+            left=toks[-2]
+            right=toks[-1]
+            rangeLen="%s - %s + 1"%(self.formater.format(left), self.formater.format(right))
+            try:
+                rangeInt=eval(rangeLen)
+                rangeLen="%d"%rangeInt
+            except:
+                pass
+            return rangeLen
+
+    def __elaborate_regdecl(self,tokens):
+            #tokens=tokens[0] #self.registers
+            _atrs=""
+            _range=self.vf.format(tokens[2])
+            _len=self.__getLenStr(tokens[2])
+
+            if _len!="1":
+                details="(range:%s len:%s)"%(_range,_len)
+            else:
+                details=""
+
+            for reg in tokens[-1]:
+                 name=reg[0]
+                 #self.registers[name]=
+                 #print  {"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
+                 #self.debugInModule("gotReg: %s %s" % (name,details), type="regs")
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,  "type":"reg" }
+    def __elaborate_moduleinstantiation(self,tokens):
+            #toks=toks[0]
+            identifier=tokens[0]
+            instance = tokens[2][0][0][0]
+            _range=""
+            _len="1"
+            #self.debugInModule("'%s' (type:%s)"%(instance,identifier),type="instance")
+#            print "+",instname, module
+            #self.instances[instance]={"atributes":identifier,"tmr":True}
+            self.current_module["instances"][identifier]={ "instance":instance,"range":_range, "len":_len}
+            #self.current_module["instantiated"]=0
+    def __elaborate_always(self,tokens):
+        self.__elaborate(tokens[1])
+
+    def __elaborate_input(self,tokens):
+             #tokens=tokens[0]
+             _dir=tokens[0]
+             _atrs=""
+             _range=self.vf.format(tokens[1])
+             _len=self.__getLenStr(tokens[1])
+
+             if _len!="1":
+                 details="(range:%s len:%s)"%(_range,_len)
+             else:
+                 details=""
+
+             for name in tokens[-1]:
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"input" }
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+
+    def __elaborate_output(self,tokens):
+             #tokens=tokens[0]
+             _dir=tokens[0]
+             _atrs=""
+             _range=self.vf.format(tokens[1])
+             _len=self.__getLenStr(tokens[1])
+
+             if _len!="1":
+                 details="(range:%s len:%s)"%(_range,_len)
+             else:
+                 details=""
+
+             for name in tokens[-1]:
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"output" }
+                 #if not name in  self.current_module["nets"]:
+                 #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+    def moduleSummary(self,module):
+
+        def printDict(d,dname=""):
+            if len(d)==0: return
+
+            tab = PrettyTable([dname, "range", "tmr"])
+            tab.min_width[dname]=50;
+            tab.min_width["range"]=20;
+            tab.min_width["tmr"]=10;
+            tab.align[dname] = "l" # Left align city names
+
+            #print "%-12s:"%dname
+            for k in d:
+                item=d[k]
+                #print k,item
+                range=item["range"]
+                if "tmr" in item: tmr=item["tmr"]
+                else: tmr="-"
+                tab.add_row([k,range, tmr])
+            tab.padding_width = 1 # One space between column edges and contents (default)
+            print tab
+
+        printDict(self.current_module["nets"],    "Nets")
+        printDict(self.current_module["io"],      "IO")
+        printDict(self.current_module["instances"], "Instantiations")
+    def elaborate(self):
+        self.modules={}
+        for fname in sorted(self.files):
+            self.logger.info("Elaborating %s"%(fname))
+            tokens=self.files[fname]
+            for module in tokens:
+                moduleHdr=module[0]
+                moduleName=moduleHdr[1]
+                modulePorts=moduleHdr[2]
+                for port in modulePorts:
+                    pass
+                    #print port
+                self.logger.info("Module %s"%moduleName)
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{}}
+                for moduleItem in module[1]:
+                    self.__elaborate(moduleItem)
+                self.moduleSummary(self.current_module)
+                self.modules[moduleName]=self.current_module
+        if len(self.modules)>1:
+            logging.info("Modules found %d"%len(self.modules))
+            for module in self.modules:
+                logging.info(" - %s"%module)
+
+        pass
+
+    def tmr(self):
+        tmrSuffix="TMR"
+        spaces=2
+        showdiff=True
+        logging.info("Triplciation starts here")
+        for fname in sorted(self.files):
+            file,ext=os.path.splitext(os.path.basename(fname))
+            self.logger.info("Triplicating %s"%(fname))
+            tokens=self.files[fname]
+            for module in tokens:
+                print ">",module
+                tmrtokens=self.triplicate(module)
+
+    #             vf.setTrace(options.trace)
+            fout=os.path.join(self.tmrdir, file+tmrSuffix+ext)
+            print fout
+            if os.path.exists(fout):
+                    foutnew=fout+'.new'
+                    f=open(foutnew,"w")
+                    f.write(self.vf.format(tmrtokens).replace("\t"," "*spaces))
+                    f.close()
+                    if not filecmp.cmp(fout,foutnew):
+                        logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
+                        if showdiff:
+                            diffFiles(fout,foutnew)
+            else:
+                    logging.warning("Saving output to '%s'"%(fout))
+                    f=open(fout,"w")
+                    f.write(self.vf.format(tmrtokens).replace("\t"," "*options.spaces))
+                    f.close()
+    def setTmrDir(self,tmrdir):
+        self.tmrdir=tmrdir
 ########################################################################################################################
 
 
@@ -722,20 +912,29 @@ def main():
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
-    parser.add_option("-t", "--triplicate",        action="store_true", dest="tmr", default=False, help="Triplicate.")
-    parser.add_option("-p", "--parse",             action="store_true", dest="parse", default=True, help="Parse")
-    parser.add_option("-f", "--format",            action="store_true", dest="format", default=False, help="Parse")
-    parser.add_option("-i", "--info",              action="store_true", dest="info",  default=False, help="Info")
-    parser.add_option("-q", "--trace",             action="store_true", dest="trace",  default=False, help="Trace formating")
-    parser.add_option("",   "--single2tmr",        action="store_true", dest="s2t",  default=False, help="Single ended to TMR")
-    parser.add_option("-d", "--do-not-triplicate", action="append",     dest="dnt",type="str")
-    parser.add_option("","--spaces",               dest="spaces",       default=2, type=int )
-    parser.add_option("","--rtl-dir",              dest="rtldir",       default="./rtl")
-    parser.add_option("","--tmr-dir",              dest="tmrdir",       default="./tmr")
-    parser.add_option("","--tmr-suffix",           dest="tmrSuffix",    default="TMR")
-    parser.add_option("-v",  "--verbose",          action="store_true", dest="verbose",  default=False, help="More verbose output")
-    parser.add_option("",  "--diff",               action="store_true", dest="showdiff",  default=False, help="Show diff")
+    actionGroup = OptionGroup(parser, "Actions" )
+    actionGroup.add_option("-p", "--parse-only",        action="store_true", dest="parse",     default=False, help="Parse")
+    actionGroup.add_option("-e", "--elaborate",         action="store_true", dest="elaborate", default=False, help="Elaborate")
+    actionGroup.add_option("-t", "--triplicate",        action="store_true", dest="tmr",       default=False, help="Triplicate.")
+    parser.add_option_group(actionGroup)
+    parser.add_option("-f", "--format",            dest="format",       action="store_true",default=False, help="Parse")
+    parser.add_option("-i", "--info",              dest="info",         action="store_true",   default=False, help="Info")
+    parser.add_option("-q", "--trace",             dest="trace",        action="store_true",   default=False, help="Trace formating")
+    parser.add_option("",   "--single2tmr",        dest="s2t",          action="store_true",   default=False, help="Single ended to TMR")
+    parser.add_option("-d", "--do-not-triplicate", dest="dnt",          action="append"  ,type="str")
+    parser.add_option("",   "--spaces",            dest="spaces",       default=2, type=int )
+    parser.add_option("",   "--rtl-dir",           dest="rtldir",       default="./rtl")
+    parser.add_option("",   "--tmr-dir",           dest="tmrdir",       default="./tmr")
+    parser.add_option("",    "--tmr-suffix",       dest="tmrSuffix",    default="TMR")
+    parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output")
+    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
+    parser.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
+    parser.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
 
+
+   # print config.get("tmrg","tmr_dir")
+   # print config.get("tmrg","tmr_signals")
+   # print config.items("module")
     #FORMAT = '%(message)s'
     logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
 
@@ -743,28 +942,35 @@ def main():
         (options, args) = parser.parse_args()
 
 
-        if options.verbose:
+        if options.verbose==0:
+            logging.getLogger().setLevel(logging.WARNING)
+        if options.verbose==1:
+            logging.getLogger().setLevel(logging.INFO)
+        elif options.verbose==2:
             logging.getLogger().setLevel(logging.DEBUG)
+
+
+        config = ConfigParser.ConfigParser()
+        config.read(['tmrg.cfg', os.path.expanduser('~/.tmrg.cfg')])
+
+        logging.info
+        print options.config
 
         if len(args)==0:
             args=[options.rtldir]
 
-        modules={}
+        tmrg=TMR()
+        tmrg.setTmrDir(options.tmrdir)
         for fname in args2files(args):
             try:
                 logging.info("Processing file %s"%fname)
-                vp=TMR()
-                if options.parse or options.tmr or options.format:
-                    tokens=vp.parseFile (fname)
-                vp.applyDntConstrains(options.dnt)
-
-                if options.format:
-                    vf=VerilogFormater()
-                    vf.setTrace(options.trace)
-                    print vf.format(tokens).replace("\t"," "*options.spaces)
-
+                tmrg.addFile (fname)
+#                vp.applyDntConstrains(options.dnt)
+#                if options.format:
+#                    vf=VerilogFormater()
+#                    vf.setTrace(options.trace)
+#                    print vf.format(tokens).replace("\t"," "*options.spaces)
 #                modules[vp.module_name]=vp
-
             except ParseException, err:
                 logging.error("")
                 logging.error(err.line)
@@ -772,38 +978,14 @@ def main():
                 logging.error( err)
                 for l in traceback.format_exc().split("\n"):
                     logging.error(l)
-        if len(DESIGN)>1:
-            logging.info("Modules found %d"%len(modules))
-            for module in DESIGN:
-                logging.info(" - %s"%module)
+        if options.parse:
+            return
+        if options.elaborate or options.tmr:
+            tmrg.elaborate()
 
 
         if options.tmr:
-            logging.info("Triplciation starts here")
-            vf=VerilogFormater()
-
-            for module_name in DESIGN:
-                print DESIGN[module_name]["tokens"]
-#                vp=modules[module_name]
-                logging.info("Triplicating module '%s'"%module_name)
-                tmrtokens=vp.triplicate()
-                vf.setTrace(options.trace)
-                fout=os.path.join(options.tmrdir,module_name+options.tmrSuffix+".v")
-                if os.path.exists(fout):
-                    foutnew=fout+'.new'
-#                    logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
-                    f=open(foutnew,"w")
-                    f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
-                    f.close()
-                    if not filecmp.cmp(fout,foutnew):
-                        logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
-                        if options.showdiff:
-                            diffFiles(fout,foutnew)
-                else:
-                    logging.warning("Saving output to '%s'"%(fout))
-                    f=open(fout,"w")
-                    f.write(vf.format(tmrtokens).replace("\t"," "*options.spaces))
-                    f.close()
+            tmrg.tmr()
 
         # elif options.s2t:
         #     tmrtokens=vp.single2tmr()
