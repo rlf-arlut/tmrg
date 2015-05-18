@@ -1,4 +1,4 @@
-module comb04 (in1,in2,out1,out2);
+module comb04 (in,out);
   // tmrg default triplicate
   // tmrg do_not_triplicate out
   input in;

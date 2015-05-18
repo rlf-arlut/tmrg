@@ -4,7 +4,7 @@ module inv(I,ZN);
   output ZN;
   assign ZN=~I;
 endmodule
-// dcmsk
+
 module inst01 (in,out);
   // tmrg default triplicate
   input in;
