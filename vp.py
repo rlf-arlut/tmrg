@@ -568,22 +568,14 @@ class VerilogParser:
             sdpd
             )
 
-        self.directive = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
-        self.directiveEOL = ( Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums)) + restOfLine ).setResultsName("directive")
-        assert "// tmrg xyzzy df" == self.directiveEOL
-        #assert "// tmrg default triplicate" == self.directiveEOL
+        tmrg=Suppress("tmrg")
 
-        def gotDirective(s,l,t):
-            print "#DIR#",t.getName(),t
-            #if t[4]=='t':
-            #if t[0] == self.directive:#.searchString(t[0])
-             #print "~",res
-            #if tokens[0] == directive:
-                #raise ParseException("don't match special comments")
-           # print res
-#
-        self.directive.setParseAction(gotDirective)
-        self.directiveEOL.setParseAction(gotDirective)
+        self.directive_doNotTriplicate  = Group( tmrg + Suppress("do_not_triplicate") + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_do_not_triplicate")
+        self.directive_triplicate       = Group( tmrg + Suppress("triplicate")        + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_triplicate")
+        self.directive_default          = Group( tmrg + Suppress("default")           + oneOf("triplicate do_not_triplicate")+ Suppress(self.semi)).setResultsName("directive_default")
+        self.directive_tmr_error        = Group( tmrg + Suppress("tmr_error")         + oneOf("true false")                  + Suppress(self.semi)).setResultsName("directive_tmr_error")
+
+
         """
         x::= <specparam_declaration>
         x||= <path_declaration>
@@ -616,7 +608,10 @@ class VerilogParser:
             self.alwaysStmt |
             task |
             functionDecl |
-            self.directiveEOL |
+            self.directive_doNotTriplicate |
+            self.directive_triplicate |
+            self.directive_default |
+            self.directive_tmr_error |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -711,56 +706,19 @@ class VerilogParser:
 #            if tokens[0] == specialComment:
 #                raise ParseException("don't match special comments")
 #        cppStyleComment.setParseAction(dontMatchSpecialComments)
-        tmrg=Suppress("tmrg")
-
-        self.directive_doNotTriplicate  =( tmrg + Suppress("do_not_triplicate") + OneOrMore(identifier)                ).setResultsName("directive_do_not_triplicate")
-        self.directive_triplicate       =( tmrg + Suppress("triplicate")        + OneOrMore(identifier)                ).setResultsName("directive_triplicate")
-        self.directive_default          =( tmrg + Suppress("default")           + oneOf("triplicate do_not_triplicate")).setResultsName("directive_default")
-        self.directive_tmr_error        =( tmrg + Suppress("tmr_error")         + oneOf("true false")                  ).setResultsName("directive_tmr_error")
-
-        self.directiveItem =  ( self.directive_triplicate |
-                                self.directive_doNotTriplicate |
-                                self.directive_default |
-                                self.directive_tmr_error
-                                )
-
-
-        def gotComment(t):
-           # print "#COM#>",t[0],type(t[0])
-           pass
-           # if t[0]== self.directive:
-           #       print "X"
-           #       raise
-            #if t[0] == self.directive:#.searchString(t[0])
-            #  print "~",res
-            #if tokens[0] == directive:
-            #    raise ParseException("don't match special comments")
-            #print res
-#            for tokens in  res:
-#                constraint=tokens.getName()[len("directive_"):]
-#                if constraint in ("triplicate","do_not_triplicate"):
-#                    for token in tokens:
-#                        self.constraints[constraint].add(token)
-#                elif constraint=="default":
-#                    if tokens[0]=="triplicate":
-#                        self.constraints["default"]=True
-#                    else:
-#                        self.constraints["default"]=False
-#                elif constraint=="tmr_error":
-#                    if tokens[0]=="true":
-#                        self.constraints["tmr_error"]=True
-#                    else:
-#                        self.constraints["tmr_error"]=False
-
 
 #           return t
-        verilogbnf.ignore( cppStyleComment.setParseAction(gotComment) )
+        verilogbnf.ignore( cppStyleComment )
         #verilogbnf.ignore( self.compilerDirective )
 
         self.verilogbnf=verilogbnf
 
+        self.tmrgDirective = (Suppress('//') + "tmrg" + restOfLine).setResultsName("directive")
+        def tmrgDirectiveAction(toks):
+            return " ".join(toks)+ ";"
+
+        self.tmrgDirective.setParseAction(tmrgDirectiveAction)
     def parseFile(self,fname):
-        self.logger.info("Processing file %s"%fname)
         self.fname=fname
         f=open(fname,"r")
         body=f.read()
@@ -768,8 +726,11 @@ class VerilogParser:
         return self.parseString(body)
 
     def parseString( self,strng ):
-        self.verilog=strng
-        self.tokens=self.verilogbnf.parseString( strng )
+        #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
+        preParsedStrng = self.tmrgDirective.transformString( strng )
+
+        self.verilog=preParsedStrng
+        self.tokens=self.verilogbnf.parseString( preParsedStrng )
         return self.tokens
 
 if __name__=="__main__":

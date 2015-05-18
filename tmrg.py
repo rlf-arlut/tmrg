@@ -28,9 +28,40 @@ def resultLine(tokens,sep=""):
         s+=tokens
     return s
 
+class CmdConstrainParser:
+    def __init__(self):
+        # primitives
+        self.semi = Literal(";")
+        self.lpar = Literal("(")
+        self.rpar = Literal(")")
+        self.equals = Literal("=")
+        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":True}
+
+        identLead = alphas+"$_"
+        identBody = alphanums+"$_"
+        identifier1 = Regex( r"\.?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*"
+                            ).setName("baseIdent")
+        identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
+        identifier = (identifier1 | identifier2).setResultsName("id")
+
+        self.directive_doNotTriplicate  =(  Suppress("do_not_triplicate") + OneOrMore(identifier)                ).setResultsName("directive_do_not_triplicate")
+        self.directive_triplicate       =(  Suppress("triplicate")        + OneOrMore(identifier)                ).setResultsName("directive_triplicate")
+        self.directive_default          =(  Suppress("default")           + oneOf("triplicate do_not_triplicate") + Group(Optional(identifier)) ).setResultsName("directive_default")
+        self.directive_tmr_error        =(  Suppress("tmr_error")         + oneOf("true false") + Group(Optional(identifier))                   ).setResultsName("directive_tmr_error")
+
+        self.directiveItem =  ( self.directive_triplicate |
+                                self.directive_doNotTriplicate |
+                                self.directive_default |
+                                self.directive_tmr_error
+                                )
+    def parse(self,s):
+        return self.directiveItem.parseString(s)
+
 
 class TMR():
-    def __init__(self):
+    def __init__(self,options, args):
+        self.options=options
+        self.args=args
         self.vp=VerilogParser()
         self.vf=VerilogFormater()
         self.EXT=('A','B','C')
@@ -38,42 +69,216 @@ class TMR():
         self.fanout={}
         self.tmrErr={}
         self.logger = logging.getLogger('TMR')
+        if self.options.verbose==0:
+            self.logger.setLevel(logging.WARNING)
+        if self.options.verbose==1:
+            self.logger.setLevel(logging.INFO)
+        elif self.options.verbose>=2:
+            self.logger.setLevel(logging.DEBUG)
         self.files={}
+
+        #scan class looking for elaborator functions
         self.elaborator={}
-        #scan class looking for formater functions
         for member in dir(self):
             if member.find("_TMR__elaborate_")==0:
                 token=member[len("_TMR__elaborate_"):].lower()
                 self.elaborator[token]=getattr(self,member)
                 self.logger.debug("Found elaborator for %s"%token)
+
+        #scan class looking for triplicator functions
+        self.triplicator={}
+        for member in dir(self):
+            if member.find("_TMR__triplicate_")==0:
+                token=member[len("_TMR__triplicate_"):].lower()
+                self.triplicator[token]=getattr(self,member)
+                self.logger.debug("Found triplicator for %s"%token)
+
         self.trace=True
+
+        self.config = ConfigParser.ConfigParser()
+        scriptDir = os.path.abspath(os.path.dirname(__file__))
+        self.logger.debug("Script path : %s"%scriptDir)
+
+        #master clonfig file
+        masterCnfg=os.path.join(scriptDir,"tmrg.cfg")
+        if os.path.exists(masterCnfg):
+            self.logger.debug("Loading master config file from %s"%masterCnfg)
+            self.config.read(masterCnfg)
+        else:
+            self.logger.warning("Master config file does not exists at %s"%masterCnfg)
+
+        #user config file
+        userCnfg=os.path.expanduser('~/.tmrg.cfg')
+        if os.path.exists(userCnfg):
+            self.logger.debug("Loading user config file from %s"%userCnfg)
+            self.config.read(userCnfg)
+        else:
+            self.logger.info("User config file does not exists at %s"%userCnfg)
+
+        #command line specified config files
+        for fname in self.options.config:
+            if os.path.exists(fname):
+                self.logger.debug("Loading command line specified config file from %s"%fname)
+                self.config.read(fname)
+            else:
+                self.logger.error("Command line specified config file does not exists at %s"%fname)
+
+        if self.options.tmr_dir:
+            self.logger.debug("Setting tmr_dir to %s"%self.options.tmr_dir)
+            self.config.set("tmrg","tmr_dir",self.options.tmr_dir)
+
+        if self.options.rtl_dir:
+            self.logger.debug("Setting rtl_dir to %s"%self.options.rtl_dir)
+            self.config.set("tmrg","rtl_dir",self.options.rtl_dir)
+
+
+        if self.options.tmr_suffix:
+            self.logger.debug("Setting tmr_suffix to %s"%self.options.tmr_suffix)
+            self.config.set("tmrg","tmr_suffix",self.options.tmr_suffix)
+
+
+        if self.config.has_option('tmrg', 'files'):
+            files=self.config.get("tmrg","files").split(",")
+            for file in files:
+                file=file.strip()
+                self.logger.debug("Adding file from config file %s"%file)
+                self.args.append(file)
+        # parse command line constrains
+        ccp=CmdConstrainParser()
+        self.cmdLineConstrains={}
+        for c in self.options.constrain:
+            tokens=ccp.parse(c)
+            name=tokens.getName()
+            if name=="directive_triplicate" or name=="do_not_triplicate":
+                tmrVal=False
+                if name=="triplicate":tmrVal=True
+                for _id in tokens:
+                    if _id.find(".")>=0:
+                        module,net=_id.split(".")
+                        self.logger.info("Command line constrain for net %s in module %s"%(net,module))
+                        if not module in self.cmdLineConstrains:
+                            self.cmdLineConstrains[module]={}
+                        self.cmdLineConstrains[module][net]=True
+                    else:
+                        self.logger.info("Command line constrain for net %s"%(net))
+                        net=_id
+                        if not "global" in self.cmdLineConstrains:
+                            self.cmdLineConstrains["global"]={}
+                        self.cmdLineConstrains["global"][net]=tmrVal
+            elif name=="directive_default":
+                tmrVal=False
+                if tokens[0].lower()=="triplicate":
+                    tmrVal=False
+                if len(tokens[1])>0:
+                    for module in tokens[1]:
+                        if not module in self.cmdLineConstrains:
+                            self.cmdLineConstrains[module]={}
+                        self.cmdLineConstrains[module]["default"]=tmrVal
+                else:
+                    if not "global" in self.cmdLineConstrains:
+                        self.cmdLineConstrains["global"]={}
+                    self.cmdLineConstrains["global"]["default"]=tmrVal
+
+        if len(self.args)==0:
+            rtl_dir=self.config.get("tmrg","rtl_dir")
+            self.logger.debug("No input arguments specified. All files from rtl_dir (%s) will be parsed."%rtl_dir)
+            self.args=[rtl_dir]
+
+    def parse(self):
+        def args2files(args):
+            files=[]
+            for name in args:
+                if os.path.isfile(name):
+                    files.append(name)
+                elif os.path.isdir(name):
+                    for fname in glob.glob("%s/*.v"%name):
+                        files.append(fname)
+                else:
+                    self.logger.error("File or directory does not exists %s"%name)
+            return files
+        for fname in args2files(self.args):
+            try:
+                logging.info("Processing file %s"%fname)
+                self.addFile(fname)
+            except ParseException, err:
+                logging.error("")
+                logging.error(err.line)
+                logging.error( " "*(err.column-1) + "^")
+                logging.error( err)
+                for l in traceback.format_exc().split("\n"):
+                    logging.error(l)
 
     def __elaborate(self,tokens):
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
+            if len(tokens)==0: return
             if self.trace: self.logger.debug( "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
-            if len(tokens)==0: return ""
             if name in self.elaborator:
                 self.elaborator[name](tokens)
             else:
                 self.logger.debug("No elaborator for %s"%name)
+                if len(tokens):
+                    for t in tokens:
+                        self.__elaborate(t)
 
+    def triplicate(self,tokens):
+        #self.properties=copy.deepcopy(self.current_module)
+        #self.alwaysStmt.setParseAction( self.tmrAlways )
+        #self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
 
-    def _triplicate(self,tokens):
-#        print "t",type(tokens),tokens
+        #self.module.setParseAction(self.tmrModule)
+        #self.verilogbnf.setParseAction(self.tmrTop)
+        #self.outputDecl.setParseAction(self.tmrOutput)
+        #self.inputDecl.setParseAction(self.tmrInput)
+        #self.regDecl.setParseAction(self.tmrRegDecl)
+        #self.continuousAssign.setParseAction(self.tmrContinuousAssign)
+        #self.netDecl3.setParseAction(self.tmrNetDecl3)
+        #self.netDecl1.setParseAction(self.tmrNetDecl1)
+        #self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
+        #tmrt=self.verilogbnf.parseString(self.verilog)
+        print "\n"*2
+        print tokens.getName()
+
+        return self.__triplicate(tokens)
+
+    def __triplicate_directive_default(self,tokens):
+        return []
+
+    def __triplicate_directive_triplicate(self,tokens):
+        return []
+
+    def __triplicate_directive_do_not_triplicate(self,tokens):
+        return []
+    
+    def __triplicate(self,tokens,i=""):
+        print i,"__",tokens.getName(),tokens
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return tokens
-#            res=ParseResults(None)
-            for tok in tokens:
-                self._triplicate(tok)
-#                res+=tok
-#            returtokens
+            if name in self.triplicator:
+                print i,"tpc>",tokens
+                tokens=self.triplicator[name](tokens)
+            else:
+                self.logger.debug("No triplicator for %s"%name)
+                newTokens=ParseResults([],name=tokens.getName())
+                for j in range(len(tokens)):
+                    print i,"in >",tokens[j]
+                    if isinstance(tokens[j], ParseResults):
+                        tmrToks=self.__triplicate(tokens[j],i+"  ")
+                        if isinstance(tmrToks,list):
+                            for otokens in tmrToks:
+                                newTokens.append(otokens)
+                                print i,"out>",otokens
+                        else:
+                            newTokens.append(tmrToks)
+                    else:
+                        newTokens.append(tokens[j])
+                        print i,"str>",tokens[j]
+                print i,"ret",newTokens.getName(),newTokens
+                return newTokens
         else:
             #we have a string!
-            if tokens=='in1':
-                tokens="dupa"
-                self.logger.error("Problem in _triplicate")
+            pass
         return tokens
 
     def checkIfContains(self,tokens,label):
@@ -162,11 +367,14 @@ class TMR():
         leftTMR=False
         leftNoTMR=False
 
-        for i in res["left"]:
-            if i in self.toTMR:
-                leftTMR=True
+        for net in res["left"]:
+            if net in self.current_module["nets"]:
+                if self.current_module["nets"][net]["tmr"]:
+                    leftTMR=True
+                if not self.current_module["nets"][net]["tmr"]:
+                    leftNoTMR=True
             else:
-                leftNoTMR=True
+                self.logger.warning("Unknown net %s"%i)
         if leftTMR and leftNoTMR:
             self.logger.error("Block contains both type of elements (should and should not be triplicated!). ")
             self.logger.error("This request will not be properly processed!")
@@ -226,21 +434,30 @@ class TMR():
     def _tmr_list(self,tokens):
         newtokens=ParseResults([],name=tokens.getName())
         for element in tokens:
-            if element in self.toTMR:
-                for post in self.EXT:
-                    newtokens.append(element+post)
+            if element in self.current_module["nets"]:
+                if self.current_module["nets"][element]["tmr"]:
+                    for post in self.EXT:
+                        newtokens.append(element+post)
+                else:
+                    newtokens.append(element)
             else:
+                self.logger.warning("Net %s unknown!"%element)
                 newtokens.append(element)
+        print newtokens
         return newtokens
 
-    def tmrOutput(self,tokens):
-        self.logger.debug("Output %s"%str(tokens[0][2]))
-        tokens[0][2]=self._tmr_list(tokens[0][2])
+    def __triplicate_output(self,tokens):
+        before=str(tokens[2])
+        tokens[2]=self._tmr_list(tokens[2])
+        after=str(tokens[2])
+        self.logger.debug("Output %s->%s"%(before,after))
         return tokens
 
-    def tmrInput(self,tokens):
-        self.logger.debug("input %s"%str(tokens[0][2]))
-        tokens[0][2]=self._tmr_list(tokens[0][2])
+    def __triplicate_input(self,tokens):
+        before=str(tokens[2])
+        tokens[2]=self._tmr_list(tokens[2])
+        after=str(tokens[2])
+        self.logger.debug("Input %s->%s"%(before,after))
         return tokens
 
     def hasAnythingToTMR(self,tokens):
@@ -253,7 +470,8 @@ class TMR():
 
     def _addVotersIfNeeded(self,right):
             for rid in right:
-                if rid in self.toTMR:
+                if self.current_module["nets"][rid]["tmr"]:
+
                     group=""
                     if group in self.voters and rid in self.voters[group]:
                         continue
@@ -271,14 +489,16 @@ class TMR():
                                      inC=c,
                                      out=name_voted,
                                      tmrError=netErrorName,
-                                     range=self.properties["nets"][rid]["range"],
-                                     len=self.properties["nets"][rid]["len"],
+                                     range=self.current_module["nets"][rid]["range"],
+                                     len=self.current_module["nets"][rid]["len"],
                                      group=group)
 
     # right - list of IDs
     def _addFanoutIfNeeded(self,right):
             for rid in right:
-                if not rid in self.toTMR:
+                #if not rid in self.toTMR:
+                if not self.current_module["nets"][rid]["tmr"]:
+
                     group=""
                     if group in self.fanout and rid in self.fanout[group]:
                         continue
@@ -289,8 +509,8 @@ class TMR():
                     outA=rid+self.EXT[0]
                     outB=rid+self.EXT[1]
                     outC=rid+self.EXT[2]
-                    range=self.properties["nets"][rid]["range"]
-                    len=self.properties["nets"][rid]["len"]
+                    range=self.current_module["nets"][rid]["range"]
+                    len=self.current_module["nets"][rid]["len"]
                     self._addFanout(inst,_in,outA,outB,outC,range=range,len=len)
 
     def _appendToAllIds(self,t,post):
@@ -306,9 +526,8 @@ class TMR():
 
 
 
-    def tmrContinuousAssign(self,tokens):
-
-
+    def __triplicate_continuousassign(self,tokens):
+        print "1>>>>",tokens
         #check if the module needs triplication
         tmr=self.checkIfTmrNeeded(tokens)
         ids=self.getLeftRightHandSide(tokens)
@@ -324,11 +543,12 @@ class TMR():
 
         self._addFanoutIfNeeded(ids["right"])
 
-        result=ParseResults([])
+        result=[]
         for i in self.EXT:
             cpy=tokens.deepcopy()
             self._appendToAllIds(cpy,post=i)
-            result+=cpy
+            result.append(cpy)
+        print "!!!!!",result
         return result
 
 #        dList=tokens[0][2]
@@ -462,8 +682,8 @@ class TMR():
 #        print tokens
         return tokens
 
-    def tmrNetDecl1(self,tokens):
-        tokens[0][3]=self._tmr_list(tokens[0][3])
+    def __triplicate_NetDecl1(self,tokens):
+        tokens[3]=self._tmr_list(tokens[3])
         return tokens
 
     def tmrRegDecl(self,tokens):
@@ -553,65 +773,41 @@ class TMR():
             for ll in l.split("\n"):
               self.logger.error(ll)
 
-    def tmrModule(self,tokens):
+    def __triplicate_module(self,tokens):
         try:
-            header=tokens[0][0]
-            header[1][0]=str(header[1][0])+"TMR"
-            self.logger.debug("Module")
+            header=tokens[0]
+            moduleName=header[1]
+            self.current_module=self.modules[moduleName]
+            header[1]=str(moduleName)+"TMR"
+            self.logger.debug("Module %s -> %s"%(moduleName,header[1]))
             if len(header)>2:
                 ports=header[2]
-    #            print ports.getName()
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
-                    triplicated=False
-                    for varToTMR in self.toTMR:
-                        if self.checkIfContains(port,varToTMR):
-                            for ext in self.EXT:
-                                cpy=port.deepcopy()
-                                self.replace(cpy,varToTMR,varToTMR+ext)
-                                newports.append(cpy)
-                            triplicated=True
-                            break
-                    if not triplicated:
+                    portName=port[0]
+                    print portName
+                    doTmr=self.current_module["nets"][portName]["tmr"]
+                    if doTmr:
+                        for post in self.EXT:
+                            newports.append(portName+post)
+                    else:
                         newports.append(port)
-                if self.constraints["tmr_error"]:
-                    for group in self.voters:
-                        newports.append("tmrError%s"%group )
+
+                if self.current_module["nets"]["tmrError"]:
+                    if self.current_module["nets"]["tmrError"]["tmr"]:
+                        for post in self.EXT:
+                            newports.append("tmrError%s"%post )
+                    else:
+                            newports.append("tmrError" )
+
+
                 header[2]=newports
-            body=tokens[0][1]
-
-            if 0 and self.fsm:
-                for r1,r2 in self.fsm_regs:
-                    if r2 in self.toTMR:
-                        a=r2+self.EXT[0]
-                        b=r2+self.EXT[1]
-                        c=r2+self.EXT[2]
-
-                        atrs=self.registers[r1]["atributes"]
-
-                        rangeLen=1
-                        if len(atrs.strip())>0:
-    #                        print atrs
-                            prange=self.range.parseString(atrs)
-                            rangeLen=int(prange[1])-int(prange[3] ) +1
-
-
-                        for ext in self.EXT:
-                            name_voted="%sVoted%s"%(r1,ext)
-                            comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
-                            body.insert(0,comment)
-                            voterInstName="%sVoter%s"%(r1,ext)
-                            netErrorName="%sTmrError%s"%(r1,ext)
-                            body.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
-                            body.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
-
-                            width=""
-                            if rangeLen>1:
-                                width+="#(.WIDTH(%d)) "%rangeLen
-                            body.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
-                                                                             (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
-
-                            self.tmrErr[ext].append(netErrorName)
+                print newports
+            moduleBody=tokens[1]
+            print "~ 1 ~",moduleBody
+            moduleBody=self.__triplicate(moduleBody)
+            tokens[1]=moduleBody
+            print "~ 2 ~",moduleBody
 
             groups = set(self.voters.keys()) | set(self.tmrErr.keys())
             for group in sorted(groups):
@@ -623,9 +819,10 @@ class TMR():
                   for voter in self.voters[group]:
                     inst=voter
                     voter=self.voters[group][voter]
-    #                print voter
+                    print "voter",voter
                     self.logger.info("Instializaing voter %s"%inst)
                     _range=voter["range"]
+
                     _len=voter["len"]
                     _out=voter["out"]
                     _err=voter["err"]
@@ -636,22 +833,22 @@ class TMR():
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-                    body.insert(0,self.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
-                    body.insert(0,self.netDecl1.parseString("wire %s;"%(_err))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
                     width=""
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
-                    body.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                    moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
                                                                        (width,inst,_a,_b,_c,_out,_err) )[0]);
                     errSignals.add(_err)
 
 
 
-                body.insert(0,self.netDecl1.parseString("wire tmrError%s;"%group)[0])
+                moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                 #after all voters are added, we can create or them all
-                if self.constraints["tmr_error"]:
-                    body.insert(0,self.outputDecl.parseString("output tmrError%s;"%group)[0])
+                if self.current_module["nets"]["tmrError"]:
+                    moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                 if group in self.tmrErr:
                     errSignals=errSignals |self.tmrErr[group]
                 sep=""
@@ -663,7 +860,7 @@ class TMR():
                 else:
                     asgnStr+="1'b0"
                 asgnStr+=";"
-                body.append(self.continuousAssign.parseString(asgnStr)[0])
+                moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
 
             for fanout in self.fanout:
                     inst=fanout
@@ -686,7 +883,7 @@ class TMR():
                     width=""
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
-                    body.append(self.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
+                    moduleBody.append(self.vp.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
 
             return tokens
@@ -697,22 +894,7 @@ class TMR():
     def tmrTop(self,tokens):
         return tokens
 
-    def triplicate(self,tokens):
-        #self.properties=copy.deepcopy(self.current_module)
-        #self.alwaysStmt.setParseAction( self.tmrAlways )
-        #self.nbAssgnmt.setParseAction(self.tmrNbAssgnmt)
 
-        #self.module.setParseAction(self.tmrModule)
-        #self.verilogbnf.setParseAction(self.tmrTop)
-        #self.outputDecl.setParseAction(self.tmrOutput)
-        #self.inputDecl.setParseAction(self.tmrInput)
-        #self.regDecl.setParseAction(self.tmrRegDecl)
-        #self.continuousAssign.setParseAction(self.tmrContinuousAssign)
-        #self.netDecl3.setParseAction(self.tmrNetDecl3)
-        #self.netDecl1.setParseAction(self.tmrNetDecl1)
-        #self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
-        #tmrt=self.verilogbnf.parseString(self.verilog)
-        return tokens
 
     def addFile(self,fname):
         tokens=self.vp.parseFile(fname)
@@ -798,8 +980,44 @@ class TMR():
              for name in tokens[-1]:
                  if not name in  self.current_module["nets"]:
                      self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"output" }
+                 if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
                  #if not name in  self.current_module["nets"]:
                  #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+
+    def __elaborate_netdecl1(self,tokens):
+            toks=tokens[0]
+
+            _atrs=""
+            _range=self.vf.format(tokens[1])
+            _len=self.__getLenStr(tokens[1])
+            type=toks[0]
+            for name in tokens[3]:
+                self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , "type":type}
+                if _len!="1":
+                    details="(range:%s len:%s)"%(_range,_len)
+                else:
+                    details=""
+#                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
+#                if not name in  self.current_module["nets"]:
+#                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len}
+
+
+    def __elaborate_directive_default(self,tokens):
+        tmr=False
+        if tokens[0].lower() =='triplicate':
+            tmr=True
+        self.current_module["constraints"]["default"]=tmr
+
+    def __elaborate_directive_do_not_triplicate(self,tokens):
+        for net in tokens:
+            self.current_module["constraints"][net]=False
+
+    def __elaborate_directive_triplicate(self,tokens):
+        for net in tokens:
+            self.current_module["constraints"][net]=True
+
+
     def moduleSummary(self,module):
 
         def printDict(d,dname=""):
@@ -820,14 +1038,17 @@ class TMR():
                 else: tmr="-"
                 tab.add_row([k,range, tmr])
             tab.padding_width = 1 # One space between column edges and contents (default)
-            print tab
+            for l in str(tab).split("\n"):
+                self.logger.info(l)
 
-        printDict(self.current_module["nets"],    "Nets")
-        printDict(self.current_module["io"],      "IO")
-        printDict(self.current_module["instances"], "Instantiations")
+        printDict(module["nets"],    "Nets")
+        printDict(module["io"],      "IO")
+        printDict(module["instances"], "Instantiations")
+
     def elaborate(self):
         self.modules={}
         for fname in sorted(self.files):
+            self.logger.info("")
             self.logger.info("Elaborating %s"%(fname))
             tokens=self.files[fname]
             for module in tokens:
@@ -837,63 +1058,115 @@ class TMR():
                 for port in modulePorts:
                     pass
                     #print port
-                self.logger.info("Module %s"%moduleName)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{}}
+                self.logger.info("")
+                self.logger.info("Module %s:%s"%(fname,moduleName))
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{}}
                 for moduleItem in module[1]:
                     self.__elaborate(moduleItem)
-                self.moduleSummary(self.current_module)
-                self.modules[moduleName]=self.current_module
-        if len(self.modules)>1:
-            logging.info("Modules found %d"%len(self.modules))
-            for module in self.modules:
-                logging.info(" - %s"%module)
+                self.modules[moduleName]=copy.deepcopy(self.current_module)
 
-        pass
+        if len(self.modules)>1:
+            self.logger.info("")
+            self.logger.info("Modules found %d"%len(self.modules))
+            for module in self.modules:
+                self.logger.info(" - %s"%module)
+
+        self.logger.info("")
+        self.logger.info("Applying constrains")
+        for module in sorted(self.modules):
+            self.logger.info("Module %s"%module)
+
+            self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
+            for net in self.modules[module]["nets"]:
+                tmr=False
+                # default from global configuration
+                globalTmr=self.config.get("global","default")
+                if globalTmr.lower()=="triplicate":
+                    tmr=True
+                s="configGlobalDefault:%s"%(str(tmr))
+                # default from module configuration
+                if self.config.has_section(module) and self.config.has_option(module,"default"):
+                    modDefault=self.config.get(module,"default")
+                    if modDefault.lower()=="triplicate":
+                        tmr=True
+                    else:
+                        tmr=False
+                    s+=" -> configModuleDefault:%s"%(str(tmr))
+                # default from source code
+                if "default" in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"]["default"]
+                    s+=" -> srcModuleDefault:%s"%(str(tmr))
+
+                # default from command line arguments
+                if module in self.cmdLineConstrains and "default" in self.cmdLineConstrains[module]:
+                    tmr=self.cmdLineConstrains[module]["default"]
+                    s+=" -> cmdModuleDefault:%s"%(str(tmr))
+                # net specific from configuration
+                if self.config.has_section(module) and self.config.has_option(module,net):
+                    conf=self.config.get(module,net)
+                    if conf.lower()=="triplicate":
+                        tmr=True
+                    else:
+                        tmr=False
+                    s+=" -> config:%s"%(str(tmr))
+                # net specific from source code
+                if net in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"][net]
+                    s+=" -> src:%s"%(str(tmr))
+                # net specific from command line
+                if module in self.cmdLineConstrains and net in self.cmdLineConstrains[module]:
+                    tmr=self.cmdLineConstrains[module][net]
+                    s+=" -> cmd:%s"%(str(tmr))
+
+                self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
+                self.modules[module]["nets"][net]["tmr"]=tmr
+
+        for module in sorted(self.modules):
+            self.logger.info("")
+            self.logger.info("Module:%s"%module)
+            self.moduleSummary(self.modules[module])
+
 
     def tmr(self):
         tmrSuffix="TMR"
         spaces=2
         showdiff=True
-        logging.info("Triplciation starts here")
+
+        self.logger.info("")
+        self.logger.info("Triplciation starts here")
         for fname in sorted(self.files):
             file,ext=os.path.splitext(os.path.basename(fname))
-            self.logger.info("Triplicating %s"%(fname))
+            self.logger.info("")
+            self.logger.info("Triplicating file %s"%(fname))
             tokens=self.files[fname]
+            tmrTokens=ParseResults([],name=tokens.getName())
             for module in tokens:
-                print ">",module
-                tmrtokens=self.triplicate(module)
+                tmrModule=self.triplicate(module)
+                tmrTokens.append(tmrModule)
+            fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
 
-    #             vf.setTrace(options.trace)
-            fout=os.path.join(self.tmrdir, file+tmrSuffix+ext)
-            print fout
             if os.path.exists(fout):
                     foutnew=fout+'.new'
                     f=open(foutnew,"w")
-                    f.write(self.vf.format(tmrtokens).replace("\t"," "*spaces))
+                    f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
                     f.close()
                     if not filecmp.cmp(fout,foutnew):
-                        logging.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
+                        self.logger.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
                         if showdiff:
                             diffFiles(fout,foutnew)
+                    else:
+                        self.logger.info("File '%s' exists. Its content is up to date."%fout)
+                        os.remove(foutnew)
             else:
-                    logging.warning("Saving output to '%s'"%(fout))
+                    self.logger.info("Saving output to '%s'"%(fout))
                     f=open(fout,"w")
-                    f.write(self.vf.format(tmrtokens).replace("\t"," "*options.spaces))
+                    f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
                     f.close()
-    def setTmrDir(self,tmrdir):
-        self.tmrdir=tmrdir
+
 ########################################################################################################################
 
 
-def args2files(args):
-    files=[]
-    for name in args:
-        if os.path.isfile(name):
-            files.append(name)
-        elif os.path.isdir(name):
-            for fname in glob.glob("%s/*.v"%name):
-                files.append(fname)
-    return files
+
 
 def readLinesFromFile(fname):
     f=open(fname,"r")
@@ -923,9 +1196,9 @@ def main():
     parser.add_option("",   "--single2tmr",        dest="s2t",          action="store_true",   default=False, help="Single ended to TMR")
     parser.add_option("-d", "--do-not-triplicate", dest="dnt",          action="append"  ,type="str")
     parser.add_option("",   "--spaces",            dest="spaces",       default=2, type=int )
-    parser.add_option("",   "--rtl-dir",           dest="rtldir",       default="./rtl")
-    parser.add_option("",   "--tmr-dir",           dest="tmrdir",       default="./tmr")
-    parser.add_option("",    "--tmr-suffix",       dest="tmrSuffix",    default="TMR")
+    parser.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
+    parser.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="")
+    parser.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output")
     parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     parser.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
@@ -936,11 +1209,11 @@ def main():
    # print config.get("tmrg","tmr_signals")
    # print config.items("module")
     #FORMAT = '%(message)s'
-    logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
+    #logging.basicConfig(format='[%(name)s|%(levelname)5s] %(message)s', level=logging.INFO)
+    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     try:
         (options, args) = parser.parse_args()
-
 
         if options.verbose==0:
             logging.getLogger().setLevel(logging.WARNING)
@@ -949,35 +1222,10 @@ def main():
         elif options.verbose==2:
             logging.getLogger().setLevel(logging.DEBUG)
 
+        tmrg=TMR(options, args)
 
-        config = ConfigParser.ConfigParser()
-        config.read(['tmrg.cfg', os.path.expanduser('~/.tmrg.cfg')])
+        tmrg.parse()
 
-        logging.info
-        print options.config
-
-        if len(args)==0:
-            args=[options.rtldir]
-
-        tmrg=TMR()
-        tmrg.setTmrDir(options.tmrdir)
-        for fname in args2files(args):
-            try:
-                logging.info("Processing file %s"%fname)
-                tmrg.addFile (fname)
-#                vp.applyDntConstrains(options.dnt)
-#                if options.format:
-#                    vf=VerilogFormater()
-#                    vf.setTrace(options.trace)
-#                    print vf.format(tokens).replace("\t"," "*options.spaces)
-#                modules[vp.module_name]=vp
-            except ParseException, err:
-                logging.error("")
-                logging.error(err.line)
-                logging.error( " "*(err.column-1) + "^")
-                logging.error( err)
-                for l in traceback.format_exc().split("\n"):
-                    logging.error(l)
         if options.parse:
             return
         if options.elaborate or options.tmr:

@@ -338,7 +338,7 @@ class VerilogFormater:
 
     def _format_Module(self,tokens,i=""):
         header=tokens[0]
-        modname=header[1][0]
+        modname=header[1]
         oStr="module %s"%modname
         sep=""
         if len(header)>2:
@@ -469,7 +469,7 @@ class VerilogFormater:
             if member.find("_format_")==0:
                 token=member[len("_format_"):].lower()
                 self.formater[token]=getattr(self,member)
-        self.trace=False
+        self.trace=True
 
     def format(self,tokens,i=""):
         if isinstance(tokens, ParseResults):
