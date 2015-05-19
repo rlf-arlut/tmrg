@@ -236,9 +236,6 @@ class TMR():
         #self.netDecl1.setParseAction(self.tmrNetDecl1)
         #self.moduleInstantiation.setParseAction(self.tmrModuleInstantiation)
         #tmrt=self.verilogbnf.parseString(self.verilog)
-        print "\n"*2
-        print tokens.getName()
-
         return self.__triplicate(tokens)
 
     def __triplicate_directive_default(self,tokens):
@@ -249,32 +246,33 @@ class TMR():
 
     def __triplicate_directive_do_not_triplicate(self,tokens):
         return []
-    
+
     def __triplicate(self,tokens,i=""):
-        print i,"__",tokens.getName(),tokens
+        debug=0
+        if debug:print i,"__",tokens.getName(),tokens
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return tokens
             if name in self.triplicator:
-                print i,"tpc>",tokens
+                if debug:print i,"tpc>",tokens
                 tokens=self.triplicator[name](tokens)
             else:
                 self.logger.debug("No triplicator for %s"%name)
                 newTokens=ParseResults([],name=tokens.getName())
                 for j in range(len(tokens)):
-                    print i,"in >",tokens[j]
+                    if debug:print i,"in >",tokens[j]
                     if isinstance(tokens[j], ParseResults):
                         tmrToks=self.__triplicate(tokens[j],i+"  ")
                         if isinstance(tmrToks,list):
                             for otokens in tmrToks:
                                 newTokens.append(otokens)
-                                print i,"out>",otokens
+                                if debug:print i,"out>",otokens
                         else:
                             newTokens.append(tmrToks)
                     else:
                         newTokens.append(tokens[j])
-                        print i,"str>",tokens[j]
-                print i,"ret",newTokens.getName(),newTokens
+                        if debug:print i,"str>",tokens[j]
+                if debug:print i,"ret",newTokens.getName(),newTokens
                 return newTokens
         else:
             #we have a string!
@@ -443,7 +441,6 @@ class TMR():
             else:
                 self.logger.warning("Net %s unknown!"%element)
                 newtokens.append(element)
-        print newtokens
         return newtokens
 
     def __triplicate_output(self,tokens):
@@ -497,6 +494,9 @@ class TMR():
     def _addFanoutIfNeeded(self,right):
             for rid in right:
                 #if not rid in self.toTMR:
+                if not rid in self.current_module["nets"]:
+                    self.logger.warning("Net %s unknown in addFanout!"%rid)
+                    continue
                 if not self.current_module["nets"][rid]["tmr"]:
 
                     group=""
@@ -527,7 +527,6 @@ class TMR():
 
 
     def __triplicate_continuousassign(self,tokens):
-        print "1>>>>",tokens
         #check if the module needs triplication
         tmr=self.checkIfTmrNeeded(tokens)
         ids=self.getLeftRightHandSide(tokens)
@@ -548,7 +547,6 @@ class TMR():
             cpy=tokens.deepcopy()
             self._appendToAllIds(cpy,post=i)
             result.append(cpy)
-        print "!!!!!",result
         return result
 
 #        dList=tokens[0][2]
@@ -604,7 +602,7 @@ class TMR():
 #            self.logger.error("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
 
 
-    def tmrNetDecl3(self,tokens):
+    def __triplicate_NetDecl3(self,tokens):
         def tmr_reg_list(tokens):
             newtokens=ParseResults([],name=tokens.getName())
             for element in tokens:
@@ -620,24 +618,21 @@ class TMR():
         vote=False
 
         #left=tokens[0][4][0][0][0]
-        left=tokens[0][4][0][0][0]
-        right=tokens[0][4][0][2][0][0]
+        left=tokens[4][0][0][0]
+
+        right=tokens[4][0][2][0][0]
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
         if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
             self.logger.info("Removing declaration of %s"%(left))
-#            print tokens
             return ParseResults([],name=tokens.getName())
 
-#        print left,right, self.voting_nets
         if len(self.voting_nets):
-#            self.logger.info("!!!!!!! %s %s"%(str(self.avoting), str(self.avoting_nets)))
-
             if (right, left) in self.voting_nets:
                 vote=True
 
         if vote:
-              self.logger.info("TMR voting %s -> %s (bits:%s)"%(right,left,self.properties["nets"][right]["len"]))
+              self.logger.info("TMR voting %s -> %s (bits:%s)"%(right,left,self.current_module["nets"][right]["len"]))
               newtokens=ParseResults([],name=tokens.getName())
 
               a=right+self.EXT[0]
@@ -654,8 +649,8 @@ class TMR():
                                  inC=c,
                                  out=name_voted,
                                  tmrError=netErrorName,
-                                 range=self.properties["nets"][right]["range"],
-                                 len=self.properties["nets"][right]["len"],
+                                 range=self.current_module["nets"][right]["range"],
+                                 len=self.current_module["nets"][right]["len"],
                                  group=ext)
 
 #                    atrs="" #temproray FIXME
@@ -677,7 +672,7 @@ class TMR():
               tokens=newtokens
 
         else:
-            tokens[0][4]=tmr_reg_list(tokens[0][4])
+            tokens[4]=tmr_reg_list(tokens[4])
 
 #        print tokens
         return tokens
@@ -780,34 +775,37 @@ class TMR():
             self.current_module=self.modules[moduleName]
             header[1]=str(moduleName)+"TMR"
             self.logger.debug("Module %s -> %s"%(moduleName,header[1]))
+
+            moduleBody=tokens[1]
+            moduleBody=self.__triplicate(moduleBody)
+            tokens[1]=moduleBody
+
+            #triplicate module header | add tmr signals
             if len(header)>2:
                 ports=header[2]
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
                     portName=port[0]
-                    print portName
                     doTmr=self.current_module["nets"][portName]["tmr"]
+                    portstr="Port %s -> "%(portName)
+
                     if doTmr:
+                        sep=""
                         for post in self.EXT:
-                            newports.append(portName+post)
+                            newport=portName+post
+                            newports.append(newport)
+                            portstr+=sep+newport
+                            sep=", "
                     else:
                         newports.append(port)
-
+                    self.logger.debug(portstr)
                 if self.current_module["nets"]["tmrError"]:
-                    if self.current_module["nets"]["tmrError"]["tmr"]:
-                        for post in self.EXT:
-                            newports.append("tmrError%s"%post )
-                    else:
-                            newports.append("tmrError" )
-
-
+                    groups = set(self.voters.keys()) | set(self.tmrErr.keys())
+                    for group in sorted(groups):
+                        newport="tmrError%s"%group
+                        newports.append( newport )
+                        self.logger.debug("Port %s"%(newport))
                 header[2]=newports
-                print newports
-            moduleBody=tokens[1]
-            print "~ 1 ~",moduleBody
-            moduleBody=self.__triplicate(moduleBody)
-            tokens[1]=moduleBody
-            print "~ 2 ~",moduleBody
 
             groups = set(self.voters.keys()) | set(self.tmrErr.keys())
             for group in sorted(groups):
@@ -819,7 +817,6 @@ class TMR():
                   for voter in self.voters[group]:
                     inst=voter
                     voter=self.voters[group][voter]
-                    print "voter",voter
                     self.logger.info("Instializaing voter %s"%inst)
                     _range=voter["range"]
 
@@ -861,6 +858,8 @@ class TMR():
                     asgnStr+="1'b0"
                 asgnStr+=";"
                 moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
+
+
 
             for fanout in self.fanout:
                     inst=fanout
@@ -986,12 +985,11 @@ class TMR():
                  #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
     def __elaborate_netdecl1(self,tokens):
-            toks=tokens[0]
-
+#            tokens=tokens[0]
             _atrs=""
             _range=self.vf.format(tokens[1])
             _len=self.__getLenStr(tokens[1])
-            type=toks[0]
+            type=tokens[0]
             for name in tokens[3]:
                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , "type":type}
                 if _len!="1":
@@ -1001,6 +999,23 @@ class TMR():
 #                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
 #                if not name in  self.current_module["nets"]:
 #                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len}
+
+    def __elaborate_netdecl3(self,tokens):
+#             print tokens
+            _atrs=""
+            _range=self.vf.format(tokens[2])
+            _len=self.__getLenStr(tokens[2])
+
+            for assgmng in tokens[4]:
+                name=assgmng[0][0]
+ #               self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
+#                if _len!="1":
+#                    details="(range:%s len:%s)"%(_range,_len)
+#                else:
+#                    details=""
+#                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
+                if not name in  self.current_module["nets"]:
+                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , 'type':'wire'}
 
 
     def __elaborate_directive_default(self,tokens):
@@ -1047,6 +1062,7 @@ class TMR():
 
     def elaborate(self):
         self.modules={}
+        # elaborate all modules
         for fname in sorted(self.files):
             self.logger.info("")
             self.logger.info("Elaborating %s"%(fname))
@@ -1064,13 +1080,13 @@ class TMR():
                 for moduleItem in module[1]:
                     self.__elaborate(moduleItem)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
-
+        # display summary
         if len(self.modules)>1:
             self.logger.info("")
             self.logger.info("Modules found %d"%len(self.modules))
             for module in self.modules:
                 self.logger.info(" - %s"%module)
-
+        #apply constrains
         self.logger.info("")
         self.logger.info("Applying constrains")
         for module in sorted(self.modules):
@@ -1120,6 +1136,24 @@ class TMR():
 
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
+
+        #apply special constrains by name conventions
+        self.logger.info("")
+        self.logger.info("Applying constrains by name")
+        self.voting_nets=[]
+        for module in sorted(self.modules):
+            self.logger.info("Module %s"%module)
+            for net1 in self.modules[module]["nets"]:
+                for net2 in self.modules[module]["nets"]:
+                    if net1+"Voted"==net2:
+                        self.voting_nets.append((net1,net2))
+                        self.logger.info("Full voting detected for nets %s -> %s"%(net1,net2))
+                        if not self.modules[module]["nets"][net1]["tmr"] or  not self.modules[module]["nets"][net2]["tmr"]:
+                            self.logger.warning("Nets for full voting should be triplicated!")
+        if len(self.voting_nets):
+            self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
+
+
 
         for module in sorted(self.modules):
             self.logger.info("")

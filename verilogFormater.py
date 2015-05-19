@@ -469,7 +469,7 @@ class VerilogFormater:
             if member.find("_format_")==0:
                 token=member[len("_format_"):].lower()
                 self.formater[token]=getattr(self,member)
-        self.trace=True
+        self.trace=False
 
     def format(self,tokens,i=""):
         if isinstance(tokens, ParseResults):
