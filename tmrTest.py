@@ -62,14 +62,18 @@ def synthesizeModule(fname,gui=False):
     os.system(cmd)
 
 def loadGateReport(fname):
+    ret={}
     fbase,fext=os.path.splitext(os.path.basename(fname))
     fdir=os.path.dirname(fname)
     workDir=os.path.join(fdir,fbase+"_rc")
     gateFile=os.path.join(workDir,"syn2gen.gate")
     logging.info("Loading report from %s"%gateFile)
+    if not os.path.isfile(gateFile):
+      logging.warning("File does not exists")
+      return ret
+    
     f=open(gateFile,"r")
     part=0
-    ret={}
     for l in f.readlines():
       if l.find("--")==0: 
         part+=1
@@ -95,10 +99,10 @@ def tmrExperiment(fname):
     logging.info("  %s"%cmd)    
     os.system(cmd)
 
-    synthesizeModule(fname)
+#    synthesizeModule(fname)
     module=loadGateReport(fname) 
 
-    synthesizeModule(fnameTMR)
+#    synthesizeModule(fnameTMR)
     moduleTMR=loadGateReport(fnameTMR)     
     tab = PrettyTable(["cell", "instances", "area", "instancesTMR", "areaTMR"],horizontal_char='-',hrules=ALL)
     tab.min_width["cell"]=20;
@@ -112,11 +116,19 @@ def tmrExperiment(fname):
     areaTMR=0.0
     instances=0
     instancesTMR=0
-    for cellName in module:
-       i=module[cellName]["instances"]
-       a=module[cellName]["area"]
-       iTMR=moduleTMR[cellName]["instances"]
-       aTMR=moduleTMR[cellName]["area"]       
+    mkeys=module.keys()
+    mTMRkeys=moduleTMR.keys()
+    for cellName in sorted(list(set(mkeys + mTMRkeys))):
+       i = 0
+       a = 0.0
+       iTMR = 0
+       aTMR = 0.0
+       if cellName in module:
+         i=module[cellName]["instances"]
+         a=module[cellName]["area"]
+       if cellName in moduleTMR:
+         iTMR=moduleTMR[cellName]["instances"]
+         aTMR=moduleTMR[cellName]["area"]       
        tab.add_row([cellName,i,a,iTMR,aTMR])
        area+=a
        areaTMR+=aTMR
