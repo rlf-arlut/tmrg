@@ -346,7 +346,7 @@ class TMR():
                 #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
             elif name in ("regdecl"):
-                for tt in t[0][3]:
+                for tt in t[3]:
                     left_id=tt[0]
                     res["left"].add(left_id)
 
@@ -675,7 +675,7 @@ class TMR():
         tokens[3]=self._tmr_list(tokens[3])
         return tokens
 
-    def tmrRegDecl(self,tokens):
+    def __triplicate_RegDecl(self,tokens):
         def tmr_reg_list(tokens):
             newtokens=ParseResults([],name=tokens.getName())
             for element in tokens:
@@ -688,7 +688,6 @@ class TMR():
                 else:
                     newtokens.append(element)
             return newtokens
-
         tmr=self.checkIfTmrNeeded(tokens)
         ids=self.getLeftRightHandSide(tokens)
 
@@ -696,13 +695,18 @@ class TMR():
         self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
         self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
         self.logger.debug("      TMR  :"+str(tmr))
+        if not tmr:
+            return tokens
 
+        result = []
+        for i in self.EXT:
+            cpy=tokens.deepcopy()
+            for name in list(ids["right"])+list(ids["left"]):
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+            result.append(cpy)
 
-#        print tokens
-        tokens[0][3]=tmr_reg_list(tokens[0][3])
-
-#        print tokens
-        return tokens
+        return result
     def _addTmrErrorWire(self,post,netName):
         if not post in self.tmrErr:
             self.tmrErr[post]=set()
