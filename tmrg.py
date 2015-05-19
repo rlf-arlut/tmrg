@@ -457,25 +457,27 @@ class TMR():
     # right - list of IDs
     def _addFanoutIfNeeded(self,right):
             for rid in right:
-                #if not rid in self.toTMR:
+                print rid
                 if not rid in self.current_module["nets"]:
                     self.logger.warning("Net %s unknown in addFanout!"%rid)
                     continue
-                if not self.current_module["nets"][rid]["tmr"]:
+#                if not self.current_module["nets"][rid]["tmr"]:
 
-                    group=""
-                    if group in self.fanout and rid in self.fanout[group]:
-                        continue
-                    self.logger.debug("      fanout needed for signal %s"%rid)
+                group=""
+                if group in self.fanout and rid in self.fanout[group]:
+                    continue
+                self.logger.debug("      fanout needed for signal %s"%rid)
 
-                    inst=rid+"Fanout"
-                    _in=rid
-                    outA=rid+self.EXT[0]
-                    outB=rid+self.EXT[1]
-                    outC=rid+self.EXT[2]
-                    range=self.current_module["nets"][rid]["range"]
-                    len=self.current_module["nets"][rid]["len"]
-                    self._addFanout(inst,_in,outA,outB,outC,range=range,len=len)
+                inst=rid+"Fanout"
+                _in=rid
+                outA=rid+self.EXT[0]
+                outB=rid+self.EXT[1]
+                outC=rid+self.EXT[2]
+                range=self.current_module["nets"][rid]["range"]
+                len=self.current_module["nets"][rid]["len"]
+                self._addFanout(inst,_in,outA,outB,outC,range=range,len=len)
+#                else:
+#                    self.logger.warning("Net %s is not going to be triplicated!"%rid)
 
     def _appendToAllIds(self,t,post):
         if isinstance(t, ParseResults):
@@ -712,48 +714,97 @@ class TMR():
             self.tmrErr[post]=set()
         self.tmrErr[post].add(netName)
 
-    def tmrModuleInstantiation(self,tokens):
+    def __triplicate_ModuleInstantiation(self,tokens):
         try:
-            moduleName=tokens[0][0]
-            if moduleName in ("majorityVoter","fanout"): return
+            identifier=tokens[0]
+            instance = tokens[2][0][0][0]
 
-            #print moduleName
-            if moduleName in ("powerOnReset","memoryAddrDec"):# triplicate module
-                newIns=ParseResults([],name=tokens.getName())
-                for inst in tokens:
-                    name=inst[2][0][0][0]
-                    for post in self.EXT:
-#                        =inst[2][0][0][0]+post
-#                        print inst
-                        instCpy=inst.deepcopy()
-                        instCpy[2][0][0][0]=name+post
-                        self.replaceAll(instCpy[2],post,dot=0)
-                        newIns.append(instCpy)
-                tokens=newIns
-            else: #triplicate IO
-                newModuleName=moduleName+"TMR"
-                tokens[0][0]=newModuleName
-                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
+            self.logger.debug("[module instances]")
+            self.logger.debug("      ID  :"+identifier)
+            self.logger.debug("      Ins :"+instance)
 
-                tokensIns=ParseResults([],name=tokens[0][2].getName())
-                for instance in tokens[0][2]:
-                        iname=instance[0][0]
+            # if we know the instance
+            if identifier in self.modules:
+                self.logger.info("Module %s is known"%identifier)
+                identifierTMR=identifier+"TMR"
+                tokens[0]=identifierTMR
+#                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
+                tokensIns=ParseResults([],name=tokens[2].getName())
+
+                for instance in tokens[2]:
+                        iname=instance[0]
                         instance2=instance.deepcopy()
                         newPorts=ParseResults([],name=instance2[1].getName())
                         for port in instance2[1]:
-                            for post in self.EXT:
-                                portCpy=port.deepcopy()
-                                newPorts.append(self.replaceAll(portCpy,post))
-                        if 1:
-                            for post in self.EXT:
-                                netName="%stmrError%s"%(iname,post)
-                                tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
-                                self._addTmrErrorWire(post,netName)
-                                newPorts.append(tmrErrOut)
+                            dport=port[0][0][1:] #skip dot
+                            sport=port[0][2][0][0]
+                            dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
+                            sportTmr=self.current_module["nets"][sport]["tmr"]
+
+                            self.logger.debug("      %s (tmr:%s) -> %s (tmr:%s)"%(dport,dportTmr,sport,sportTmr))
+                            if not dportTmr:
+                                newPorts.append(port)
+                                if sportTmr:
+                                    if self.modules[identifier]["io"][dport]["type"]=="input":
+                                        self._addVotersIfNeeded([sport])
+                                    else:
+                                        self._addFanoutIfNeeded([sport])
+                            elif dportTmr and sportTmr:
+                                for post in self.EXT:
+                                    portCpy=port.deepcopy()
+                                    portCpy[0][0]="."+dport+post
+                                    portCpy[0][2][0][0]=sport+post
+                                    newPorts.append(portCpy)
+                                if not sportTmr:
+                                    if self.modules[identifier]["io"][dport]["type"]=="output":
+                                        self._addVotersIfNeeded([sport])
+                                    else:
+                                        self._addFanoutIfNeeded([sport])
+                            ### TODO ADD TMR ERROR !!!!!!!!!!!!
+
+#                            for post in self.EXT:
+#                                netName="%stmrError%s"%(iname,post)
+                                #tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
+                                #self._addTmrErrorWire(post,netName)
+                                #newPorts.append(tmrErrOut)
 
                         instance2[1]=newPorts
                         tokensIns.append(instance2)
-                tokens[0][2]=tokensIns
+                tokens[2]=tokensIns
+                print tokensIns
+                return tokens
+
+            #instantiation of unknown module
+            self.logger.info("Module %s is unknown"%identifier)
+            tmr=self.current_module["instances"][instance]["tmr"]
+
+
+            self.logger.debug("      TMR :"+str(tmr))
+            if not tmr:
+                newIns=ParseResults([],name=tokens.getName())
+                self.logger.error("Fanouts / voters are missing!")
+#                for inst in tokens:
+#                    name=inst[2][0][0][0]
+#                    for post in self.EXT:
+#                        instCpy=inst.deepcopy()
+#                        instCpy[2][0][0][0]=name+post
+#                        self.replaceAll(instCpy[2],post,dot=0)
+#                        newIns.append(instCpy)
+#                tokens=newIns
+            else: #triplicate insances
+                results=[]
+                # triplicate instances
+                for post in self.EXT:
+                    instCpy=tokens.deepcopy()
+                    instCpy[2][0][0][0]=instance+post
+                    for port in instCpy[2][0][1]:
+                        print port,port[0][2][0][0]
+                        port[0][2][0][0]=port[0][2][0][0]+post
+                        #print port
+                    results.append(instCpy)
+                # add voting / fanouts
+                self.logger.error("Fanouts / voters are missing!")
+                return results
             return tokens
         except:
             self.exc()
@@ -828,6 +879,9 @@ class TMR():
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
@@ -877,6 +931,7 @@ class TMR():
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_in))[0])
 #                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
                     width=""
@@ -941,7 +996,8 @@ class TMR():
             #self.debugInModule("'%s' (type:%s)"%(instance,identifier),type="instance")
 #            print "+",instname, module
             #self.instances[instance]={"atributes":identifier,"tmr":True}
-            self.current_module["instances"][identifier]={ "instance":instance,"range":_range, "len":_len}
+            print instance
+            self.current_module["instances"][instance]={ "instance":identifier,"range":_range, "len":_len}
             #self.current_module["instantiated"]=0
     def __elaborate_always(self,tokens):
         self.__elaborate(tokens[1])
@@ -1057,7 +1113,7 @@ class TMR():
                 self.logger.info(l)
 
         printDict(module["nets"],    "Nets")
-        printDict(module["io"],      "IO")
+#        printDict(module["io"],      "IO")
         printDict(module["instances"], "Instantiations")
 
     def elaborate(self):
@@ -1086,6 +1142,7 @@ class TMR():
             self.logger.info("Modules found %d"%len(self.modules))
             for module in self.modules:
                 self.logger.info(" - %s"%module)
+
         #apply constrains
         self.logger.info("")
         self.logger.info("Applying constrains")
@@ -1136,6 +1193,50 @@ class TMR():
 
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
+
+            for inst in self.modules[module]["instances"]:
+                tmr=False
+                # default from global configuration
+                globalTmr=self.config.get("global","default")
+                if globalTmr.lower()=="triplicate":
+                    tmr=True
+                s="configGlobalDefault:%s"%(str(tmr))
+                # default from module configuration
+                if self.config.has_section(module) and self.config.has_option(module,"default"):
+                    modDefault=self.config.get(module,"default")
+                    if modDefault.lower()=="triplicate":
+                        tmr=True
+                    else:
+                        tmr=False
+                    s+=" -> configModuleDefault:%s"%(str(tmr))
+                # default from source code
+                if "default" in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"]["default"]
+                    s+=" -> srcModuleDefault:%s"%(str(tmr))
+
+                # default from command line arguments
+                if module in self.cmdLineConstrains and "default" in self.cmdLineConstrains[module]:
+                    tmr=self.cmdLineConstrains[module]["default"]
+                    s+=" -> cmdModuleDefault:%s"%(str(tmr))
+                # inst specific from configuration
+                if self.config.has_section(module) and self.config.has_option(module,inst):
+                    conf=self.config.get(module,inst)
+                    if conf.lower()=="triplicate":
+                        tmr=True
+                    else:
+                        tmr=False
+                    s+=" -> config:%s"%(str(tmr))
+                # inst specific from source code
+                if inst in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"][inst]
+                    s+=" -> src:%s"%(str(tmr))
+                # inst specific from command line
+                if module in self.cmdLineConstrains and inst in self.cmdLineConstrains[module]:
+                    tmr=self.cmdLineConstrains[module][inst]
+                    s+=" -> cmd:%s"%(str(tmr))
+
+                self.logger.info(" | inst %s : %s (%s)"%(net,str(tmr),s))
+                self.modules[module]["instances"][inst]["tmr"]=tmr
 
         #apply special constrains by name conventions
         self.logger.info("")

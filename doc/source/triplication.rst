@@ -76,6 +76,9 @@ Signals coming from non triplicated analog blocks.
    :linenos:
 
 
+.. include:: ../../examples/comb03.rst
+
+
 comb04 - input and logic triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -96,6 +99,8 @@ Signals going to non triplicated analog blocks.
    :linenos:
 
 
+.. include:: ../../examples/comb04.rst
+
 comb05- logic triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -111,6 +116,7 @@ comb05- logic triplication
    :language: verilog
    :linenos:
 
+.. include:: ../../examples/comb05.rst
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,6 +132,8 @@ comb06- input and output triplication
 .. literalinclude:: ../../examples/comb06TMR.v
    :language: verilog
    :linenos:
+
+.. include:: ../../examples/comb06.rst
 
 
 Voting
@@ -151,6 +159,8 @@ vote01
    :language: verilog
    :linenos:
 
+.. include:: ../../examples/vote01.rst
+
 
 vote02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -168,7 +178,7 @@ vote02
    :linenos:
 
 
-
+.. include:: ../../examples/vote02.rst
 
 Finite state machine
 ####################
@@ -192,6 +202,8 @@ Simple case. Everything is triplicated but the errors are not fixed.
    :language: verilog
    :linenos:
 
+.. include:: ../../examples/fsm01.rst
+
 
 fsm02 - triplication and voting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,6 +222,8 @@ This type of configuration gives maximum protection.
    :language: verilog
    :linenos:
 
+.. include:: ../../examples/fsm02.rst
+
 fsm03 - triplicating only register
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -226,6 +240,8 @@ Single event transient appearing in the voting element of combinatorial block cl
 .. literalinclude:: ../../examples/fsm03TMR.v
    :language: verilog
    :linenos:
+
+.. include:: ../../examples/fsm03.rst
 
 Module instantiations
 #####################
