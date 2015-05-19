@@ -99,10 +99,10 @@ def tmrExperiment(fname):
     logging.info("  %s"%cmd)    
     os.system(cmd)
 
-#    synthesizeModule(fname)
+    synthesizeModule(fname)
     module=loadGateReport(fname) 
 
-#    synthesizeModule(fnameTMR)
+    synthesizeModule(fnameTMR)
     moduleTMR=loadGateReport(fnameTMR)     
     tab = PrettyTable(["cell", "instances", "area", "instancesTMR", "areaTMR"],horizontal_char='-',hrules=ALL)
     tab.min_width["cell"]=20;

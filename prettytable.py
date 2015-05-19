@@ -1218,7 +1218,6 @@ class PrettyTable(object):
             bits.append(options["junction_char"])
             bitshdr.pop()
             bitshdr.append(options["junction_char"])
-        print bitshdr
         return "".join(bits),"".join(bitshdr)
 
     def _stringify_title(self, title, options):
@@ -1239,7 +1238,6 @@ class PrettyTable(object):
         bits.append(self._justify(title, len(self._hrule)-2, "c"))
         bits.append(endpoint)
         lines.append("".join(bits))
-        print lines
         return "\n".join(lines)
 
     def _stringify_header(self, options):

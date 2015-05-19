@@ -512,7 +512,7 @@ class TMR():
         for i in self.EXT:
             cpy=tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                print name
+#                print name
 #                if self.checkIfContains(cpy,name):
                 _to_name=name+i
                 self.replace(cpy,name,_to_name)
