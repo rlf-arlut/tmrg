@@ -863,7 +863,7 @@ class TMR():
                     inst=fanout
                     fanout=self.fanout[inst]
     #                print voter
-                    self.logger.info("Instializaing voter %s"%inst)
+                    self.logger.info("Instializaing fanout %s"%inst)
                     _range=fanout["range"]
                     _len=fanout["len"]
                     _in=fanout["in"]
@@ -874,8 +874,10 @@ class TMR():
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-#                    body.insert(0,self.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
-#                    body.insert(0,self.netDecl1.parseString("wire %s;"%(_err))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+#                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
                     width=""
                     if _len!="1":
