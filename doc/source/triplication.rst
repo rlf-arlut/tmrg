@@ -54,6 +54,9 @@ comb02 - full triplication
    :linenos:
 
 
+.. include:: ../../examples/comb02.rst
+
+
 comb03 - logic and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -226,6 +229,7 @@ Single event transient appearing in the voting element of combinatorial block cl
 
 Module instantiations
 #####################
+
 
 
 

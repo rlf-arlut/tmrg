@@ -380,43 +380,7 @@ class TMR():
             return False
         return leftTMR
 
-    def tmrAlways(self,t):
-        seq=self._isAlwaysSeq(t)
-        result=ParseResults([])
-        #check if the module needs triplication
-        #print t,self.checkIfTmrNeeded(t)
-        tmr=self.checkIfTmrNeeded(t)
-        ids=self.getLeftRightHandSide(t)
 
-        self.logger.debug("[Always block]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
-        if not tmr:
-            self._addVotersIfNeeded(ids["right"])
-            return t
-
-        for i in self.EXT:
-            cpy=t.deepcopy()
-            for name in self.toTMR:
-#                print name
-                if self.checkIfContains(cpy,name):
-                    _to_name=name+i
-
-#                     if seq:
-#                         state_reg=""
-#                         for regName,regNameNext in self.fsm_regs:
-#                             if name==regNameNext:
-#                                 state_reg=regName
-# #                        print "state ",state_reg
-#                         if state_reg!="":
-#                             _to_name=state_reg+"Voted"+i
-# #                    print "->",_to_name
-#
-                    self.replace(cpy,name,_to_name)
-            result+=cpy
-        #print "cpy",cpy,len(cpy)
-        return result
 
     def tmrNbAssgnmt(self,t):
         # cpy=t.deepcopy()
@@ -525,6 +489,36 @@ class TMR():
                     res=self._appendToAllIds(t[i],post=post)
 
 
+
+    def __triplicate_Always(self,tokens):
+        #seq=self._isAlwaysSeq(t)
+        result=[]
+        #check if the module needs triplication
+        #print t,self.checkIfTmrNeeded(t)
+        tmr=self.checkIfTmrNeeded(tokens)
+        ids=self.getLeftRightHandSide(tokens)
+
+        self.logger.debug("[Always block]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+        if not tmr:
+            self._addVotersIfNeeded(ids["right"])
+            return tokens
+
+        self._addFanoutIfNeeded(ids["right"])
+
+
+        for i in self.EXT:
+            cpy=tokens.deepcopy()
+            for name in list(ids["right"])+list(ids["left"]):
+                print name
+#                if self.checkIfContains(cpy,name):
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+            result.append(cpy)
+        #print "cpy",cpy,len(cpy)
+        return result
 
     def __triplicate_continuousassign(self,tokens):
         #check if the module needs triplication

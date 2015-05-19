@@ -1196,7 +1196,7 @@ class PrettyTable(object):
             bitshdr =  [options["junction_char"]]
         else:
             bits = [options["horizontal_char"]]
-            bitshdr = ["#"]
+            bitshdr = [u"#"]
         # For tables with no data or fieldnames
         if not self._field_names:
                 bits.append(options["junction_char"])
@@ -1212,12 +1212,13 @@ class PrettyTable(object):
                 bitshdr.append(options["junction_char"])
             else:
                 bits.append(options["horizontal_char"])
-                bitshdr.append(options["#"])
+                bitshdr.append(u"#")
         if options["vrules"] == FRAME:
             bits.pop()
             bits.append(options["junction_char"])
             bitshdr.pop()
             bitshdr.append(options["junction_char"])
+        print bitshdr
         return "".join(bits),"".join(bitshdr)
 
     def _stringify_title(self, title, options):
@@ -1238,6 +1239,7 @@ class PrettyTable(object):
         bits.append(self._justify(title, len(self._hrule)-2, "c"))
         bits.append(endpoint)
         lines.append("".join(bits))
+        print lines
         return "\n".join(lines)
 
     def _stringify_header(self, options):
