@@ -924,9 +924,9 @@ class TMR():
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
@@ -973,9 +973,9 @@ class TMR():
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_in))[0])
 #                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
