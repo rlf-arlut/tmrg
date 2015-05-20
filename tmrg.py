@@ -444,7 +444,7 @@ class TMR():
                 break
         return toTMR
 
-    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group):
+    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -460,7 +460,8 @@ class TMR():
                                  "err":tmrError,
                                  "range":range,
                                  "len":len,
-                                 "group":group}
+                                 "group":group,
+                               "addWires":addWires}
             self.__voterPresent=True
 
     def _addVoter(self,netID,group="",addWires=""):
