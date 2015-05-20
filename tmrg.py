@@ -12,12 +12,19 @@ import filecmp
 import copy
 import ConfigParser
 
+class ErrorMessage(BaseException):
+    def __init__(self,s):
+        BaseException.__init__(self,s)
 
 def readFile(fname):
-    f=open(fname,"r")
-    body=f.read()
-    f.close()
-    return body
+    if os.path.isfile(fname):
+        f=open(fname,"r")
+        body=f.read()
+        f.close()
+        return body
+    else:
+        logging.error("File '%s' does not exists"%fname)
+        return ""
 
 def resultLine(tokens,sep=""):
     s=""
@@ -27,6 +34,13 @@ def resultLine(tokens,sep=""):
     else:
         s+=tokens
     return s
+
+def diffFiles(fname1,fname2):
+    path=os.path.realpath(__file__)
+    dir=os.path.dirname(path)
+    icdiff=os.path.join(dir,'icdiff')
+    os.system("%s %s %s"%(icdiff,fname1,fname2))
+
 
 class CmdConstrainParser:
     def __init__(self):
@@ -69,6 +83,9 @@ class TMR():
         self.fanout={}
         self.tmrErr={}
         self.logger = logging.getLogger('TMR')
+        self.__voterPresent=False
+        self.__fanoutPresent=False
+
         if self.options.verbose==0:
             self.logger.setLevel(logging.WARNING)
         if self.options.verbose==1:
@@ -96,11 +113,11 @@ class TMR():
         self.trace=True
 
         self.config = ConfigParser.ConfigParser()
-        scriptDir = os.path.abspath(os.path.dirname(__file__))
-        self.logger.debug("Script path : %s"%scriptDir)
+        self.scriptDir = os.path.abspath(os.path.dirname(__file__))
+        self.logger.debug("Script path : %s"%self.scriptDir)
 
         #master clonfig file
-        masterCnfg=os.path.join(scriptDir,"tmrg.cfg")
+        masterCnfg=os.path.join(self.scriptDir,"tmrg.cfg")
         if os.path.exists(masterCnfg):
             self.logger.debug("Loading master config file from %s"%masterCnfg)
             self.config.read(masterCnfg)
@@ -390,7 +407,7 @@ class TMR():
         # #if self.checkIfContains(cpy,"rst"):
         #     print "shot!"
         #     self.replace(cpy,v,v+"A")
-        print t
+        #print t
         return t
 
     def _tmr_list(self,tokens):
@@ -429,55 +446,78 @@ class TMR():
                 break
         return toTMR
 
-    def _addVotersIfNeeded(self,right):
-            for rid in right:
-                if self.current_module["nets"][rid]["tmr"]:
+    def _addVoter(self,netID,group=""):
+        if not group in self.voters:
+            self.voters[group]={}
+            self.logger.info("Creating TMR error group %s"%group)
 
-                    group=""
-                    if group in self.voters and rid in self.voters[group]:
-                        continue
-                    self.logger.debug("      voter needed for signal %s"%rid)
+        voterInstName="%sVoter"%(netID)
+        if not voterInstName in self.voters[group]:
+            nameVoted="%s"%(netID)
+            netErrorName="%sTmrError"%(netID)
+            inA=netID+self.EXT[0]
+            inB=netID+self.EXT[1]
+            inC=netID+self.EXT[2]
+            range=self.current_module["nets"][netID]["range"]
+            len=self.current_module["nets"][netID]["len"]
 
-                    voterInstName="%sVoter"%(rid)
-                    name_voted="%s"%(rid)
-                    netErrorName="%sTmrError"%(rid)
-                    a=rid+self.EXT[0]
-                    b=rid+self.EXT[1]
-                    c=rid+self.EXT[2]
-                    self._addVoter(inst=voterInstName,
-                                     inA=a,
-                                     inB=b,
-                                     inC=c,
-                                     out=name_voted,
-                                     tmrError=netErrorName,
-                                     range=self.current_module["nets"][rid]["range"],
-                                     len=self.current_module["nets"][rid]["len"],
-                                     group=group)
+            self.logger.debug("Adding voter %s"%voterInstName)
+            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
+            self.voters[group][voterInstName]={
+                               "inA"  :inA,
+                               "inB"  :inB,
+                               "inC"  :inC,
+                               "out"  :nameVoted,
+                               "err"  :netErrorName,
+                               "range":range,
+                               "len"  :len,
+                               "group":group}
+            self.__voterPresent=True
 
-    # right - list of IDs
-    def _addFanoutIfNeeded(self,right):
-            for rid in right:
-                print rid
-                if not rid in self.current_module["nets"]:
-                    self.logger.warning("Net %s unknown in addFanout!"%rid)
-                    continue
-#                if not self.current_module["nets"][rid]["tmr"]:
+#        else:
+#            self.logger.error("Unable to add volter %s (name already exists)"%inst)
+#            self.logger.error("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
 
-                group=""
-                if group in self.fanout and rid in self.fanout[group]:
-                    continue
-                self.logger.debug("      fanout needed for signal %s"%rid)
 
-                inst=rid+"Fanout"
-                _in=rid
-                outA=rid+self.EXT[0]
-                outB=rid+self.EXT[1]
-                outC=rid+self.EXT[2]
-                range=self.current_module["nets"][rid]["range"]
-                len=self.current_module["nets"][rid]["len"]
-                self._addFanout(inst,_in,outA,outB,outC,range=range,len=len)
-#                else:
-#                    self.logger.warning("Net %s is not going to be triplicated!"%rid)
+    def _addVotersIfNeeded(self,idList,group=""):
+            for netID in idList:
+                if self.current_module["nets"][netID]["tmr"]:
+                    self._addVoter(netID,group=group)
+
+
+    def _addFanout(self,netID):
+        inst=netID+"Fanout"
+        if not netID in self.current_module["nets"]:
+             self.logger.warning("Net %s unknown in addFanout!"%netID)
+             return
+
+        if not inst in self.fanout:
+            _in=netID
+            outA=netID+self.EXT[0]
+            outB=netID+self.EXT[1]
+            outC=netID+self.EXT[2]
+            range=self.current_module["nets"][netID]["range"]
+            len=self.current_module["nets"][netID]["len"]
+
+            self.logger.debug("Adding fanout %s"%inst)
+            self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
+            self.fanout[inst]={"in":_in,
+                               "outA":outA,
+                               "outB":outB,
+                               "outC":outC,
+                               "range":range,
+                               "len":len}
+            self.__fanoutPresent=True
+
+    def _addFanouts(self,idList):
+        for netId in idList:
+            self._addFanout(netId)
+
+    #  list of IDs
+    def _addFanoutsIfTmr(self,idList):
+            for netId in idList:
+                if not self.current_module["nets"][netId]["tmr"]:
+                    self._addFanout(netId)
 
     def _appendToAllIds(self,t,post):
         if isinstance(t, ParseResults):
@@ -505,10 +545,10 @@ class TMR():
         self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
         self.logger.debug("      TMR  :"+str(tmr))
         if not tmr:
-            self._addVotersIfNeeded(ids["right"])
+            self._addVotersIfNeeded(ids["right"],group="")
             return tokens
 
-        self._addFanoutIfNeeded(ids["right"])
+        self._addFanoutsIfTmr(ids["right"])
 
 
         for i in self.EXT:
@@ -533,10 +573,10 @@ class TMR():
         self.logger.debug("      TMR  :"+str(tmr))
 
         if not tmr:
-            self._addVotersIfNeeded(ids["right"])
+            self._addVotersIfNeeded(ids["right"],group="")
             return tokens
 
-        self._addFanoutIfNeeded(ids["right"])
+        self._addFanoutsIfTmr(ids["right"])
 
         result=[]
         for i in self.EXT:
@@ -564,38 +604,11 @@ class TMR():
         #print "TMR",delimitedList
         return tokens
 
-    def _addFanout(self,inst,_in,outA,outB,outC,range="",len="1"):
-        if not inst in self.fanout:
-            self.logger.debug("Adding fanout %s"%inst)
-            self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
-            self.fanout[inst]={"in":_in,
-                               "outA":outA,
-                               "outB":outB,
-                               "outC":outC,
-                               "range":range,
-                               "len":len}
+
 #        else:
 #            self.logger.error("Unable to add fanout %s (name already exists)"%inst)
 #            self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
 
-    def _addVoter(self,inst,inA,inB,inC,out,tmrError,range="",len="1",group=""):
-        if not group in self.voters:
-            self.voters[group]={}
-            self.logger.info("Creating TMR error group %s"%group)
-        if not inst in self.voters[group]:
-            self.logger.debug("Adding voter %s"%inst)
-            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
-            self.voters[group][inst]={"inA":inA,
-                               "inB":inB,
-                               "inC":inC,
-                               "out":out,
-                               "err":tmrError,
-                               "range":range,
-                               "len":len,
-                               "group":group}
-#        else:
-#            self.logger.error("Unable to add volter %s (name already exists)"%inst)
-#            self.logger.error("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
 
 
     def __triplicate_NetDecl3(self,tokens):
@@ -725,7 +738,7 @@ class TMR():
 
             # if we know the instance
             if identifier in self.modules:
-                self.logger.info("Module %s is known"%identifier)
+#                self.logger.info("Module %s is known"%identifier)
                 identifierTMR=identifier+"TMR"
                 tokens[0]=identifierTMR
 #                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
@@ -746,9 +759,9 @@ class TMR():
                                 newPorts.append(port)
                                 if sportTmr:
                                     if self.modules[identifier]["io"][dport]["type"]=="input":
-                                        self._addVotersIfNeeded([sport])
+                                        self._addVotersIfNeeded([sport],group="")
                                     else:
-                                        self._addFanoutIfNeeded([sport])
+                                        self._addFanoutsIfTmr([sport])
                             elif dportTmr and sportTmr:
                                 for post in self.EXT:
                                     portCpy=port.deepcopy()
@@ -759,7 +772,7 @@ class TMR():
                                     if self.modules[identifier]["io"][dport]["type"]=="output":
                                         self._addVotersIfNeeded([sport])
                                     else:
-                                        self._addFanoutIfNeeded([sport])
+                                        self._addFanoutsIfTmr([sport])
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
 
 #                            for post in self.EXT:
@@ -771,7 +784,6 @@ class TMR():
                         instance2[1]=newPorts
                         tokensIns.append(instance2)
                 tokens[2]=tokensIns
-                print tokensIns
                 return tokens
 
             #instantiation of unknown module
@@ -798,7 +810,7 @@ class TMR():
                     instCpy=tokens.deepcopy()
                     instCpy[2][0][0][0]=instance+post
                     for port in instCpy[2][0][1]:
-                        print port,port[0][2][0][0]
+                        #print port,port[0][2][0][0]
                         port[0][2][0][0]=port[0][2][0][0]+post
                         #print port
                     results.append(instCpy)
@@ -813,9 +825,14 @@ class TMR():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         self.logger.error("")
         self.logger.error("TMR exception:")
-        for l in traceback.format_tb(exc_traceback):
+        #for l in traceback.format_tb(exc_traceback):
+        for l in traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback):
             for ll in l.split("\n"):
               self.logger.error(ll)
+        self.logger.error(ll)
+
+                #traceback.format_exception_only(type(an_error), an_error)
 
     def __triplicate_module(self,tokens):
         try:
@@ -823,11 +840,18 @@ class TMR():
             moduleName=header[1]
             self.current_module=self.modules[moduleName]
             header[1]=str(moduleName)+"TMR"
+            self.logger.debug("")
+            self.logger.debug("= "*50)
             self.logger.debug("Module %s -> %s"%(moduleName,header[1]))
+            self.logger.debug("= "*50)
+
+            self.logger.debug("- module body "+"- "*43)
 
             moduleBody=tokens[1]
             moduleBody=self.__triplicate(moduleBody)
             tokens[1]=moduleBody
+
+            self.logger.debug("- module header "+"- "*42)
 
             #triplicate module header | add tmr signals
             if len(header)>2:
@@ -856,6 +880,7 @@ class TMR():
                         self.logger.debug("Port %s"%(newport))
                 header[2]=newports
 
+            self.logger.debug("- voters & fanouts  "+"- "*40)
             groups = set(self.voters.keys()) | set(self.tmrErr.keys())
             for group in sorted(groups):
                 errSignals=set()
@@ -875,6 +900,7 @@ class TMR():
                     _a=voter["inA"]
                     _b=voter["inB"]
                     _c=voter["inC"]
+
     #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
@@ -996,7 +1022,7 @@ class TMR():
             #self.debugInModule("'%s' (type:%s)"%(instance,identifier),type="instance")
 #            print "+",instname, module
             #self.instances[instance]={"atributes":identifier,"tmr":True}
-            print instance
+            #print instance
             self.current_module["instances"][instance]={ "instance":identifier,"range":_range, "len":_len}
             #self.current_module["instantiated"]=0
     def __elaborate_always(self,tokens):
@@ -1130,9 +1156,11 @@ class TMR():
                 for port in modulePorts:
                     pass
                     #print port
-                self.logger.info("")
-                self.logger.info("Module %s:%s"%(fname,moduleName))
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{}}
+                self.logger.debug("")
+                self.logger.debug("= "*50)
+                self.logger.info("Module %s (%s)"%(moduleName,fname))
+                self.logger.debug("= "*50)
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname}
                 for moduleItem in module[1]:
                     self.__elaborate(moduleItem)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
@@ -1141,7 +1169,7 @@ class TMR():
             self.logger.info("")
             self.logger.info("Modules found %d"%len(self.modules))
             for module in self.modules:
-                self.logger.info(" - %s"%module)
+                self.logger.info(" - %s (%s)"%(module,self.modules[module]["file"]))
 
         #apply constrains
         self.logger.info("")
@@ -1235,7 +1263,7 @@ class TMR():
                     tmr=self.cmdLineConstrains[module][inst]
                     s+=" -> cmd:%s"%(str(tmr))
 
-                self.logger.info(" | inst %s : %s (%s)"%(net,str(tmr),s))
+                self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
 
         #apply special constrains by name conventions
@@ -1255,43 +1283,118 @@ class TMR():
             self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 
 
-
         for module in sorted(self.modules):
             self.logger.info("")
             self.logger.info("Module:%s"%module)
             self.moduleSummary(self.modules[module])
 
+        # check if all modules are known
+        self.logger.info("")
+        self.logger.info("Checking the design hierarchy")
+        elaborationError=False
+        for module in self.modules:
+            for instName in self.modules[module]["instances"]:
+                instance=self.modules[module]["instances"][instName]["instance"]
+                if instance in self.modules:
+                    self.modules[instance]["instantiated"]+=1
+                else:
+                    self.logger.error("Unknown module instantiaition! In module %s, instance name %s instance type %s."%(module,instName,instance))
+                    elaborationError=True
+        tops=0
+        self.topFile=""
+        for module in self.modules:
+            if self.modules[module]["instantiated"]==0:
+                self._printHierary(module)
+                self.topFile=self.modules[module]["file"]
+                tops+=1
+        if tops!=1:
+            elaborationError=True
+            self.logger.error("The design has multiple top cells! Output may not be correct!")
+
+        if elaborationError:
+            raise ErrorMessage("Serious error during elaboration.")
+
+
+    def _printHierary(self,topModule):
+        def _printH(module,i=""):
+            i+="  |"
+            for instName in self.modules[module]["instances"]:
+                inst=self.modules[module]["instances"][instName]["instance"]
+                if inst in self.modules:
+                    self.logger.info(i+"- "+instName+":"+inst)
+                    _printH(inst,i)
+                else:
+                    self.logger.info(i+"- [!] "+instName+":"+inst)
+
+        self.logger.info("[%s]"%topModule)
+        _printH(topModule)
+
+    def _addCommonModules(self,fname,voter=False,fanout=False):
+        if not  self.__fanoutPresent and not self.__voterPresent : return
+        self.logger.info("Declarations of voters and fanouts are being added to %s"%fname)
+        f=open(fname,"a")
+
+        if self.__voterPresent:
+            vfile=os.path.join( self.scriptDir,  self.config.get("tmrg","voter_definition"))
+            self.logger.info("Taking voter declaration from %s"%vfile)
+            f.write("\n\n// %s\n"%vfile)
+            f.write(readFile(vfile))
+
+        if self.__fanoutPresent:
+            ffile=os.path.join( self.scriptDir,  self.config.get("tmrg","fanout_definition"))
+            self.logger.info("Taking fanout declaration from %s"%ffile)
+            f.write("\n\n// %s\n"%ffile)
+            f.write(readFile(ffile))
+        f.close()
 
     def tmr(self):
         tmrSuffix="TMR"
         spaces=2
         showdiff=True
 
-        self.logger.info("")
+        self.logger.debug("")
         self.logger.info("Triplciation starts here")
         for fname in sorted(self.files):
             file,ext=os.path.splitext(os.path.basename(fname))
             self.logger.info("")
+            self.logger.debug("#"*100)
             self.logger.info("Triplicating file %s"%(fname))
+            self.logger.debug("#"*100)
             tokens=self.files[fname]
             tmrTokens=ParseResults([],name=tokens.getName())
             for module in tokens:
                 tmrModule=self.triplicate(module)
                 tmrTokens.append(tmrModule)
-            fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
 
+            fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
+            foutnew=fout+'.new'
+            self.logger.debug("Saving result of triplication to %s"%foutnew)
+
+            f=open(foutnew,"w")
+            f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
+            f.close()
+
+        topFile,ext=os.path.splitext(os.path.basename(self.topFile))
+        ftop=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+ext+'.new')
+        self._addCommonModules(ftop)
+
+        topFile,ext=os.path.splitext(os.path.basename(self.topFile))
+        fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
+        self.logger.info("Constraints file is being saved to %s"%fsdc)
+
+        for fname in sorted(self.files):
+            file,ext=os.path.splitext(os.path.basename(fname))
+            fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
+            foutnew=fout+'.new'
             if os.path.exists(fout):
-                    foutnew=fout+'.new'
-                    f=open(foutnew,"w")
-                    f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
-                    f.close()
-                    if not filecmp.cmp(fout,foutnew):
+                    if filecmp.cmp(fout,foutnew):
+                        self.logger.info("File '%s' exists. Its content is up to date."%fout)
+                        self.logger.debug("Removing temporary file %s."%foutnew)
+                        os.remove(foutnew)
+                    else:
                         self.logger.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
                         if showdiff:
                             diffFiles(fout,foutnew)
-                    else:
-                        self.logger.info("File '%s' exists. Its content is up to date."%fout)
-                        os.remove(foutnew)
             else:
                     self.logger.info("Saving output to '%s'"%(fout))
                     f=open(fout,"w")
@@ -1303,17 +1406,8 @@ class TMR():
 
 
 
-def readLinesFromFile(fname):
-    f=open(fname,"r")
-    lines=f.readlines()
-    f.close()
-    return lines
 
-def diffFiles(fname1,fname2):
-    path=os.path.realpath(__file__)
-    dir=os.path.dirname(path)
-    icdiff=os.path.join(dir,'icdiff')
-    os.system("%s %s %s"%(icdiff,fname1,fname2))
+
 
 def main():
     parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
@@ -1376,8 +1470,27 @@ def main():
         #     vf.setTrace(options.trace)
         #     print vf.format(tmrtokens).replace("\t"," "*options.spaces)
 
-    except ValueError:
-        raise
+    except ErrorMessage as e:
+        logging.error(str(e))
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logging.warning("The exception was raised from:")
+        for l in traceback.format_tb(exc_traceback):
+            for ll in l.split("\n"):
+              logging.warning(ll)
+        logging.warning(ll)
+
+    except :
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        logging.error("")
+        logging.error("")
+        #for l in traceback.format_tb(exc_traceback):
+        for l in traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback):
+            for ll in l.split("\n"):
+              logging.error(ll)
+        logging.error(ll)
+
+
 #        G.write('simple.dot')
 #        G.layout() # layout with default (neato)
 #        G.draw('simple.png')

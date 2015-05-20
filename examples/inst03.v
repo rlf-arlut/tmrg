@@ -1,3 +1,4 @@
+
 module inst03 (in,out);
   // tmrg default triplicate
   input in;
