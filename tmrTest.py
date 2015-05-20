@@ -164,9 +164,14 @@ def tmrExperiment(fname):
 
 def logFile(fname):
     f=open(fname)
+    cnt=0
     for l in f.readlines():
         logging.error(l.rstrip())
+        cnt+=1
     f.close()
+    return cnt
+
+
 def tmrExperimentIverilog(fname):
     fbase,fext=os.path.splitext(os.path.basename(fname))
     fdir=os.path.dirname(fname)
@@ -181,19 +186,21 @@ def tmrExperimentIverilog(fname):
     cmd="iverilog %s 2> %s "%(fname,flog)
     logging.info("  %s "%(cmd))
     os.system(cmd)
-    logFile(flog)
+    er1=logFile(flog)
 
-    cmd="tmrg.py --tmr-dir=examples -t %s "%fname
+    tlog=os.path.join(fdir,fbase+".tlog")
+    cmd="tmrg.py --tmr-dir=examples -t %s 2> %s"%(fname,tlog)
     logging.info("  %s"%cmd)
     os.system(cmd)
+    er2=logFile(tlog)
 
     flogTMR=os.path.join(fdir,fbase+"TMR.ilog")
     cmd="iverilog %s 2> %s "%(fnameTMR,flogTMR)
     logging.info("  %s "%(cmd))
     os.system(cmd)
-    logFile(flogTMR)
+    er3=logFile(flogTMR)
 
-
+    return er1,er2,er3
 def main():
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
     parser = OptionParser()
@@ -206,12 +213,24 @@ def main():
       tmrExperiment(args[0])
     else:
         try:
-            #print glob.glob("examples/*.v")
-            for fn in sorted(glob.glob("examples/*.v")):
-                if fn.find("TMR")>=0 : continue
-                if options.iverilog:
-                    tmrExperimentIverilog(fn)
-                else:
+            if options.iverilog:
+                te1=0
+                te2=0
+                te3=0
+                #print glob.glob("examples/*.v")
+                for fn in sorted(glob.glob("examples/*.v")):
+                    if fn.find("TMR")>=0 : continue
+                    er1,er2,er3=tmrExperimentIverilog(fn)
+                    if er1:te1+=1
+                    if er2:te2+=1
+                    if er3:te3+=1
+                logging.info("")
+                logging.info("iverilog errors     : %d"%te1)
+                logging.info("tmrg errors         : %d"%te2)
+                logging.info("iverilog TMR errors : %d"%te3)
+            else:
+                for fn in sorted(glob.glob("examples/*.v")):
+                    if fn.find("TMR")>=0 : continue
                     tmrExperiment(fn)
 
         except:
