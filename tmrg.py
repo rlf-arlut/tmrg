@@ -79,8 +79,6 @@ class TMR():
         self.vp=VerilogParser()
         self.vf=VerilogFormater()
         self.EXT=('A','B','C')
-        self.voters={}
-        self.fanout={}
         self.tmrErr={}
         self.logger = logging.getLogger('TMR')
         self.__voterPresent=False
@@ -446,13 +444,32 @@ class TMR():
                 break
         return toTMR
 
+    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group):
+        if not group in self.current_module["voters"]:
+            self.current_module["voters"][group]={}
+            self.logger.info("Creating TMR error group %s"%group)
+
+        if not voterInstName in self.current_module["voters"][group]:
+            self.logger.debug("Adding voter %s"%voterInstName)
+            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
+            self.current_module["voters"][group][voterInstName]={
+                                 "inA":inA,
+                                 "inB":inB,
+                                 "inC":inC,
+                                 "out":out,
+                                 "err":tmrError,
+                                 "range":range,
+                                 "len":len,
+                                 "group":group}
+            self.__voterPresent=True
+
     def _addVoter(self,netID,group=""):
-        if not group in self.voters:
-            self.voters[group]={}
+        if not group in self.current_module["voters"]:
+            self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
 
         voterInstName="%sVoter"%(netID)
-        if not voterInstName in self.voters[group]:
+        if not voterInstName in self.current_module["voters"][group]:
             nameVoted="%s"%(netID)
             netErrorName="%sTmrError"%(netID)
             inA=netID+self.EXT[0]
@@ -463,7 +480,7 @@ class TMR():
 
             self.logger.debug("Adding voter %s"%voterInstName)
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
-            self.voters[group][voterInstName]={
+            self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
                                "inB"  :inB,
                                "inC"  :inC,
@@ -491,7 +508,7 @@ class TMR():
              self.logger.warning("Net %s unknown in addFanout!"%netID)
              return
 
-        if not inst in self.fanout:
+        if not inst in self.current_module["fanouts"]:
             _in=netID
             outA=netID+self.EXT[0]
             outB=netID+self.EXT[1]
@@ -501,7 +518,7 @@ class TMR():
 
             self.logger.debug("Adding fanout %s"%inst)
             self.logger.debug("    %s -> %s %s %s "%(_in,outA,outB,outC))
-            self.fanout[inst]={"in":_in,
+            self.current_module["fanouts"][inst]={"in":_in,
                                "outA":outA,
                                "outB":outB,
                                "outC":outC,
@@ -652,7 +669,7 @@ class TMR():
                   name_voted="%s%s"%(left,ext)
                   netErrorName="%sTmrError%s"%(right,ext)
 #                  print self.properties["nets"][right]
-                  self._addVoter(inst=voterInstName,
+                  self._addVoterExtended(voterInstName=voterInstName,
                                  inA=a,
                                  inB=b,
                                  inC=c,
@@ -873,7 +890,7 @@ class TMR():
                         newports.append(port)
                     self.logger.debug(portstr)
                 if self.current_module["nets"]["tmrError"]:
-                    groups = set(self.voters.keys()) | set(self.tmrErr.keys())
+                    groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
                         newports.append( newport )
@@ -881,16 +898,16 @@ class TMR():
                 header[2]=newports
 
             self.logger.debug("- voters & fanouts  "+"- "*40)
-            groups = set(self.voters.keys()) | set(self.tmrErr.keys())
+            groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
             for group in sorted(groups):
                 errSignals=set()
 
 #                comment=ParseResults(["TMR group %s"%group],name="lineComment")
 #                body.append(comment)
-                if group in self.voters:
-                  for voter in self.voters[group]:
+                if group in self.current_module["voters"]:
+                  for voter in self.current_module["voters"][group]:
                     inst=voter
-                    voter=self.voters[group][voter]
+                    voter=self.current_module["voters"][group][voter]
                     self.logger.info("Instializaing voter %s"%inst)
                     _range=voter["range"]
 
@@ -939,9 +956,9 @@ class TMR():
 
 
 
-            for fanout in self.fanout:
+            for fanout in self.current_module["fanouts"]:
                     inst=fanout
-                    fanout=self.fanout[inst]
+                    fanout=self.current_module["fanouts"][inst]
     #                print voter
                     self.logger.info("Instializaing fanout %s"%inst)
                     _range=fanout["range"]
@@ -1160,7 +1177,7 @@ class TMR():
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname}
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}}
                 for moduleItem in module[1]:
                     self.__elaborate(moduleItem)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
