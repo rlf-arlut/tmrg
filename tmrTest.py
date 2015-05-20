@@ -162,22 +162,61 @@ def tmrExperiment(fname):
     f.write("\n\n TMR area gain %.1f %%\n\n"%(100.0*areaTMR/area))
     f.close()
 
+def logFile(fname):
+    f=open(fname)
+    for l in f.readlines():
+        logging.error(l.rstrip())
+    f.close()
+def tmrExperimentIverilog(fname):
+    fbase,fext=os.path.splitext(os.path.basename(fname))
+    fdir=os.path.dirname(fname)
+    fnameTMR=os.path.join(fdir,fbase+"TMR"+fext)
+    os.system("rm -rf %s"%fnameTMR)
+    logging.info("")
+    logging.info("#"*100)
+    logging.info("# Triplicating file %s"%fname)
+    logging.info("#"*100)
+
+    flog=os.path.join(fdir,fbase+".ilog")
+    cmd="iverilog %s 2> %s "%(fname,flog)
+    logging.info("  %s "%(cmd))
+    os.system(cmd)
+    logFile(flog)
+
+    cmd="tmrg.py --tmr-dir=examples -t %s "%fname
+    logging.info("  %s"%cmd)
+    os.system(cmd)
+
+    flogTMR=os.path.join(fdir,fbase+"TMR.ilog")
+    cmd="iverilog %s 2> %s "%(fnameTMR,flogTMR)
+    logging.info("  %s "%(cmd))
+    os.system(cmd)
+    logFile(flogTMR)
+
+
 def main():
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
     parser = OptionParser()
     parser.add_option("-a", "--all", action="store_true", dest="all")
+    parser.add_option("-i", "--iverilog", action="store_true", dest="iverilog")
     (options, args) = parser.parse_args()
     if not options.all:
       if len(args)!=1:
         parser.error("You have to specify at least one file name")
       tmrExperiment(args[0])
     else:
-      try:
-        for fn in sorted(glob.glob("examples/*0*.v")):
-          if fn.find("TMR")>=0 : continue
-          tmrExperiment(fn)
-      except:
-        pass
+        try:
+            #print glob.glob("examples/*.v")
+            for fn in sorted(glob.glob("examples/*.v")):
+                if fn.find("TMR")>=0 : continue
+                if options.iverilog:
+                    tmrExperimentIverilog(fn)
+                else:
+                    tmrExperiment(fn)
+
+        except:
+            print "ER"
+            pass
 
 
 if __name__=="__main__":

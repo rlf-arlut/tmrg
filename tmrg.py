@@ -222,7 +222,7 @@ class TMR():
                 logging.error( err)
                 for l in traceback.format_exc().split("\n"):
                     logging.error(l)
-
+                raise ErrorMessage("Error during parsing")
     def __elaborate(self,tokens):
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
@@ -463,7 +463,7 @@ class TMR():
                                  "group":group}
             self.__voterPresent=True
 
-    def _addVoter(self,netID,group=""):
+    def _addVoter(self,netID,group="",addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -488,7 +488,8 @@ class TMR():
                                "err"  :netErrorName,
                                "range":range,
                                "len"  :len,
-                               "group":group}
+                               "group":group,
+                               "addWires":addWires}
             self.__voterPresent=True
 
 #        else:
@@ -502,7 +503,7 @@ class TMR():
                     self._addVoter(netID,group=group)
 
 
-    def _addFanout(self,netID):
+    def _addFanout(self,netID,addWires=""):
         inst=netID+"Fanout"
         if not netID in self.current_module["nets"]:
              self.logger.warning("Net %s unknown in addFanout!"%netID)
@@ -523,18 +524,19 @@ class TMR():
                                "outB":outB,
                                "outC":outC,
                                "range":range,
-                               "len":len}
+                               "len":len,
+                               "addWires":addWires}
             self.__fanoutPresent=True
 
-    def _addFanouts(self,idList):
+    def _addFanouts(self,idList,addWires=""):
         for netId in idList:
-            self._addFanout(netId)
+            self._addFanout(netId,addWires=addWires)
 
     #  list of IDs
-    def _addFanoutsIfTmr(self,idList):
+    def _addFanoutsIfTmr(self,idList,addWires=""):
             for netId in idList:
                 if not self.current_module["nets"][netId]["tmr"]:
-                    self._addFanout(netId)
+                    self._addFanout(netId,addWires=addWires)
 
     def _appendToAllIds(self,t,post):
         if isinstance(t, ParseResults):
@@ -565,7 +567,7 @@ class TMR():
             self._addVotersIfNeeded(ids["right"],group="")
             return tokens
 
-        self._addFanoutsIfTmr(ids["right"])
+        self._addFanoutsIfTmr(ids["right"],addWires="output")
 
 
         for i in self.EXT:
@@ -593,7 +595,7 @@ class TMR():
             self._addVotersIfNeeded(ids["right"],group="")
             return tokens
 
-        self._addFanoutsIfTmr(ids["right"])
+        self._addFanoutsIfTmr(ids["right"],addWires="ouput")
 
         result=[]
         for i in self.EXT:
@@ -776,10 +778,10 @@ class TMR():
                                 newPorts.append(port)
                                 if sportTmr:
                                     if self.modules[identifier]["io"][dport]["type"]=="input":
-                                        self._addVotersIfNeeded([sport],group="")
+                                        self._addVoter(sport,group="")
 #                                        print "voter"
                                     else:
-                                        self._addFanouts([sport])
+                                        self._addFanout(sport,addWires="input")
 #                                        print "fanout"
                             elif dportTmr:
                                 for post in self.EXT:
@@ -789,9 +791,9 @@ class TMR():
                                     newPorts.append(portCpy)
                                 if not sportTmr:
                                     if self.modules[identifier]["io"][dport]["type"]=="output":
-                                        self._addVotersIfNeeded([sport])
+                                        self._addVoter(sport,addWires="input")
                                     else:
-                                        self._addFanoutsIfTmr([sport])
+                                        self._addFanout(sport)
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
 
 #                            for post in self.EXT:
@@ -804,10 +806,13 @@ class TMR():
                         tokensIns.append(instance2)
                 tokens[2]=tokensIns
                 return tokens
-
+            else:
+                self.logger.error("")
             #instantiation of unknown module
-            self.logger.info("Module %s is unknown"%identifier)
-            tmr=self.current_module["instances"][instance]["tmr"]
+                self.logger.info("Module %s is unknown"%identifier)
+                raise ErrorMessage("Module %s is unknown"%identifier)
+
+            #tmr=self.current_module["instances"][instance]["tmr"]
 
 
             self.logger.debug("      TMR :"+str(tmr))
@@ -919,15 +924,23 @@ class TMR():
                     _a=voter["inA"]
                     _b=voter["inB"]
                     _c=voter["inC"]
+                    addWires=voter["addWires"]
+                    if addWires=="output":
+                        self.logger.debug("Adding output wire %s"%(_out))
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                    elif addWires=="input":
+                        self.logger.debug("Adding inpu wires %s, %s , %s"%(_a,_b,_c))
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
 
     #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
                     moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
                     width=""
@@ -969,15 +982,21 @@ class TMR():
                     _a=fanout["outA"]
                     _b=fanout["outB"]
                     _c=fanout["outC"]
+                    addWires=fanout["addWires"]
+                    if addWires=="output":
+                        self.logger.debug("Adding output wires %s, %s , %s"%(_a,_b,_c))
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                    elif addWires=="input":
+                        self.logger.debug("Adding input wire %s"%(_in))
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_in))[0])
+#
     #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
     #                   newtokens.insert(0,comment)
     #                   voterInstName="%sVoter%s"%(right,ext)
 
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_in))[0])
-#                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
+                    #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
 
                     width=""
                     if _len!="1":
@@ -1006,7 +1025,7 @@ class TMR():
                 return rangeLen
             left=toks[-2]
             right=toks[-1]
-            rangeLen="%s - %s + 1"%(self.formater.format(left), self.formater.format(right))
+            rangeLen="%s - %s + 1"%(self.vf.format(left), self.vf.format(right))
             try:
                 rangeInt=eval(rangeLen)
                 rangeLen="%d"%rangeInt

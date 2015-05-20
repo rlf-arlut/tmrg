@@ -1,6 +1,5 @@
 module combLogic (in,out);
-  // tmrg default do_not_triplicate
-  // tmrg triplicate combLogic
+  // tmrg default triplicate
   input in;
   output out;
   wire combLogic;
@@ -8,8 +7,8 @@ module combLogic (in,out);
   assign out = combLogic;
 endmodule
 
-module hier03 (in,out);
-  // tmrg default triplicate
+module inst06 (in,out);
+  // tmrg default do_not_triplicate
   input in;
   output out;
   combLogic combLogicInst(.in(in),.out(out));

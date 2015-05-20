@@ -1,7 +1,11 @@
+module powerOnReset(z);
+  output z;
+endmodule
+
 module resetBlock (rstn,rst);
-  input rst;
+  input rstn;
   output rst;
   wire porRst;
-  assign rst=!rst | porRst;
+  assign rst=!rstn | porRst;
   powerOnReset por(.z(porRst));
 endmodule

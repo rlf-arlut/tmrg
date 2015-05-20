@@ -1,3 +1,8 @@
+module inv (I,ZN);
+  // tmrg do_not_touch
+  input  I;
+  output ZN;
+endmodule
 
 module inst03 (in,out);
   // tmrg default triplicate
