@@ -777,9 +777,11 @@ class TMR():
                                 if sportTmr:
                                     if self.modules[identifier]["io"][dport]["type"]=="input":
                                         self._addVotersIfNeeded([sport],group="")
+                                        print "voter"
                                     else:
-                                        self._addFanoutsIfTmr([sport])
-                            elif dportTmr and sportTmr:
+                                        self._addFanouts([sport])
+                                        print "fanout"
+                            elif dportTmr:
                                 for post in self.EXT:
                                     portCpy=port.deepcopy()
                                     portCpy[0][0]="."+dport+post
@@ -1319,9 +1321,11 @@ class TMR():
                     elaborationError=True
         tops=0
         self.topFile=""
+        self.topModule=""
         for module in self.modules:
             if self.modules[module]["instantiated"]==0:
                 self._printHierary(module)
+                self.topModule=module
                 self.topFile=self.modules[module]["file"]
                 tops+=1
         if tops!=1:
@@ -1395,9 +1399,6 @@ class TMR():
         ftop=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+ext+'.new')
         self._addCommonModules(ftop)
 
-        topFile,ext=os.path.splitext(os.path.basename(self.topFile))
-        fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
-        self.logger.info("Constraints file is being saved to %s"%fsdc)
 
         for fname in sorted(self.files):
             file,ext=os.path.splitext(os.path.basename(fname))
@@ -1416,6 +1417,52 @@ class TMR():
                     self.logger.info("Saving output to '%s'"%(fout))
                     self.logger.debug("Rename %s to %s"%(foutnew,fout))
                     os.rename(foutnew,fout)
+        self.genSDF()
+
+    def genSDF(self):
+        tmrSuffix="TMR"
+
+        def _findVotersAndFanouts(module,i="",ret=[]):
+            for fanoutInst in self.modules[module]["fanouts"]:
+                fanout=self.modules[module]["fanouts"][fanoutInst]
+                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outA"])
+                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outB"])
+                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outC"])
+                ret.append(i+module+tmrSuffix+"/nets/"+fanout["in"])
+
+            for group in self.modules[module]["voters"]:
+                for voterInst in self.modules[module]["voters"][group]:
+                    voter=self.modules[module]["voters"][group][voterInst]
+                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inA"])
+                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inB"])
+                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inC"])
+                    ret.append(i+module+tmrSuffix+"/nets/"+voter["out"])
+            i=i+module+tmrSuffix+"/instances_hier/"
+            for instName in self.modules[module]["instances"]:
+                inst=self.modules[module]["instances"][instName]["instance"]
+                if inst in self.modules:
+#                    self.logger.info(i+"- "+instName+":"+inst)
+                    _findVotersAndFanouts(inst,i,ret)
+                else:
+#                    self.logger.info(i+"- [!] "+instName+":"+inst)
+                     pass
+            return ret
+        # generate sdf file
+        topFile,ext=os.path.splitext(os.path.basename(self.topFile))
+        fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
+        self.logger.info("Constraints file is being saved to %s"%fsdc)
+        ret= _findVotersAndFanouts(self.topModule,i="/designs/")
+        f=open(fsdc,"w")
+        if self.__voterPresent:
+            f.write("set_dont_touch majorityVoter\n")
+        if self.__fanoutPresent:
+            f.write("set_dont_touch fanout\n")
+        for l in ret:
+            f.write("set_dont_touch %s\n"%l)
+        f.close()
+
+
+
 
 ########################################################################################################################
 
