@@ -345,7 +345,10 @@ class TMR():
             if isinstance(t, ParseResults):
                name=str(t.getName()).lower()
                if name=="subscridentifier":
-                   res.add(t[0])
+                   if not t[0] in self.current_module["nets"]:
+                     self.logger.warning("Unknown net %s"%t[0])
+                   if not "dnt" in self.current_module["nets"][t[0]]:
+                       res.add(t[0])
                else:
                    for i in range(len(t)):
                        res=_extractID(t[i],res=res)
@@ -366,7 +369,7 @@ class TMR():
                     res["left"].add(left_id)
 
             elif name == "subscridentifier":
-                res["right"].add( t[0] )
+                    res["right"].add( t[0] )
             else:
                 for i in range(len(t)):
 #                    print "#(%d)>"%i,t[i]
@@ -601,7 +604,11 @@ class TMR():
         result=[]
         for i in self.EXT:
             cpy=tokens.deepcopy()
-            self._appendToAllIds(cpy,post=i)
+            #self._appendToAllIds(cpy,post=i)
+            for name in ids["right"]:
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+
             result.append(cpy)
         return result
 
@@ -1129,6 +1136,12 @@ class TMR():
 
             for assgmng in tokens[4]:
                 name=assgmng[0][0]
+                right=assgmng[2]
+                idRight=right[0][0]
+                dnt=False
+                for ex in self.EXT:
+                    if name==idRight+ex: dnt=True
+#                print idRight,dnt
  #               self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
 #                if _len!="1":
 #                    details="(range:%s len:%s)"%(_range,_len)
@@ -1136,7 +1149,10 @@ class TMR():
 #                    details=""
 #                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
                 if not name in  self.current_module["nets"]:
-                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , 'type':'wire'}
+                    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , 'type':'wire'}
+                    if dnt:
+                        self.current_module["nets"][name]["dnt"]=True
+                        self.logger.debug("Net %s will not be touched!"%name)
 
 
     def __elaborate_directive_default(self,tokens):
@@ -1172,6 +1188,7 @@ class TMR():
                 range=item["range"]
                 if "tmr" in item: tmr=item["tmr"]
                 else: tmr="-"
+                if "dnt" in item: tmr="DNT"
                 tab.add_row([k,range, tmr])
             tab.padding_width = 1 # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
