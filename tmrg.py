@@ -1372,6 +1372,7 @@ class TMR():
 
     def _addCommonModules(self,fname,voter=False,fanout=False):
         if not  self.__fanoutPresent and not self.__voterPresent : return
+        if not self.config.getboolean("tmrg","add_common_definitions"): return
         self.logger.info("Declarations of voters and fanouts are being added to %s"%fname)
         f=open(fname,"a")
 
@@ -1390,7 +1391,7 @@ class TMR():
 
     def tmr(self):
         tmrSuffix="TMR"
-        spaces=2
+        spaces=self.config.getint("tmrg","spaces")
         showdiff=True
 
         self.logger.debug("")
@@ -1507,7 +1508,6 @@ def main():
     parser.add_option("-q", "--trace",             dest="trace",        action="store_true",   default=False, help="Trace formating")
     parser.add_option("",   "--single2tmr",        dest="s2t",          action="store_true",   default=False, help="Single ended to TMR")
     parser.add_option("-d", "--do-not-triplicate", dest="dnt",          action="append"  ,type="str")
-    parser.add_option("",   "--spaces",            dest="spaces",       default=2, type=int )
     parser.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
     parser.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="")
     parser.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
