@@ -777,10 +777,10 @@ class TMR():
                                 if sportTmr:
                                     if self.modules[identifier]["io"][dport]["type"]=="input":
                                         self._addVotersIfNeeded([sport],group="")
-                                        print "voter"
+#                                        print "voter"
                                     else:
                                         self._addFanouts([sport])
-                                        print "fanout"
+#                                        print "fanout"
                             elif dportTmr:
                                 for post in self.EXT:
                                     portCpy=port.deepcopy()
@@ -1425,20 +1425,20 @@ class TMR():
         def _findVotersAndFanouts(module,i="",ret=[]):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout=self.modules[module]["fanouts"][fanoutInst]
-                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outA"])
-                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outB"])
-                ret.append(i+module+tmrSuffix+"/nets/"+fanout["outC"])
-                ret.append(i+module+tmrSuffix+"/nets/"+fanout["in"])
+                ret.append(i+"nets/"+fanout["outA"])
+                ret.append(i+"nets/"+fanout["outB"])
+                ret.append(i+"nets/"+fanout["outC"])
+                ret.append(i+"nets/"+fanout["in"])
 
             for group in self.modules[module]["voters"]:
                 for voterInst in self.modules[module]["voters"][group]:
                     voter=self.modules[module]["voters"][group][voterInst]
-                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inA"])
-                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inB"])
-                    ret.append(i+module+tmrSuffix+"/nets/"+voter["inC"])
-                    ret.append(i+module+tmrSuffix+"/nets/"+voter["out"])
-            i=i+module+tmrSuffix+"/instances_hier/"
+                    ret.append(i+"nets/"+voter["inA"])
+                    ret.append(i+"nets/"+voter["inB"])
+                    ret.append(i+"nets/"+voter["inC"])
+                    ret.append(i+"nets/"+voter["out"])
             for instName in self.modules[module]["instances"]:
+                i=i+"instances_hier/%s/"%instName
                 inst=self.modules[module]["instances"][instName]["instance"]
                 if inst in self.modules:
 #                    self.logger.info(i+"- "+instName+":"+inst)
@@ -1451,7 +1451,7 @@ class TMR():
         topFile,ext=os.path.splitext(os.path.basename(self.topFile))
         fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
         self.logger.info("Constraints file is being saved to %s"%fsdc)
-        ret= _findVotersAndFanouts(self.topModule,i="/designs/")
+        ret= _findVotersAndFanouts(self.topModule,i="/designs/%s/"%(self.topModule+tmrSuffix))
         f=open(fsdc,"w")
         if self.__voterPresent:
             f.write("set_dont_touch majorityVoter\n")
