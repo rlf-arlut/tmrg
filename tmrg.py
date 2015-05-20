@@ -1397,9 +1397,8 @@ class TMR():
                             diffFiles(fout,foutnew)
             else:
                     self.logger.info("Saving output to '%s'"%(fout))
-                    f=open(fout,"w")
-                    f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
-                    f.close()
+                    self.logger.debug("Rename %s to %s"%(foutnew,fout))
+                    os.rename(foutnew,fout)
 
 ########################################################################################################################
 
