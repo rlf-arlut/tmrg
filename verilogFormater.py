@@ -458,6 +458,12 @@ class VerilogFormater:
         oStr="initial\n\t%s\n"%self.format(tokens[1],i+"\t")
         return oStr
 
+    def _format_directive_do_not_touch(self,tokens,i=""):
+        return ""
+
+    def _format_directive_do_not_triplicate(self,tokens,i=""):
+        return ""
+
     def _format_gate(self,tokens,i=""):
         oStr=""
  #       print tokens

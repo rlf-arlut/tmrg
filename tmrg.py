@@ -262,6 +262,9 @@ class TMR():
     def __triplicate_directive_do_not_triplicate(self,tokens):
         return []
 
+    def __triplicate_directive_do_not_touch(self,tokens):
+        return []
+
     def __triplicate(self,tokens,i=""):
         debug=0
         if debug:print i,"__",tokens.getName(),tokens
@@ -763,57 +766,81 @@ class TMR():
             self.logger.debug("      ID  :"+identifier)
             self.logger.debug("      Ins :"+instance)
 
+                #["constraints"]
             # if we know the instance
             if identifier in self.modules:
-#                self.logger.info("Module %s is known"%identifier)
-                identifierTMR=identifier+"TMR"
-                tokens[0]=identifierTMR
-#                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
-                tokensIns=ParseResults([],name=tokens[2].getName())
+                if "dnt" in self.modules[identifier]["constraints"]:
+                    self.logger.debug("Module %s will not be touched (id:%s)"%(identifier,instance))
+                    tmr=self.current_module["instances"][instance]["tmr"]
+                    if tmr:
+                        ret=[]
+                        for post in self.EXT:
+                            instCpy=tokens.deepcopy()
+                            instCpy[2][0][0][0]=instCpy[2][0][0][0]+post # change instance name
+                            #portCpy[0][0]="."+dport+post
+                            #portCpy[0][2][0][0]=sport+post
+                            for port in instCpy[2][0][1]:
+                                port[0][2][0][0]=port[0][2][0][0]+post
+                                #dport=port[0][0][1:] #skip dot
+                                #sport=port[0][2][0][0]
+                                #dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
+                                #sportTmr=self.current_module["nets"][sport]["tmr"]
+                            ret.append(instCpy)
+                        return ret
+                    else:
+                        raise ErrorMessage("Implement!")
+                        return tokens
+                else:
+    #                self.logger.info("Module %s is known"%identifier)
+                    identifierTMR=identifier+"TMR"
+                    tokens[0]=identifierTMR
+    #                self.logger.debug("ModuleInstantiation %s -> %s"%(moduleName,newModuleName))
+                    tokensIns=ParseResults([],name=tokens[2].getName())
 
-                for instance in tokens[2]:
-                        iname=instance[0]
-                        instance2=instance.deepcopy()
-                        newPorts=ParseResults([],name=instance2[1].getName())
-                        for port in instance2[1]:
-                            dport=port[0][0][1:] #skip dot
-                            sport=port[0][2][0][0]
-                            dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
-                            sportTmr=self.current_module["nets"][sport]["tmr"]
+                    for instance in tokens[2]:
+                            iname=instance[0]
+                            instance2=instance.deepcopy()
+                            newPorts=ParseResults([],name=instance2[1].getName())
 
-                            self.logger.debug("      %s (tmr:%s) -> %s (tmr:%s)"%(dport,dportTmr,sport,sportTmr))
-                            if not dportTmr:
-                                newPorts.append(port)
-                                if sportTmr:
-                                    if self.modules[identifier]["io"][dport]["type"]=="input":
-                                        self._addVoter(sport,group="")
-#                                        print "voter"
-                                    else:
-                                        self._addFanout(sport,addWires="input")
-#                                        print "fanout"
-                            elif dportTmr:
-                                for post in self.EXT:
-                                    portCpy=port.deepcopy()
-                                    portCpy[0][0]="."+dport+post
-                                    portCpy[0][2][0][0]=sport+post
-                                    newPorts.append(portCpy)
-                                if not sportTmr:
-                                    if self.modules[identifier]["io"][dport]["type"]=="output":
-                                        self._addVoter(sport,addWires="input")
-                                    else:
-                                        self._addFanout(sport)
-                            ### TODO ADD TMR ERROR !!!!!!!!!!!!
+                            for port in instance2[1]:
+                                dport=port[0][0][1:] #skip dot
+                                sport=port[0][2][0][0]
+                                dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
+                                sportTmr=self.current_module["nets"][sport]["tmr"]
 
-#                            for post in self.EXT:
-#                                netName="%stmrError%s"%(iname,post)
-                                #tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
-                                #self._addTmrErrorWire(post,netName)
-                                #newPorts.append(tmrErrOut)
+                                self.logger.debug("      %s (tmr:%s) -> %s (tmr:%s)"%(dport,dportTmr,sport,sportTmr))
+                                if not dportTmr:
+                                    newPorts.append(port)
+                                    if sportTmr:
+                                        if self.modules[identifier]["io"][dport]["type"]=="input":
+                                            self._addVoter(sport,group="")
+    #                                        print "voter"
+                                        else:
+                                            self._addFanout(sport,addWires="input")
+    #                                        print "fanout"
+                                elif dportTmr:
+                                    for post in self.EXT:
+                                        portCpy=port.deepcopy()
+                                        portCpy[0][0]="."+dport+post
+                                        portCpy[0][2][0][0]=sport+post
+                                        newPorts.append(portCpy)
+                                    if not sportTmr:
+                                        if self.modules[identifier]["io"][dport]["type"]=="output":
+                                            self._addVoter(sport,addWires="input")
+                                        else:
+                                            self._addFanout(sport)
+                                ### TODO ADD TMR ERROR !!!!!!!!!!!!
 
-                        instance2[1]=newPorts
-                        tokensIns.append(instance2)
-                tokens[2]=tokensIns
-                return tokens
+    #                            for post in self.EXT:
+    #                                netName="%stmrError%s"%(iname,post)
+                                    #tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
+                                    #self._addTmrErrorWire(post,netName)
+                                    #newPorts.append(tmrErrOut)
+
+                            instance2[1]=newPorts
+                            tokensIns.append(instance2)
+                    tokens[2]=tokensIns
+                    return tokens
             else:
                 self.logger.error("")
             #instantiation of unknown module
@@ -822,33 +849,32 @@ class TMR():
 
             #tmr=self.current_module["instances"][instance]["tmr"]
 
-
-            self.logger.debug("      TMR :"+str(tmr))
-            if not tmr:
-                newIns=ParseResults([],name=tokens.getName())
-                self.logger.error("Fanouts / voters are missing!")
-#                for inst in tokens:
-#                    name=inst[2][0][0][0]
-#                    for post in self.EXT:
-#                        instCpy=inst.deepcopy()
-#                        instCpy[2][0][0][0]=name+post
-#                        self.replaceAll(instCpy[2],post,dot=0)
-#                        newIns.append(instCpy)
-#                tokens=newIns
-            else: #triplicate insances
-                results=[]
-                # triplicate instances
-                for post in self.EXT:
-                    instCpy=tokens.deepcopy()
-                    instCpy[2][0][0][0]=instance+post
-                    for port in instCpy[2][0][1]:
-                        #print port,port[0][2][0][0]
-                        port[0][2][0][0]=port[0][2][0][0]+post
-                        #print port
-                    results.append(instCpy)
-                # add voting / fanouts
-                self.logger.error("Fanouts / voters are missing!")
-                return results
+#             self.logger.debug("      TMR :"+str(tmr))
+#             if not tmr:
+#                 newIns=ParseResults([],name=tokens.getName())
+#                 self.logger.error("Fanouts / voters are missing!")
+# #                for inst in tokens:
+# #                    name=inst[2][0][0][0]
+# #                    for post in self.EXT:
+# #                        instCpy=inst.deepcopy()
+# #                        instCpy[2][0][0][0]=name+post
+# #                        self.replaceAll(instCpy[2],post,dot=0)
+# #                        newIns.append(instCpy)
+# #                tokens=newIns
+#             else: #triplicate insances
+#                 results=[]
+#                 # triplicate instances
+#                 for post in self.EXT:
+#                     instCpy=tokens.deepcopy()
+#                     instCpy[2][0][0][0]=instance+post
+#                     for port in instCpy[2][0][1]:
+#                         #print port,port[0][2][0][0]
+#                         port[0][2][0][0]=port[0][2][0][0]+post
+#                         #print port
+#                     results.append(instCpy)
+#                 # add voting / fanouts
+#                 self.logger.error("Fanouts / voters are missing!")
+#                 return results
             return tokens
         except:
             self.exc()
@@ -870,6 +896,9 @@ class TMR():
         try:
             header=tokens[0]
             moduleName=header[1]
+            if "dnt" in   self.modules[moduleName]["constraints"]:
+                self.logger.info("Module %s is not to be touched"%moduleName)
+                return tokens
             self.current_module=self.modules[moduleName]
             header[1]=str(moduleName)+"TMR"
             self.logger.debug("")
@@ -1169,6 +1198,8 @@ class TMR():
         for net in tokens:
             self.current_module["constraints"][net]=True
 
+    def __elaborate_directive_do_not_touch(self,tokens):
+        self.current_module["constraints"]["dnt"]=True
 
     def moduleSummary(self,module):
 
@@ -1205,6 +1236,7 @@ class TMR():
             self.logger.info("")
             self.logger.info("Elaborating %s"%(fname))
             tokens=self.files[fname]
+#            print tokens
             for module in tokens:
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]

@@ -1,11 +1,11 @@
 module powerOnReset(z);
-  // tmrg default do_not_triplicate
+  // tmrg do_not_triplicate rstn
+  // tmrg do_not_touch
   output z;
 endmodule
 
 module resetBlock (rstn,rst,porStatus);
   // tmrg do_not_triplicate rstn
-  // tmrg do_not_triplicate porRstA porRstB porRstC
   input rstn;
   output rst;
   output [2:0] porStatus;

@@ -574,6 +574,7 @@ class VerilogParser:
         self.directive_triplicate       = Group( tmrg + Suppress("triplicate")        + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_triplicate")
         self.directive_default          = Group( tmrg + Suppress("default")           + oneOf("triplicate do_not_triplicate")+ Suppress(self.semi)).setResultsName("directive_default")
         self.directive_tmr_error        = Group( tmrg + Suppress("tmr_error")         + oneOf("true false")                  + Suppress(self.semi)).setResultsName("directive_tmr_error")
+        self.directive_do_not_touch     = Group( tmrg + ("do_not_touch") + Suppress(self.semi)).setResultsName("directive_do_not_touch")
 
 
         """
@@ -612,6 +613,7 @@ class VerilogParser:
             self.directive_triplicate |
             self.directive_default |
             self.directive_tmr_error |
+            self.directive_do_not_touch |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
