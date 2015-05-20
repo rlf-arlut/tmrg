@@ -26,6 +26,11 @@ def _mkdir(newdir):
         if tail:
             os.mkdir(newdir)
 
+def readFile(fname):
+  f=open(fname,"r")
+  temp=f.read()
+  f.close()
+  return temp
 
 def generateFromTemplate(outFname,templateFname, values):
   f=open(templateFname,"r")
@@ -41,6 +46,15 @@ def synthesizeModule(fname,gui=False):
     fbase,fext=os.path.splitext(os.path.basename(fname))
     fdir=os.path.dirname(fname)
     workDir=os.path.join(fdir,fbase+"_rc")
+    for f in glob.glob('%s/*'%workDir):
+      os.remove(f)
+
+    fsdc=os.path.join(fdir,fbase+".sdc")
+    userSDC=""
+    if os.path.isfile(fsdc):
+      logging.info("Loading SDC file from %s"%fsdc)
+      userSDC=readFile(fsdc)
+    
     logging.info("Creating %s directory"%workDir)
     _mkdir(workDir)
 
@@ -54,7 +68,7 @@ def synthesizeModule(fname,gui=False):
     generateFromTemplate(rcFile,os.path.join(fdir,"rc/rc.tpl"),rcValues)
 
     logging.info("Creating SDC script %s"%sdcFile)
-    sdcValues={"dont_touch":""}
+    sdcValues={"dont_touch":userSDC}
     generateFromTemplate(sdcFile,os.path.join(fdir,"rc/constraint.tpl"),sdcValues)
 
     logging.info("Run RC")
@@ -94,6 +108,7 @@ def tmrExperiment(fname):
     fdir=os.path.dirname(fname)
     fnameTMR=os.path.join(fdir,fbase+"TMR"+fext)
     os.system("rm -rf %s"%fnameTMR)
+    logging.info("")
     logging.info("Triplicating file %s"%fname)    
     cmd="tmrg.py --tmr-dir=examples -t %s "%fname
     logging.info("  %s"%cmd)    
@@ -144,15 +159,25 @@ def tmrExperiment(fname):
     logging.info("Writing results file %s"%frst)    
     f=open(frst,"w")
     f.write("\n".join(lines))
-    f.write("\n TMR area gain %.1f %%"%(100.0*areaTMR/area))
+    f.write("\n\n TMR area gain %.1f %%\n\n"%(100.0*areaTMR/area))
     f.close()
+
 def main():
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
     parser = OptionParser()
+    parser.add_option("-a", "--all", action="store_true", dest="all")
     (options, args) = parser.parse_args()
-    if len(args)!=1:
-       parser.error("You have to specify file name")
-    tmrExperiment(args[0])
+    if not options.all:
+      if len(args)!=1:
+        parser.error("You have to specify at least one file name")
+      tmrExperiment(args[0])
+    else:
+      try:
+        for fn in sorted(glob.glob("examples/*0*.v")):
+          if fn.find("TMR")>=0 : continue
+          tmrExperiment(fn)
+      except:
+        pass
 
 
 if __name__=="__main__":
