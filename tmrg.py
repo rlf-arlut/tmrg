@@ -786,10 +786,11 @@ class TMR():
                                 #dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
                                 #sportTmr=self.current_module["nets"][sport]["tmr"]
                             ret.append(instCpy)
+                        self.logger.error("Voters/fanouts missing!")
                         return ret
                     else:
-                        raise ErrorMessage("Implement!")
                         return tokens
+                        self.logger.error("Voters/fanouts missing!")
                 else:
     #                self.logger.info("Module %s is known"%identifier)
                     identifierTMR=identifier+"TMR"
