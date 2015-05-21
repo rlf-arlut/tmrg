@@ -1,5 +1,5 @@
-module inv(I,ZN);
-  // tmrg default do_not_triplicate
+module logic(I,ZN);
+  // tmrg do_not_touch
   input I;
   output ZN;
   assign ZN=~I;
@@ -7,7 +7,8 @@ endmodule
 
 module inst02 (in,out);
   // tmrg default triplicate
+  // tmrg do_not_triplicate logic01
   input in;
   output out;
-  inv inv01(.I(in),.ZN(out));
+  logic logic01(.I(in),.ZN(out));
 endmodule
