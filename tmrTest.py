@@ -110,7 +110,7 @@ def tmrExperiment(fname):
     os.system("rm -rf %s"%fnameTMR)
     logging.info("")
     logging.info("Triplicating file %s"%fname)    
-    cmd="tmrg.py --tmr-dir=examples -t %s "%fname
+    cmd="tmrg.py --tmr-dir=examples %s "%fname
     logging.info("  %s"%cmd)    
     os.system(cmd)
 
