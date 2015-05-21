@@ -51,6 +51,7 @@ div.bodywrapper a, div.footer a {
 
 .left {
   float: left;
+
 }
 
 .right {
@@ -334,7 +335,8 @@ div.footer .right {
 }
 
 div.footer .left {
-  text-transform: uppercase;
+
+  width:50%;
 }
 
 
