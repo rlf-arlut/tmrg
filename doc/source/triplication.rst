@@ -1,9 +1,9 @@
 Constraining the design
 ***********************
 
-Terminology:
-   * SEU - Single Event Upset - change of the value of a memory element (flip-flop)
-   * SET - Single Event Transient - temporary (~up to few ns) change of the value of a net 
+.. Terminology:
+..   * SEU - Single Event Upset - change of the value of a memory element (flip-flop)
+..   * SET - Single Event Transient - temporary (~up to few ns) change of the value of a net 
 
 
 
@@ -11,11 +11,19 @@ Terminology:
 Triplication
 ############
 
+To ensure maximum robustness against SEU and SET one should triplicate all
+circuitry in the chip. Unfortunately it is not always possible, as the
+triplication does come with some penalties. Just to name few one should mention
+an increase in occupied area, an increase in power consumption, a reduction in
+the maximum clock frequency. Moreover, not all blocks can be easily triplicated,
+e.g. I/O ports or some analog blocks.
 
-
-Some rules:
-  * if non triplicated signal is connected to a triplicated signal a fanout is added
-  * if triplicated signal is connected to a non triplicated signal a voter is added
+The TMRG tool lets designer to decide which blocks and signals should be triplicated.
+It automatizes also "converting" between triplicated and not triplicated signals.
+There are two basic conversion schemes:
+  * if non triplicated signal is connected to a triplicated signal a simple passive fanout is added
+  * if triplicated signal is connected to a non triplicated signal a majority voter is added
+Summary of all possible conversions is summarized in the table below:
 
 
 +-----------------------------+----------------------------+----------------------------+
@@ -26,35 +34,62 @@ Some rules:
 | **triplicated**             | majority voter             | 3 wires connection         |
 +-----------------------------+----------------------------+----------------------------+
 
-  * do not use concatenation on left hand site of any assignment
-  * do not mix triplicated and non triplicated signals (on left hand site of any assignment) 
-    in blocks
+
+There are several ways to pass constrains to the TMRG tool, the simplest and the most
+intuitive is to put a directives directly in the source code. The directives 
+are placed in comments, so they do not affect other tools. The TMRG directive
+always starts with **tmrg**  keyword. An example directive may look like:
+
+.. code-block:: verilog
+   :linenos:
+
+   // tmrg triplicate netName
 
 
-Non triplicated module
-^^^^^^^^^^^^^^^^^^^^^^
+For the time being, lets focus only on three directives:
 
-Let us consider simple combinatorial module **comb01**:
+.. code-block:: verilog
+   :linenos:
+
+   // tmrg default [triplicate|do_not_triplicate]
+   // tmrg triplicate netName
+   // tmrg do_not_triplicate netName
+
+The first directive specifies the default behavior for the whole module.
+The default behavior can be changed for individual nets using directives from 
+line 2 and 3. 
+
+Let us consider simple combinatorial module:
 
 .. literalinclude:: ../../examples/comb01.v
    :language: verilog
    :linenos:
 
+The module models an inverter, which contains only one input, one output. In the
+following sections we will see how various directives can affect the same input
+code.
+
 
 comb02 - full triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: comb02.png
-   :align: center
+Lets start our examples from appling ``default`` directive
+
 
 .. literalinclude:: ../../examples/comb02.v
    :language: verilog
    :linenos:
 
+The resulting module will look like:
+
 .. literalinclude:: ../../examples/comb02TMR.v
    :language: verilog
    :linenos:
 
+.. image:: comb02.png
+   :align: center
+
+You should note that input, output and logic was triplicated. 
 
 .. include:: ../../examples/comb02.rst
 
@@ -62,35 +97,38 @@ comb02 - full triplication
 comb03 - logic and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Chip input signals.
-Signals coming from non triplicated analog blocks.
-
-.. image:: comb03.png
-   :align: center
+Imagine that you want to connect ``in`` signal directly to an input pad (or a signal coming from an analog block), in that case you should use directive 
+``do_not_triplicate`` as shown below:
 
 
 .. literalinclude:: ../../examples/comb03.v
    :language: verilog
    :linenos:
 
+
 .. literalinclude:: ../../examples/comb03TMR.v
    :language: verilog
    :linenos:
 
+.. image:: comb03.png
+   :align: center
+
 
 .. include:: ../../examples/comb03.rst
 
+As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, logic itself, modeled by ``wire combLogic`` is also triplicated. 
+At this point, one should be aware, that the output module would be the exactly the same if one applies constrains as shown below
+
+.. code-block:: verilog
+   :linenos:
+
+   // tmrg default do_not_triplicate
+   // tmrg triplicate out combLogic
 
 comb04 - input and logic triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Chip output signals.
-Signals going to non triplicated analog blocks.
-
-
-.. image:: comb04.png
-   :align: center
-
+Lets us consider the opposite situation, where the output is left non triplicated. 
 
 .. literalinclude:: ../../examples/comb04.v
    :language: verilog
@@ -100,15 +138,18 @@ Signals going to non triplicated analog blocks.
    :language: verilog
    :linenos:
 
+.. image:: comb04.png
+   :align: center
 
 .. include:: ../../examples/comb04.rst
+
+As you can see, in order to generate non triplicated output a majority voter is added.
+
 
 comb05- logic triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: comb05.png
-   :align: center
-
+Nothing prevents you, from triplicating only logic.
 
 .. literalinclude:: ../../examples/comb05.v
    :language: verilog
@@ -118,14 +159,15 @@ comb05- logic triplication
    :language: verilog
    :linenos:
 
+.. image:: comb05.png
+   :align: center
+
 .. include:: ../../examples/comb05.rst
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: comb06.png
-   :align: center
-
+You can also triplicate everything except logic.
 
 .. literalinclude:: ../../examples/comb06.v
    :language: verilog
@@ -135,23 +177,35 @@ comb06- input and output triplication
    :language: verilog
    :linenos:
 
+.. image:: comb06.png
+   :align: center
+
 .. include:: ../../examples/comb06.rst
+
 
 
 Voting
 ######
 
 Triplication by itself is not enough to ensure SEU robustness, especially when memory elements (flip-flops) are used.
-Add more explanation ...
+If an error occurs in one branch it will propagate along the branch. If there is no repair mechanism, after first error the effective cross section is doubled with respect to the non triplicated circuit. In order to eliminate this problem, a majority voting is needed.
 
-You can see that for TMR modules additional output, tmrError, is added. It goes high whenever there is a mismatch between input signals. 
-Several examples how this feature can be used will be shown later.
+.. You can see that for TMR modules additional output, tmrError, is added. It goes high whenever there is a mismatch between input signals. 
+.. Several examples how this feature can be used will be shown later.
 
 vote01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: vote01.png
-   :align: center
+Majoritie voters can be added on a triplicated signal by adding a net declaration with a specific name:
+
+
+.. code-block:: verilog
+   :linenos:
+
+   wire netVoted = net;
+
+A simple pass through is shown below: 
+
 
 .. literalinclude:: ../../examples/vote01.v
    :language: verilog
@@ -160,6 +214,9 @@ vote01
 .. literalinclude:: ../../examples/vote01TMR.v
    :language: verilog
    :linenos:
+
+.. image:: vote01.png
+   :align: center
 
 .. include:: ../../examples/vote01.rst
 
@@ -370,7 +427,7 @@ Lets think if this is what you really want. You may see that 'porStatus'' signal
 which is of course what we want. If you connect it to some kind of digital bus, 
 most likely you will have some voting on the way, so you will not have an information
 about individual signals. In order to solve the problem, you have to "code" some triplication
-manually. If you declare a wire with a special name and with a special assigment (like bellow) 
+manually. If you declare a wire with a special name and with a special assignment (like bellow) 
 you gain access to the signal after triplication
 
 .. code-block:: verilog
@@ -414,7 +471,7 @@ sub-signals in a triplicated signal. Now let us consider opposite situation, how
 to generate triplicated signal from arbitrary combination of other signals.
 
 To make example easier to understand, lets take real-life problem: we want
-to make a clock gating circuit. A simple implementation with only one gaiting signal 
+to make a clock gating circuit. A simple implementation with only one gating signal 
 may look like:
 
 .. literalinclude:: ../../examples/clockGating01.v
@@ -426,8 +483,8 @@ may look like:
    :linenos:
 
 
-We we want to be able to gate individual sub-signals in a triplicate clock, 
-we have to use similar trick as in resetBlock.
+If we want to be able to gate individual sub-signals in a triplicate clock, 
+we have to use similar trick as in the resetBlock.
 
 
 .. literalinclude:: ../../examples/clockGating02.v
@@ -441,3 +498,11 @@ we have to use similar trick as in resetBlock.
 
 Using voting error output
 ###################################################
+
+
+Limitations
+############
+  * do not use concatenation on left hand site of any assignment
+  * do not mix triplicated and non triplicated signals (on left hand site of any assignment) 
+    in blocks
+
