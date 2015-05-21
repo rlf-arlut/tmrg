@@ -101,7 +101,7 @@ The only non-triplicated item is voting logic itself.
 
 
 Using RTL compiler pragmas
-=======================
+==========================
 
 If we ask RTL compier not to optimize output of the voters, like:
 

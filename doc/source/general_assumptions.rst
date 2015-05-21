@@ -17,11 +17,14 @@ Specification
   2) triplication should be done on RTL level
   3) tool should generate one output module for each input module. This requirement has some consequences: imagine that you have a module, like a simple added, which you are using in various places across your design. If you want to obtain various levels of protection in various places (e.g. full triplication in FSM, no protection on a data path) you have to create two identical modules (with different names) in the source project.
   4) triplication should be possible only for given signals/instances (while leaving others not touched)
+
       - specification of these should be done via pragmas in the source code or in the configuration file (similarly to RTL compiler)
       - "conversion" between triplicated and non triplicated signals should be handled automatically by means of fanout and voters
       - it should be possible to add voter anywhere (also on combinatorial signals)
       - designer should be able to access individual signals of the triplicated net (power on reset, clock gating)
+
   4) error output from majority voters should be available for the designer. This output can be used for a clock gating, error counting, or others.
+
 
 ..  4) (too some extend) understand the circuit (detect whether logic is combinatorial or sequential)
 ..      - the goal is not to write synthesizer which understand all possible cases

@@ -1,4 +1,4 @@
-module logic(I,ZN);
+module mlogic(I,ZN);
   // tmrg do_not_touch
   input I;
   output ZN;
@@ -10,5 +10,5 @@ module inst02 (in,out);
   // tmrg do_not_triplicate logic01
   input in;
   output out;
-  logic logic01(.I(in),.ZN(out));
+  mlogic logic01(.I(in),.ZN(out));
 endmodule
