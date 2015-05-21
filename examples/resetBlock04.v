@@ -1,5 +1,4 @@
 module powerOnReset(z);
-  // tmrg do_not_triplicate rstn
   // tmrg do_not_touch
   output z;
 endmodule

@@ -654,6 +654,8 @@ class TMR():
                 else:
                        newtokens.append(element)
             return newtokens
+
+        ids=self.getLeftRightHandSide(tokens)
         vote=False
 
         #left=tokens[0][4][0][0][0]
@@ -661,10 +663,42 @@ class TMR():
 
         right=tokens[4][0][2][0][0]
 
-        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-        if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
-            self.logger.info("Removing declaration of %s"%(left))
+        # check if this is explicit fanout
+        eFanout=False
+        for ext in self.EXT:
+            if left==right+ext:eFanout=True
+        if eFanout:
+            self.logger.info("Removing declaration of '%s' (it comes from a fanout of %s)"%(left,right))
             return ParseResults([],name=tokens.getName())
+
+
+        #check if this is part of explicit voter
+        eVoter=False
+        eGroup=""
+        eNet=""
+        for net in self.current_module["nets"]:
+            for ext in self.EXT:
+                if net+ext == left:
+                    eVoter=True
+                    eGroup=ext
+                    eNet=net
+        if eVoter:
+            self.logger.info("Explicit fanin '%s' part of '%s' (group %s)"%(left,eNet,eGroup))
+            for name in list(ids["right"]):
+                self._addVoter(name,"","output")
+            return tokens
+        eFanin=False
+        for ext in self.EXT:
+            if left+ext==right:eFanin=True
+        if eFanin:
+            self.logger.info("Removing declaration of '%s' (it was declared for fanin)"%(left))
+            return ParseResults([],name=tokens.getName())
+
+
+        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
+        #if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
+        #    self.logger.info("Removing declaration of %s"%(left))
+        #    return ParseResults([],name=tokens.getName())
 
         if len(self.voting_nets):
             if (right, left) in self.voting_nets:
@@ -691,30 +725,22 @@ class TMR():
                                  range=self.current_module["nets"][right]["range"],
                                  len=self.current_module["nets"][right]["len"],
                                  group=ext)
-
-#                    atrs="" #temproray FIXME
-#                    rangeLen=1 #temproray FIXME
-#                     name_voted="%s%s"%(left,ext)
-#                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
-#                     newtokens.insert(0,comment)
-#                     voterInstName="%sVoter%s"%(right,ext)
-#
-#                     newtokens.insert(1,self.netDecl1.parseString("wire %s %s;"%(atrs,name_voted))[0])
-#                     newtokens.insert(2,self.netDecl1.parseString("wire %s;"%(netErrorName))[0])
-
-#                    width=""
-#                    if rangeLen>1:
-#                        width+="#(.WIDTH(%d)) "%rangeLen
-#                    newtokens.append(self.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
-#                                                                     (width,voterInstName,a,b,c,name_voted,netErrorName) )[0]);
-
               tokens=newtokens
-
-        else:
-            tokens[4]=tmr_reg_list(tokens[4])
-
+              return tokens
+        # in any other case, triplicate right hand side
+        result = []
+        print ids["right"]
+        for i in self.EXT:
+            print i
+            cpy=tokens.deepcopy()
+            print ">",cpy
+            for name in list(ids["right"])+list(ids["left"]):
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+            print cpy
+            result.append(cpy)
 #        print tokens
-        return tokens
+        return result
 
     def __triplicate_NetDecl1(self,tokens):
         tokens[3]=self._tmr_list(tokens[3])
@@ -786,7 +812,6 @@ class TMR():
                             port[0][2][0][0]=port[0][2][0][0]+post
                         ret.append(instCpy)
 
-                    self.logger.error("      Voters/fanouts missing! (CODE BELOW UNTESTED)")
                     for port in tokens[2][0][1]:
                         dname=port[0][0][1:]
                         dtype=self.modules[identifier]["io"][dname]['type']

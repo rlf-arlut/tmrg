@@ -1,5 +1,5 @@
-Constrainig the design
-**********************
+Constraining the design
+***********************
 
 Terminology:
    * SEU - Single Event Upset - change of the value of a memory element (flip-flop)
@@ -26,7 +26,9 @@ Some rules:
 | **triplicated**             | majority voter             | 3 wires connection         |
 +-----------------------------+----------------------------+----------------------------+
 
-
+  * do not use concatenation on left hand site of any assignment
+  * do not mix triplicated and non triplicated signals (on left hand site of any assignment) 
+    in blocks
 
 
 Non triplicated module
@@ -406,6 +408,35 @@ by voting porRst signal.
 
 clockGating
 ^^^^^^^^^^^
+
+In previous example it was shown how to fanout a signal in order to access 
+sub-signals in a triplicated signal. Now let us consider opposite situation, how
+to generate triplicated signal from arbitrary combination of other signals.
+
+To make example easier to understand, lets take real-life problem: we want
+to make a clock gating circuit. A simple implementation with only one gaiting signal 
+may look like:
+
+.. literalinclude:: ../../examples/clockGating01.v
+   :language: verilog
+   :linenos:
+
+.. literalinclude:: ../../examples/clockGating01TMR.v
+   :language: verilog
+   :linenos:
+
+
+We we want to be able to gate individual sub-signals in a triplicate clock, 
+we have to use similar trick as in resetBlock.
+
+
+.. literalinclude:: ../../examples/clockGating02.v
+   :language: verilog
+   :linenos:
+
+.. literalinclude:: ../../examples/clockGating02TMR.v
+   :language: verilog
+   :linenos:
 
 
 Using voting error output
