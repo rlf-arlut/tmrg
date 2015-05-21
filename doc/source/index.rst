@@ -16,12 +16,11 @@ Content:
    :maxdepth: 2
 
    flow
-   general_assumptions
-   installation
    getting_started
    triplication
    implementation
    verification
+   general_assumptions
 
 ..   synthesis_tests
 ..   examples

@@ -32,7 +32,7 @@ div.header, div.content, div.footer {
 
 div.header-wrapper {
   background: {{ theme_headerbg }};
-  border-bottom: 3px solid #2e3436;
+  border-bottom: 1px solid #2e3436;
 }
 
 

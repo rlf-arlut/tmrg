@@ -1,5 +1,5 @@
-General Assumptions
-*******************
+Implementation details
+**********************
 
 .. warning:: Before you start reading further, you should understand the purpose of the tool. 
    The TMRG tool **is not** a single button solution which will make you CHIP / FPGA design SEU proof.
