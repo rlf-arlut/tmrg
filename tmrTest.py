@@ -189,7 +189,7 @@ def tmrExperimentIverilog(fname):
     er1=logFile(flog)
 
     tlog=os.path.join(fdir,fbase+".tlog")
-    cmd="tmrg.py --tmr-dir=examples -t %s 2> %s"%(fname,tlog)
+    cmd="tmrg.py --tmr-dir=examples %s 2> %s"%(fname,tlog)
     logging.info("  %s"%cmd)
     os.system(cmd)
     er2=logFile(tlog)
