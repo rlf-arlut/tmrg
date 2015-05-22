@@ -49,7 +49,7 @@ class CmdConstrainParser:
         self.lpar = Literal("(")
         self.rpar = Literal(")")
         self.equals = Literal("=")
-        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":True}
+        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":False}
 
         identLead = alphas+"$_"
         identBody = alphanums+"$_"
@@ -334,6 +334,13 @@ class TMR():
 
     def __elaborate_directive_do_not_touch(self,tokens):
         self.current_module["constraints"]["dnt"]=True
+
+    def __elaborate_directive_tmr_error(self,tokens):
+        en=False
+        if tokens[0].lower() =='enable':
+            en=True
+        self.current_module["constraints"]["tmr_error"]=en
+
 
     def __elaborate(self,tokens):
         """ Elaborates tokens
@@ -798,7 +805,7 @@ class TMR():
                     else:
                         newports.append(port)
                     self.logger.debug(portstr)
-                if self.current_module["nets"]["tmrError"]:
+                if "tmrError" in self.current_module["nets"]:
                     groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
@@ -814,62 +821,62 @@ class TMR():
 #                comment=ParseResults(["TMR group %s"%group],name="lineComment")
 #                body.append(comment)
                 if group in self.current_module["voters"]:
-                  for voter in self.current_module["voters"][group]:
-                    inst=voter
-                    voter=self.current_module["voters"][group][voter]
-                    self.logger.info("Instializaing voter %s"%inst)
-                    _range=voter["range"]
+                    for voter in self.current_module["voters"][group]:
+                        inst=voter
+                        voter=self.current_module["voters"][group][voter]
+                        self.logger.info("Instializaing voter %s"%inst)
+                        _range=voter["range"]
 
-                    _len=voter["len"]
-                    _out=voter["out"]
-                    _err=voter["err"]
-                    _a=voter["inA"]
-                    _b=voter["inB"]
-                    _c=voter["inC"]
-                    addWires=voter["addWires"]
-                    if addWires=="output":
-                        self.logger.debug("Adding output wire %s"%(_out))
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
-                    elif addWires=="input":
-                        self.logger.debug("Adding inpu wires %s, %s , %s"%(_a,_b,_c))
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                        _len=voter["len"]
+                        _out=voter["out"]
+                        _err=voter["err"]
+                        _a=voter["inA"]
+                        _b=voter["inB"]
+                        _c=voter["inC"]
+                        addWires=voter["addWires"]
+                        if addWires=="output":
+                            self.logger.debug("Adding output wire %s"%(_out))
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                        elif addWires=="input":
+                            self.logger.debug("Adding inpu wires %s, %s , %s"%(_a,_b,_c))
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
 
-    #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
-    #                   newtokens.insert(0,comment)
-    #                   voterInstName="%sVoter%s"%(right,ext)
+                        width=""
+                        if _len!="1":
+                            width+="#(.WIDTH(%s)) "%_len
 
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
+                        if "tmrError" in self.current_module["nets"]:
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
+                            moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                                                                               (width,inst,_a,_b,_c,_out,_err) )[0]);
+                            errSignals.add(_err)
+                        else:
+                            moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
+                                                                               (width,inst,_a,_b,_c,_out) )[0]);
 
-                    width=""
-                    if _len!="1":
-                        width+="#(.WIDTH(%s)) "%_len
-                    moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
-                                                                       (width,inst,_a,_b,_c,_out,_err) )[0]);
-                    errSignals.add(_err)
 
 
-
-                moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                 #after all voters are added, we can create or them all
-                if self.current_module["nets"]["tmrError"]:
+                if "tmrError" in self.current_module["nets"]:
+                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                     moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
-                if group in self.tmrErr:
-                    errSignals=errSignals |self.tmrErr[group]
-                sep=""
-                asgnStr="assign tmrError%s="%group
-                if len(errSignals):
-                    for signal in sorted(errSignals):
-                        asgnStr+=sep+signal
-                        sep="|"
-                else:
-                    asgnStr+="1'b0"
-                asgnStr+=";"
-                moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
+                    if group in self.tmrErr:
+                        errSignals=errSignals |self.tmrErr[group]
+                    sep=""
+                    asgnStr="assign tmrError%s="%group
+                    if len(errSignals):
+                        for signal in sorted(errSignals):
+                            asgnStr+=sep+signal
+                            sep="|"
+                    else:
+                        asgnStr+="1'b0"
+                    asgnStr+=";"
+                    moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
 
 
 
@@ -1317,7 +1324,27 @@ class TMR():
         for module in sorted(self.modules):
             self.logger.info("Module %s"%module)
 
-            self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
+            #tmr error output
+            # global settings
+            tmrErrOut=self.config.getboolean("global","tmr_error")
+            s="configGlobal:%s"%(str(tmrErrOut))
+            # from module configuration
+            if self.config.has_section(module) and self.config.has_option(module,"tmr_error"):
+                tmrErrOut=self.config.getboolean(module,"tmr_error")
+                s+=" -> configModule:%s"%(str(tmrErrOut))
+            # from source code
+            if "tmr_error" in self.modules[module]["constraints"]:
+                tmrErrOut=self.modules[module]["constraints"]["tmr_error"]
+                s+=" -> srcModule:%s"%(str(tmrErrOut))
+            # from command line arguments
+            if module in self.cmdLineConstrains and "tmr_error" in self.cmdLineConstrains[module]:
+                tmrErrOut=self.cmdLineConstrains[module][ "tmr_error"]
+                s+=" -> cmdModule:%s"%(str(tmr))
+            self.logger.info(" | tmrErrOut : %s (%s)"%(str(tmrErrOut),s))
+            if tmrErrOut:
+                self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
+
+
             for net in self.modules[module]["nets"]:
                 tmr=False
                 # default from global configuration
@@ -1656,7 +1683,6 @@ def main():
             # Open URL in new window, raising the window if possible.
             webbrowser.open_new(url)
             return
-
 
         tmrg.parse()
 
