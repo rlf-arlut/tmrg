@@ -115,7 +115,7 @@ class TMR():
         self.logger.debug("Script path : %s"%self.scriptDir)
 
         #master clonfig file
-        masterCnfg=os.path.join(self.scriptDir,"tmrg.cfg")
+        masterCnfg=os.path.join(self.scriptDir,"../etc/tmrg.cfg")
         if os.path.exists(masterCnfg):
             self.logger.debug("Loading master config file from %s"%masterCnfg)
             self.config.read(masterCnfg)
