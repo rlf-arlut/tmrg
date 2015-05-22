@@ -1595,6 +1595,7 @@ def main():
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
+    parser.add_option("",  "--doc",               dest="doc",  action="store_true",   default=False, help="Open documentation in web browser")
     actionGroup = OptionGroup(parser, "Actions" )
     actionGroup.add_option("-p", "--parse-only",        action="store_true", dest="parse",     default=False, help="Parse")
     actionGroup.add_option("-e", "--elaborate",         action="store_true", dest="elaborate", default=False, help="Elaborate")
@@ -1636,6 +1637,14 @@ def main():
             logging.getLogger().setLevel(logging.DEBUG)
 
         tmrg=TMR(options, args)
+
+        if options.doc:
+            import webbrowser
+            url = 'http://cern.ch/tmrg'
+            # Open URL in new window, raising the window if possible.
+            webbrowser.open_new(url)
+            return
+
 
         tmrg.parse()
 

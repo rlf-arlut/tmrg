@@ -196,8 +196,8 @@ If an error occurs in one branch it will propagate along the branch. If there is
 vote01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Majoritie voters can be added on a triplicated signal by adding a net declaration with a specific name:
-
+Majority voters can be added on a triplicated signal by adding a net declaration with a specific name (``Voter`` postfix). 
+By assigning a value of a source signal, one ensures that the module can be simulated or synthesized.
 
 .. code-block:: verilog
    :linenos:
@@ -205,7 +205,6 @@ Majoritie voters can be added on a triplicated signal by adding a net declaratio
    wire netVoted = net;
 
 A simple pass through is shown below: 
-
 
 .. literalinclude:: ../../examples/vote01.v
    :language: verilog
