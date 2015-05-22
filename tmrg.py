@@ -504,10 +504,10 @@ class TMR():
 #            self.logger.error("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
 
 
-    def _addVotersIfNeeded(self,idList,group=""):
+    def _addVotersIfTmr(self,idList,group="",addWires="output"):
             for netID in idList:
                 if self.current_module["nets"][netID]["tmr"]:
-                    self._addVoter(netID,group=group)
+                    self._addVoter(netID,group=group,addWires=addWires)
 
 
     def _addFanout(self,netID,addWires=""):
@@ -571,7 +571,7 @@ class TMR():
         self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
         self.logger.debug("      TMR  :"+str(tmr))
         if not tmr:
-            self._addVotersIfNeeded(ids["right"],group="")
+            self._addVotersIfTmr(ids["right"],group="output")
             return tokens
 
         self._addFanoutsIfTmr(ids["right"],addWires="output")
@@ -599,10 +599,10 @@ class TMR():
         self.logger.debug("      TMR  :"+str(tmr))
 
         if not tmr:
-            self._addVotersIfNeeded(ids["right"],group="")
+            self._addVotersIfTmr(ids["right"],group="",addWires="output")
             return tokens
 
-        self._addFanoutsIfTmr(ids["right"],addWires="ouput")
+        self._addFanoutsIfTmr(ids["right"],addWires="output")
 
         result=[]
         for i in self.EXT:
