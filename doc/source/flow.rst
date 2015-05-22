@@ -14,7 +14,7 @@ Traditionally we distinguish two types of upsets: Single-event Transients (SET) 
 Single-event transient is a phenomena in which an error happens in a combinatorial logic. It appears as a short glitch on a net. The proper  value is restored within short time (~ns). 
 Importance of SET increases with increasing clock frequency when the duration of SET becomes comparable with a clock period [Buchner]_, [Reed]_.  
 
-Single-event upsets from the other are errors induced in a memory cells (like flip-flop). In contradiction to SET, the value of the memory cell does not recover after SEU [Faccio]_.
+Single-event upsets from the other side are errors induced in memory cells (like flip-flop). In contradiction to SET, the value of the memory cell does not recover after SEU [Faccio]_.
 
 
 Tripple Module Redundancy
@@ -29,7 +29,7 @@ Other techniques address the problem on system level, by utilizing error-correct
 
 
 Tripple Module Redundancy (TMR) concept was originally developed by Von Neumann, with the main purpose of enhancing reliability of electronic circuits. 
-This concept was laster on applied in microelectronics for protection against ionizing particles. 
+This concept was later applied in microelectronics for protection against ionizing particles. 
 The purpose of TMRG tool is to automatize process of triplicating digital circuits.
 
 
@@ -54,13 +54,24 @@ artifacts fulfill various requirements.
 Design flow for triplicated design
 ==================================
 
-The TMRG tool-chain interfere with the design flow in several places. The overview of the new flow is shown in Figure below:
+The TMRG tool-chain interfere with the design flow in several places. The
+overview of the new flow is shown in Figure below:
 
 .. figure:: flowTMR.png
    :align: center
 
-As you can see, there are two new steps with respect to the normal flow, and some 
-other steps are affected. 
+As you can see, there are two new steps with respect to the normal flow, and
+some other steps are affected. The main idea is that user writes normal (non
+triplicated) HDL cod) and then uses TMRG tool to transform it to a code which
+contains triplicated elements. The behavior of the tool can be is controlled by
+user-applied constrains. 
+
+The tool helps also designer at later flow processes. It helps to ensure that
+the triplication is not optimized by the design compiler during synthesis
+process and the place and route tool (a.k.a Encounter) does not put triplicated
+cell to close to each other. The last process which is assisted by the TMRG tool
+is simulation. The tool provides an uniform mechanism to simulate SEU and SET in
+a gate level simulation.
 
 
 References

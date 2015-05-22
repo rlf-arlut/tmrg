@@ -1,3 +1,5 @@
+.. _constraining_the_design:
+
 Constraining the design
 ***********************
 
