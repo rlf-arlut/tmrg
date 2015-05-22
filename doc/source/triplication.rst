@@ -82,7 +82,7 @@ Lets start our examples from appling ``default`` directive
 
 The resulting module will look like:
 
-.. literalinclude:: ../../examples/comb02TMR.v
+.. literalinclude:: ../../examples/doc/comb02TMR.v
    :language: verilog
    :linenos:
 
@@ -106,7 +106,7 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
    :linenos:
 
 
-.. literalinclude:: ../../examples/comb03TMR.v
+.. literalinclude:: ../../examples/doc/comb03TMR.v
    :language: verilog
    :linenos:
 
@@ -134,7 +134,7 @@ Lets us consider the opposite situation, where the output is left non triplicate
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/comb04TMR.v
+.. literalinclude:: ../../examples/doc/comb04TMR.v
    :language: verilog
    :linenos:
 
@@ -155,7 +155,7 @@ Nothing prevents you, from triplicating only logic.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/comb05TMR.v
+.. literalinclude:: ../../examples/doc/comb05TMR.v
    :language: verilog
    :linenos:
 
@@ -173,7 +173,7 @@ You can also triplicate everything except logic.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/comb06TMR.v
+.. literalinclude:: ../../examples/doc/comb06TMR.v
    :language: verilog
    :linenos:
 
@@ -210,7 +210,7 @@ A simple pass through is shown below:
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/vote01TMR.v
+.. literalinclude:: ../../examples/doc/vote01TMR.v
    :language: verilog
    :linenos:
 
@@ -231,7 +231,7 @@ vote02
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/vote02TMR.v
+.. literalinclude:: ../../examples/doc/vote02TMR.v
    :language: verilog
    :linenos:
 
@@ -256,7 +256,7 @@ Simple case. Everything is triplicated but the errors are not fixed.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/fsm01TMR.v
+.. literalinclude:: ../../examples/doc/fsm01TMR.v
    :language: verilog
    :linenos:
 
@@ -276,7 +276,7 @@ This type of configuration gives maximum protection.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/fsm02TMR.v
+.. literalinclude:: ../../examples/doc/fsm02TMR.v
    :language: verilog
    :linenos:
 
@@ -295,7 +295,7 @@ Single event transient appearing in the voting element of combinatorial block cl
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/fsm03TMR.v
+.. literalinclude:: ../../examples/doc/fsm03TMR.v
    :language: verilog
    :linenos:
 
@@ -337,7 +337,7 @@ and we dont want to touch internal of the cell. That is why a directive
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/inst01TMR.v
+.. literalinclude:: ../../examples/doc/inst01TMR.v
    :language: verilog
    :linenos:
 
@@ -358,7 +358,7 @@ Voters and fanouts will be added if necessary.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/inst02TMR.v
+.. literalinclude:: ../../examples/doc/inst02TMR.v
    :language: verilog
    :linenos:
 
@@ -379,7 +379,7 @@ situation when two modules (parent and child) are to be fully triplicated.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/inst03TMR.v
+.. literalinclude:: ../../examples/doc/inst03TMR.v
    :language: verilog
    :linenos:
 
@@ -404,7 +404,7 @@ practical reasons, you still want to keep only one external reset pin.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/resetBlock01TMR.v
+.. literalinclude:: ../../examples/doc/resetBlock01TMR.v
    :language: verilog
    :linenos:
 
@@ -417,7 +417,7 @@ forward way of doing that would be:
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/resetBlock02TMR.v
+.. literalinclude:: ../../examples/doc/resetBlock02TMR.v
    :language: verilog
    :linenos:
 
@@ -445,7 +445,7 @@ Lets see how we can use this in our resetBlock example.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/resetBlock03TMR.v
+.. literalinclude:: ../../examples/doc/resetBlock03TMR.v
    :language: verilog
    :linenos:
 
@@ -457,7 +457,7 @@ by voting porRst signal.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/resetBlock04TMR.v
+.. literalinclude:: ../../examples/doc/resetBlock04TMR.v
    :language: verilog
    :linenos:
 
@@ -477,7 +477,7 @@ may look like:
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/clockGating01TMR.v
+.. literalinclude:: ../../examples/doc/clockGating01TMR.v
    :language: verilog
    :linenos:
 
@@ -490,7 +490,7 @@ we have to use similar trick as in the resetBlock.
    :language: verilog
    :linenos:
 
-.. literalinclude:: ../../examples/clockGating02TMR.v
+.. literalinclude:: ../../examples/doc/clockGating02TMR.v
    :language: verilog
    :linenos:
 

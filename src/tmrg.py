@@ -841,7 +841,7 @@ class TMR():
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                         elif addWires=="input":
-                            self.logger.debug("Adding inpu wires %s, %s , %s"%(_a,_b,_c))
+                            self.logger.debug("Adding input wires %s, %s , %s"%(_a,_b,_c))
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
