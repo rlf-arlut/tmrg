@@ -456,7 +456,7 @@ class TMR():
             self.logger.info("Creating TMR error group %s"%group)
 
         if not voterInstName in self.current_module["voters"][group]:
-            self.logger.debug("Adding voter %s"%voterInstName)
+            self.logger.debug("Adding voter '%s' to group '%s'"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
             self.current_module["voters"][group][voterInstName]={
                                  "inA":inA,
@@ -485,7 +485,7 @@ class TMR():
             range=self.current_module["nets"][netID]["range"]
             len=self.current_module["nets"][netID]["len"]
 
-            self.logger.debug("Adding voter %s"%voterInstName)
+            self.logger.debug("Adding voter '%s' to group '%s'"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
             self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
@@ -571,7 +571,7 @@ class TMR():
         self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
         self.logger.debug("      TMR  :"+str(tmr))
         if not tmr:
-            self._addVotersIfTmr(ids["right"],group="output")
+            self._addVotersIfTmr(ids["right"],addWires="output")
             return tokens
 
         self._addFanoutsIfTmr(ids["right"],addWires="output")
@@ -729,15 +729,13 @@ class TMR():
               return tokens
         # in any other case, triplicate right hand side
         result = []
-        print ids["right"]
+#        print ids["right"]
         for i in self.EXT:
-            print i
+#            print i
             cpy=tokens.deepcopy()
-            print ">",cpy
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name=name+i
                 self.replace(cpy,name,_to_name)
-            print cpy
             result.append(cpy)
 #        print tokens
         return result

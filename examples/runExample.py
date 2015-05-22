@@ -2,10 +2,32 @@
 import glob
 import os
 import sys
+import shutil
+filePath =os.path.dirname(__file__)
+srcPath = os.path.abspath(os.path.join(filePath,"../src"))
+sys.path.append(srcPath)
+
 import logging
 from optparse import OptionParser
 from prettytable import *
 from string import Template
+
+def which(program):
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
 
 def _mkdir(newdir):
     """works the way a good mkdir should :)
@@ -162,11 +184,17 @@ def tmrExperiment(fname):
     f.write("\n\n TMR area gain %.1f %%\n\n"%(100.0*areaTMR/area))
     f.close()
 
-def logFile(fname):
+def loadLogFile(fname):
+    f=open(fname)
+    r= f.readlines()
+    f.close()
+    return r
+
+def logFile(fname,i=""):
     f=open(fname)
     cnt=0
     for l in f.readlines():
-        logging.error(l.rstrip())
+        logging.error(i+l.rstrip())
         cnt+=1
     f.close()
     return cnt
@@ -201,41 +229,155 @@ def tmrExperimentIverilog(fname):
     er3=logFile(flogTMR)
 
     return er1,er2,er3
+
+def runIverilog(iverilog,fin):
+    if iverilog!=None:
+        fbase,ext=os.path.splitext(fin)
+        flog=fbase+".ilog"
+        logging.debug("[iverilog %s]"%fin)
+        logging.debug("    fin :%s"%fin)
+        logging.debug("    flog:%s"%flog)
+        cmd="%s %s 2> %s "%(iverilog,fin,flog)
+        logging.debug("    cmd :%s "%(cmd))
+        os.system(cmd)
+        errors=loadLogFile(flog)
+        os.system(cmd)
+        if len(errors)==0:
+            logging.info("iverilog %s : OK"%fin)
+            return True
+        else:
+            logging.error("iverilog %s : ERROR"%fin)
+            for e in errors:
+              logging.error("    %s"%e.rstrip())
+    return False
+
+def runTmr(tmrg,fin,opts):
+    if tmrg!=None:
+        fbase,ext=os.path.splitext(fin)
+        flog=fbase+".tlog"
+        logging.debug("[tmrg %s]"%fin)
+        logging.debug("    fin :%s"%fin)
+        logging.debug("    flog:%s"%flog)
+        cmd="%s %s %s 2> %s "%(tmrg,opts,fin,flog)
+        logging.debug("    cmd :%s "%(cmd))
+        os.system(cmd)
+        errors=loadLogFile(flog)
+        os.system(cmd)
+        if len(errors)==0:
+            logging.info("tmrg %s : OK"%fin)
+            return True
+        else:
+            logging.error("tmrg %s : ERROR"%fin)
+            for e in errors:
+              logging.error("    %s"%e.rstrip())
+            return False
+    return True
+
+def logErrors(errors,i):
+    for e in errors:
+        logging.error("%s%s"%(i,e))
+
 def main():
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
     parser = OptionParser()
+    parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("-a", "--all", action="store_true", dest="all")
     parser.add_option("-i", "--iverilog", action="store_true", dest="iverilog")
     (options, args) = parser.parse_args()
-    if not options.all:
-      if len(args)!=1:
-        parser.error("You have to specify at least one file name")
-      tmrExperiment(args[0])
-    else:
-        try:
-            if options.iverilog:
-                te1=0
-                te2=0
-                te3=0
-                #print glob.glob("examples/*.v")
-                for fn in sorted(glob.glob("examples/*.v")):
-                    if fn.find("TMR")>=0 : continue
-                    er1,er2,er3=tmrExperimentIverilog(fn)
-                    if er1:te1+=1
-                    if er2:te2+=1
-                    if er3:te3+=1
-                logging.info("")
-                logging.info("iverilog errors     : %d"%te1)
-                logging.info("tmrg errors         : %d"%te2)
-                logging.info("iverilog TMR errors : %d"%te3)
-            else:
-                for fn in sorted(glob.glob("examples/*.v")):
-                    if fn.find("TMR")>=0 : continue
-                    tmrExperiment(fn)
 
-        except:
-            print "ER"
-            pass
+    if options.verbose==0:
+        logging.getLogger().setLevel(logging.INFO)
+    elif options.verbose==1:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    tmrg=which("tmrg")
+    if tmrg ==None:
+        logging.error("No 'tmrg' on a PATH.")
+        return
+    logging.debug("tmrg : %s"%tmrg)
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    iverilog=which("iverilog")
+    if iverilog ==None:
+        logging.warning("No 'iverilog' on a PATH.")
+    else:
+        logging.debug("iverilog : %s"%iverilog)
+
+    # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    rc=which("rc")
+    if rc ==None:
+        logging.warning("No 'rc' on a PATH.")
+    else:
+        logging.debug("rc : %s"%rc)
+
+
+    if options.all:
+        args=[]
+        for fn in sorted(glob.glob("*.v")):
+            args.append(fn)
+    else:
+        if len(args)!=1:
+            parser.error("You have to specify at least one file name")
+
+    #try:
+    sourceIverilogFails=[]
+    tmrgFails=[]
+    tmrIverilogFails=[]
+    filesCount=0
+    if 1:
+
+        for fname in args:
+            filesCount+=1
+            rtlFiles=fname
+            logging.info("")
+            logging.info("#"*100)
+            logging.info("# File : %s"%fname)
+            logging.info("#"*100)
+            fbase,fext=os.path.splitext(os.path.basename(fname))
+            fdir=os.path.dirname(fname)
+            workDir=os.path.join(fdir,"work",fbase)
+            logging.info("Dir  : %s"%workDir)
+            _mkdir(workDir)
+            for f in glob.glob('%s/*'%workDir):
+                os.remove(f)
+            noTmrFile=os.path.join(workDir,fname)
+            shutil.copyfile(fname,noTmrFile)
+            good=runIverilog(iverilog,noTmrFile)
+            if not good:
+                sourceIverilogFails.append(fname)
+                continue
+            good=runTmr(tmrg,noTmrFile,opts="--tmr-dir %s"%workDir)
+            if not good:
+                tmrgFails.append(fname)
+                continue
+            tmrFile=os.path.join(workDir,fbase+"TMR"+fext)
+            good=runIverilog(iverilog,tmrFile)
+            if not good:
+                tmrIverilogFails.append(fname)
+                continue
+
+
+        logging.info("")
+        logging.info("#"*100)
+        logging.info("# Summary")
+        logging.info("#"*100)
+
+        logging.info("examples executed   : %d"%filesCount)
+        logging.info("iverilog errors     : %d"%len(sourceIverilogFails))
+        logErrors(sourceIverilogFails,i="                      ")
+        logging.info("tmrg errors         : %d"%len(tmrgFails))
+        logErrors(tmrgFails,i="                      ")
+        logging.info("iverilog TMR errors : %d"%len(tmrIverilogFails))
+        logErrors(tmrIverilogFails,i="                      ")
+#        else:
+#            for fn in sorted(glob.glob("examples/*.v")):
+#                if fn.find("TMR")>=0 : continue
+#                tmrExperiment(fn)
+
+#    except:
+#        print "ER"
+#        pass
 
 
 if __name__=="__main__":
