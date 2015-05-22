@@ -498,6 +498,34 @@ we have to use similar trick as in the resetBlock.
 Using voting error output
 ###################################################
 
+Until now, we did not care whether any of the triplicated signals was
+different than others (it is whether an single event upset happened or not).
+In some cases it may be desirable to have access to that information.
+Imagine that you have a part of the circuit which utilizes clock gating, 
+in case of SEU during absence of clock, a voting mechanism is not able
+to fix the error to restore the proper state in all memory cells. 
+One can think about using information from the majority cell to re-enable the
+clock for short period of time (one clock cycle) until the error is fixed.
+
+To do this with TMRG tool, one has to use a dedicated directive ``tmr_error
+true`` as well as instanciate a net with a specific name ``tmrError``. 
+An example below illustrates how it can be done:
+
+.. literalinclude:: ../../examples/tmrOut01.v
+   :language: verilog
+   :linenos:
+
+.. literalinclude:: ../../examples/doc/tmrOut01TMR.v
+   :language: verilog
+   :linenos:
+
+As one can see, in non triplicated code tmrError wire has to be set to zero. In
+that way the non triplicated circuit is not affected. The triplicated tmrError
+signal is an OR of all signals from the current module and all instances
+instantiated in the module.
+
+Another good use of this feature may be to implement a counter of detected 
+single-event upsets.
 
 Limitations
 ############

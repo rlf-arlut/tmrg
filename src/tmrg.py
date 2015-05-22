@@ -337,7 +337,7 @@ class TMR():
 
     def __elaborate_directive_tmr_error(self,tokens):
         en=False
-        if tokens[0].lower() =='enable':
+        if tokens[0].lower() in ('true','enable'):
             en=True
         self.current_module["constraints"]["tmr_error"]=en
 
@@ -370,6 +370,9 @@ class TMR():
         return []
 
     def __triplicate_directive_do_not_touch(self,tokens):
+        return []
+
+    def __triplicate_directive_tmr_error(self,tokens):
         return []
 
     def __triplicate(self,tokens,i=""):
@@ -543,6 +546,10 @@ class TMR():
 
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
+        if "tmrError" == left and self.current_module["nets"]["tmrError"]:
+            self.logger.info("Removing declaration of %s"%(left))
+            return []
+
         #if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
         #    self.logger.info("Removing declaration of %s"%(left))
         #    return ParseResults([],name=tokens.getName())
@@ -686,7 +693,7 @@ class TMR():
                 tokensIns=ParseResults([],name=tokens[2].getName())
 
                 for instance in tokens[2]:
-                        iname=instance[0]
+                        iname=instance[0][0]
                         instance2=instance.deepcopy()
                         newPorts=ParseResults([],name=instance2[1].getName())
 
@@ -718,12 +725,13 @@ class TMR():
                                     else:
                                         self._addFanout(sport)
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
-
-#                            for post in self.EXT:
-#                                netName="%stmrError%s"%(iname,post)
-                                #tmrErrOut=self.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
-                                #self._addTmrErrorWire(post,netName)
-                                #newPorts.append(tmrErrOut)
+                        if "tmrError" in self.modules[identifier]["nets"]:
+                            #print iname
+                            for post in self.EXT:
+                                netName="%stmrError%s"%(iname,post)
+                                tmrErrOut=self.vp.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
+                                self._addTmrErrorWire(post,netName)
+                                newPorts.append(tmrErrOut)
 
                         instance2[1]=newPorts
                         tokensIns.append(instance2)
@@ -876,6 +884,7 @@ class TMR():
                     else:
                         asgnStr+="1'b0"
                     asgnStr+=";"
+#                    print asgnStr
                     moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
 
 

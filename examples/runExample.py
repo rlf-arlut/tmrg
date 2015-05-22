@@ -288,7 +288,7 @@ def main():
 
     if options.verbose==0:
         logging.getLogger().setLevel(logging.INFO)
-    elif options.verbose==1:
+    elif options.verbose>=1:
         logging.getLogger().setLevel(logging.DEBUG)
 
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
