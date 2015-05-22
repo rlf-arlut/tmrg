@@ -282,6 +282,7 @@ def main():
     parser = OptionParser()
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("-a", "--all", action="store_true", dest="all")
+    parser.add_option("-d", "--doc", action="store_true", dest="doc")
     parser.add_option("-i", "--iverilog", action="store_true", dest="iverilog")
     (options, args) = parser.parse_args()
 
@@ -356,6 +357,8 @@ def main():
             if not good:
                 tmrIverilogFails.append(fname)
                 continue
+            if options.doc:
+                runTmr(tmrg,noTmrFile,opts="-c doc.cfg --tmr-dir doc")
 
 
         logging.info("")
