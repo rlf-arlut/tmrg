@@ -373,8 +373,6 @@ module BENCD4 (M0, M1, M2, X2, A, S);
     input M0, M1, M2;
     output X2, A, S;
 endmodule
-module BHD (Z);
-endmodule
 module BMLD1 (X2, A, S, M0, M1, PP);
   input		X2, A, S, M0, M1;
   output	PP;
