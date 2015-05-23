@@ -200,36 +200,6 @@ def logFile(fname,i=""):
     return cnt
 
 
-def tmrExperimentIverilog(fname):
-    fbase,fext=os.path.splitext(os.path.basename(fname))
-    fdir=os.path.dirname(fname)
-    fnameTMR=os.path.join(fdir,fbase+"TMR"+fext)
-    os.system("rm -rf %s"%fnameTMR)
-    logging.info("")
-    logging.info("#"*100)
-    logging.info("# Triplicating file %s"%fname)
-    logging.info("#"*100)
-
-    flog=os.path.join(fdir,fbase+".ilog")
-    cmd="iverilog %s 2> %s "%(fname,flog)
-    logging.info("  %s "%(cmd))
-    os.system(cmd)
-    er1=logFile(flog)
-
-    tlog=os.path.join(fdir,fbase+".tlog")
-    cmd="tmrg.py --tmr-dir=examples %s 2> %s"%(fname,tlog)
-    logging.info("  %s"%cmd)
-    os.system(cmd)
-    er2=logFile(tlog)
-
-    flogTMR=os.path.join(fdir,fbase+"TMR.ilog")
-    cmd="iverilog %s 2> %s "%(fnameTMR,flogTMR)
-    logging.info("  %s "%(cmd))
-    os.system(cmd)
-    er3=logFile(flogTMR)
-
-    return er1,er2,er3
-
 def runIverilog(iverilog,fin):
     if iverilog!=None:
         fbase,ext=os.path.splitext(fin)
@@ -273,6 +243,59 @@ def runTmr(tmrg,fin,opts):
             return False
     return True
 
+def runRc(rc,fin,gui=False):
+    if rc!=None:
+        fbase,fext=os.path.splitext(fin)
+        flog=fbase+".rlog"
+        fbase,fext=os.path.splitext(os.path.basename(fin))
+        logging.debug("[rc %s]"%fin)
+        logging.debug("    fin :%s"%fin)
+        logging.debug("    flog:%s"%flog)
+        fdir=os.path.dirname(fin)
+        
+        workDir=os.path.join(fdir,fbase+"_rc")
+        logging.debug("    wdir:%s"%workDir)
+        _mkdir(workDir)
+
+        for f in glob.glob('%s/*'%workDir):
+            os.remove(f)
+
+        fsdc=os.path.join(fdir,fbase+".sdc")
+        logging.debug("    sdc :%s"%fsdc)
+        
+        userSDC=""
+        if os.path.isfile(fsdc):
+          logging.info("    Loading SDC file from %s"%fsdc)
+          userSDC=readFile(fsdc)
+       
+        sdcFile=os.path.join(workDir,"constraint.sdc")
+        rcFile=os.path.join(workDir,"rc.tcl")
+
+        logging.info("    Creating RC script %s"%rcFile)
+        rcValues={"workDir":workDir,"rtlFiles":fin,"sdcFile":sdcFile,"exit":"exit"}
+        if gui:
+           rcValues["exit"]=""
+        generateFromTemplate(rcFile,"rc/rc.tpl",rcValues)
+
+        logging.info("    Creating SDC script %s"%sdcFile)
+        sdcValues={"dont_touch":userSDC}
+        generateFromTemplate(sdcFile,"rc/constraint.tpl",sdcValues)
+
+        logging.info("    Run RC")
+        cmd="rc -files %s > %s"%(rcFile,flog)
+        logging.debug("    cmd :%s "%(cmd))
+        os.system(cmd)
+        r2g=os.path.join(workDir,"r2g.v")
+        logging.debug("    r2g :%s "%(r2g))
+        if os.path.isfile(r2g):
+            logging.info("rc %s : OK"%fin)
+            return True
+        else:
+            logging.error("rc %s : ERROR"%fin)
+#            for e in errors:
+#              logging.error("    %s"%e.rstrip())
+    return False
+    
 def logErrors(errors,i):
     for e in errors:
         logging.error("%s%s"%(i,e))
@@ -323,8 +346,10 @@ def main():
 
     #try:
     sourceIverilogFails=[]
+    sourceRcFails=[]
     tmrgFails=[]
     tmrIverilogFails=[]
+    tmrRcFails=[]
     filesCount=0
     if 1:
 
@@ -339,24 +364,38 @@ def main():
             fdir=os.path.dirname(fname)
             workDir=os.path.join(fdir,"work",fbase)
             logging.info("Dir  : %s"%workDir)
+            shutil.rmtree(workDir) 
             _mkdir(workDir)
-            for f in glob.glob('%s/*'%workDir):
-                os.remove(f)
             noTmrFile=os.path.join(workDir,fname)
             shutil.copyfile(fname,noTmrFile)
-            good=runIverilog(iverilog,noTmrFile)
-            if not good:
-                sourceIverilogFails.append(fname)
-                continue
+            if iverilog:
+              good=runIverilog(iverilog,noTmrFile)
+              if not good:
+                  sourceIverilogFails.append(fname)
+                  continue
+            if rc:
+              good=runRc(rc,noTmrFile)
+              if not good:
+                  sourceRcFails.append(fname)
+                  continue
+                  
             good=runTmr(tmrg,noTmrFile,opts="--tmr-dir %s"%workDir)
             if not good:
-                tmrgFails.append(fname)
-                continue
+               tmrgFails.append(fname)
+               continue
             tmrFile=os.path.join(workDir,fbase+"TMR"+fext)
-            good=runIverilog(iverilog,tmrFile)
-            if not good:
-                tmrIverilogFails.append(fname)
+            if iverilog:
+               good=runIverilog(iverilog,tmrFile)
+               if not good:
+                  tmrIverilogFails.append(fname)
+                  continue
+
+            if rc:
+              good=runRc(rc,tmrFile)
+              if not good:
+                tmrRcFails.append(fname)
                 continue
+                  
             if options.doc:
                 runTmr(tmrg,noTmrFile,opts="-c doc.cfg --tmr-dir doc")
 
@@ -367,12 +406,23 @@ def main():
         logging.info("#"*100)
 
         logging.info("examples executed   : %d"%filesCount)
-        logging.info("iverilog errors     : %d"%len(sourceIverilogFails))
-        logErrors(sourceIverilogFails,i="                      ")
+        if iverilog: 
+          logging.info("iverilog errors     : %d"%len(sourceIverilogFails))
+          logErrors(sourceIverilogFails,i="                      ")
+        if rc:       
+          logging.info("rc errors           : %d"%len(sourceRcFails))
+          logErrors(sourceRcFails,i="                      ")
+
         logging.info("tmrg errors         : %d"%len(tmrgFails))
+
         logErrors(tmrgFails,i="                      ")
-        logging.info("iverilog TMR errors : %d"%len(tmrIverilogFails))
-        logErrors(tmrIverilogFails,i="                      ")
+        if iverilog: 
+          logging.info("iverilog TMR errors : %d"%len(tmrIverilogFails))
+          logErrors(tmrIverilogFails,i="                      ")
+        if rc: 
+          logging.info("rc TMR errors       : %d"%len(tmrRcFails))
+          logErrors(tmrRcFails,i="                      ")
+
 #        else:
 #            for fn in sorted(glob.glob("examples/*.v")):
 #                if fn.find("TMR")>=0 : continue
