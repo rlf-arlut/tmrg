@@ -1,0 +1,7 @@
+[comb06]
+default : do_not_triplicate
+in : triplicate
+out : do_not_triplicate
+combLogic : triplicate
+tmr_error : true
+
