@@ -24,10 +24,9 @@ def generateFromTemplate(outFname,templateFname, values):
   f.write(Template(temp).substitute(values))
   f.close()
 
-class SEU(VerilogElaborator):
+class SEE(VerilogElaborator):
     def __init__(self,options, args):
-        VerilogElaborator.__init__(self,options, args,cnfgName="seug")
-        self.seulogger = logging.getLogger('SEU')
+        VerilogElaborator.__init__(self,options, args,cnfgName="seeg")
     def generate(self):
         logging.info("Top module %s"%self.topModule)
         nets=[]
@@ -212,10 +211,10 @@ def main():
         fname=args[0]
 
         try:
-            seug=SEU(options, args)
-            seug.parse()
-            seug.elaborate()
-            seug.generate()
+            seeg=SEE(options, args)
+            seeg.parse()
+            seeg.elaborate()
+            seeg.generate()
         except ParseException, err:
             logging.error("")
             logging.error(err.line)
