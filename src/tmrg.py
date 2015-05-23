@@ -595,7 +595,8 @@ class TMR():
                                  tmrError=netErrorName,
                                  range=self.current_module["nets"][right]["range"],
                                  len=self.current_module["nets"][right]["len"],
-                                 group=ext)
+                                 group=ext,
+                                 addWires="output")
               tokens=newtokens
               return tokens
         # in any other case, triplicate right hand side
@@ -1102,7 +1103,6 @@ class TMR():
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
-
         if not voterInstName in self.current_module["voters"][group]:
             self.logger.debug("Adding voter '%s' to group '%s'"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))

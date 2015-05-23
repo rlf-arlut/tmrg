@@ -9,7 +9,7 @@ import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,args2files,readFile,resultLine
+from tmrg import VerilogFormater,readFile,resultLine
 import random
 import re
 
@@ -32,6 +32,7 @@ def findTopModule(design):
     #self.current_module["instantiated"]=0
 def main():
     parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
+    parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
 #    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
@@ -41,47 +42,51 @@ def main():
     parser.add_option("-q", "--trace",             action="store_true", dest="trace",  default=False, help="Trace formating")
     parser.add_option("","--spaces",               dest="spaces",       default=2, type=int )
     parser.add_option("","--rtl-dir",              dest="rtldir",       default="./rtl")
-    parser.add_option("-v",  "--verbose",          action="store_true", dest="verbose",  default=False, help="More verbose output")
     parser.add_option("-e",   "--exclude",         dest="exlude",       default="", help="Exlude nets from output file")
     parser.add_option("","--sequences",                dest="sequences",       default=1, type=int )
     #FORMAT = '%(message)s'
-    logging.basicConfig(format='[%(name)s|%(levelname)s] %(message)s', level=logging.INFO)
+
+    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     try:
         (options, args) = parser.parse_args()
 
-
-        if options.verbose:
+        if options.verbose==0:
+            logging.getLogger().setLevel(logging.WARNING)
+        if options.verbose==1:
+            logging.getLogger().setLevel(logging.INFO)
+        elif options.verbose==2:
             logging.getLogger().setLevel(logging.DEBUG)
 
-        if len(args)==0:
-            args=[options.rtldir]
 
-        modules={}
-        for fname in args2files(args):
-            try:
-                logging.info("Processing file %s"%fname)
-                vp=SEU()
-                if options.parse or options.tmr or options.format:
-                    tokens=vp.parseString(readFile(fname))
+        if len(args)!=1:
+            raise OptParseError("You have to specify netlist file name. (like r2g.v)")
 
-                #vp.applyDntConstrains(options.dnt)
+        fname=args[0]
 
-                if options.info:
-                    vp.printInfo()
+        try:
+            logging.info("Processing file %s"%fname)
+            vp=SEU()
+            if options.parse or options.tmr or options.format:
+                tokens=vp.parseString(readFile(fname))
 
-                if options.format:
-                    vf=VerilogFormater()
-                    vf.setTrace(options.trace)
-                    print vf.format(tokens).replace("\t"," "*options.spaces)
-                modules[vp.module_name]=vp
-            except ParseException, err:
-                logging.error("")
-                logging.error(err.line)
-                logging.error( " "*(err.column-1) + "^")
-                logging.error( err)
-                for l in traceback.format_exc().split("\n"):
-                    logging.error(l)
+            #vp.applyDntConstrains(options.dnt)
+
+            if options.info:
+                vp.printInfo()
+
+            if options.format:
+                vf=VerilogFormater()
+                vf.setTrace(options.trace)
+                print vf.format(tokens).replace("\t"," "*options.spaces)
+            modules[vp.module_name]=vp
+        except ParseException, err:
+            logging.error("")
+            logging.error(err.line)
+            logging.error( " "*(err.column-1) + "^")
+            logging.error( err)
+            for l in traceback.format_exc().split("\n"):
+                logging.error(l)
 
         if len(DESIGN)>=1:
             logging.info("Modules found %d"%len(DESIGN))
@@ -251,8 +256,8 @@ endtask
         #    print s
 
 
-    except ValueError:
-        raise
+    except OptParseError as er:
+        logging.error(er)
 #        G.write('simple.dot')
 #        G.layout() # layout with default (neato)
 #        G.draw('simple.png')
