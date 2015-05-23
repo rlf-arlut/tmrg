@@ -13,24 +13,174 @@ from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
 from verilogElaborator import *
+from string import Template
+
+def generateFromTemplate(outFname,templateFname, values):
+  f=open(templateFname,"r")
+  temp=f.read()
+  f.close()
+
+  f=open(outFname,"w")
+  f.write(Template(temp).substitute(values))
+  f.close()
 
 class SEU(VerilogElaborator):
     def __init__(self,options, args):
         VerilogElaborator.__init__(self,options, args,cnfgName="seug")
         self.seulogger = logging.getLogger('SEU')
+    def generate(self):
+        logging.info("Top module %s"%self.topModule)
+        nets=[]
+        def outputSetNets(module,prefix=""):
+            res=[]
+            # we want to affect net only on the bottom of the hierarhy
+            if len(self.modules[module]["instances"])==0:
+                for net in self.modules[module]["io"]:
+                    _type=self.modules[module]["io"][net]["type"]
+                    if _type=="output":
+                        _len=self.modules[module]["io"][net]["len"]
+                        _range=self.modules[module]["io"][net]["range"]
+                        _ilen=int(_len)
 
-def findTopModule(design):
-    for module in design:
-        for inst in design[module]["instances"]:
-            inst_id=inst['identifier']
-            if inst_id in design:
-                design[inst_id]["instantiated"]+=1
+#                        print net,_len, type(_len),_range,_ilen,_type
+                        if _ilen==1:
+                            res.append(prefix+net)
+                        else:
+                            #work around
+                            nn=atr.split()
+                            i1= int(nn[1])
+                            i2= int(nn[3])
+                            mmin = min ( (i1,i2) )
+                            mmax = max ( (i1,i2) )
+                            for i in range(mmin,mmax+1):
+                                res.append(prefix+net+"[%d]"%i)
+            else:
+                #in other case we loop over hierarchy
+                for instId in self.modules[module]["instances"]:
+#                    print "XX",instId,self.modules[module]["instances"][instId]
+                    inst=self.modules[module]["instances"][instId]['instance']
+                    if "[" in  instId: instId="\\"+instId+" "
+                    if inst in self.modules:
+                        res+=outputSetNets(inst,prefix=prefix+instId+".")
+            return res
+        def outputSeuNets(module,prefix=""):
+            res=[]
+            # we want to affect net only on the bottom of the hierarhy
+            if len(self.modules[module]["instances"])==0:
+                if "seu_set" in self.modules[module]["constraints"]:
+                    res.append(prefix+self.modules[module]["constraints"]["seu_set"])
+                if "seu_reset" in self.modules[module]["constraints"]:
+                    res.append(prefix+self.modules[module]["constraints"]["seu_reset"])
 
-    for module in design:
-        if design[module]["instantiated"]==0:
-            return module
+            else:
+                #in other case we loop over hierarchy
+                for instId in self.modules[module]["instances"]:
+#                    print "XX",instId,self.modules[module]["instances"][instId]
+                    inst=self.modules[module]["instances"][instId]['instance']
+                    if "[" in  instId: instId="\\"+instId+" "
+                    if inst in self.modules:
+                        res+=outputSeuNets(inst,prefix=prefix+instId+".")
+            return res
+        setNets=outputSetNets(self.topModule,"DUT.")
 
-    #self.current_module["instantiated"]=0
+        seuNets=outputSeuNets(self.topModule,"DUT.")
+
+        logging.info("Found '%d' SET nets in the design"%len(setNets))
+        if self.options.exlude!="":
+            logging.info("Exluding nets from '%s'"%options.exlude)
+            f=open(self.options.exlude,"r")
+            toExlude=[]
+            for l in f.readlines():
+                if len(l.strip())==0: continue
+                if l[0]=="#":continue
+                toExlude.append(l.rstrip())
+            f.close()
+            logging.info("Found %d exluding rules"%len(toExlude))
+            reducedNets=[]
+            for port in sorted(nets):
+                matched=0
+                for pattern in toExlude:
+                    result = re.match(pattern,port)
+                    if result:
+                        logging.info("Exluding net '%s' because of rule '%s'"%(port,pattern))
+                        matched=1
+                        break
+                if not matched:
+                    reducedNets.append(port)
+
+            nets=reducedNets
+
+        logging.debug("Nets to be affected by SET : %d"%(len(setNets)))
+        l="  "
+        for n in setNets:
+            l+=n+" "
+            if len(l)>100:
+                logging.debug(l)
+                l="  "
+        logging.debug(l)
+
+        logging.debug("Nets to be affected by SEU : %d"%(len(seuNets)))
+        l="  "
+        for n in seuNets:
+            l+=n+" "
+            if len(l)>100:
+                logging.debug(l)
+                l="  "
+        logging.debug(l)
+
+
+        wireid=0
+
+        values={}
+        values['set_display_net']=""
+        values['set_force_net']=""
+        values['set_release_net']=""
+        for wireid,net in enumerate(setNets):
+            values['set_force_net']  +="    %4d : force %s = ~%s;\n"%(wireid,net,net)
+            values['set_release_net']+="    %4d : release %s;\n"%(wireid,net)
+            values['set_display_net']+='   %4d : $display("%s");\n'%(wireid,net)
+        values['set_max_net']="%d"%len(setNets)
+        values['set_force_net']  =values['set_force_net'].rstrip()
+        values['set_release_net']=values['set_release_net'].rstrip()
+        values['set_display_net']=values['set_display_net'].rstrip()
+
+
+        values['seu_display_net']=""
+        values['seu_force_net']=""
+        values['seu_release_net']=""
+        for wireid,net in enumerate(seuNets):
+            values['seu_force_net']  +="    %4d : force %s = ~%s;\n"%(wireid,net,net)
+            values['seu_release_net']+="    %4d : release %s;\n"%(wireid,net)
+            values['seu_display_net']+='   %4d : $display("%s");\n'%(wireid,net)
+        values['seu_max_net']="%d"%len(seuNets)
+        values['seu_force_net']  =values['seu_force_net'].rstrip()
+        values['seu_release_net']=values['seu_release_net'].rstrip()
+        values['seu_display_net']=values['seu_display_net'].rstrip()
+
+
+        fname="seu.v"
+        self.logger.info("SEU file is stored to '%s'"%fname)
+
+        tfile=os.path.join( self.scriptDir,  self.config.get("seug","template"))
+        self.logger.info("Taking template from '%s'"%tfile)
+
+
+#f=open(fname,"a")
+
+        generateFromTemplate(fname,tfile, values)
+#        ofile=open("seu.v","w")
+  #      ofile.write(force+"\n"*3+release+"\n"*3+display+"\n"*3+seu_max)
+ #       ofile.close()
+
+   #     logging.info("SEU generated : %d"%seuCnt)
+        #for port in ports:
+        #    s="""always @(DUT.PORT)
+        #  $fwrite(f,"PORT %d %d\\n",$time,DUT.PORT);"""
+        #    s=s.replace("PORT",port)
+        #    print s
+
+
+
 def main():
     parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
@@ -65,6 +215,7 @@ def main():
             seug=SEU(options, args)
             seug.parse()
             seug.elaborate()
+            seug.generate()
         except ParseException, err:
             logging.error("")
             logging.error(err.line)
@@ -73,173 +224,8 @@ def main():
             for l in traceback.format_exc().split("\n"):
                 logging.error(l)
 
-
-        topModule=findTopModule(DESIGN)
-        logging.info("Top module %s"%topModule)
-        nets=[]
-        def outputNets(module,prefix=""):
-            res=[]
-            for net in DESIGN[module]["nets"]:
-                atr=DESIGN[module]["nets"][net]["atributes"]
-                if "[" in  net: net="\\"+net+" "
-
-                if atr!="": 
-  #                print net,atr
-                  #work around
-                  nn=atr.split()
-                  i1= int(nn[1])
-                  i2= int(nn[3])
-                  mmin = min ( (i1,i2) )
-                  mmax = max ( (i1,i2) )
-                  for i in range(mmin,mmax+1):
-                    res.append(prefix+net+"[%d]"%i)
-                else:                    
-                  res.append(prefix+net)
-            for inst in DESIGN[module]["instances"]:
-                instName=inst['instance']
-                if "[" in  instName: instName="\\"+instName+" "
-                instId=inst['identifier']
-                if instId in DESIGN:
-                    res+=outputNets(instId,prefix=prefix+instName+".")
-            return res
-        nets=outputNets(topModule,"DUT.")
-        logging.info("Found %d nest in the design"%len(nets))
-        if options.exlude!="":
-            logging.info("Exluding nets from '%s'"%options.exlude)
-            f=open(options.exlude,"r")
-            toExlude=[]
-            for l in f.readlines():
-                if len(l.strip())==0: continue
-                if l[0]=="#":continue
-                toExlude.append(l.rstrip())
-            f.close()
-            logging.info("Found %d exluding rules"%len(toExlude))
-            reducedNets=[]
-            for port in sorted(nets):
-                matched=0
-                for pattern in toExlude:
-                    result = re.match(pattern,port)
-                    if result:
-                        logging.info("Exluding net '%s' because of rule '%s'"%(port,pattern))
-                        matched=1
-                        break
-                if not matched:
-                    reducedNets.append(port)
-             
-            nets=reducedNets
-
-        logging.debug("Nets to be affected by SEU:")
-        l="  "
-        for n in nets:
-            l+=n+" "
-            if len(l)>100:
-                logging.debug(l)
-                l="  "
-        logging.debug(l)
-       
-        ofile=open("seuOld.v","w")
-        seuCnt=1
-        force="""task seu_force_net;
-  input wireid;
-  integer wireid;
-  begin
-  case (wireid)
-"""
-
-        release="""task seu_release_net;
-  input wireid;
-  integer wireid;
-  begin
-  case (wireid)
-"""
- 
-        display="""task seu_display_net;
-  input wireid;
-  integer wireid;
-  begin
-  case (wireid)
-"""
-       
-        for loop in range(options.sequences):
-          added=[]
-          while len(added)!=len(nets):
-            port=""
-            while port=="":
-              port=random.choice(nets)
-              if port in added:
-                port=""
-            added.append(port)
-            
-            s="""  // SEQ PORT
-  nextSEUtime = ($random & 'hffff)*SEUDEL/65536;
-  #(SEUDEL/2+nextSEUtime);
-  SEUduration = ($random & 'hffff)*MAX_UPSET_TIME/65536;
-  force PORT = ~PORT; // force procedural statement
-  seu=1;
-  #(SEUduration) release PORT;    // release procedural statement
-  seu=0;
-"""
-            s=s.replace("PORT",port)
-            s=s.replace("SEQ","%d"%seuCnt)
-            ofile.write(s+"\n")
-
-            s="""   SEQ : force PORT = ~PORT; """
-            s=s.replace("PORT",port)
-            s=s.replace("SEQ","%4d"%seuCnt)
-            force+=s+"\n"
-
-            s="""   SEQ : release PORT; """
-            s=s.replace("PORT",port)
-            s=s.replace("SEQ","%4d"%seuCnt)
-            release+=s+"\n"
-
-            s="""   SEQ : $display("PORT"); """
-            s=s.replace("PORT",port)
-            s=s.replace("SEQ","%4d"%seuCnt)
-            display+=s+"\n"
-
-
-            seuCnt+=1
-          #print
-        ofile.close()
-
-        force+="""  endcase
-end
-endtask"""    
-
-        release+="""  endcase
-end
-endtask""" 
-
-        display+="""  endcase
-end
-endtask"""   
-
-        seu_max=""" task seu_max_net;
-  output wireid;
-  integer wireid;
-  begin
-    wireid=SEQ;
-  end
-endtask
-"""
-        seu_max=seu_max.replace("SEQ","%4d"%seuCnt)
-        
-        ofile=open("seu.v","w")
-        ofile.write(force+"\n"*3+release+"\n"*3+display+"\n"*3+seu_max)
-        ofile.close()
-
-        logging.info("SEU generated : %d"%seuCnt)
-        #for port in ports:
-        #    s="""always @(DUT.PORT)
-        #  $fwrite(f,"PORT %d %d\\n",$time,DUT.PORT);"""
-        #    s=s.replace("PORT",port)
-        #    print s
-
-
     except ErrorMessage as er:
         logging.error(er)
-
     except OptParseError as er:
         logging.error(er)
 #        G.write('simple.dot')

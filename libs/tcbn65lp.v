@@ -932,6 +932,8 @@ endmodule
 module DFQD1 (D, CP, Q);
     input D, CP;
     output Q;
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
 endmodule
 module DFQD2 (D, CP, Q);
     input D, CP;

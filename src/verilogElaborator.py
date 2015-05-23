@@ -236,6 +236,11 @@ class VerilogElaborator():
             en=True
         self.current_module["constraints"]["tmr_error"]=en
 
+    def _elaborate_directive_seu_set(self,tokens):
+        self.current_module["constraints"]["seu_set"]=tokens[0]
+
+    def _elaborate_directive_seu_reset(self,tokens):
+        self.current_module["constraints"]["seu_reset"]=tokens[0]
 
     def _elaborate(self,tokens):
         """ Elaborates tokens
