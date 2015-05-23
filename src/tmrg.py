@@ -1284,7 +1284,7 @@ class TMR(VerilogElaborator):
         if self.config.getboolean("tmrg","generate_sdc") or self.options.generate_sdc:
             topFile,ext=os.path.splitext(os.path.basename(self.topFile))
             fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
-            self.logger.info("Generating SDC constraints file i%s"%fsdc)
+            self.logger.info("Generating SDC constraints file %s"%fsdc)
             header=""
             if self.config.getboolean("tmrg","sdc_headers") or self.options.sdc_headers:
                header="set sdc_version 1.3\n"
