@@ -1,3 +1,5 @@
+.. _licesing:
+
 Licesing and distribution
 #########################
 
@@ -27,7 +29,7 @@ to ensure that the TMRG software is not distributed to forbiden countries.
 
 The EU and Swtitezrland therefore control the export, transit and brokering of
 dual-use items as a key instrument contributing to international peace and
-security. Please refer to `Dual-use controlst
+security. Please refer to `Dual-use controls
 <http://ec.europa.eu/trade/import-and-export-rules/export-from-eu/dual-use-controls/>`_
 for more informations.
 
