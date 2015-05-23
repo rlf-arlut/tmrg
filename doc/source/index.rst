@@ -2,7 +2,7 @@ Triple Modular Redundancy Generator
 ###################################
 
 This website describes the **Triple Modular Redundancy Generator** tool.
-The TMRG tool set assists in the process of creating digital designs immune 
+The TMRG toolset assists in the process of creating digital designs immune 
 to single event upsets. The immunity is provided by means of triple modular 
 redundancy. 
 
