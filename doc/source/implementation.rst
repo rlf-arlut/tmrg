@@ -1,3 +1,5 @@
+.. _implementation:
+
 Physical implementation
 ***********************
 
@@ -42,7 +44,7 @@ prevent DC from optimizing the actual logic. To load the file in RC you can:
     read_sdc comb06TMR.sd
 
 If you do not want to specify command line options every time, you can also 
-put options in the section ``tmrg`` in the configuration file,  as shown below:
+put options in the section ``tmrg`` in the configuration file, s as shown below:
 
 .. code-block:: text
 
@@ -59,10 +61,12 @@ Place & Route
 To ensure that triplication effort makes sens, one has to ensure that
 the triplicated instances of the same element are not placed to close to each other.
 Such a physical proximity may lead to situation, where one particle traversing the ASIC is
-able to deposit energy along several logic cells at the same time causing multiple bit SEU. Such an error can not be detected and then leads to malfunctioning of the design. 
+able to deposit energy along several logic cells at the same time causing multiple bit upsets. 
+Such an error can not be detected and then leads to malfunctioning of the design. 
 
 In the real design, there are majority voters before(or after) flip-flops. 
-From the P&R optimization point of view, in order to keep routing short, the triplicated flip-flops should be placed relatively close together. 
+From the P&R optimization point of view, in order to keep routing short, the
+instances of triplicated flip-flops should be placed relatively close together. 
 
 If designer creates several specific regions where to put various groups of flip-flops:
 
@@ -84,5 +88,6 @@ the TMRG tool can generate a file which will assign flip-flops to proper groups:
   addInstToInstGroup tmrGroupB {GBLDDIGITALTMR/MB/MC1/memB_reg[1]}
   addInstToInstGroup tmrGroupC {GBLDDIGITALTMR/MB/MC1/memC_reg[1]}
 
-Moreover, the tool is capable of calculating distances between triplicated flip-flops and making histogram of these.
+Moreover, the tool is capable of calculating distances between triplicated
+flip-flops and making histogram of these.
 

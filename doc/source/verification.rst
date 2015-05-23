@@ -1,9 +1,11 @@
+.. _verification:
+
 Verification
 ************
 
 Once the design is implemented (you have a verilog netlist) you should verify 
 that the design still  does what you want it to do and that the design in immune to SEU. 
-The TMRG tool set can generate a verilog file which will simplify that task.
+The TMRG toolset can generate a verilog file which will simplify that task.
 The file contains several useful verilog tasks, which can toggle nets (to simulate SET) or toggle flip-flip flops (to simmulate SEU).
 
 .. code-block:: verilog

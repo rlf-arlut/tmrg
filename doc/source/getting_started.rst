@@ -4,7 +4,7 @@ Getting started
 Installation
 ============
 
-The TMRG tool set does not really require installation. It is a set of python scripts.
+The TMRG toolset does not really require installation. It is a set of python scripts.
 It is enough to download it, extract and set a system PATH to point on the bin directory.
 
 Getting source code from the SVN repository
@@ -80,11 +80,7 @@ You should see nothing, which means that script finished successfully without an
 As a result of script operation a file ``dffTMR.v`` should be created in a current directory. 
 The file contains  (please review it!) fully triplicated, synthesizable module.
 
-Synthesizing the design
-=======================
 
-Place and route the design
-==========================
+In the next step you should implement and verify the design. The TMRG tool assist with this steps as well.
+For more details please refer :ref:`implementation` and  :ref:`verification` sections.
 
-Simulation
-==========
