@@ -529,6 +529,136 @@ instantiated in the module.
 Another good use of this feature may be to implement a counter of detected 
 single-event upsets.
 
+
+
+Available constrains 
+###################################################
+
+If you do not like an idea of putting constrains in your source code directly, 
+you do not have to do it. You may put your constrains in a configuration file
+or you can provide them as a command line arguments.
+
+The configuration file uses standard INI file format. It is a simple text file with a basic structure composed of sections, properties, and values.
+An example file may look like:
+
+.. code-block:: ini
+
+   [modName]
+     default : triplicate
+     net : triplicate
+     net : do_not_triplicate
+     tmr_error : true
+
+There should be one section per module, each property/value pair sets a constrain. To load a configuration file, you have to specify its name
+as a comand line argument:
+
+.. code-block:: bash
+
+    $ tmrg -c config.cfg [other_options]
+    $ tmrg --config config.cfg [other_options]
+
+Applying constrains is also possible via command line arguments. This aproach is net very efective for constraining the whole project, but
+may be really handy in the initial phase. A posible constrains are shown bellow:
+
+.. code-block:: bash
+
+    $ tmrg -d "default triplicate modName" [other_options]
+    $ tmrg -d "triplicate modName.net" [other_options]
+    $ tmrg -d "do_not_triplicate modName.net" [other_options]
+    $ tmrg -d "tmr_error true modName" [other_options]
+
+As one can see, syntax is quire similar, however module name has to be specified for each constrain.
+
+A brief summary of all constrains, ways of specifying it, and priorities is shown in Table below.
+
++------------------------------------------------+------------------------------------------------+------------------------------------------------+
+| directive in code (lowest priority)            | configuration file (medium priority)           | command line argument (highest priority)       |
++================================================+================================================+================================================+
+| .. code-block:: verilog                        | .. code-block:: ini                            | .. code-block:: verilog                        |
+|                                                |                                                |                                                |
+|     module modName(..);                        |     [modName]                                  |     -                                          |
+|      // tmrg default triplicate                |       default : triplicate                     |     -d "default triplicate modName"            |
+|      // tmrg triplicate net                    |       net : triplicate                         |     -d "triplicate modName.net"                |
+|      // tmrg do_not_triplicate net             |       net : do_not_triplicate                  |     -d "do_not_triplicate modName.net"         |
+|      // tmrg tmr_error true                    |       tmr_error : true                         |     -d "tmr_error true modName"                |
+|                                                |                                                |                                                |
++------------------------------------------------+------------------------------------------------+------------------------------------------------+
+
+There is one more important feature which should be mentioned at this point. As there are several ways of specifying constrains and one constrain 
+can be overwritten by another, there is mechanism which can ensure the designer that all his intentions are interpreted properly.
+When you are calling TMRG tool you can ask for a verbose output using ``-v`` option. Lets consider ``comb06`` module from above example. Lets write a configuration files ``comb06.cnf``
+
+.. code-block:: init
+
+   [comb06]
+   default : do_not_triplicate
+   in : triplicate
+   out : do_not_triplicate
+   combLogic : triplicate
+   tmr_error : true
+
+When you run TMRG with additional options and constrains as shown below:
+ 
+.. code-block:: bash
+
+    $ tmrg -vv \
+           -w "default triplicate comb06" \
+           -w "tmr_error false comb06" \
+           -w "triplicate comb06.combLogic" \
+           -c comb06.cnf \
+           comb06.v
+
+You will see the detailed log of what is being done. The part which is interesting
+from the point of this chapter is shown below:
+
+.. code-block:: bash
+
+   [..]
+   [DEBUG  ] Loading master config file from /home/skulis/work/tmrg/trunk/bin/../etc/tmrg.cfg
+   [DEBUG  ] Loading user config file from /home/skulis/.tmrg.cfg
+   [DEBUG  ] Loading command line specified config file from comb06.cnf
+   [..]
+   [INFO   ] Command line constrain 'directive_default' for module 'comb06' (value:True)
+   [INFO   ] Command line constrain 'directive_tmr_error' for module 'comb06' (value:False)
+   [INFO   ] Command line constrain 'directive_triplicate' for net 'combLogic' in module 'comb06'
+   [..]
+   [INFO   ] Applying constrains
+   [INFO   ] Module comb06
+   [INFO   ]  | tmrErrOut : False (configGlobal:False 
+                                  -> configModule:True 
+                                  -> cmdModule:False)
+   [INFO   ]  | net combLogic : True (configGlobalDefault:True 
+                                  -> srcModuleDefault:True 
+                                  -> configModuleDefault:False 
+                                  -> cmdModuleDefault:True 
+                                  -> src:False 
+                                  -> config:True 
+                                  -> cmd:True)
+   [INFO   ]  | net in : True (configGlobalDefault:True 
+                                  -> srcModuleDefault:True 
+                                  -> configModuleDefault:False 
+                                  -> cmdModuleDefault:True 
+                                  -> config:True)
+   [INFO   ]  | net out : False (configGlobalDefault:True 
+                                  -> srcModuleDefault:True 
+                                  -> configModuleDefault:False 
+                                  -> cmdModuleDefault:True 
+                                  -> config:False)
+   [..]
+   [INFO   ] Module:comb06
+   [INFO   ] +####################################################+##################+############+
+   [INFO   ] | Nets                                               |        range     |    tmr     |
+   [INFO   ] +####################################################+##################+############+
+   [INFO   ] | combLogic                                          |                  |    True    |
+   [INFO   ] | in                                                 |                  |    True    |
+   [INFO   ] | out                                                |                  |   False    |
+   [INFO   ] +----------------------------------------------------+------------------+------------+
+   [..]
+
+You can check in the last table whether the constrains are applied as intended.
+If not, you can follow step by step process of applying constrains to understand
+at which point something went wrong.
+
 Limitations
 ############
   * do not use concatenation on left hand site of any assignment

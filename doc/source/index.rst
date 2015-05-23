@@ -21,6 +21,7 @@ This website describes the **Triple Modular Redundancy Generator** tool.
    implementation
    verification
    general_assumptions
+   license
 
 ..   synthesis_tests
 ..   examples
