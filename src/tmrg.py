@@ -1604,9 +1604,9 @@ class TMR():
                     self.logger.info("Saving output to '%s'"%(fout))
                     self.logger.debug("Rename %s to %s"%(foutnew,fout))
                     os.rename(foutnew,fout)
-        self.genSDF()
+        self.genSDC()
 
-    def genSDF(self):
+    def genSDC(self):
         tmrSuffix="TMR"
 
         def _findVotersAndFanouts(module,i="",ret=[]):
@@ -1634,19 +1634,25 @@ class TMR():
 #                    self.logger.info(i+"- [!] "+instName+":"+inst)
                      pass
             return ret
-        # generate sdf file
-        topFile,ext=os.path.splitext(os.path.basename(self.topFile))
-        fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
-        self.logger.info("Constraints file is being saved to %s"%fsdc)
-        ret= _findVotersAndFanouts(self.topModule,i="/designs/%s/"%(self.topModule+tmrSuffix))
-        f=open(fsdc,"w")
-        if self.__voterPresent:
-            f.write("set_dont_touch majorityVoter\n")
-        if self.__fanoutPresent:
-            f.write("set_dont_touch fanout\n")
-        for l in ret:
-            f.write("set_dont_touch %s\n"%l)
-        f.close()
+
+        if self.config.getboolean("tmrg","generate_sdc") or self.options.generate_sdc:
+            topFile,ext=os.path.splitext(os.path.basename(self.topFile))
+            fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
+            self.logger.info("Generating SDC constraints file i%s"%fsdc)
+            header=""
+            if self.config.getboolean("tmrg","sdc_headers") or self.options.sdc_headers:
+               header="set sdc_version 1.3\n"
+            # generate sdf file
+            ret= _findVotersAndFanouts(self.topModule,i="/designs/%s/"%(self.topModule+tmrSuffix))
+            f=open(fsdc,"w")
+            f.write(header)
+            if self.__voterPresent:
+                f.write("set_dont_touch majorityVoter\n")
+            if self.__fanoutPresent:
+                f.write("set_dont_touch fanout\n")
+            for l in ret:
+                f.write("set_dont_touch %s\n"%l)
+            f.close()
 
 
 
@@ -1687,6 +1693,10 @@ def main():
 #    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     tmrGroup.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
+    tmrGroup.add_option("",  "--generate_sdc",       dest="generate_sdc",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
+    tmrGroup.add_option("",  "--sdc_headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
+
+
     parser.add_option_group(tmrGroup)
 
    # print config.get("tmrg","tmr_dir")
