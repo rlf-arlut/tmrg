@@ -31,6 +31,24 @@ If you are using mic cluster @CERN, you can use an installation from  ``/homedir
 
     $ source /homedir/skulis/tmrg/trunk/etc/tmrg.sh
 
+
+Getting help
+=============
+
+If you want to see how to use TMRG you can run:
+
+.. code-block:: bash
+
+    $ tmrg -h
+
+which will show a summary of available options. If you want to read the full documentation you can run:
+
+.. code-block:: bash
+
+    $ tmrg --doc
+
+which should open a documentation in the web browser.
+
 Triplicating first design
 =========================
 
