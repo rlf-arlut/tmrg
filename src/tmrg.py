@@ -150,18 +150,18 @@ class TMR():
         for c in self.options.constrain:
             tokens=ccp.parse(c)
             name=tokens.getName()
-            if name=="directive_triplicate" or name=="do_not_triplicate":
+            if name=="directive_triplicate" or name=="directive_do_not_triplicate":
                 tmrVal=False
                 if name=="triplicate":tmrVal=True
                 for _id in tokens:
                     if _id.find(".")>=0:
                         module,net=_id.split(".")
-                        self.logger.info("Command line constrain for net %s in module %s"%(net,module))
+                        self.logger.info("Command line constrain '%s' for net '%s' in module '%s'"%(name, net,module))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module]={}
                         self.cmdLineConstrains[module][net]=True
                     else:
-                        self.logger.info("Command line constrain for net %s"%(net))
+                        self.logger.info("Command line constrain '%s' for net '%s'"%(name,net))
                         net=_id
                         if not "global" in self.cmdLineConstrains:
                             self.cmdLineConstrains["global"]={}
@@ -169,9 +169,10 @@ class TMR():
             elif name=="directive_default":
                 tmrVal=False
                 if tokens[0].lower()=="triplicate":
-                    tmrVal=False
+                    tmrVal=True
                 if len(tokens[1])>0:
                     for module in tokens[1]:
+                        self.logger.info("Command line constrain '%s' for module '%s' (value:%s)"%(name, module,str(tmrVal)))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module]={}
                         self.cmdLineConstrains[module]["default"]=tmrVal
@@ -179,6 +180,22 @@ class TMR():
                     if not "global" in self.cmdLineConstrains:
                         self.cmdLineConstrains["global"]={}
                     self.cmdLineConstrains["global"]["default"]=tmrVal
+            elif name=="directive_tmr_error":
+                tmrErr=False
+                if tokens[0].lower()=="true":
+                    tmrErr=True
+                if len(tokens[1])>0:
+                    for module in tokens[1]:
+                        self.logger.info("Command line constrain '%s' for module '%s' (value:%s)"%(name, module,str(tmrErr)))
+                        if not module in self.cmdLineConstrains:
+                            self.cmdLineConstrains[module]={}
+                        self.cmdLineConstrains[module]["tmr_error"]=tmrErr
+                else:
+                    if not "global" in self.cmdLineConstrains:
+                        self.cmdLineConstrains["global"]={}
+                    self.cmdLineConstrains["global"]["default"]=tmrErr
+            else:
+                self.logger.warning("Unknown constrain '%s'"%name)
 
         if len(self.args)==0:
             rtl_dir=self.config.get("tmrg","rtl_dir")
@@ -1330,6 +1347,7 @@ class TMR():
         #apply constrains
         self.logger.info("")
         self.logger.info("Applying constrains")
+      #  print self.cmdLineConstrains[module]
         for module in sorted(self.modules):
             self.logger.info("Module %s"%module)
 
@@ -1337,18 +1355,18 @@ class TMR():
             # global settings
             tmrErrOut=self.config.getboolean("global","tmr_error")
             s="configGlobal:%s"%(str(tmrErrOut))
-            # from module configuration
-            if self.config.has_section(module) and self.config.has_option(module,"tmr_error"):
-                tmrErrOut=self.config.getboolean(module,"tmr_error")
-                s+=" -> configModule:%s"%(str(tmrErrOut))
             # from source code
             if "tmr_error" in self.modules[module]["constraints"]:
                 tmrErrOut=self.modules[module]["constraints"]["tmr_error"]
                 s+=" -> srcModule:%s"%(str(tmrErrOut))
+            # from module configuration
+            if self.config.has_section(module) and self.config.has_option(module,"tmr_error"):
+                tmrErrOut=self.config.getboolean(module,"tmr_error")
+                s+=" -> configModule:%s"%(str(tmrErrOut))
             # from command line arguments
             if module in self.cmdLineConstrains and "tmr_error" in self.cmdLineConstrains[module]:
                 tmrErrOut=self.cmdLineConstrains[module][ "tmr_error"]
-                s+=" -> cmdModule:%s"%(str(tmr))
+                s+=" -> cmdModule:%s"%(str(tmrErrOut))
             self.logger.info(" | tmrErrOut : %s (%s)"%(str(tmrErrOut),s))
             if tmrErrOut:
                 self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
@@ -1361,6 +1379,11 @@ class TMR():
                 if globalTmr.lower()=="triplicate":
                     tmr=True
                 s="configGlobalDefault:%s"%(str(tmr))
+                # default from source code
+                if "default" in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"]["default"]
+                    s+=" -> srcModuleDefault:%s"%(str(tmr))
+
                 # default from module configuration
                 if self.config.has_section(module) and self.config.has_option(module,"default"):
                     modDefault=self.config.get(module,"default")
@@ -1369,15 +1392,17 @@ class TMR():
                     else:
                         tmr=False
                     s+=" -> configModuleDefault:%s"%(str(tmr))
-                # default from source code
-                if "default" in self.modules[module]["constraints"]:
-                    tmr=self.modules[module]["constraints"]["default"]
-                    s+=" -> srcModuleDefault:%s"%(str(tmr))
 
                 # default from command line arguments
                 if module in self.cmdLineConstrains and "default" in self.cmdLineConstrains[module]:
                     tmr=self.cmdLineConstrains[module]["default"]
                     s+=" -> cmdModuleDefault:%s"%(str(tmr))
+
+                # net specific from source code
+                if net in self.modules[module]["constraints"]:
+                    tmr=self.modules[module]["constraints"][net]
+                    s+=" -> src:%s"%(str(tmr))
+
                 # net specific from configuration
                 if self.config.has_section(module) and self.config.has_option(module,net):
                     conf=self.config.get(module,net)
@@ -1386,10 +1411,7 @@ class TMR():
                     else:
                         tmr=False
                     s+=" -> config:%s"%(str(tmr))
-                # net specific from source code
-                if net in self.modules[module]["constraints"]:
-                    tmr=self.modules[module]["constraints"][net]
-                    s+=" -> src:%s"%(str(tmr))
+
                 # net specific from command line
                 if module in self.cmdLineConstrains and net in self.cmdLineConstrains[module]:
                     tmr=self.cmdLineConstrains[module][net]
