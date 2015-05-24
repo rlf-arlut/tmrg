@@ -30,7 +30,6 @@ class SEE(VerilogElaborator):
         VerilogElaborator.__init__(self,options, args,cnfgName="seeg")
     def generate(self):
         logging.debug("")
-        nets=[]
         def outputSetNets(module,prefix=""):
             res=[]
             # we want to affect net only on the bottom of the hierarhy
@@ -41,8 +40,6 @@ class SEE(VerilogElaborator):
                         _len=self.modules[module]["io"][net]["len"]
                         _range=self.modules[module]["io"][net]["range"]
                         _ilen=int(_len)
-
-#                        print net,_len, type(_len),_range,_ilen,_type
                         if _ilen==1:
                             res.append(prefix+net)
                         else:
@@ -57,7 +54,6 @@ class SEE(VerilogElaborator):
             else:
                 #in other case we loop over hierarchy
                 for instId in self.modules[module]["instances"]:
-#                    print "XX",instId,self.modules[module]["instances"][instId]
                     inst=self.modules[module]["instances"][instId]['instance']
                     if "[" in  instId: instId="\\"+instId+" "
                     if inst in self.modules:
@@ -65,28 +61,27 @@ class SEE(VerilogElaborator):
             return res
         def outputSeuNets(module,prefix=""):
             res=[]
-            # we want to affect net only on the bottom of the hierarhy
+            # we want to affect nets only on the bottom of the hierarhy
             if len(self.modules[module]["instances"])==0:
                 if "seu_set" in self.modules[module]["constraints"]:
                     res.append(prefix+self.modules[module]["constraints"]["seu_set"])
                 if "seu_reset" in self.modules[module]["constraints"]:
                     res.append(prefix+self.modules[module]["constraints"]["seu_reset"])
-
             else:
                 #in other case we loop over hierarchy
                 for instId in self.modules[module]["instances"]:
-#                    print "XX",instId,self.modules[module]["instances"][instId]
                     inst=self.modules[module]["instances"][instId]['instance']
                     if "[" in  instId: instId="\\"+instId+" "
                     if inst in self.modules:
                         res+=outputSeuNets(inst,prefix=prefix+instId+".")
             return res
+
         setNets=outputSetNets(self.topModule,"DUT.")
+        self.logger.info("Found '%d' SET nets in the design"%len(setNets))
 
         seuNets=outputSeuNets(self.topModule,"DUT.")
-
-        self.logger.info("Found '%d' SET nets in the design"%len(setNets))
         self.logger.info("Found '%d' SEU nets in the design"%len(seuNets))
+
         self.logger.info("")
 
         if self.options.exlude!="":
@@ -120,23 +115,18 @@ class SEE(VerilogElaborator):
                 seuNets=exclude(seuNets,toExlude)
                 setNets=exclude(setNets,toExlude)
 
-        logging.debug("Nets to be affected by SET : %d"%(len(setNets)))
-        l="  "
-        for n in setNets:
-            l+=n+" "
-            if len(l)>100:
-                logging.debug(l)
-                l="  "
-        logging.debug(l)
+        def verboseNets(desc,nets):
+            logging.debug("Nets to be affected by SET : %d"%(len(nets)))
+            l="  "
+            for n in nets:
+                l+=n+" "
+                if len(l)>100:
+                    logging.debug(l)
+                    l="  "
+            logging.debug(l)
 
-        logging.debug("Nets to be affected by SEU : %d"%(len(seuNets)))
-        l="  "
-        for n in seuNets:
-            l+=n+" "
-            if len(l)>100:
-                logging.debug(l)
-                l="  "
-        logging.debug(l)
+        verboseNets("Nets to be affected by SET : ",setNets)
+        verboseNets("Nets to be affected by SEU : ",seuNets)
 
         wireid=0
 
