@@ -14,6 +14,7 @@ import random
 import re
 from verilogElaborator import *
 from string import Template
+from toolset import *
 
 def generateFromTemplate(outFname,templateFname, values):
   f=open(templateFname,"r")
@@ -177,12 +178,14 @@ class SEE(VerilogElaborator):
 
 
 def main():
-    parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName")
-    parser.add_option("-v", "--verbose",        dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
-    parser.add_option("-l", "--lib",            dest="libs",       action="append",   default=[], help="Library")
-    parser.add_option("",   "--spaces",         dest="spaces",       default=2, type=int )
-    parser.add_option("-e", "--exclude",        dest="exlude",       default="", help="Exlude nets from output file")
-    parser.add_option("-o", "--output-file",    dest="ofile" ,       default="", help="Output file name")
+    OptionParser.format_epilog = lambda self, formatter: self.epilog
+    parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName", epilog=epilog)
+    parser.add_option("-v", "--verbose",       dest="verbose",   action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
+    parser.add_option("",   "--doc",           dest="doc",       action="store_true",   default=False, help="Open documentation in web browser")
+    parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")
+    parser.add_option("",   "--spaces",        dest="spaces",    default=2, type=int )
+    parser.add_option("-e", "--exclude",       dest="exlude",    default="", help="Exlude nets from output file")
+    parser.add_option("-o", "--output-file",   dest="ofile" ,    default="see.v", help="Output file name")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
@@ -196,6 +199,9 @@ def main():
         elif options.verbose==2:
             logging.getLogger().setLevel(logging.DEBUG)
 
+        if options.doc:
+            webbrowser.open_new('http://cern.ch/tmrg')
+            return
 
         if len(args)!=1:
             raise OptParseError("You have to specify netlist file name. (like r2g.v)")

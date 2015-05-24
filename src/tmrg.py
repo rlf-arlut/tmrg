@@ -10,6 +10,7 @@ import filecmp
 import copy
 import ConfigParser
 from verilogElaborator import *
+from toolset import *
 
 class CmdConstrainParser:
     def __init__(self):
@@ -1312,7 +1313,9 @@ class TMR(VerilogElaborator):
 
 
 def main():
-    parser = OptionParser(version="%prog 0.1", usage="%prog [options] fileName")
+    OptionParser.format_epilog = lambda self, formatter: self.epilog
+    parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName", epilog=epilog)
+
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
 #    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
@@ -1346,11 +1349,6 @@ def main():
 
     parser.add_option_group(tmrGroup)
 
-   # print config.get("tmrg","tmr_dir")
-   # print config.get("tmrg","tmr_signals")
-   # print config.items("module")
-    #FORMAT = '%(message)s'
-    #logging.basicConfig(format='[%(name)s|%(levelname)5s] %(message)s', level=logging.INFO)
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     try:
@@ -1366,10 +1364,7 @@ def main():
         tmrg=TMR(options, args)
 
         if options.doc:
-            import webbrowser
-            url = 'http://cern.ch/tmrg'
-            # Open URL in new window, raising the window if possible.
-            webbrowser.open_new(url)
+            webbrowser.open_new('http://cern.ch/tmrg')
             return
 
         tmrg.parse()
@@ -1391,17 +1386,7 @@ def main():
               logging.warning(ll)
         logging.warning(ll)
 
-    # except :
-    #     exc_type, exc_value, exc_traceback = sys.exc_info()
-    #     logging.error("1")
-    #     logging.error("")
-    #     #for l in traceback.format_tb(exc_traceback):
-    #     for l in traceback.format_exception(exc_type, exc_value,
-    #                                       exc_traceback):
-    #         for ll in l.split("\n"):
-    #           logging.error(ll)
-    #     logging.error(ll)
-    #
+
 
 if __name__=="__main__":
     main()

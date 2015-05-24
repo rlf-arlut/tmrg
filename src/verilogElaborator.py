@@ -437,7 +437,22 @@ class VerilogElaborator():
                         libDetails[lib]=[]
                     libDetails[lib].append(module)
             for lib in libDetails:
-                self.logger.info("Lib %s : %s" %(lib," ".join(libDetails[lib])))
+                s="Lib %s : "%lib
+                infoed=0
+                for m in libDetails[lib]:
+                    s+=m+" "
+                    if len(s)>100:
+                        if infoed<5:
+                            self.logger.info(s)
+                        else:
+                            self.logger.debug(s)
+                        s=""
+                        infoed+=1
+                if infoed<5:
+                    self.logger.info(s)
+                else:
+                    self.logger.debug(s)
+
 
 #        for module in sorted(self.modules):
 #            self.logger.info("")
