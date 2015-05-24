@@ -13,21 +13,12 @@ from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
 from verilogElaborator import *
-from string import Template
 from toolset import *
-
-def generateFromTemplate(outFname,templateFname, values):
-  f=open(templateFname,"r")
-  temp=f.read()
-  f.close()
-
-  f=open(outFname,"w")
-  f.write(Template(temp).substitute(values))
-  f.close()
 
 class SEE(VerilogElaborator):
     def __init__(self,options, args):
         VerilogElaborator.__init__(self,options, args,cnfgName="seeg")
+
     def generate(self):
         logging.debug("")
         def outputSetNets(module,prefix=""):
@@ -198,8 +189,6 @@ def main():
 
         if not options.ofile:
             raise OptParseError("You have to specify output file name.")
-
-        fname=args[0]
 
         try:
             seeg=SEE(options, args)

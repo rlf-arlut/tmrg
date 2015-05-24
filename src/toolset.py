@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import webbrowser
+from string import Template
 
 epilog="""
 TMRG toolset:
@@ -12,3 +13,12 @@ TMRG toolset:
          (helps with placement of triplicated circuit)
 """
 
+
+def generateFromTemplate(outFname,templateFname, values):
+  f=open(templateFname,"r")
+  temp=f.read()
+  f.close()
+
+  f=open(outFname,"w")
+  f.write(Template(temp).substitute(values))
+  f.close()
