@@ -4,101 +4,240 @@ Verification
 ************
 
 Once the design is implemented (you have a verilog netlist) you should verify 
-that the design still  does what you want it to do and that the design in immune to SEU. 
-The TMRG toolset can generate a verilog file which will simplify that task.
-The file contains several useful verilog tasks, which can toggle nets (to simulate SET) or toggle flip-flip flops (to simmulate SEU).
+that the design still  does what you want it to do and that the design in immune to SEE. 
+The TMRG toolset contains SEEG (Single Event Effect Generator) tool which can
+assist you in that process.
+The SEEG generates a verilog file, which contains several useful verilog tasks,
+which can toggle nets (to simulate SET) or toggle flip-flip flops (to simmulate
+SEU).
+
+The SEEG tool operate on a final netlist. An example usage of the tool for the
+netlist generated for an example ``fsm02`` can look like:
+
+.. code-block:: bash
+
+   seeg --lib libs/tcbn65lp.v --output fsm02TMR_see.v fsm02_r2g.v
+
+As a result a verilog file ``see.v`` is generated. In the considered example a file will
+look like:
 
 .. code-block:: verilog
 
-  task seu_max_net;
-    output wireid;
-    integer wireid;
-    begin
-      wireid=7493;
-    end
-  endtask
-  
-  task seu_force_net;
-    input wireid;
-    integer wireid;
-    begin
-    case (wireid)
-        1 : force DUT.GBLDDIGITALTMR.I2C.I2CC.iVoterA.out[0] = ~DUT.GBLDDIGITALTMR.I2C.I2CC.iVoterA.out[0]; 
-        2 : force DUT.GBLDDIGITALTMR.MB.MC2.memVoterA.inC[4] = ~DUT.GBLDDIGITALTMR.MB.MC2.memVoterA.inC[4]; 
-        3 : force DUT.GBLDDIGITALTMR.I2C.I2CC.SCLin_lateVoterB.inB[0] = ~DUT.GBLDDIGITALTMR.I2C.I2CC.SCLin_lateVoterB.inB[0]; 
-        4 : force DUT.GBLDDIGITALTMR.porVoterC.tmrErr = ~DUT.GBLDDIGITALTMR.porVoterC.tmrErr; 
-        5 : force DUT.GBLDDIGITALTMR.MB.MC1.memVoterA.inA[6] = ~DUT.GBLDDIGITALTMR.MB.MC1.memVoterA.inA[6]; 
-        6 : force DUT.GBLDDIGITALTMR.MB.MEC.n_12 = ~DUT.GBLDDIGITALTMR.MB.MEC.n_12; 
-        7 : force DUT.GBLDDIGITALTMR.MB.MC2.dataInB[3] = ~DUT.GBLDDIGITALTMR.MB.MC2.dataInB[3]; 
-        8 : force DUT.GBLDDIGITALTMR.I2C.I2CC.wbAdrC[2] = ~DUT.GBLDDIGITALTMR.I2C.I2CC.wbAdrC[2]; 
-        9 : force DUT.GBLDDIGITALTMR.ADC.address[0] = ~DUT.GBLDDIGITALTMR.ADC.address[0]; 
-        ...
-    endcase
-  end
-  endtask
-  
-  task seu_release_net;
-    input wireid;
-    integer wireid;
-    begin
-    case (wireid)
-        1 : release DUT.GBLDDIGITALTMR.I2C.I2CC.iVoterA.out[0]; 
-        2 : release DUT.GBLDDIGITALTMR.MB.MC2.memVoterA.inC[4]; 
-        3 : release DUT.GBLDDIGITALTMR.I2C.I2CC.SCLin_lateVoterB.inB[0]; 
-        4 : release DUT.GBLDDIGITALTMR.porVoterC.tmrErr; 
-        5 : release DUT.GBLDDIGITALTMR.MB.MC1.memVoterA.inA[6]; 
-        6 : release DUT.GBLDDIGITALTMR.MB.MEC.n_12; 
-        7 : release DUT.GBLDDIGITALTMR.MB.MC2.dataInB[3]; 
-        8 : release DUT.GBLDDIGITALTMR.I2C.I2CC.wbAdrC[2]; 
-        9 : release DUT.GBLDDIGITALTMR.ADC.address[0]; 
-        ...
-    endcase
-  end
-  endtask
-  
-  task seu_display_net;
-    input wireid;
-    integer wireid;
-    begin
-    case (wireid)
-        1 : $display("DUT.GBLDDIGITALTMR.I2C.I2CC.iVoterA.out[0]"); 
-        2 : $display("DUT.GBLDDIGITALTMR.MB.MC2.memVoterA.inC[4]"); 
-        3 : $display("DUT.GBLDDIGITALTMR.I2C.I2CC.SCLin_lateVoterB.inB[0]"); 
-        4 : $display("DUT.GBLDDIGITALTMR.porVoterC.tmrErr"); 
-        5 : $display("DUT.GBLDDIGITALTMR.MB.MC1.memVoterA.inA[6]"); 
-        6 : $display("DUT.GBLDDIGITALTMR.MB.MEC.n_12"); 
-        7 : $display("DUT.GBLDDIGITALTMR.MB.MC2.dataInB[3]"); 
-        8 : $display("DUT.GBLDDIGITALTMR.I2C.I2CC.wbAdrC[2]"); 
-        9 : $display("DUT.GBLDDIGITALTMR.ADC.address[0]"); 
-    endcase
-  end
-  endtask
-  
-Having this tasks in place, the developer can easily generate upsets in his
-design. The easies implementation may look like:
+   // - Single Event Transient - - - - - - - - - - - - - - - - - - - - - - - - - -
+   task set_force_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+          0 : force DUT.stateA_reg.Q = ~DUT.stateA_reg.Q;
+          1 : force DUT.stateC_reg.Q = ~DUT.stateC_reg.Q;
+          2 : force DUT.stateNextVoterA.Fp9999957A.ZN = ~DUT.stateNextVoterA.Fp9999957A.ZN;
+          3 : force DUT.stateNextVoterA.p214748365A.ZN = ~DUT.stateNextVoterA.p214748365A.ZN;
+          4 : force DUT.stateNextVoterC.Fp9999957A.ZN = ~DUT.stateNextVoterC.Fp9999957A.ZN;
+          5 : force DUT.stateNextVoterC.p214748365A.ZN = ~DUT.stateNextVoterC.p214748365A.ZN;
+          6 : force DUT.stateNextVoterB.Fp9999957A.ZN = ~DUT.stateNextVoterB.Fp9999957A.ZN;
+          7 : force DUT.stateNextVoterB.p214748365A.ZN = ~DUT.stateNextVoterB.p214748365A.ZN;
+          8 : force DUT.stateB_reg.Q = ~DUT.stateB_reg.Q;
+          9 : force DUT.p214748365A22.Z = ~DUT.p214748365A22.Z;
+         10 : force DUT.p214748365A20.Z = ~DUT.p214748365A20.Z;
+         11 : force DUT.p214748365A21.Z = ~DUT.p214748365A21.Z;
+       endcase
+     end
+   endtask
+   
+   task set_release_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+          0 : release DUT.stateA_reg.Q;
+          1 : release DUT.stateC_reg.Q;
+          2 : release DUT.stateNextVoterA.Fp9999957A.ZN;
+          3 : release DUT.stateNextVoterA.p214748365A.ZN;
+          4 : release DUT.stateNextVoterC.Fp9999957A.ZN;
+          5 : release DUT.stateNextVoterC.p214748365A.ZN;
+          6 : release DUT.stateNextVoterB.Fp9999957A.ZN;
+          7 : release DUT.stateNextVoterB.p214748365A.ZN;
+          8 : release DUT.stateB_reg.Q;
+          9 : release DUT.p214748365A22.Z;
+         10 : release DUT.p214748365A20.Z;
+         11 : release DUT.p214748365A21.Z;
+       endcase
+     end
+   endtask
+   
+   task set_display_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+         0 : $display("DUT.stateA_reg.Q");
+         1 : $display("DUT.stateC_reg.Q");
+         2 : $display("DUT.stateNextVoterA.Fp9999957A.ZN");
+         3 : $display("DUT.stateNextVoterA.p214748365A.ZN");
+         4 : $display("DUT.stateNextVoterC.Fp9999957A.ZN");
+         5 : $display("DUT.stateNextVoterC.p214748365A.ZN");
+         6 : $display("DUT.stateNextVoterB.Fp9999957A.ZN");
+         7 : $display("DUT.stateNextVoterB.p214748365A.ZN");
+         8 : $display("DUT.stateB_reg.Q");
+         9 : $display("DUT.p214748365A22.Z");
+        10 : $display("DUT.p214748365A20.Z");
+        11 : $display("DUT.p214748365A21.Z");
+       endcase
+     end
+   endtask
+   
+   task set_max_net;
+     output wireid;
+     integer wireid;
+     begin
+       wireid=12;
+     end
+   endtask
+   
+   // - Single Event Upset - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   
+   task seu_force_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+          0 : force DUT.stateA_reg.SDN = ~DUT.stateA_reg.SDN;
+          1 : force DUT.stateA_reg.CDN = ~DUT.stateA_reg.CDN;
+          2 : force DUT.stateC_reg.SDN = ~DUT.stateC_reg.SDN;
+          3 : force DUT.stateC_reg.CDN = ~DUT.stateC_reg.CDN;
+          4 : force DUT.stateB_reg.SDN = ~DUT.stateB_reg.SDN;
+          5 : force DUT.stateB_reg.CDN = ~DUT.stateB_reg.CDN;
+       endcase
+     end
+   endtask
+   
+   task seu_release_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+          0 : release DUT.stateA_reg.SDN;
+          1 : release DUT.stateA_reg.CDN;
+          2 : release DUT.stateC_reg.SDN;
+          3 : release DUT.stateC_reg.CDN;
+          4 : release DUT.stateB_reg.SDN;
+          5 : release DUT.stateB_reg.CDN;
+       endcase
+     end
+   endtask
+   
+   task seu_display_net;
+     input wireid;
+     integer wireid;
+     begin
+       case (wireid)
+         0 : $display("DUT.stateA_reg.SDN");
+         1 : $display("DUT.stateA_reg.CDN");
+         2 : $display("DUT.stateC_reg.SDN");
+         3 : $display("DUT.stateC_reg.CDN");
+         4 : $display("DUT.stateB_reg.SDN");
+         5 : $display("DUT.stateB_reg.CDN");
+       endcase
+     end
+   endtask
+   
+   task seu_max_net;
+     output wireid;
+     integer wireid;
+     begin
+       wireid=6;
+     end
+   endtask
+   
+   // - Single Event Efect - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   
+   task see_force_net;
+     input wireid;
+     integer wireid;
+     begin
+       if (wireid<12)
+         set_force_net(wireid);
+       else
+         seu_force_net(wireid-12);
+     end
+   endtask
+   
+   task see_release_net;
+     input wireid;
+     integer wireid;
+     begin
+       if (wireid<12)
+         set_release_net(wireid);
+       else
+         seu_release_net(wireid-12);
+     end
+   endtask
+   
+   task see_display_net;
+     input wireid;
+     integer wireid;
+     begin
+       if (wireid<12)
+         set_display_net(wireid);
+       else
+         seu_display_net(wireid-12);
+     end
+   endtask
+   
+   task see_max_net;
+     output wireid;
+     integer wireid;
+     begin
+       wireid=(12 + 6);
+     end
+   endtask
+   
+Having these tasks in place, the developer can easily generate SET, SEU, or SEE
+upsets in his design. The simpliest implementation may look like:
 
 .. code-block:: verilog
 
-  always 
-    begin
-      if (SEUEnable)
-        begin
-          // randomize time, duration, and wire
-          SEUnextTime = {$random} % SEUDEL;
-          SEUduration = 1+ {$random} % MAX_UPSET_TIME;
-          SEUwireId   =  {$random} % SEUmaxWireId;
+  module stimulus;
 
-          // wait for SEU
-          #(SEUDEL/2+SEUnextTime);
+    fsm02TMR DUT(...);
+   
+    [...]
 
-          // toggle wire
-          seu=1;
-          seuCounter=seuCounter+1;
-          seu_force_net(SEUwireId);
-          #(SEUduration);
-          seu_release_net(SEUwireId);
-          seu=0;
-        end
-    end
+    integer SEEnextTime;
+    integer SEEduration;
+    integer SEEwireId;
+    integer SEEmaxWireId;
+    integer MAX_UPSET_TIME=10;
+    integer SEEDEL=100;
+    inreger SEEEnable=1;
 
+    initial
+      see_max_net (SEEmaxWireId);
+  
+    `include "fsm02TMR_see.v"
 
+    always 
+      begin
+        if (SEEEnable)
+          begin
+            // randomize time, duration, and wire of SEE
+            SEEnextTime = {$random} % SEEDEL;
+            SEEduration = {$random} % MAX_UPSET_TIME + 1;
+            SEEwireId   = {$random} % SEEmaxWireId;
+  
+            // wait for SEU
+            #(SEEDEL/2+SEEnextTime);
+  
+            // toggle wire
+            seeCounter=seeCounter+1;
+            see_force_net(SEEwireId);
+            see_display_net(SEEwireId);
+            #(SEEduration);
+            see_release_net(SEEwireId);
+          end
+      end
+   endmodule  
+  
+  
+  
