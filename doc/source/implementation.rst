@@ -11,7 +11,7 @@ synthesizer point of view it can be removed. Of course, this behavior is
 undesirable. The TMRG can generate for you a set of constrains which will 
 force Design Compiler (which is now part of RTL Compiler) not to throw away
 the redundant logic. 
-To generate the file you have to:
+To generate the file you have add an option while you are executing tmrg:
 
 .. code-block:: bash
 
@@ -36,7 +36,7 @@ can look like
     set_dont_touch /designs/comb06TMR/nets/in
 
 The file contains minimum set (to our knowledge) of rules which from one side
-ensures that the triplication is not optimized and from the other side does not
+ensures that the triplication is not optimized out and from the other side does not
 prevent DC from optimizing the actual logic. To load the file in RC you can:
 
 .. code-block:: bash
@@ -44,7 +44,7 @@ prevent DC from optimizing the actual logic. To load the file in RC you can:
     read_sdc comb06TMR.sd
 
 If you do not want to specify command line options every time, you can also 
-put options in the section ``tmrg`` in the configuration file, s as shown below:
+put options in the section ``tmrg`` in the configuration file, as shown below:
 
 .. code-block:: text
 
@@ -68,26 +68,33 @@ In the real design, there are majority voters before(or after) flip-flops.
 From the P&R optimization point of view, in order to keep routing short, the
 instances of triplicated flip-flops should be placed relatively close together. 
 
-If designer creates several specific regions where to put various groups of flip-flops:
+There is a PLAG (Placement Generatror) tool in the TMRG toolset. 
+The tool operate on a final netlist and can assign registers to a specific ``Instances Group``. 
+An example usage of the tool for the netlist generated for an example ``fsm02`` can look like:
+
+.. code-block:: bash
+
+   plag --lib libs/tcbn65lp.v fsm02_r2g.v
+
+As a result a tcl script ``tmrPlace.tcl`` is generated. In the considered example a file will
+look like:
+
+.. code-block:: tcl
+
+   addInstToInstGroup tmrGroupA {fsm02TMR/stateA_reg}
+   addInstToInstGroup tmrGroupB {fsm02TMR/stateB_reg}
+   addInstToInstGroup tmrGroupC {fsm02TMR/stateC_reg}
+
+Designer should create specific regions where to put various groups of cells
+and then he can source the generated script:
 
 .. code-block:: tcl
 
   createInstGroup tmrGroupA -region 0 0 10 10
   createInstGroup tmrGroupB -region 10 0 20 10
   createInstGroup tmrGroupB -region 20 0 30 10
+  source tmrPlace.tcl
 
-the TMRG tool can generate a file which will assign flip-flops to proper groups:
-
-.. code-block:: tcl
-
-  addInstToInstGroup tmrGroupA {GBLDDIGITALTMR/MB/MC1/memA_reg[0]}
-  addInstToInstGroup tmrGroupB {GBLDDIGITALTMR/MB/MC1/memB_reg[0]}
-  addInstToInstGroup tmrGroupC {GBLDDIGITALTMR/MB/MC1/memC_reg[0]}
-
-  addInstToInstGroup tmrGroupA {GBLDDIGITALTMR/MB/MC1/memA_reg[1]}
-  addInstToInstGroup tmrGroupB {GBLDDIGITALTMR/MB/MC1/memB_reg[1]}
-  addInstToInstGroup tmrGroupC {GBLDDIGITALTMR/MB/MC1/memC_reg[1]}
-
-Moreover, the tool is capable of calculating distances between triplicated
-flip-flops and making histogram of these.
+.. Moreover, the tool is capable of calculating distances between triplicated
+.. flip-flops and making histogram of these.
 
