@@ -503,4 +503,16 @@ class VerilogElaborator():
         self.logger.info("[%s]"%topModule)
         _printH(topModule)
 
-
+    def getAllInsttances(self,module,prefix=""):
+        res=[]
+        # we want store instances from the bottom of the hierarhy
+        if len(self.modules[module]["instances"])==0:
+                res.append( (prefix,module) )
+        else:
+            #in other case we loop over hierarchy
+            for instId in self.modules[module]["instances"]:
+                inst=self.modules[module]["instances"][instId]['instance']
+                if "[" in  instId: instId="\\"+instId+" "
+                if inst in self.modules:
+                    res+=self.getAllInsttances(inst,prefix=prefix+"/"+instId)
+        return res

@@ -107,7 +107,7 @@ class SEE(VerilogElaborator):
                 setNets=exclude(setNets,toExlude)
 
         def verboseNets(desc,nets):
-            logging.debug("Nets to be affected by SET : %d"%(len(nets)))
+            logging.debug("%d%d"%(desc,len(nets)))
             l="  "
             for n in nets:
                 l+=n+" "
