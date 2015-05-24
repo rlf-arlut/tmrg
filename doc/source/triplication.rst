@@ -588,7 +588,7 @@ There is one more important feature which should be mentioned at this point. As 
 can be overwritten by another, there is mechanism which can ensure the designer that all his intentions are interpreted properly.
 When you are calling TMRG tool you can ask for a verbose output using ``-v`` option. Lets consider ``comb06`` module from above example. Lets write a configuration files ``comb06.cnf``
 
-.. code-block:: init
+.. code-block:: ini
 
    [comb06]
    default : do_not_triplicate

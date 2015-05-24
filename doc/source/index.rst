@@ -31,9 +31,10 @@ Content:
    triplication
    implementation
    verification
-   general_assumptions
    license
 
+
+..   general_assumptions
 ..   synthesis_tests
 ..   examples
 
