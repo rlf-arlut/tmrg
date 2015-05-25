@@ -32,7 +32,7 @@ Content:
    implementation
    verification
    license
-
+   downloads
 
 ..   general_assumptions
 ..   synthesis_tests
