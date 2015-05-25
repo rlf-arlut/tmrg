@@ -1309,12 +1309,15 @@ class TMR(VerilogElaborator):
 
 
 
+def version():
+  verstr="$Id$"
+  return verstr
 
 
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
-    parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName", epilog=epilog)
+    parser = OptionParser(version="TMRG 0.09", usage="%prog [options] fileName", epilog=epilog)
 
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
 #    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
