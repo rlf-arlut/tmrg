@@ -1301,47 +1301,28 @@ class TMR(VerilogElaborator):
                 f.write("set_dont_touch %s\n"%l)
             f.close()
 
-
-
-
 ########################################################################################################################
-
-
-
 
 def version():
   verstr="$Id$"
   return verstr
-
-
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
     parser = OptionParser(version="TMRG 0.09", usage="%prog [options] fileName", epilog=epilog)
 
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
-#    parser.add_option("", "--input-file",         dest="inputFile",   help="Input file name (*.v)", metavar="FILE")
-#    parser.add_option("", "--output-file",        dest="outputFile",  help="Output file name (*.v)", metavar="FILE")
-#    parser.add_option("-r", "--recursive",       action="store_true", dest="rec", default=True, help="Recurive.")
     parser.add_option("",  "--doc",               dest="doc",  action="store_true",   default=False, help="Open documentation in web browser")
     actionGroup = OptionGroup(parser, "Actions" )
     actionGroup.add_option("-p", "--parse-only",        action="store_true", dest="parse",     default=False, help="Parse")
     actionGroup.add_option("-e", "--elaborate",         action="store_true", dest="elaborate", default=False, help="Elaborate")
-    #actionGroup.add_option("-t", "--triplicate",        action="store_true", dest="tmr",       default=False, help="Triplicate.")
     parser.add_option_group(actionGroup)
-    #parser.add_option("-f", "--format",            dest="format",       action="store_true",default=False, help="Parse")
-    #parser.add_option("-i", "--info",              dest="info",         action="store_true",   default=False, help="Info")
-    #parser.add_option("-q", "--trace",             dest="trace",        action="store_true",   default=False, help="Trace formating")
-    #parser.add_option("",   "--single2tmr",        dest="s2t",          action="store_true",   default=False, help="Single ended to TMR")
-    #parser.add_option("-d", "--do-not-triplicate", dest="dnt",          action="append"  ,type="str")
     dirGroup = OptionGroup(parser, "Directories" )
     dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
     dirGroup.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="")
     dirGroup.add_option("-l",  "--lib",            dest="libs",       action="append",   default=[], help="Library")
     parser.add_option_group(dirGroup)
-
     tmrGroup = OptionGroup(parser, "Triplication" )
-
     tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
 #    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
@@ -1371,11 +1352,9 @@ def main():
             return
 
         tmrg.parse()
-
         if options.parse: return
 
         tmrg.elaborate()
-
         if options.elaborate: return
 
         tmrg.triplicate()
