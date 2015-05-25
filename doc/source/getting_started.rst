@@ -29,7 +29,7 @@ If you are using mic cluster @CERN, you can use an installation from  ``/homedir
 
 .. code-block:: bash
 
-    $ source /homedir/skulis/tmrg/trunk/etc/tmrg.sh
+    $ source source /homedir/skulis/tmrg/stable/etc/tmrg.sh
 
 
 Getting help

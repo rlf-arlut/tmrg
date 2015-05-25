@@ -23,8 +23,10 @@ e.g. I/O ports or some analog blocks.
 The TMRG tool lets designer to decide which blocks and signals should be triplicated.
 It automatizes also "converting" between triplicated and not triplicated signals.
 There are two basic conversion schemes:
+
   * if non triplicated signal is connected to a triplicated signal a simple passive fanout is added
   * if triplicated signal is connected to a non triplicated signal a majority voter is added
+
 Summary of all possible conversions is summarized in the table below:
 
 

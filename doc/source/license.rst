@@ -98,8 +98,10 @@ The precise terms and conditions for copying, distribution and
 modification follow.
 
 ..                     GNU GENERAL PUBLIC LICENSE
+
 TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
---------
+---------------------------------------------------------------
+
   0. This License applies to any program or other work which contains
      a notice placed by the copyright holder saying it may be distributed
      under the terms of this General Public License.  The "Program", below,
