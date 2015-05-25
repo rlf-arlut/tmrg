@@ -3,7 +3,6 @@ import logging
 from optparse import *
 #import tempita
 #import pygraphviz as pgv
-from vp import *
 import traceback
 import pprint
 import os
@@ -181,7 +180,7 @@ def main():
             logging.getLogger().setLevel(logging.DEBUG)
 
         if options.doc:
-            webbrowser.open_new('http://cern.ch/tmrg')
+            startDocumentation()
             return
 
         if len(args)!=1:

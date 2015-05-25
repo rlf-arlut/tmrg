@@ -2,6 +2,7 @@
 
 import webbrowser
 from string import Template
+import os
 
 epilog="""
 TMRG toolset:
@@ -22,3 +23,9 @@ def generateFromTemplate(outFname,templateFname, values):
   f=open(outFname,"w")
   f.write(Template(temp).substitute(values))
   f.close()
+
+def startDocumentation():
+    scriptDir = os.path.abspath(os.path.dirname(__file__))
+    docDir = os.path.join(scriptDir,'../doc/build/html')
+    docInx = os.path.abspath( docDir+"/index.html")
+    webbrowser.open_new(docInx)

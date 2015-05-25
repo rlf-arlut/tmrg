@@ -133,8 +133,9 @@ def main():
             logging.getLogger().setLevel(logging.DEBUG)
 
         if options.doc:
-            webbrowser.open_new('http://cern.ch/tmrg')
+            startDocumentation()
             return
+
 
         if len(args)!=1:
             raise OptParseError("You have to specify netlist file name. (like r2g.v)")

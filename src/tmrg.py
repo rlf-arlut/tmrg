@@ -1348,7 +1348,7 @@ def main():
         tmrg=TMR(options, args)
 
         if options.doc:
-            webbrowser.open_new('http://cern.ch/tmrg')
+            startDocumentation()
             return
 
         tmrg.parse()
