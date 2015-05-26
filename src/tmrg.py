@@ -609,20 +609,44 @@ class TMR(VerilogElaborator):
                 ports=header[2]
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
-                    portName=port[0]
-                    doTmr=self.current_module["nets"][portName]["tmr"]
-                    portstr="Port %s -> "%(portName)
+                    if  port.getName()=="subscrIdentifier":
+                        portName=port[0]
+                        if not portName in self.current_module["nets"]:
+                            self.logger.warning("Net '%s' unknown."%portName)
+                            continue
+                        doTmr=self.current_module["nets"][portName]["tmr"]
+                        portstr="Port %s -> "%(portName)
 
-                    if doTmr:
-                        sep=""
-                        for post in self.EXT:
-                            newport=portName+post
-                            newports.append(newport)
-                            portstr+=sep+newport
-                            sep=", "
+                        if doTmr:
+                            sep=""
+                            for post in self.EXT:
+                                newport=portName+post
+                                newports.append(newport)
+                                portstr+=sep+newport
+                                sep=", "
+                        else:
+                            newports.append(port)
+                        self.logger.debug(portstr)
                     else:
-                        newports.append(port)
-                    self.logger.debug(portstr)
+                        portName=port[2][0]
+                        if not portName in self.current_module["nets"]:
+                            self.logger.warning("Net '%s' unknown."%portName)
+                            continue
+                        doTmr=self.current_module["nets"][portName]["tmr"]
+                        portstr="Port %s -> "%(portName)
+                        if doTmr:
+                            sep=""
+                            for post in self.EXT:
+                                portCpy=port.deepcopy()
+                                newPortName=portName+post
+                                self.replace(portCpy,portName,newPortName)
+                                newports.append(portCpy)
+                                portstr+=sep+newPortName
+                                sep=", "
+                        else:
+                            newports.append(port)
+                        self.logger.debug(portstr)
+
                 if "tmrError" in self.current_module["nets"]:
                     groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
                     for group in sorted(groups):
@@ -825,7 +849,10 @@ class TMR(VerilogElaborator):
                     res["left"].add(left_id)
 
             elif name == "subscridentifier":
+                if t[0] in self.current_module["nets"]:
                     res["right"].add( t[0] )
+                else:
+                    self.logger.warning("Unknown net %s"%t[0])
             else:
                 for i in range(len(t)):
 #                    print "#(%d)>"%i,t[i]
@@ -1355,6 +1382,7 @@ def main():
         if options.parse: return
 
         tmrg.elaborate()
+        tmrg.showSummary()
         if options.elaborate: return
 
         tmrg.triplicate()

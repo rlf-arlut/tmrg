@@ -150,6 +150,9 @@ class VerilogElaborator():
              if not name in  self.current_module["nets"]:
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
+    def _elaborate_inputhdr(self,tokens):
+        self._elaborate_input(tokens)
+
     def _elaborate_output(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
@@ -169,6 +172,11 @@ class VerilogElaborator():
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
              #if not name in  self.current_module["nets"]:
              #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+
+    def _elaborate_outputhdr(self,tokens):
+         #tokens=tokens[0]
+        self._elaborate_output(tokens)
+
 
     def _elaborate_netdecl1(self,tokens):
 #            tokens=tokens[0]
@@ -250,7 +258,7 @@ class VerilogElaborator():
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return
-            if self.trace: self.logger.debug( "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
+            self.logger.debug( "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
             if name in self.elaborator:
                 self.elaborator[name](tokens)
             else:
@@ -389,14 +397,14 @@ class VerilogElaborator():
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]
                 modulePorts=moduleHdr[2]
-                for port in modulePorts:
-                    pass
-                    #print port
                 self.logger.debug("")
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
                 self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}}
+                for port in modulePorts:
+                    self._elaborate(port)
+
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
@@ -454,10 +462,6 @@ class VerilogElaborator():
                     self.logger.debug(s)
 
 
-#        for module in sorted(self.modules):
-#            self.logger.info("")
-#            self.logger.info("Module:%s"%module)
-#            self.moduleSummary(self.modules[module])
 
         # check if all modules are known
         self.logger.info("")
@@ -502,6 +506,12 @@ class VerilogElaborator():
 
         self.logger.info("[%s]"%topModule)
         _printH(topModule)
+
+    def showSummary(self):
+        for module in sorted(self.modules):
+            self.logger.info("")
+            self.logger.info("Module:%s"%module)
+            self.moduleSummary(self.modules[module])
 
     def getAllInsttances(self,module,prefix=""):
         res=[]
