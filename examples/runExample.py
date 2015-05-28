@@ -364,7 +364,8 @@ def main():
             fdir=os.path.dirname(fname)
             workDir=os.path.join(fdir,"work",fbase)
             logging.info("Dir  : %s"%workDir)
-            shutil.rmtree(workDir) 
+            if os.path.exists(workDir):
+              shutil.rmtree(workDir) 
             _mkdir(workDir)
             noTmrFile=os.path.join(workDir,fname)
             shutil.copyfile(fname,noTmrFile)
@@ -379,7 +380,7 @@ def main():
                   sourceRcFails.append(fname)
                   continue
                   
-            good=runTmr(tmrg,noTmrFile,opts="--tmr-dir %s"%workDir)
+            good=runTmr(tmrg,noTmrFile,opts="--tmr-dir %s -c examples.cfg"%workDir)
             if not good:
                tmrgFails.append(fname)
                continue
