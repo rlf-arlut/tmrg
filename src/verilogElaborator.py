@@ -428,6 +428,7 @@ class VerilogElaborator():
                 self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}, "lib":fname}
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
+                self.current_module["constraints"]["dnt"]=True
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
 
