@@ -95,7 +95,7 @@ class TMR(VerilogElaborator):
 
 
         if self.config.has_option('tmrg', 'files'):
-            files=self.config.get("tmrg","files").split(",")
+            files=self.config.get("tmrg","files").split(" ")
             for file in files:
                 file=file.strip()
                 self.logger.debug("Adding file from config file %s"%file)
@@ -826,7 +826,8 @@ class TMR(VerilogElaborator):
                name=str(t.getName()).lower()
                if name=="subscridentifier":
                    if not t[0] in self.current_module["nets"]:
-                     self.logger.warning("Unknown net %s"%t[0])
+                       self.logger.warning("Unknown net %s"%t[0])
+                       return res
                    if not "dnt" in self.current_module["nets"][t[0]]:
                        res.add(t[0])
                else:
