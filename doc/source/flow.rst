@@ -8,7 +8,7 @@ Single-event effects
 Single-event effect is a phenomena triggered by a charged particle passing through an electronic device.
 Traversing particle ionizes the matter producing electron-holes pairs. 
 The amount of charge being generated depends on particle type, particle energy, incident angle, material.
-The charge can by the collected by a drain/source diffusion and can modify its voltage, changing its logical value (from zero to one or vice versa).
+The charge can be then collected by a drain/source diffusion and can modify its voltage, changing its logical value (from zero to one or vice versa).
 Traditionally we distinguish two types of upsets: Single-event Transients (SET) and Single-event Upset (SEU).
 
 Single-event transient is a phenomena in which an error happens in a combinatorial logic. It appears as a short glitch on a net. The proper  value is restored within short time (~ns). 
