@@ -49,7 +49,6 @@ class TMR(VerilogElaborator):
         self.tmrErr={}
         self.__voterPresent=False
         self.__fanoutPresent=False
-
         self.__init_tripclicate_callbacks()
 
         self.config = ConfigParser.ConfigParser()
@@ -100,6 +99,15 @@ class TMR(VerilogElaborator):
                 file=file.strip()
                 self.logger.debug("Adding file from config file %s"%file)
                 self.args.append(file)
+
+        if self.config.has_option('tmrg', 'libs'):
+            files=self.config.get("tmrg","libs").split(" ")
+            for file in files:
+                file=file.strip()
+                self.logger.debug("Adding lib file from config file : %s"%file)
+                self.libFiles.append(file)
+
+
         # parse command line constrains
         ccp=CmdConstrainParser()
         self.cmdLineConstrains={}

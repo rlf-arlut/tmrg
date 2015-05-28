@@ -51,6 +51,7 @@ class VerilogElaborator():
         self.vp=VerilogParser()
         self.vf=VerilogFormater()
         self.logger = logging.getLogger('TMR')
+        self.libFiles=[]
 
         if self.options.verbose==0:
             self.logger.setLevel(logging.WARNING)
@@ -59,7 +60,7 @@ class VerilogElaborator():
         elif self.options.verbose>=2:
             self.logger.setLevel(logging.DEBUG)
         self.files={}
-        self.libFiles={}
+        self.libs={}
         self.__init_elaborate_callbacks()
 
 
@@ -288,10 +289,11 @@ class VerilogElaborator():
         tokens=self.vp.parseFile(fname)
 #        print tokens
         self.files[fname]=tokens
+
     def addLibFile(self,fname):
         tokens=self.vp.parseFile(fname)
 #        print tokens
-        self.libFiles[fname]=tokens
+        self.libs[fname]=tokens
 
 
     def __getLenStr(self,toks):
@@ -369,6 +371,9 @@ class VerilogElaborator():
                 raise ErrorMessage("Error during parsing")
 
         for fname in self.options.libs:
+            self.libFiles.append(fname)
+
+        for fname in self.libFiles:
             try:
                 logging.info("Processing file %s"%fname)
                 self.addLibFile(fname)
@@ -409,10 +414,10 @@ class VerilogElaborator():
                     self._elaborate(moduleItem)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
-        for fname in sorted(self.libFiles):
+        for fname in sorted(self.libs):
             self.logger.info("")
             self.logger.info("Elaborating library %s"%(fname))
-            tokens=self.libFiles[fname]
+            tokens=self.libs[fname]
 #            print tokens
             for module in tokens:
                 moduleHdr=module[0]
