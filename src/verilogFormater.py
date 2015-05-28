@@ -12,11 +12,18 @@ class VerilogFormater:
         return i+"// %s\n"%tokens[0]
 
     def _format_Default(self,tokens,i=""):
-        return "default (%s)\n"%(tokens.getName())
+        return "default (%s : %s)\n"%(tokens.getName(),tokens)
 
     def _format_Id(self,tokens,i=""):
         oStr=str(tokens[0])
         return oStr
+
+    def _format_None(self,tokens,i=""):
+        oStr=""
+        for t in tokens:
+            oStr+=self.format(t)+" "
+        return oStr
+
     def _formatIo(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
