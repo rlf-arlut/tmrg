@@ -28,8 +28,10 @@ class VerilogFormater:
         oStr=""
         label=str(tokens[0])
         spec=self.format(tokens[1])
+        #if spec!="":spec+=" "
+        spec+=self.format(tokens[2])
         if spec!="":spec+=" "
-        ports=tokens[2]
+        ports=tokens[3]
         for port in ports:
             oStr+="%s %s%s;\n"%(label,spec,port)
         return oStr
@@ -47,16 +49,18 @@ class VerilogFormater:
         oStr=""
         label=str(tokens[0])
         spec=self.format(tokens[1])
-        ports=tokens[2]
+        spec+=self.format(tokens[2])
+        ports=tokens[3]
         for port in ports:
             oStr+="%s %s %s"%(label,spec,port)
         return oStr
 
-
     def _format_inputhdr(self,tokens,i=""):
         return self._formatIoHdr(tokens)
+
     def _format_outputhdr(self,tokens,i=""):
         return self._formatIoHdr(tokens)
+
     def _format_inouthdr(self,tokens,i=""):
         return self._formatIoHdr(tokens)
 

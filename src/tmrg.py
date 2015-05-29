@@ -102,7 +102,9 @@ class TMR(VerilogElaborator):
 
         if self.config.has_option('tmrg', 'libs'):
             files=self.config.get("tmrg","libs").split(" ")
+
             for file in files:
+                if len(file)==0:continue
                 file=file.strip()
                 self.logger.debug("Adding lib file from config file : %s"%file)
                 self.libFiles.append(file)
@@ -636,7 +638,7 @@ class TMR(VerilogElaborator):
                             newports.append(port)
                         self.logger.debug(portstr)
                     else:
-                        portName=port[2][0]
+                        portName=port[3][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
                             continue
@@ -651,8 +653,10 @@ class TMR(VerilogElaborator):
                                 newports.append(portCpy)
                                 portstr+=sep+newPortName
                                 sep=", "
+#                                print portCpy,portCpy.getName()
                         else:
                             newports.append(port)
+
                         self.logger.debug(portstr)
 
                 if "tmrError" in self.current_module["nets"]:
@@ -769,16 +773,16 @@ class TMR(VerilogElaborator):
             self.exc()
 
     def __triplicate_output(self,tokens):
-        before=str(tokens[2])
-        tokens[2]=self._tmr_list(tokens[2])
-        after=str(tokens[2])
+        before=str(tokens[-1])
+        tokens[-1]=self._tmr_list(tokens[-1])
+        after=str(tokens[-1])
         self.logger.debug("Output %s->%s"%(before,after))
         return tokens
 
     def __triplicate_input(self,tokens):
-        before=str(tokens[2])
-        tokens[2]=self._tmr_list(tokens[2])
-        after=str(tokens[2])
+        before=str(tokens[-1])
+        tokens[-1]=self._tmr_list(tokens[-1])
+        after=str(tokens[-1])
         self.logger.debug("Input %s->%s"%(before,after))
         return tokens
 

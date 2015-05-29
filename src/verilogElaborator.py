@@ -137,8 +137,8 @@ class VerilogElaborator():
          #tokens=tokens[0]
          _dir=tokens[0]
          _atrs=""
-         _range=self.vf.format(tokens[1])
-         _len=self.__getLenStr(tokens[1])
+         _range=self.vf.format(tokens[2])
+         _len=self.__getLenStr(tokens[2])
 
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
@@ -158,8 +158,8 @@ class VerilogElaborator():
          #tokens=tokens[0]
          _dir=tokens[0]
          _atrs=""
-         _range=self.vf.format(tokens[1])
-         _len=self.__getLenStr(tokens[1])
+         _range=self.vf.format(tokens[2])
+         _len=self.__getLenStr(tokens[2])
 
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
@@ -347,6 +347,7 @@ class VerilogElaborator():
         def args2files(args):
             files=[]
             for name in args:
+                if len(name)==0:continue
                 if os.path.isfile(name):
                     files.append(name)
                 elif os.path.isdir(name):
@@ -359,7 +360,7 @@ class VerilogElaborator():
 
         for fname in args2files(self.args):
             try:
-                logging.info("Processing file %s"%fname)
+                logging.info("Processing file '%s'"%fname)
                 self.addFile(fname)
             except ParseException, err:
                 logging.error("")
@@ -375,7 +376,7 @@ class VerilogElaborator():
 
         for fname in self.libFiles:
             try:
-                logging.info("Processing file %s"%fname)
+                logging.info("Processing lib file '%s'"%fname)
                 self.addLibFile(fname)
             except ParseException, err:
                 logging.error("")
