@@ -111,7 +111,7 @@ class PLA(VerilogElaborator):
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
-    parser = OptionParser(version="%prog 1.0", usage="%prog [options] fileName", epilog=epilog)
+    parser = OptionParser(version="PLAG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
     parser.add_option("-v", "--verbose",       dest="verbose",   action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",   "--doc",           dest="doc",       action="store_true",   default=False, help="Open documentation in web browser")
     parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")

@@ -29,3 +29,6 @@ def startDocumentation():
     docDir = os.path.join(scriptDir,'../doc/build/html')
     docInx = os.path.abspath( docDir+"/index.html")
     webbrowser.open_new(docInx)
+
+def tmrg_version():
+    return "trunk"
