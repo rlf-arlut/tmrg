@@ -25,18 +25,25 @@ To start using TMRG it is enough to source the environment file
 MIC cluster
 -----------
 
-If you are using mic cluster @CERN, you can use an installation from  ``/homedir/skulis/tmrg/trunk`` by sourcing:
+If you are using mic cluster @CERN, you can use an installation from  ``/homedir/skulis/tmrg/trunk``.
+Bash users should source:
 
 .. code-block:: bash
 
     $ source /homedir/skulis/tmrg/stable/etc/tmrg.sh
+
+while, tcsh users should soruce:
+
+.. code-block:: bash
+
+    $ source /homedir/skulis/tmrg/stable/etc/tmrg.csh
 
 As the development is very active (many people complain about bugs), if something does not work for you, you may try if running the most recent development version helps.
 To do that, you just source:
 
 .. code-block:: bash
 
-    $ source /homedir/skulis/tmrg/trunk/etc/tmrg.sh
+    $ source /homedir/skulis/tmrg/trunk/etc/tmrg.[c]sh
 
 
 Getting help
