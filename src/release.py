@@ -94,8 +94,9 @@ def main2():
 
     logging.info("File tmrg-%s.tgz"%(tag))
     logging.info("File size :%.1f"%(float(os.path.getsize('../rel/tmrg-%s.tgz'%(tag)))/(1024*1024)))
-
-    sshpassword=""
+    f=open("tmrg.pass","r")
+    sshpassword=f.read()
+    f.close()
 
     os.system("sshpass -p '%s' ssh tmrg@lxplus mkdir ./www/releases/%s"%(sshpassword,tag))
     os.system("sshpass -p '%s' scp -r ../rel/tmrg-%s/doc/build/html/* tmrg@lxplus:./www/releases/%s"%(sshpassword,tag,tag))
