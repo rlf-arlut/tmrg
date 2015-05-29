@@ -1,0 +1,18 @@
+Release notes
+=============
+
+
+0.1.1
+-------
+
+  * minor bug fixes
+  * support for ``reg`` and ``wire`` keywords in input/output declaration
+  * library names added to configuration file
+
+
+0.1.0
+-------
+
+  * Initial revision
+
+
