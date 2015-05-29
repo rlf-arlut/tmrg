@@ -48,7 +48,7 @@ def replaceStrInFile(fname,fromStr,toStr):
     f.write(body)
     f.close()
 
-def main2():
+def main():
     tag="0.1.1"
     client = pysvn.Client()
 
