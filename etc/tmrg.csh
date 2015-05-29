@@ -1,11 +1,11 @@
 #!/bin/tcsh
 set sourced=($_)
 if ("$sourced" != "") then
-    echo "sourced $sourced[2]"
+#    echo "sourced $sourced[2]"
     set rootdir = `dirname $sourced[2]`       # may be relative path
-    echo $rootdir
+#    echo $rootdir
     set bindir = `cd $rootdir/../bin && pwd`    # ensure absolute path
-    echo $bindir 
+#    echo $bindir 
     set path = ($path $bindir)
 endif
 
