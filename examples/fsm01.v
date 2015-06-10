@@ -12,5 +12,4 @@ module fsm01 (in,out,clk);
 
   always @(state or in)
     stateNext = in ^ state;
-// z
 endmodule
