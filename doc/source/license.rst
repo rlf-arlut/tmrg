@@ -24,10 +24,10 @@ purposes but which may have military applications, or may contribute to the
 proliferation of Weapons of Mass Destruction (WMD).
 
 The TMRG tool can be considered as dual-use item as it can be used to produce 
-electronic circuits which are resistent to radiation. It is users responsibility
-to ensure that the TMRG software is not distributed to forbiden countries.
+electronic circuits which are resistant to radiation. It is users responsibility
+to ensure that the TMRG software is not distributed to forbidden countries.
 
-The EU and Swtitezrland therefore control the export, transit and brokering of
+The EU and Switzerland therefore control the export, transit and brokering of
 dual-use items as a key instrument contributing to international peace and
 security. Please refer to `Dual-use controls
 <http://ec.europa.eu/trade/import-and-export-rules/export-from-eu/dual-use-controls/>`_

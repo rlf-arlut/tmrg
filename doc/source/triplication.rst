@@ -187,6 +187,22 @@ You can also triplicate everything except logic.
 .. include:: ../../examples/comb06.rst
 
 
+majorityVoter and fanout modules
+################################
+
+Until now, ``majorityVoter`` and ``fanout`` modules were used without explicitly 
+saying what they are. An example implementation of voter can be found in file ``common/voter.v``:
+
+.. literalinclude:: ../../common/voter.v
+   :language: verilog
+   :linenos:
+
+While an example implementation of fanout can be found in file ``common/fanout.v``:
+
+.. literalinclude:: ../../common/fanout.v
+   :language: verilog
+   :linenos:
+
 
 Voting
 ######
@@ -200,7 +216,7 @@ If an error occurs in one branch it will propagate along the branch. If there is
 vote01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Majority voters can be added on a triplicated signal by adding a net declaration with a specific name (``Voter`` postfix). 
+Majority voters can be added on a triplicated signal by adding a net declaration with a specific name (``Voted`` postfix). 
 By assigning a value of a source signal, one ensures that the module can be simulated or synthesized.
 
 .. code-block:: verilog
@@ -329,8 +345,8 @@ Lets go through some examples.
 inst01 - triplicating a fixed macrocell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example we have a cell ''logic'' (which presumably comes from the library)
-and we dont want to touch internal of the cell. That is why a directive 
+In this example we have a cell ''mlogic'' (which presumably comes from the library)
+and we do not want to touch internal of the cell. That is why a directive 
 ''do_not_touch'' is added in the module declaration. 
 
 
@@ -393,8 +409,8 @@ situation when two modules (parent and child) are to be fully triplicated.
 Accessing individual signals from a triplicated bus
 ###################################################
 
-In some very spetial cases you may want to access signals after the triplication
-individually. Lets condider two examples:
+In some very spatial cases you may want to access signals after the triplication
+individually. Lets consider two examples:
 
 powerOnReset
 ^^^^^^^^^^^^
@@ -426,8 +442,10 @@ forward way of doing that would be:
    :linenos:
 
 
-Lets think if this is what you really want. You may see that 'porStatus'' signal got triplicated 
-which is of course what we want. If you connect it to some kind of digital bus, 
+You may see that 'porStatus'' signal got triplicated 
+which is of course what we want.
+Lets think if this is what you really want. 
+If you connect it to some kind of digital bus, 
 most likely you will have some voting on the way, so you will not have an information
 about individual signals. In order to solve the problem, you have to "code" some triplication
 manually. If you declare a wire with a special name and with a special assignment (like bellow) 
@@ -469,7 +487,7 @@ by voting porRst signal.
 clockGating
 ^^^^^^^^^^^
 
-In previous example it was shown how to fanout a signal in order to access 
+In the previous example it was shown how to fanout a signal in order to access 
 sub-signals in a triplicated signal. Now let us consider opposite situation, how
 to generate triplicated signal from arbitrary combination of other signals.
 
@@ -508,11 +526,11 @@ In some cases it may be desirable to have access to that information.
 Imagine that you have a part of the circuit which utilizes clock gating, 
 in case of SEU during absence of clock, a voting mechanism is not able
 to fix the error to restore the proper state in all memory cells. 
-One can think about using information from the majority cell to re-enable the
+One can think about using information from the majority voter cell to re-enable the
 clock for short period of time (one clock cycle) until the error is fixed.
 
 To do this with TMRG tool, one has to use a dedicated directive ``tmr_error
-true`` as well as instanciate a net with a specific name ``tmrError``. 
+true`` as well as instantiate a net with a specific name ``tmrError``. 
 An example below illustrates how it can be done:
 
 .. literalinclude:: ../../examples/tmrOut01.v
@@ -524,7 +542,8 @@ An example below illustrates how it can be done:
    :linenos:
 
 As one can see, in non triplicated code tmrError wire has to be set to zero. In
-that way the non triplicated circuit is not affected. The triplicated tmrError
+that way the non triplicated circuit is not affected and can be simulated. 
+The triplicated tmrError
 signal is an OR of all signals from the current module and all instances
 instantiated in the module.
 
@@ -552,15 +571,15 @@ An example file may look like:
      tmr_error : true
 
 There should be one section per module, each property/value pair sets a constrain. To load a configuration file, you have to specify its name
-as a comand line argument:
+as a command line argument:
 
 .. code-block:: bash
 
     $ tmrg -c config.cfg [other_options]
     $ tmrg --config config.cfg [other_options]
 
-Applying constrains is also possible via command line arguments. This aproach is net very efective for constraining the whole project, but
-may be really handy in the initial phase. A posible constrains are shown bellow:
+Applying constrains is also possible via command line arguments. This approach is net very effective for constraining the whole project, but
+may be really handy in the initial phase. A possible constrains are shown bellow:
 
 .. code-block:: bash
 
@@ -663,7 +682,10 @@ at which point something went wrong.
 
 Limitations
 ############
-  * do not use concatenation on left hand site of any assignment
-  * do not mix triplicated and non triplicated signals (on left hand site of any assignment) 
+
+  * do not use concatenation on left hand side of any assignment
+  * do not mix triplicated and non triplicated signals (on the left hand side of any assignment) 
     in blocks
+  * only named connections are supported for module instantiation
+  * do not use expressions in the module connections
 
