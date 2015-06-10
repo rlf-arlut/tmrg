@@ -51,26 +51,6 @@ class TMR(VerilogElaborator):
         self.__fanoutPresent=False
         self.__init_tripclicate_callbacks()
 
-        self.config = ConfigParser.ConfigParser()
-        self.scriptDir = os.path.abspath(os.path.dirname(__file__))
-        self.logger.debug("Script path : %s"%self.scriptDir)
-
-        #master clonfig file
-        masterCnfg=os.path.join(self.scriptDir,"../etc/tmrg.cfg")
-        if os.path.exists(masterCnfg):
-            self.logger.debug("Loading master config file from %s"%masterCnfg)
-            self.config.read(masterCnfg)
-        else:
-            self.logger.warning("Master config file does not exists at %s"%masterCnfg)
-
-        #user config file
-        userCnfg=os.path.expanduser('~/.tmrg.cfg')
-        if os.path.exists(userCnfg):
-            self.logger.debug("Loading user config file from %s"%userCnfg)
-            self.config.read(userCnfg)
-        else:
-            self.logger.info("User config file does not exists at %s"%userCnfg)
-
         #command line specified config files
         for fname in self.options.config:
             if os.path.exists(fname):
@@ -94,14 +74,14 @@ class TMR(VerilogElaborator):
 
 
         if self.config.has_option('tmrg', 'files'):
-            files=self.config.get("tmrg","files").split(" ")
+            files=self.config.get("tmrg","files").split()
             for file in files:
                 file=file.strip()
                 self.logger.debug("Adding file from config file %s"%file)
                 self.args.append(file)
 
         if self.config.has_option('tmrg', 'libs'):
-            files=self.config.get("tmrg","libs").split(" ")
+            files=self.config.get("tmrg","libs").split()
 
             for file in files:
                 if len(file)==0:continue
@@ -838,7 +818,8 @@ class TMR(VerilogElaborator):
                name=str(t.getName()).lower()
                if name=="subscridentifier":
                    if not t[0] in self.current_module["nets"]:
-                       self.logger.warning("Unknown net %s"%t[0])
+                       if not t[0] in self.current_module["params"]:
+                          self.logger.warning("Unknown net '%s'"%t[0])
                        return res
                    if not "dnt" in self.current_module["nets"][t[0]]:
                        res.add(t[0])
@@ -865,7 +846,8 @@ class TMR(VerilogElaborator):
                 if t[0] in self.current_module["nets"]:
                     res["right"].add( t[0] )
                 else:
-                    self.logger.warning("Unknown net %s"%t[0])
+                    pass
+                    #self.logger.warning("Unknown net %s"%t[0])
             else:
                 for i in range(len(t)):
 #                    print "#(%d)>"%i,t[i]

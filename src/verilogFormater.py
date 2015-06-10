@@ -398,7 +398,7 @@ class VerilogFormater:
 
     def _format_paramAssgnmt(self,tokens,i=""):
         id=self.format(tokens[0])
-        val=self.format(tokens[2])
+        val=self.format(tokens[1])
         oStr="%s=%s"%(id,val)
         return oStr.rstrip()
 

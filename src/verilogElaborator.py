@@ -76,7 +76,7 @@ class VerilogElaborator():
             self.logger.debug("Loading master config file from %s"%masterCnfg)
             self.config.read(masterCnfg)
         else:
-            self.logger.warning("Master config file does not exists at %s"%masterCnfg)
+            self.logger.warning("Master config file does not exists at '%s'"%masterCnfg)
 
         #user config file
         userCnfg=os.path.expanduser('~/.%s.cfg'%cnfgName)
@@ -84,7 +84,7 @@ class VerilogElaborator():
             self.logger.debug("Loading user config file from %s"%userCnfg)
             self.config.read(userCnfg)
         else:
-            self.logger.info("User config file does not exists at %s"%userCnfg)
+            self.logger.info("User config file does not exists at '%s'"%userCnfg)
 
 
     def __init_elaborate_callbacks(self):
@@ -194,6 +194,16 @@ class VerilogElaborator():
 #                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
 #                if not name in  self.current_module["nets"]:
 #                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len}
+
+    def _elaborate_localparamdecl(self,tokens):
+        _range=self.vf.format(tokens[1])
+        _len=self.__getLenStr(tokens[1])
+        for param in tokens[2]:
+            pname=param[0]
+            pval=param[1]
+            self.logger.debug("Parameter %s = %s"%(pname,pval))
+            self.current_module["params"][pname]={"valule":pval,"range":_range,"len":_len}
+
 
     def _elaborate_netdecl3(self,tokens):
 #             print tokens
@@ -338,6 +348,7 @@ class VerilogElaborator():
         printDict(module["nets"],    "Nets")
 #        printDict(module["io"],      "IO")
         printDict(module["instances"], "Instantiations")
+        printDict(module["params"], "Params")
 
 
     def parse(self):
@@ -354,13 +365,13 @@ class VerilogElaborator():
                     for fname in glob.glob("%s/*.v"%name):
                         files.append(fname)
                 else:
-                    self.logger.error("File or directory does not exists %s"%name)
+                    self.logger.error("File or directory does not exists '%s'"%name)
 
             return files
 
         for fname in args2files(self.args):
             try:
-                logging.info("Processing file '%s'"%fname)
+                logging.info("Loading file '%s'"%fname)
                 self.addFile(fname)
             except ParseException, err:
                 logging.error("")
@@ -376,7 +387,7 @@ class VerilogElaborator():
 
         for fname in self.libFiles:
             try:
-                logging.info("Processing lib file '%s'"%fname)
+                logging.info("Loading lib file '%s'"%fname)
                 self.addLibFile(fname)
             except ParseException, err:
                 logging.error("")
@@ -407,7 +418,7 @@ class VerilogElaborator():
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}}
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{}}
                 for port in modulePorts:
                     self._elaborate(port)
 

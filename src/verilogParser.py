@@ -252,11 +252,11 @@ class VerilogParser:
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
 
-        paramAssgnmt = Group( identifier + "=" + self.expr ).setResultsName("paramAssgnmt")
+        paramAssgnmt = Group( identifier + Suppress("=") + self.expr ).setResultsName("paramAssgnmt")
 
 
         parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
-        localParameterDecl = Group("localparam" + Group( Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
+        localParameterDecl = Group("localparam" + Group(Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
 
         self.inputDecl  = Group( "input"  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
