@@ -200,9 +200,9 @@ class VerilogElaborator():
         _len=self.__getLenStr(tokens[1])
         for param in tokens[2]:
             pname=param[0]
-            pval=param[1]
+            pval=self.vf.format(param[1])
             self.logger.debug("Parameter %s = %s"%(pname,pval))
-            self.current_module["params"][pname]={"valule":pval,"range":_range,"len":_len}
+            self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len}
 
 
     def _elaborate_netdecl3(self,tokens):
@@ -424,6 +424,16 @@ class VerilogElaborator():
 
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
+
+                def pdict(d,i="",title=""):
+
+                    print i+title
+                    for e in d:
+                        if isinstance(d[e],dict):
+                            pdict(d[e],i+"  ",title=e)
+                        else:
+                            print "%s%s:%s"%(i+"  ",e,d[e])
+#                pdict(self.current_module)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
         for fname in sorted(self.libs):

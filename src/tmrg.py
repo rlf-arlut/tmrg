@@ -500,6 +500,7 @@ class TMR(VerilogElaborator):
                         for port in instance2[1]:
                             dport=port[0][0][1:] #skip dot
                             sport=port[0][2][0][0]
+                            print dport,sport,port[0][2]
                             dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
                             sportTmr=self.current_module["nets"][sport]["tmr"]
 

@@ -489,6 +489,9 @@ class VerilogFormater:
         self.trace=False
 
     def format(self,tokens,i=""):
+        outStr=""
+        if tokens==None:
+            return ""
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if self.trace: print "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80])
