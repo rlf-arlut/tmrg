@@ -499,32 +499,48 @@ class TMR(VerilogElaborator):
 
                         for port in instance2[1]:
                             dport=port[0][0][1:] #skip dot
-                            sport=port[0][2][0][0]
-                            print dport,sport,port[0][2]
+                            sport=port[0][2]
+                            print dport,"------",sport
+                            ids=self.getLeftRightHandSide(port[0][2])
+                            print ids
                             dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
-                            sportTmr=self.current_module["nets"][sport]["tmr"]
+                            #sportTmr=self.checkIfTmrNeeded(sport)
 
-                            self.logger.debug("      %s (tmr:%s) -> %s (tmr:%s)"%(dport,dportTmr,sport,sportTmr))
+#        result = []
+#        for i in self.EXT:
+#            cpy=tokens.deepcopy()
+#            for name in list(ids["right"])+list(ids["left"]):
+#                _to_name=name+i
+#                self.replace(cpy,name,_to_name)
+#            result.append(cpy)
+
+                            self.logger.debug("      %s (tmr:%s) -> %s"%(dport,dportTmr,self.vf.format(sport)))
                             if not dportTmr:
                                 newPorts.append(port)
-                                if sportTmr:
-                                    if self.modules[identifier]["io"][dport]["type"]=="input":
-                                        self._addVoter(sport,group="")
-#                                        print "voter"
-                                    else:
-                                        self._addFanout(sport,addWires="input")
-#                                        print "fanout"
+                                for sport in ids['right']:
+                                    sportTmr=self.current_module["nets"][sport]["tmr"]
+                                    if sportTmr:
+                                        if self.modules[identifier]["io"][dport]["type"]=="input":
+                                            self._addVoter(sport,group="")
+    #                                        print "voter"
+                                        else:
+                                            self._addFanout(sport,addWires="input")
+    #                                        print "fanout"
                             elif dportTmr:
                                 for post in self.EXT:
                                     portCpy=port.deepcopy()
                                     portCpy[0][0]="."+dport+post
-                                    portCpy[0][2][0][0]=sport+post
+                                    for name in list(ids["right"]):
+                                        _to_name=name+post
+                                        self.replace(portCpy,name,_to_name)
                                     newPorts.append(portCpy)
-                                if not sportTmr:
-                                    if self.modules[identifier]["io"][dport]["type"]=="output":
-                                        self._addVoter(sport,addWires="input")
-                                    else:
-                                        self._addFanout(sport)
+                                for sport in ids['right']:
+                                    sportTmr=self.current_module["nets"][sport]["tmr"]
+                                    if not sportTmr:
+                                        if self.modules[identifier]["io"][dport]["type"]=="output":
+                                                self._addVoter(sport,addWires="input")
+                                        else:
+                                            self._addFanout(sport)
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
                         if "tmrError" in self.modules[identifier]["nets"]:
                             #print iname
