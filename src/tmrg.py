@@ -500,9 +500,9 @@ class TMR(VerilogElaborator):
                         for port in instance2[1]:
                             dport=port[0][0][1:] #skip dot
                             sport=port[0][2]
-                            print dport,"------",sport
+#                            print dport,"------",sport
                             ids=self.getLeftRightHandSide(port[0][2])
-                            print ids
+#                            print ids
                             dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
                             #sportTmr=self.checkIfTmrNeeded(sport)
 

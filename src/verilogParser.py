@@ -578,6 +578,7 @@ class VerilogParser:
         self.directive_seu_set          = Group( tmrg + Suppress("seu_set") + identifier + Suppress(self.semi)).setResultsName("directive_seu_set")
         self.directive_seu_reset        = Group( tmrg + Suppress("seu_reset") + identifier +  Suppress(self.semi)).setResultsName("directive_seu_reset")
 
+        self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
         """
         x::= <specparam_declaration>
@@ -618,6 +619,7 @@ class VerilogParser:
             self.directive_do_not_touch |
             self.directive_seu_set |
             self.directive_seu_reset |
+            self.comp_directive |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -705,7 +707,7 @@ class VerilogParser:
             "endprimitive" )
 
         #verilogbnf = OneOrMore( self.module | udp ) + StringEnd()
-        verilogbnf = (OneOrMore( self.module | udp ) + StringEnd()).setName("top").setResultsName("top")
+        verilogbnf = (OneOrMore( self.module | udp | self.comp_directive ) + StringEnd()).setName("top").setResultsName("top")
 
 #        specialComment = '//##' + Word(alphanums) + '##' + Word(alphanums+'.') + "::" + Word(nums)
 #        def dontMatchSpecialComments(tokens):
@@ -722,8 +724,13 @@ class VerilogParser:
         self.tmrgDirective = (Suppress('//') + "tmrg" + restOfLine).setResultsName("directive")
         def tmrgDirectiveAction(toks):
             return " ".join(toks)+ ";"
-
         self.tmrgDirective.setParseAction(tmrgDirectiveAction)
+
+        self.compDirective = (Suppress('`') + restOfLine).setResultsName("compDirective")
+        def compDirectiveAction(toks):
+            return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
+        self.compDirective.setParseAction(compDirectiveAction)
+
     def parseFile(self,fname):
         self.fname=fname
         f=open(fname,"r")
@@ -734,7 +741,7 @@ class VerilogParser:
     def parseString( self,strng ):
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = self.tmrgDirective.transformString( strng )
-
+        preParsedStrng = self.compDirective.transformString(preParsedStrng)
         self.verilog=preParsedStrng
         self.tokens=self.verilogbnf.parseString( preParsedStrng )
         return self.tokens

@@ -411,6 +411,9 @@ class VerilogElaborator():
             tokens=self.files[fname]
 #            print tokens
             for module in tokens:
+                if module.getName()!="module":
+                    continue
+
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]
                 modulePorts=moduleHdr[2]
