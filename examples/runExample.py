@@ -272,7 +272,7 @@ def runRc(rc,fin,gui=False):
         rcFile=os.path.join(workDir,"rc.tcl")
 
         logging.info("    Creating RC script %s"%rcFile)
-        rcValues={"workDir":workDir,"rtlFiles":fin,"sdcFile":sdcFile,"exit":"exit"}
+        rcValues={"workDir":workDir,"rtlFiles":fin,"sdcFile":sdcFile,"exit":exit}
         if gui:
            rcValues["exit"]=""
         generateFromTemplate(rcFile,"rc/rc.tpl",rcValues)
@@ -282,7 +282,9 @@ def runRc(rc,fin,gui=False):
         generateFromTemplate(sdcFile,"rc/constraint.tpl",sdcValues)
 
         logging.info("    Run RC")
-        cmd="rc -files %s > %s"%(rcFile,flog)
+        guiStr=""
+        if gui:guiStr="-gui"
+        cmd="rc %s -files %s > %s"%(guiStr,rcFile,flog)
         logging.debug("    cmd :%s "%(cmd))
         os.system(cmd)
         r2g=os.path.join(workDir,"r2g.v")
@@ -306,6 +308,7 @@ def main():
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("-a", "--all", action="store_true", dest="all")
     parser.add_option("-d", "--doc", action="store_true", dest="doc")
+    parser.add_option("", "--gui", action="store_true", dest="gui", default=False)
     parser.add_option("-i", "--iverilog", action="store_true", dest="iverilog")
     (options, args) = parser.parse_args()
 
@@ -375,7 +378,7 @@ def main():
                   sourceIverilogFails.append(fname)
                   continue
             if rc:
-              good=runRc(rc,noTmrFile)
+              good=runRc(rc,noTmrFile,gui=options.gui)
               if not good:
                   sourceRcFails.append(fname)
                   continue
@@ -392,7 +395,7 @@ def main():
                   continue
 
             if rc:
-              good=runRc(rc,tmrFile)
+              good=runRc(rc,tmrFile,gui=options.gui)
               if not good:
                 tmrRcFails.append(fname)
                 continue
