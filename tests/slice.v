@@ -8,9 +8,12 @@ module top(i,o);
  input i;
  output o;
  
- wire [2:1] comb1={i,i};
+ wire fb;
+ wire fbVoted=fb;
+
+ wire [2:1] comb1={i,fbVoted};
  wire [2:1] comb1Voted=comb1;
  wire [2:1] comb2=comb1Voted;
  wire [2:1] comb2Voted=comb2;
- mlogic m01(.i(comb2Voted[0]),.o(o));
+ mlogic m01(.i(comb2Voted[0]),.o(fb));
 endmodule
