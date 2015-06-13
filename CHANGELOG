@@ -1,13 +1,14 @@
 Release notes
 =============
 
-0.1.2
+trunk
 -------
 
   * tcsh setup scrtip added
   * improved parameter and localparameter support
   * complex expresions are accepted in the module instantiation 
   * support for compiler directives
+  * module slicing added
 
 
 0.1.1
