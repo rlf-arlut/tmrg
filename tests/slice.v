@@ -8,7 +8,7 @@ module top(i,o);
  input i;
  output o;
  
- wire [2:1] comb1=~i;
+ wire [2:1] comb1={i,i};
  wire [2:1] comb1Voted=comb1;
  wire comb2=comb1Voted;
  wire comb2Voted=comb2;

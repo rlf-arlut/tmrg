@@ -97,6 +97,52 @@ class VerilogElaborator():
                 self.logger.debug("Found elaborator for %s"%token)
 
 
+    def getLeftRightHandSide(self,t,res=None):
+        #print "getLeftRightHandSide", res, t
+        if res==None: res={"left":set(),"right":set()}
+
+        def _extractID(t,res=None):
+            if res==None: res=set()
+            if isinstance(t, ParseResults):
+               name=str(t.getName()).lower()
+               if name=="subscridentifier":
+                   if not t[0] in self.current_module["nets"]:
+                       if not t[0] in self.current_module["params"]:
+                          self.logger.warning("Unknown net '%s'"%t[0])
+                       return res
+                   if not "dnt" in self.current_module["nets"][t[0]]:
+                       res.add(t[0])
+               else:
+                   for i in range(len(t)):
+                       res=_extractID(t[i],res=res)
+            return res
+#        print "#",type(t),t
+        if isinstance(t, ParseResults):
+            name=str(t.getName()).lower()
+            #print name, len(t), t
+            if len(t)==0: return res
+            if name in ("assgnmt", "nbassgnmt"):
+                left_id=t[0][0]
+                res["left"].add(left_id)
+                #print   _extractID(t[2])
+                res["right"].update( _extractID(t[2]))
+            elif name in ("regdecl"):
+                for tt in t[3]:
+                    left_id=tt[0]
+                    res["left"].add(left_id)
+
+            elif name == "subscridentifier":
+                if t[0] in self.current_module["nets"]:
+                    res["right"].add( t[0] )
+                else:
+                    pass
+                    #self.logger.warning("Unknown net %s"%t[0])
+            else:
+                for i in range(len(t)):
+#                    print "#(%d)>"%i,t[i]
+                    res=self.getLeftRightHandSide(t[i],res=res)
+
+        return res
 
     def _elaborate_regdecl(self,tokens):
         #tokens=tokens[0] #self.registers
@@ -212,9 +258,12 @@ class VerilogElaborator():
             _len=self.__getLenStr(tokens[2])
 
             for assgmng in tokens[4]:
+                ids=self.getLeftRightHandSide(assgmng)
+                print ids
                 name=assgmng[0][0]
                 right=assgmng[2]
-                idRight=right[0][0]
+                idRight=ids["right"].pop()
+                print idRight
                 dnt=False
                 for ex in self.EXT:
                     if name==idRight+ex: dnt=True

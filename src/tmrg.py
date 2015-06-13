@@ -618,13 +618,12 @@ class TMR(VerilogElaborator):
                     if not "dnt" in self.modules[modName]["constraints"]:
                         raise ErrorMessage("Error during slicing. Module '%s' should have directive 'do_not_touch'"%modName)
 
-                if moduleItem.getName()!="netDecl3": continue
-                if len(ids["right"])==1 and len(ids["left"])==1:
-
-                    for net,netVoted in self.voting_nets:
-                        if netVoted in ids["left"] and net in ids["right"]:
-                            vote=True
-                            voteNet=net
+                if moduleItem.getName()=="netDecl3":
+                    if len(ids["right"])==1 and len(ids["left"])==1:
+                        for net,netVoted in self.voting_nets:
+                            if netVoted in ids["left"] and net in ids["right"]:
+                                vote=True
+                                voteNet=net
                 if not vote:
                     newModuleItems.append(moduleItem)
                 else:
@@ -656,7 +655,7 @@ class TMR(VerilogElaborator):
                         width+="#(.WIDTH(%s)) "%_len
                     newModuleItems.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
                                                                             (width,inst,_a,_b,_c,_out) )[0]);
-
+                    self.__voterPresent=True
             slice[1]=newModuleItems
             for port in portsToAdd + portsToAddVoted:
                 slice[0][2].append(self.vp.port.parseString(port)[0])
@@ -984,52 +983,7 @@ class TMR(VerilogElaborator):
         return tokens
 
 
-    def getLeftRightHandSide(self,t,res=None):
-        #print "getLeftRightHandSide", res, t
-        if res==None: res={"left":set(),"right":set()}
 
-        def _extractID(t,res=None):
-            if res==None: res=set()
-            if isinstance(t, ParseResults):
-               name=str(t.getName()).lower()
-               if name=="subscridentifier":
-                   if not t[0] in self.current_module["nets"]:
-                       if not t[0] in self.current_module["params"]:
-                          self.logger.warning("Unknown net '%s'"%t[0])
-                       return res
-                   if not "dnt" in self.current_module["nets"][t[0]]:
-                       res.add(t[0])
-               else:
-                   for i in range(len(t)):
-                       res=_extractID(t[i],res=res)
-            return res
-#        print "#",type(t),t
-        if isinstance(t, ParseResults):
-            name=str(t.getName()).lower()
-            #print name, len(t), t
-            if len(t)==0: return res
-            if name in ("assgnmt", "nbassgnmt"):
-                left_id=t[0][0]
-                res["left"].add(left_id)
-                #print   _extractID(t[2])
-                res["right"].update( _extractID(t[2]))
-            elif name in ("regdecl"):
-                for tt in t[3]:
-                    left_id=tt[0]
-                    res["left"].add(left_id)
-
-            elif name == "subscridentifier":
-                if t[0] in self.current_module["nets"]:
-                    res["right"].add( t[0] )
-                else:
-                    pass
-                    #self.logger.warning("Unknown net %s"%t[0])
-            else:
-                for i in range(len(t)):
-#                    print "#(%d)>"%i,t[i]
-                    res=self.getLeftRightHandSide(t[i],res=res)
-
-        return res
 
 
     def checkIfTmrNeeded(self,t):
