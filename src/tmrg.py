@@ -438,7 +438,7 @@ class TMR(VerilogElaborator):
         return result
 
     def __triplicate_ModuleInstantiation(self,tokens):
-        try:
+#        try:
             identifier=tokens[0]
             instance = tokens[2][0][0][0]
 
@@ -591,8 +591,8 @@ class TMR(VerilogElaborator):
 #                 self.logger.error("Fanouts / voters are missing!")
 #                 return results
             return tokens
-        except:
-            self.exc()
+#        except:
+#            self.exc()
 
     def __slice_module(self,tokens):
         result=[]
@@ -613,7 +613,14 @@ class TMR(VerilogElaborator):
             for moduleItem in slice[1]:
                 ids=self.getLeftRightHandSide(moduleItem)
                 vote=False
+                if moduleItem.getName()=="moduleInstantiation":
+                    modName=moduleItem[0]
+                    if not "dnt" in self.modules[modName]["constraints"]:
+                        raise ErrorMessage("Error during slicing. Module '%s' should have directive 'do_not_touch'"%modName)
+
+                if moduleItem.getName()!="netDecl3": continue
                 if len(ids["right"])==1 and len(ids["left"])==1:
+
                     for net,netVoted in self.voting_nets:
                         if netVoted in ids["left"] and net in ids["right"]:
                             vote=True
@@ -739,7 +746,7 @@ class TMR(VerilogElaborator):
         return result
 
     def __triplicate_module(self,tokens):
-        try:
+#        try:
             header=tokens[0]
             moduleName=header[1]
             self.current_module=self.modules[moduleName]
@@ -918,8 +925,8 @@ class TMR(VerilogElaborator):
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
            # print "\n--\n",[tokens,tokens],"\n==\n"
             return [tokens]
-        except:
-            self.exc()
+#        except:
+#            self.exc()
 
     def __triplicate_output(self,tokens):
         before=str(tokens[-1])
@@ -1560,11 +1567,11 @@ def main():
     except ErrorMessage as e:
         logging.error(str(e))
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        logging.warning("The exception was raised from:")
+        logging.info("The exception was raised from:")
         for l in traceback.format_tb(exc_traceback):
             for ll in l.split("\n"):
-              logging.warning(ll)
-        logging.warning(ll)
+              logging.info(ll)
+        logging.info(ll)
 
 
 
