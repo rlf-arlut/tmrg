@@ -642,6 +642,7 @@ class TMR(VerilogElaborator):
                     newModuleItems.insert(0,self.vp.inputDecl.parseString("input %s %s;"%(_range,_b))[0])
                     newModuleItems.insert(0,self.vp.inputDecl.parseString("input %s %s;"%(_range,_c))[0])
                     newModuleItems.insert(0,self.vp.outputDecl.parseString("output %s %s;"%(_range,voteNet))[0])
+                    newModuleItems.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
                     wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
                     wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                     wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
