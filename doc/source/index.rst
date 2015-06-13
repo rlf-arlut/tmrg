@@ -19,6 +19,9 @@ redundancy.
    By downloading the code, you become **RESPONSIBLE** for protecting it.
    For more details please refer :ref:`licesing`.
 
+.. note:: 
+   `TMRG introduction presentation <http://cern.ch/tmrg/tmrg_introduction.pdf>`_ [PDF]
+
 
 Content:
 
