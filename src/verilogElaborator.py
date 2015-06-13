@@ -249,6 +249,10 @@ class VerilogElaborator():
     def _elaborate_directive_do_not_touch(self,tokens):
         self.current_module["constraints"]["dnt"]=True
 
+    def _elaborate_directive_slicing(self,tokens):
+        self.current_module["constraints"]["slicing"]=True
+
+
     def _elaborate_directive_tmr_error(self,tokens):
         en=False
         if tokens[0].lower() in ('true','enable'):

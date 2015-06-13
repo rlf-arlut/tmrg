@@ -476,6 +476,9 @@ class VerilogFormater:
     def _format_directive_do_not_triplicate(self,tokens,i=""):
         return ""
 
+    def _format_directive_slicing(self,tokens,i=""):
+        return ""
+
     def _format_gate(self,tokens,i=""):
         oStr=""
  #       print tokens

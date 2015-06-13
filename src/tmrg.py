@@ -176,34 +176,39 @@ class TMR(VerilogElaborator):
 
     def __triplicate(self,tokens,i=""):
         debug=0
-        if debug:print i,"__",tokens.getName(),tokens
+        if debug:print i,"_(1 in )_ >",tokens.getName(),str(tokens)[:100]
+        i+="    "
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return tokens
             if name in self.triplicator:
-                if debug:print i,"tpc>",tokens
+                if debug:print i,"_(2 tmr)_>",str(tokens)[:100]
                 tokens=self.triplicator[name](tokens)
             else:
                 self.logger.debug("No triplicator for %s"%name)
                 newTokens=ParseResults([],name=tokens.getName())
+                if debug:print i,"_(3 lis)_ >",str(tokens)[:100]
+                i+="    "
                 for j in range(len(tokens)):
-                    if debug:print i,"in >",tokens[j]
                     if isinstance(tokens[j], ParseResults):
-                        tmrToks=self.__triplicate(tokens[j],i+"  ")
+                        tmrToks=self.__triplicate(tokens[j],i+"    ")
                         if isinstance(tmrToks,list):
                             for otokens in tmrToks:
                                 newTokens.append(otokens)
-                                if debug:print i,"out>",otokens
+                                if debug:print i,"_(4 out)_>",str(otokens)[:100]
                         else:
                             newTokens.append(tmrToks)
+                            if debug:print i,"_(4 out)_>",str(tmrToks)[:100]
                     else:
                         newTokens.append(tokens[j])
-                        if debug:print i,"str>",tokens[j]
-                if debug:print i,"ret",newTokens.getName(),newTokens
+                        if debug:print i,"_(4 out)_>",str(tokens[j])[:100]
+                if debug:print i,"_(new)_>",newTokens.getName(),str(newTokens)[:100]
                 return newTokens
         else:
             #we have a string!
+            if debug:print i,"_(str2)_>",str(tokens[j])[:100]
             pass
+        if debug:print i,"_(ret)_>",str(tokens)[:100]
         return tokens
 
 
@@ -316,6 +321,7 @@ class TMR(VerilogElaborator):
         eFanout=False
         for ext in self.EXT:
             if left==right+ext:eFanout=True
+
         if eFanout:
             self.logger.info("Removing declaration of '%s' (it comes from a fanout of %s)"%(left,right))
             return ParseResults([],name=tokens.getName())
@@ -588,15 +594,161 @@ class TMR(VerilogElaborator):
         except:
             self.exc()
 
+    def __slice_module(self,tokens):
+        result=[]
+        header=tokens[0]
+        moduleName=header[1]
+
+
+        # generate slice
+        slice=tokens.deepcopy()
+        slice[0][1]=str(moduleName)+"_slice"
+        wrapperWires=[]
+
+        portsToAdd=[]
+        portsToAddVoted=[]
+
+        if len(self.voting_nets):
+            newModuleItems=ParseResults([],name=tokens[1].getName())
+            for moduleItem in slice[1]:
+                ids=self.getLeftRightHandSide(moduleItem)
+                vote=False
+                if len(ids["right"])==1 and len(ids["left"])==1:
+                    for net,netVoted in self.voting_nets:
+                        if netVoted in ids["left"] and net in ids["right"]:
+                            vote=True
+                            voteNet=net
+                if not vote:
+                    newModuleItems.append(moduleItem)
+                else:
+                    inst=voteNet+"Voter"
+                    self.logger.info("Instializaing voter %s"%inst)
+                    net=self.modules[moduleName]["nets"][voteNet]
+                    _range=net["range"]
+
+                    _len=net["len"]
+                    _out=voteNet+"Voted"
+                    _err=voteNet+"TmrError"
+                    _a=voteNet+"A"
+                    _b=voteNet+"B"
+                    _c=voteNet+"C"
+                    newModuleItems.insert(0,self.vp.inputDecl.parseString("input %s %s;"%(_range,_a))[0])
+                    newModuleItems.insert(0,self.vp.inputDecl.parseString("input %s %s;"%(_range,_b))[0])
+                    newModuleItems.insert(0,self.vp.inputDecl.parseString("input %s %s;"%(_range,_c))[0])
+                    newModuleItems.insert(0,self.vp.outputDecl.parseString("output %s %s;"%(_range,voteNet))[0])
+                    wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                    wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                    wrapperWires.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+
+                    portsToAddVoted.append(_a)
+                    portsToAddVoted.append(_b)
+                    portsToAddVoted.append(_c)
+                    portsToAdd.append(voteNet)
+                    width=""
+                    if _len!="1":
+                        width+="#(.WIDTH(%s)) "%_len
+                    newModuleItems.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
+                                                                            (width,inst,_a,_b,_c,_out) )[0]);
+
+            slice[1]=newModuleItems
+            for port in portsToAdd + portsToAddVoted:
+                slice[0][2].append(self.vp.port.parseString(port)[0])
+
+        # generate wrapper
+        wrapper=tokens.deepcopy()
+
+        portList=[]
+        #triplicate module header | add tmr signals
+        if len(wrapper[0])>2:
+            ports=wrapper[0][2]
+            newports=ParseResults([],name=ports.getName())
+            for port in ports:
+                if  port.getName()=="subscrIdentifier":
+                    portName=port[0]
+                    portList.append(portName)
+                    if not portName in self.current_module["nets"]:
+                        self.logger.warning("Net '%s' unknown."%portName)
+                        continue
+                    doTmr=self.current_module["nets"][portName]["tmr"]
+                    portstr="Port %s -> "%(portName)
+
+                    if doTmr:
+                        sep=""
+                        for post in self.EXT:
+                            newport=portName+post
+                            newports.append(newport)
+                            portstr+=sep+newport
+                            sep=", "
+                    else:
+                        newports.append(port)
+                    self.logger.debug(portstr)
+                else:
+                    portName=port[3][0]
+                    portList.append(portName)
+                    if not portName in self.current_module["nets"]:
+                        self.logger.warning("Net '%s' unknown."%portName)
+                        continue
+                    doTmr=self.current_module["nets"][portName]["tmr"]
+                    portstr="Port %s -> "%(portName)
+                    if doTmr:
+                        sep=""
+                        for post in self.EXT:
+                            portCpy=port.deepcopy()
+                            newPortName=portName+post
+                            self.replace(portCpy,portName,newPortName)
+                            newports.append(portCpy)
+                            portstr+=sep+newPortName
+                            sep=", "
+#                                print portCpy,portCpy.getName()
+                    else:
+                        newports.append(port)
+
+                    self.logger.debug(portstr)
+
+            if "tmrError" in self.current_module["nets"]:
+                groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
+                for group in sorted(groups):
+                    newport="tmrError%s"%group
+                    newports.append( newport )
+                    self.logger.debug("Port %s"%(newport))
+            wrapper[0][2]=newports
+
+        newModuleItems=ParseResults([],name=tokens[1].getName())
+        for moduleItem in wrapper[1]:
+            if moduleItem.getName() in ("input","output"):
+                newModuleItems.append(self.__triplicate(moduleItem))
+            pass
+        for wire in wrapperWires:
+             newModuleItems.append(wire)
+        for ext in self.EXT:
+            instName=wrapper[0][1]+ext
+            modName=slice[0][1]
+            portStr=""
+            sep=""
+            for port in portList + portsToAdd:
+                portStr+=sep+".%s(%s%s)"%(port,port,ext)
+                sep=","
+            for port in portsToAddVoted:
+                portStr+=sep+".%s(%s)"%(port,port)
+            newModuleItems.append(self.vp.moduleInstantiation.parseString("%s %s(%s);"%(modName,instName,portStr))[0])
+        wrapper[1]=newModuleItems
+
+
+        result.append(slice)
+        result.append(wrapper)
+        return result
 
     def __triplicate_module(self,tokens):
         try:
             header=tokens[0]
             moduleName=header[1]
+            self.current_module=self.modules[moduleName]
             if "dnt" in   self.modules[moduleName]["constraints"]:
                 self.logger.info("Module '%s' is not to be touched"%moduleName)
                 return tokens
-            self.current_module=self.modules[moduleName]
+            if "slicing" in   self.modules[moduleName]["constraints"]:
+                self.logger.info("Module '%s' is to be sliced"%moduleName)
+                return self.__slice_module(tokens)
             header[1]=str(moduleName)+"TMR"
             self.logger.debug("")
             self.logger.debug("= "*50)
@@ -764,8 +916,8 @@ class TMR(VerilogElaborator):
                         width+="#(.WIDTH(%s)) "%_len
                     moduleBody.append(self.vp.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
-
-            return tokens
+           # print "\n--\n",[tokens,tokens],"\n==\n"
+            return [tokens]
         except:
             self.exc()
 
@@ -1151,6 +1303,9 @@ class TMR(VerilogElaborator):
                     tmr=self.cmdLineConstrains[module][net]
                     s+=" -> cmd:%s"%(str(tmr))
 
+                if "slicing" in self.modules[module]["constraints"]:
+                    tmr=True
+                    s+=" -> slicing:%s"%(str(tmr))
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
 
@@ -1251,10 +1406,13 @@ class TMR(VerilogElaborator):
             self.logger.info("Triplicating file %s"%(fname))
             self.logger.debug("#"*100)
             tokens=self.files[fname]
-            tmrTokens=ParseResults([],name=tokens.getName())
-            for module in tokens:
-                tmrModule=self.__triplicate(module)
-                tmrTokens.append(tmrModule)
+            tmrTokens=self.__triplicate(tokens)
+#            print "\n\n-----------\n",tmrTokens
+#            tmrTokens=ParseResults([],name=tokens.getName())
+#            for module in tokens:
+#                tmrModule=self.__triplicate(module)
+#                #print "\n==\n",tmrModule
+#                tmrTokens.append(tmrModule)
 
             fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
             foutnew=fout+'.new'

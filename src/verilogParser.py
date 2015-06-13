@@ -577,6 +577,7 @@ class VerilogParser:
         self.directive_do_not_touch     = Group( tmrg + ("do_not_touch") + Suppress(self.semi)).setResultsName("directive_do_not_touch")
         self.directive_seu_set          = Group( tmrg + Suppress("seu_set") + identifier + Suppress(self.semi)).setResultsName("directive_seu_set")
         self.directive_seu_reset        = Group( tmrg + Suppress("seu_reset") + identifier +  Suppress(self.semi)).setResultsName("directive_seu_reset")
+        self.directive_slicing          = Group( tmrg + ("slicing") + Suppress(self.semi)).setResultsName("directive_slicing")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
@@ -620,6 +621,7 @@ class VerilogParser:
             self.directive_seu_set |
             self.directive_seu_reset |
             self.comp_directive |
+            self.directive_slicing |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -649,7 +651,7 @@ class VerilogParser:
         """
         portRef = subscrIdentifier
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
-        port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
+        self.port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output")
         portIn   = Group( "input"  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
@@ -660,7 +662,7 @@ class VerilogParser:
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
                             Group(Optional( Suppress("(") +
-                                             Optional( delimitedList( portIn | portOut | portInOut | port ) )  +
+                                             Optional( delimitedList( portIn | portOut | portInOut | self.port ) )  +
                                             Suppress(")") )).setResultsName("ports") +
                             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
 
@@ -742,6 +744,7 @@ class VerilogParser:
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = self.tmrgDirective.transformString( strng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
+
         self.verilog=preParsedStrng
         self.tokens=self.verilogbnf.parseString( preParsedStrng )
         return self.tokens
