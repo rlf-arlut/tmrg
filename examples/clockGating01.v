@@ -1,4 +1,4 @@
-module clockGating (clkIn,clkOut,clkGate);
+module clockGating01 (clkIn,clkOut,clkGate);
   // tmrg default triplicate
   input clkIn;
   output clkOut;
