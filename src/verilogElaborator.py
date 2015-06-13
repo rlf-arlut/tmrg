@@ -259,11 +259,11 @@ class VerilogElaborator():
 
             for assgmng in tokens[4]:
                 ids=self.getLeftRightHandSide(assgmng)
-                print ids
+#                print ids
                 name=assgmng[0][0]
-                right=assgmng[2]
+#                right=assgmng[2]
                 idRight=ids["right"].pop()
-                print idRight
+#                print idRight
                 dnt=False
                 for ex in self.EXT:
                     if name==idRight+ex: dnt=True
