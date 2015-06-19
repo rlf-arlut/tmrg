@@ -133,6 +133,16 @@ class SEE(VerilogElaborator):
         values['set_release_net']=values['set_release_net'].rstrip()
         values['set_display_net']=values['set_display_net'].rstrip()
 
+        if len(values['set_force_net'])==0:
+            self.logger.warning("No SET wires!")
+            values['set_force_net']    = "    // No SET wires found !\n"
+            values['set_release_net']  = "    // No SET wires found !\n"
+            values['set_display_net']  = "    // No SET wires found !\n"
+        else:
+            values['set_force_net']    = "    case (wireid)\n" + values['set_force_net']   + "    endcase\n"
+            values['set_release_net']  = "    case (wireid)\n" + values['set_release_net'] + "    endcase\n"
+            values['set_display_net']  = "    case (wireid)\n" + values['set_display_net'] + "    endcase\n"
+
 
         values['seu_display_net']=""
         values['seu_force_net']=""
@@ -146,6 +156,15 @@ class SEE(VerilogElaborator):
         values['seu_release_net']=values['seu_release_net'].rstrip()
         values['seu_display_net']=values['seu_display_net'].rstrip()
 
+        if len(values['seu_force_net'])==0:
+            self.logger.warning("No SEU wires!")
+            values['seu_force_net']    = "    // No SEU wires found !\n"
+            values['seu_release_net']  = "    // No SEU wires found !\n"
+            values['seu_display_net']  = "    // No SEU wires found !\n"
+        else:
+            values['seu_force_net']    = "    case (wireid)\n" + values['seu_force_net']   + "    endcase\n"
+            values['seu_release_net']  = "    case (wireid)\n" + values['seu_release_net'] + "    endcase\n"
+            values['seu_display_net']  = "    case (wireid)\n" + values['seu_display_net'] + "    endcase\n"
 
         tfile=os.path.join( self.scriptDir,  self.config.get("seeg","template"))
         self.logger.info("Taking template from '%s'"%tfile)

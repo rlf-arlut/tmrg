@@ -3,9 +3,7 @@ task set_force_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${set_force_net}
-    endcase
   end
 endtask
 
@@ -13,9 +11,7 @@ task set_release_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${set_release_net}
-    endcase
   end
 endtask
 
@@ -23,9 +19,7 @@ task set_display_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${set_display_net}
-    endcase
   end
 endtask
 
@@ -43,9 +37,7 @@ task seu_force_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${seu_force_net}
-    endcase
   end
 endtask
 
@@ -53,9 +45,7 @@ task seu_release_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${seu_release_net}
-    endcase
   end
 endtask
 
@@ -63,9 +53,7 @@ task seu_display_net;
   input wireid;
   integer wireid;
   begin
-    case (wireid)
 ${seu_display_net}
-    endcase
   end
 endtask
 
