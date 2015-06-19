@@ -590,82 +590,122 @@ module CKBXHVTD8 (I, Z);
    output Z;
 endmodule
 module CKLHQHVTD1 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD12 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD16 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD2 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD20 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD24 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD3 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD4 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD6 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQHVTD8 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLNQHVTD1 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD12 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD16 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD2 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD20 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD24 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD3 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD4 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD6 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQHVTD8 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
@@ -890,290 +930,434 @@ module DELHVT4 (I, Z);
    output Z;
 endmodule
 module DFCNHVTD1 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCNHVTD2 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCNHVTD4 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCNQHVTD1 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCNQHVTD2 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCNQHVTD4 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCSNHVTD1 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSNHVTD2 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSNHVTD4 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSNQHVTD1 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFCSNQHVTD2 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFCSNQHVTD4 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFHVTD1 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFHVTD2 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFHVTD4 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFKCNHVTD1 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCNHVTD2 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCNHVTD4 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCNQHVTD1 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCNQHVTD2 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCNQHVTD4 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCSNHVTD1 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKCSNHVTD2 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKCSNHVTD4 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKSNHVTD1 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFKSNHVTD2 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFKSNHVTD4 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFNCNHVTD1 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCNHVTD2 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCNHVTD4 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCSNHVTD1 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFNCSNHVTD2 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFNCSNHVTD4 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFNHVTD1 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFNHVTD2 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFNHVTD4 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFNSNHVTD1 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFNSNHVTD2 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFNSNHVTD4 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFQHVTD1 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
 module DFQHVTD2 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
 module DFQHVTD4 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
 module DFSNHVTD1 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSNHVTD2 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSNHVTD4 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSNQHVTD1 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFSNQHVTD2 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFSNQHVTD4 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFXHVTD1 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXHVTD2 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXHVTD4 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXQHVTD1 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module DFXQHVTD2 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module DFXQHVTD4 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module EDFCNHVTD1 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCNHVTD2 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCNHVTD4 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCNQHVTD1 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFCNQHVTD2 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFCNQHVTD4 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFHVTD1 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFHVTD2 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFHVTD4 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFKCNHVTD1 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCNHVTD2 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCNHVTD4 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCNQHVTD1 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFKCNQHVTD2 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFKCNQHVTD4 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFQHVTD1 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
 module EDFQHVTD2 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
 module EDFQHVTD4 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
@@ -2398,482 +2582,722 @@ module OR4XHVTD1 (A1, A2, A3, A4, Z);
     output Z;
 endmodule
 module SDF4CQHVTD0 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDF4CQHVTD1 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDF4CQHVTD2 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDF4CQHVTD4 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFCNHVTD0 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCNHVTD1 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCNHVTD2 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCNHVTD4 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCNQHVTD0 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQHVTD1 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQHVTD2 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQHVTD4 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCSNHVTD0 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSNHVTD1 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSNHVTD2 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSNHVTD4 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSNQHVTD0 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQHVTD1 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQHVTD2 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQHVTD4 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFHVTD0 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFHVTD1 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFHVTD2 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFHVTD4 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFKCNHVTD0 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCNHVTD1 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCNHVTD2 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCNHVTD4 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCNQHVTD0 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQHVTD1 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQHVTD2 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQHVTD4 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCSNHVTD0 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSNHVTD1 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSNHVTD2 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSNHVTD4 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSNQHVTD0 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQHVTD1 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQHVTD2 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQHVTD4 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKSNHVTD0 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSNHVTD1 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSNHVTD2 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSNHVTD4 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSNQHVTD0 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQHVTD1 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQHVTD2 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQHVTD4 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFNCNHVTD0 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCNHVTD1 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCNHVTD2 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCNHVTD4 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCSNHVTD0 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSNHVTD1 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSNHVTD2 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSNHVTD4 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNHVTD0 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFNHVTD1 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFNHVTD2 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFNHVTD4 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFNSNHVTD0 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSNHVTD1 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSNHVTD2 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSNHVTD4 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFQHVTD0 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQHVTD1 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQHVTD2 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQHVTD4 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQNHVTD0 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQNHVTD1 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQNHVTD2 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQNHVTD4 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFSNHVTD0 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSNHVTD1 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSNHVTD2 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSNHVTD4 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSNQHVTD0 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQHVTD1 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQHVTD2 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQHVTD4 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFXHVTD0 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXHVTD1 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXHVTD2 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXHVTD4 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXQHVTD0 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQHVTD1 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQHVTD2 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQHVTD4 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SEDF4CQHVTD0 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDF4CQHVTD1 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDF4CQHVTD2 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDF4CQHVTD4 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFCNHVTD0 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCNHVTD1 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCNHVTD2 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCNHVTD4 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCNQHVTD0 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQHVTD1 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQHVTD2 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQHVTD4 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFHVTD0 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFHVTD1 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFHVTD2 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFHVTD4 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFKCNHVTD0 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCNHVTD1 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCNHVTD2 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCNHVTD4 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCNQHVTD0 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQHVTD1 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQHVTD2 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQHVTD4 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFQHVTD0 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQHVTD1 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQHVTD2 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQHVTD4 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQNHVTD0 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNHVTD1 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNHVTD2 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNHVTD4 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
