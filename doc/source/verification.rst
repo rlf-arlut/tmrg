@@ -204,16 +204,19 @@ upsets in his design. The simpliest implementation may look like:
    
     [...]
 
-    integer SEEnextTime;
-    integer SEEduration;
-    integer SEEwireId;
-    integer SEEmaxWireId;
-    integer MAX_UPSET_TIME=10;
-    integer SEEDEL=100;
-    inreger SEEEnable=1;
+    integer SEEEnable=1;       // enables SEE generator
+    integer SEEnextTime;       // time until the next SEE event
+    integer SEEduration;       // duration of the next SEE event
+    integer SEEwireId;         // wire to be affected by the next SEE event
+    integer SEEmaxWireId;      // number of wires in the design which can be affected by SEE event
+    integer MAX_UPSET_TIME=10; // 10 ns  (change if you are using different timescale)
+    integer SEEDel=100;        // 100 ns (change if you are using different timescale)
+    integer SEECounter;        // number of simulated SEE events
+    reg     SEEActive=0;       // high during any SEE event
 
+    // get number of wires
     initial
-      see_max_net (SEEmaxWireId);
+      see_max_net (SEEmaxWireId); 
   
     `include "fsm02TMR_see.v"
 
@@ -221,23 +224,26 @@ upsets in his design. The simpliest implementation may look like:
       begin
         if (SEEEnable)
           begin
-            // randomize time, duration, and wire of SEE
-            SEEnextTime = {$random} % SEEDEL;
-            SEEduration = {$random} % MAX_UPSET_TIME + 1;
+            // randomize time, duration, and wire of the next SEE
+            SEEnextTime = SEEDel/2 {$random} % SEEDel;
+            SEEduration = {$random} % (MAX_UPSET_TIME-1) + 1;  // SEE time is from 1 - MAX_UPSET_TIME ns
             SEEwireId   = {$random} % SEEmaxWireId;
   
-            // wait for SEU
-            #(SEEDEL/2+SEEnextTime);
+            // wait for SEE
+            #(SEEnextTime);
   
-            // toggle wire
-            seeCounter=seeCounter+1;
+            // SEE happens here! Toggle the selected wire.
+            SEECounter=SEECounter+1;
+            SEEActive=1;
             see_force_net(SEEwireId);
-            see_display_net(SEEwireId);
+            see_display_net(SEEwireId); // probably you want to comment this line ?
             #(SEEduration);
             see_release_net(SEEwireId);
+            SEEActive=0;
           end
+        else
+          #10;
       end
    endmodule  
   
-  
-  
+
