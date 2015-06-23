@@ -12,6 +12,8 @@ TMRG toolset:
          (helps in the verification of triplicated netlist)
   plag - Placement Generator
          (helps with placement of triplicated circuit)
+  tbg  - Testbench Generator
+         (creates template for the testbench)
 """
 
 
