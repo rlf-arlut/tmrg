@@ -1,0 +1,9 @@
+ePortRx={
+  "rtl_dir"   : "tests",
+  "rtl_files" : "comb00.v",
+  "sim_files" : "",
+  "lib_files" : "",
+  "tech"      : "tsmc65",
+}
+
+targets={"ePortRx":ePortRx}
