@@ -90,19 +90,28 @@ class TMAKE:
             os.makedirs(self.ruleDir)
         os.chdir(self.ruleDir)
         self.logger.info("Entering '%s'"%self.ruleDir)
+
     def target_sim(self, target):
         """Simulate RTL design"""
         self.logger.info("Executing sim for target %s"%target)
         self.ensureDirectory(target,"sim")
+        targetDict=self.manifest.targets[target]
+
+        simFiles=[]
+        self.logger.info("SIM files : ")
+        for fileName in targetDict["sim_files"].split():
+            fileNameFull=os.path.join(self.workingDir,targetDict["sim_dir"],fileName)
+            simFiles.append(fileNameFull)
+            self.logger.info("  %s"%(fileNameFull))
+
 
         rtlFiles=[]
-        targetDict=self.manifest.targets[target]
         self.logger.info("RTL files : ")
         for fileName in targetDict["rtl_files"].split():
             fileNameFull=os.path.join(self.workingDir,targetDict["rtl_dir"],fileName)
             rtlFiles.append(fileNameFull)
             self.logger.info("  %s"%(fileNameFull))
-        cmd="iverilog "+ " ".join(rtlFiles)
+        cmd="iverilog "+ " ".join(simFiles)+ " "+ " ".join(rtlFiles)
         self.runCommand(cmd)
 
     def target_tmr(self, target):
