@@ -111,7 +111,17 @@ class TMAKE:
             fileNameFull=os.path.join(self.workingDir,targetDict["rtl_dir"],fileName)
             rtlFiles.append(fileNameFull)
             self.logger.info("  %s"%(fileNameFull))
-        cmd="iverilog "+ " ".join(simFiles)+ " "+ " ".join(rtlFiles)
+
+        if self.options.iverilog:
+            cmd="iverilog "+ " ".join(simFiles)+ " "+ " ".join(rtlFiles)
+        else:
+            logFileName=os.path.join(self.ruleDir,"log.txt")
+            self.logger.info("Log will be stored to %s"%logFileName)
+            opts="-log %s "%(logFileName)
+            if self.options.gui:
+                opts+=" -gui -access +rwc +fsmdebug "
+            cmd="irun %s "%opts
+            cmd+= " ".join(simFiles)+ " "+ " ".join(rtlFiles)
         self.runCommand(cmd)
 
     def target_tmr(self, target):
@@ -191,6 +201,8 @@ def main():
 
     parser.add_option("-v","--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",  "--doc",               dest="doc",  action="store_true",   default=False, help="Open documentation in web browser")
+    parser.add_option("",  "--iverilog",          dest="iverilog",  action="store_true",   default=False, help="Use iverilog as a simulator")
+    parser.add_option("",  "--gui",          dest="gui",  action="store_true",   default=False, help="Start gui")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
