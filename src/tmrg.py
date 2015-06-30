@@ -58,17 +58,16 @@ class TMR(VerilogElaborator):
                 self.config.read(fname)
             else:
                 self.logger.error("Command line specified config file does not exists at %s"%fname)
-
-        if self.options.tmr_dir:
+        if "tmr_dir" in dir(self.options) and self.options.tmr_dir:
             self.logger.debug("Setting tmr_dir to %s"%self.options.tmr_dir)
             self.config.set("tmrg","tmr_dir",self.options.tmr_dir)
 
-        if self.options.rtl_dir:
+        if "rtl_dir" in dir(self.options) and self.options.rtl_dir:
             self.logger.debug("Setting rtl_dir to %s"%self.options.rtl_dir)
             self.config.set("tmrg","rtl_dir",self.options.rtl_dir)
 
 
-        if self.options.tmr_suffix:
+        if "tmr_suffix" in dir(self.options) and self.options.tmr_suffix:
             self.logger.debug("Setting tmr_suffix to %s"%self.options.tmr_suffix)
             self.config.set("tmrg","tmr_suffix",self.options.tmr_suffix)
 
