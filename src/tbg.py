@@ -14,9 +14,9 @@ import re
 from verilogElaborator import *
 from toolset import *
 
-class TBG(VerilogElaborator):
+class TBG(TMR):
     def __init__(self,options, args):
-        VerilogElaborator.__init__(self,options, args,cnfgName="seeg")
+        TMR.__init__(self,options, args)
 
     def generate(self):
         logging.debug("")
@@ -24,6 +24,19 @@ class TBG(VerilogElaborator):
 
         for module in self.modules:
             oStr+="module %s_test;\n"%module
+
+            oStr+="\n// - - - - - - - - - - - - - - Parameters section  - - - - - - - - - - - - - - \n"
+
+            parameters=""
+            psep="\n    "
+            for k in self.modules[module]["params"]:
+                oStr+="  parameter %s = %s;\n"%(k,self.modules[module]["params"][k]["value"])
+                parameters+="%s.%s(%s)"%(psep,k,k)
+                psep=",\n    "
+
+            if len(parameters): parameters=" #("+parameters+")\n "
+
+            oStr+="\n// - - - - - - - - - - - - - - Input/Output section  - - - - - - - - - - - - - \n"
             #initial declaration
             for ioName in self.modules[module]["io"]:
                 io=self.modules[module]["io"][ioName]
@@ -33,17 +46,66 @@ class TBG(VerilogElaborator):
                     oStr+="  wire %s %s;\n"%(io["range"], ioName)
                 else:
                     self.logger.warning("Unsuported IO type: %s"%io["type"])
+
+            oStr+="\n// - - - - - - - - - - - - - Device Under Test section - - - - - - - - - - - -\n"
+            oStr+="\n`ifdef TMR\n"
+            #initial declaration
+            for ioName in self.modules[module]["io"]:
+                if self.modules[module]["nets"][ioName]["tmr"]:
+                    io=self.modules[module]["io"][ioName]
+                    if io["type"]=="input":
+                        oStr+="  // fanout for %s\n"%(ioName)
+                        for ext in self.EXT:
+                            oStr+="  wire %s %s%s=%s;\n"%(io["range"], ioName,ext,ioName)
+                    elif io["type"]=="output":
+                        oStr+="  // voter for %s\n"%(ioName)
+                        for ext in self.EXT:
+                            oStr+="  wire %s %s%s;\n"%(io["range"], ioName,ext)
+                        oStr+="  assign %s = (%sA & %sB) | (%sB & %sC) | (%sA & %sC);\n"%(ioName,ioName,ioName,ioName,ioName,ioName,ioName)
+                    else:
+                        self.logger.warning("Unsuported IO type: %s"%io["type"])
+
+
+            #dut tmr instantiation
+            oStr+="  %sTMR%s DUT (\n"%(module,parameters)
+            sep="    "
+            #initial declaration
+            for ioName in self.modules[module]["io"]:
+                if self.modules[module]["nets"][ioName]["tmr"]:
+                    for ext in self.EXT:
+                        oStr+="%s.%s%s(%s%s)"%(sep,ioName,ext, ioName,ext)
+                        sep=",\n    "
+            oStr+="\n  );\n"
+            oStr+="`else\n"
             #dut instantiation
-            oStr+="\n  %s DUT(\n"%module
+            oStr+="  %s%s DUT (\n"%(module,parameters)
             sep="    "
             #initial declaration
             for ioName in self.modules[module]["io"]:
                 oStr+="%s.%s(%s)"%(sep,ioName, ioName)
                 sep=",\n    "
             oStr+="\n  );\n"
+            oStr+="`endif\n"
+
+
+            oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
+            oStr+="""`ifdef SDF
+  initial
+    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log", "MAXIMUM");
+`endif PNR
+"""
+
+            oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
+            oStr+="""`ifdef SEE
+  `include "see.v"
+`endif PNR
+"""
+
+
 
             #initial
-            oStr+="\n  initial\n"
+            oStr+="\n// - - - - - - - - - - - - - Actual testbench section  - - - - - - - - - - - -\n"
+            oStr+="  initial\n"
             oStr+="    begin\n"
             for ioName in self.modules[module]["io"]:
                 io=self.modules[module]["io"][ioName]
@@ -64,6 +126,8 @@ def main():
     parser.add_option("-v", "--verbose",       dest="verbose",   action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",   "--doc",           dest="doc",       action="store_true",   default=False, help="Open documentation in web browser")
     parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")
+    parser.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
+    parser.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
