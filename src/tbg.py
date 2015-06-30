@@ -92,13 +92,13 @@ class TBG(TMR):
             oStr+="""`ifdef SDF
   initial
     $sdf_annotate("r2g.sdf", DUT, ,"sdf.log", "MAXIMUM");
-`endif PNR
+`endif
 """
 
             oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
             oStr+="""`ifdef SEE
   `include "see.v"
-`endif PNR
+`endif
 """
 
 
