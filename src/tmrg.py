@@ -1441,10 +1441,16 @@ class TMR(VerilogElaborator):
                      pass
             return ret
 
-        if self.config.getboolean("tmrg","generate_sdc") or self.options.generate_sdc:
+        if self.config.getboolean("tmrg","sdc_generate") or self.options.sdc_generate:
             topFile,ext=os.path.splitext(os.path.basename(self.topFile))
-            fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
+            if self.options.sdc_fileName!="":
+                fsdc=self.options.sdc_fileName
+            elif self.config.get("tmrg","sdc_file_name")!="":
+                fsdc=self.config.get("tmrg","sdc_file_name")
+            else:
+                fsdc=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+".sdc")
             self.logger.info("Generating SDC constraints file %s"%fsdc)
+
             header=""
             if self.config.getboolean("tmrg","sdc_headers") or self.options.sdc_headers:
                header="set sdc_version 1.3\n"
@@ -1486,8 +1492,9 @@ def main():
 #    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     tmrGroup.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
-    tmrGroup.add_option("",  "--generate_sdc",       dest="generate_sdc",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
-    tmrGroup.add_option("",  "--sdc_headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
+    tmrGroup.add_option("",  "--sdc-generate",       dest="sdc_generate",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
+    tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
+    tmrGroup.add_option("",  "--sdc-file-name",      dest="sdc_fileName",    default="",   help="Specify SDC filename")
 
 
     parser.add_option_group(tmrGroup)
