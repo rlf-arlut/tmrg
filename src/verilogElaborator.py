@@ -248,7 +248,17 @@ class VerilogElaborator():
             pname=param[0]
             pval=self.vf.format(param[1])
             self.logger.debug("Parameter %s = %s"%(pname,pval))
-            self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len}
+            self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len,"type":"localparam"}
+
+    def _elaborate_paramdecl(self,tokens):
+        _range=self.vf.format(tokens[1])
+        _len=self.__getLenStr(tokens[1])
+        for param in tokens[2]:
+            pname=param[0]
+            pval=self.vf.format(param[1])
+            self.logger.debug("Parameter %s = %s"%(pname,pval))
+            self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len,"type":"param"}
+
 
 
     def _elaborate_netdecl3(self,tokens):
