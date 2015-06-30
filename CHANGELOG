@@ -9,7 +9,7 @@ trunk
   * complex expresions are accepted in the module instantiation 
   * support for compiler directives
   * module slicing added
-  * testbench generator
+  * testbench generator added (tbg)
 
 0.1.1
 -------
