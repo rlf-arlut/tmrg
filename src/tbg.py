@@ -97,11 +97,50 @@ class TBG(TMR):
 
             oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
             oStr+="""`ifdef SEE
+
+  integer SEEEnable=1;       // enables SEE generator
+  integer SEEnextTime;       // time until the next SEE event
+  integer SEEduration;       // duration of the next SEE event
+  integer SEEwireId;         // wire to be affected by the next SEE event
+  integer SEEmaxWireId;      // number of wires in the design which can be affected by SEE event
+  integer SEEmaxUpaseTime=10; // 10 ns  (change if you are using different timescale)
+  integer SEEDel=100;        // 100 ns (change if you are using different timescale)
+  integer SEECounter;        // number of simulated SEE events
+  reg     SEEActive=0;       // high during any SEE event
+
   `include "see.v"
+
+  // get number of wires which can be affected by see
+  initial
+    see_max_net (SEEmaxWireId);
+
+  always
+    begin
+      if (SEEEnable)
+        begin
+          // randomize time, duration, and wire of the next SEE
+          SEEnextTime = SEEDel/2 {$random} % SEEDel;
+          SEEduration = {$random} % (SEEmaxUpaseTime-1) + 1;  // SEE time is from 1 - MAX_UPSET_TIME ns
+          SEEwireId   = {$random} % SEEmaxWireId;
+
+          // wait for SEE
+          #(SEEnextTime);
+
+          // SEE happens here! Toggle the selected wire.
+          SEECounter=SEECounter+1;
+          SEEActive=1;
+          see_force_net(SEEwireId);
+          see_display_net(SEEwireId); // probably you want to comment this line ?
+          #(SEEduration);
+          see_release_net(SEEwireId);
+          SEEActive=0;
+        end
+      else
+        #10;
+    end
+
 `endif
 """
-
-
 
             #initial
             oStr+="\n// - - - - - - - - - - - - - Actual testbench section  - - - - - - - - - - - -\n"
