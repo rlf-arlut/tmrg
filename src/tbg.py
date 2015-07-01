@@ -20,9 +20,11 @@ class TBG(TMR):
 
     def generate(self):
         logging.debug("")
-        oStr=""
+        oStr="`timescale 1 ns / 1 ns\n"
 
         for module in self.modules:
+            clocks=[]
+            resets=[]
             oStr+="module %s_test;\n"%module
 
             oStr+="\n// - - - - - - - - - - - - - - Parameters section  - - - - - - - - - - - - - - \n"
@@ -34,7 +36,7 @@ class TBG(TMR):
                 parameters+="%s.%s(%s)"%(psep,k,k)
                 psep=",\n    "
 
-            if len(parameters): parameters=" #("+parameters+")\n "
+            if len(parameters): parameters="\n`ifndef NETLIST\n  #("+parameters+"\n  )\n`endif\n "
 
             oStr+="\n// - - - - - - - - - - - - - - Input/Output section  - - - - - - - - - - - - - \n"
             #initial declaration
@@ -42,6 +44,10 @@ class TBG(TMR):
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
                     oStr+="  reg %s %s;\n"%(io["range"], ioName)
+                    if ioName.lower().find("clk")>=0 or ioName.lower().find("clock")>=0:
+                        clocks.append(ioName)
+                    if ioName.lower().find("rst")>=0 or ioName.lower().find("reset")>=0:
+                        resets.append(ioName)
                 elif io["type"]=="output":
                     oStr+="  wire %s %s;\n"%(io["range"], ioName)
                 else:
@@ -98,15 +104,15 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
             oStr+="""`ifdef SEE
 
-  integer SEEEnable=1;       // enables SEE generator
-  integer SEEnextTime;       // time until the next SEE event
-  integer SEEduration;       // duration of the next SEE event
-  integer SEEwireId;         // wire to be affected by the next SEE event
-  integer SEEmaxWireId;      // number of wires in the design which can be affected by SEE event
+  reg     SEEEnable=0;        // enables SEE generator
+  reg     SEEActive=0;        // high during any SEE event
+  integer SEEnextTime=0;      // time until the next SEE event
+  integer SEEduration=0;      // duration of the next SEE event
+  integer SEEwireId=0;        // wire to be affected by the next SEE event
+  integer SEEmaxWireId=0;     // number of wires in the design which can be affected by SEE event
   integer SEEmaxUpaseTime=10; // 10 ns  (change if you are using different timescale)
-  integer SEEDel=100;        // 100 ns (change if you are using different timescale)
-  integer SEECounter;        // number of simulated SEE events
-  reg     SEEActive=0;       // high during any SEE event
+  integer SEEDel=200;         // 200 ns (change if you are using different timescale)
+  integer SEECounter=0;       // number of simulated SEE events
 
   `include "see.v"
 
@@ -114,12 +120,16 @@ class TBG(TMR):
   initial
     see_max_net (SEEmaxWireId);
 
+  // enable SEE after some time
+  initial
+      #1000 SEEEnable=1;
+
   always
     begin
       if (SEEEnable)
         begin
           // randomize time, duration, and wire of the next SEE
-          SEEnextTime = SEEDel/2 {$random} % SEEDel;
+          SEEnextTime = #(SEEDel/2) {$random} % SEEDel;
           SEEduration = {$random} % (SEEmaxUpaseTime-1) + 1;  // SEE time is from 1 - MAX_UPSET_TIME ns
           SEEwireId   = {$random} % SEEmaxWireId;
 
@@ -146,15 +156,34 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - - Actual testbench section  - - - - - - - - - - - -\n"
             oStr+="  initial\n"
             oStr+="    begin\n"
+            resetsRelease=""
             for ioName in self.modules[module]["io"]:
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
-                    oStr+="      %s=0;\n"%(ioName)
+                    if ioName in resets:
+                        oStr+="      %s=1;\n"%(ioName)
+                        resetsRelease="      %s=0;\n"%(ioName)
+                    else:
+                        oStr+="      %s=0;\n"%(ioName)
+            if len(resetsRelease):
+                oStr+="      #100\n"+resetsRelease
+            oStr+="      #2000 $finish;\n"
             oStr+="    end\n"
 
-            oStr+="endmodule\n"
+            oStr+="\n"
+            for clock in clocks:
+                oStr+="  localparam %s_PERIOD = 100;\n"%(clock.upper())
+                oStr+="  always\n"
+                oStr+="    #(%s_PERIOD/2) %s = !%s;\n"%(clock.upper(),clock,clock)
 
-        print oStr
+            oStr+="endmodule\n"
+        if self.options.outputFname!="":
+            self.logger.info("Writing testbench to %s"%self.options.outputFname)
+            f=open(self.options.outputFname,"w")
+            f.write(oStr)
+            f.close()
+        else:
+            print oStr
 
         #generateFromTemplate(fname,tfile, values)
 
@@ -167,6 +196,7 @@ def main():
     parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")
     parser.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     parser.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
+    parser.add_option("-o",  "--output-file",      dest="outputFname",    default="", help="Output file name")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
