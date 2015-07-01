@@ -75,7 +75,7 @@ class SEE(VerilogElaborator):
         self.logger.info("")
 
         if self.options.exlude!="":
-            logging.info("Loading exlude file from from '%s'"%self.options.exlude)
+            logging.info("Loading excluded file from from '%s'"%self.options.exlude)
             if not  os.path.isfile(self.options.exlude):
                 self.logger.warning("File does not exists. Constrains will not be applied.")
             else:
@@ -121,6 +121,7 @@ class SEE(VerilogElaborator):
         wireid=0
 
         values={}
+        values['see_full_list']=""
         values['set_display_net']=""
         values['set_force_net']=""
         values['set_release_net']=""
@@ -128,6 +129,8 @@ class SEE(VerilogElaborator):
             values['set_force_net']  +="    %4d : force %s = ~%s;\n"%(wireid,net,net)
             values['set_release_net']+="    %4d : release %s;\n"%(wireid,net)
             values['set_display_net']+='   %4d : $display("%s");\n'%(wireid,net)
+            values['see_full_list']  +="// %4d : %s\n"%(wireid,net)
+
         values['set_max_net']="%d"%len(setNets)
         values['set_force_net']  =values['set_force_net'].rstrip()
         values['set_release_net']=values['set_release_net'].rstrip()
@@ -151,6 +154,8 @@ class SEE(VerilogElaborator):
             values['seu_force_net']  +="    %4d : force %s = ~%s;\n"%(wireid,net,net)
             values['seu_release_net']+="    %4d : release %s;\n"%(wireid,net)
             values['seu_display_net']+='   %4d : $display("%s");\n'%(wireid,net)
+            values['see_full_list']  +="// %4d : %s\n"%(len(setNets)+wireid,net)
+
         values['seu_max_net']="%d"%len(seuNets)
         values['seu_force_net']  =values['seu_force_net'].rstrip()
         values['seu_release_net']=values['seu_release_net'].rstrip()
@@ -166,6 +171,7 @@ class SEE(VerilogElaborator):
             values['seu_release_net']  = "    case (wireid)\n" + values['seu_release_net'] + "\n    endcase\n"
             values['seu_display_net']  = "    case (wireid)\n" + values['seu_display_net'] + "\n    endcase\n"
 
+        values['see_full_list']+="\n"
         tfile=os.path.join( self.scriptDir,  self.config.get("seeg","template"))
         self.logger.info("Taking template from '%s'"%tfile)
 

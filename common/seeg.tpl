@@ -107,3 +107,8 @@ task see_max_net;
     wireid=(${set_max_net} + ${seu_max_net});
   end
 endtask
+
+// - Single Event Efect grepable list  - - - - - - - - - - - - - - - - - - - - -
+
+${see_full_list}
+
