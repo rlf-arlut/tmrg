@@ -1372,7 +1372,7 @@ class TMR(VerilogElaborator):
 
         def getSosInfo(fname):
             out,err=runCommand('soscmd status -f%%T\\t%%S\\t%%C\\t%%N\\t%%R\\t%%L\\t%%V\\t%%P\\t%%A\\t%%I\\t%%O %s'%fname)
-            if err.find("Error: Cannot find workarea")>=0:
+            if len(err)>0:
                 return False,""
             info=out.split("\n")[1]
             info=info.split("\t")
