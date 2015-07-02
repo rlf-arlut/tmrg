@@ -10,6 +10,8 @@ trunk
   * support for compiler directives
   * module slicing added
   * testbench generator added (tbg)
+  * grepable list of all wires added by seeg
+  * file header added to TMR files (together with revsion informations)
 
 0.1.1
 -------
