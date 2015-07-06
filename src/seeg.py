@@ -67,6 +67,10 @@ class SEE(VerilogElaborator):
             return res
 
         setNets=outputSetNets(self.topModule,"DUT.")
+        if self.options.inputsSet or self.config.getboolean("seeg","inputsSet"):
+            for net in self.modules[self.topModule]["io"]:
+                if self.modules[self.topModule]["io"][net]["type"]=="input":
+                    setNets.append("DUT.%s"%net)
         self.logger.info("Found '%d' SET nets in the design"%len(setNets))
 
         seuNets=outputSeuNets(self.topModule,"DUT.")
@@ -191,6 +195,7 @@ def main():
     parser.add_option("",   "--spaces",        dest="spaces",    default=2, type=int )
     parser.add_option("-e", "--exclude",       dest="exlude",    default="", help="Exlude nets from output file")
     parser.add_option("-o", "--output-file",   dest="ofile" ,    default="see.v", help="Output file name")
+    parser.add_option("",   "--inputs-set",    dest="inputsSet", action="store_true",   default=False, help="Generete SET also on inputs of the module")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
