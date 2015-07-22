@@ -3,7 +3,7 @@ module mlogic(input i,output o);
  assign o=~i;
 endmodule
 
-module top(i,o);
+module slice01(i,o);
   // tmrg slicing
  input i;
  output o;
