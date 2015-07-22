@@ -1273,6 +1273,10 @@ class TMR(VerilogElaborator):
                 if "slicing" in self.modules[module]["constraints"]:
                     tmr=True
                     s+=" -> slicing:%s"%(str(tmr))
+                if "dnt" in self.modules[module]["constraints"]:
+                    tmr=False
+                    s+=" -> do_not_touch:%s"%(str(tmr))
+
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
 
@@ -1333,6 +1337,7 @@ class TMR(VerilogElaborator):
                         self.logger.info("Full voting detected for nets %s -> %s"%(net1,net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or  not self.modules[module]["nets"][net2]["tmr"]:
                             self.logger.warning("Nets for full voting should be triplicated!")
+
         if len(self.voting_nets):
             self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 
@@ -1360,8 +1365,14 @@ class TMR(VerilogElaborator):
         HLEN=100
         header="/"+("*"*HLEN)+"\n"
         def runCommand(cmd):
-            p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            out, err = p.communicate()
+            try:
+                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                out, err = p.communicate()
+            except OSError as err:
+                self.logger.warning("Error running command '%s'"%cmd)
+                self.logger.warning(str(err))
+                out,err="",str(err)
+
             return out,err
 
         def getSvnInfo(fname):
@@ -1431,7 +1442,7 @@ class TMR(VerilogElaborator):
             t = os.path.getmtime(fname)
             oStr+="Modification time : %s\n"%datetime.datetime.fromtimestamp(t)
             oStr+="File Size         : %s\n"%os.path.getsize(fname)
-            oStr+="MD5 hass          : %s\n"%hashlib.md5(open(fname, 'rb').read()).hexdigest()
+            oStr+="MD5 hash          : %s"%hashlib.md5(open(fname, 'rb').read()).hexdigest()
 
             return oStr
 
@@ -1472,7 +1483,7 @@ class TMR(VerilogElaborator):
         for l in getRevInfo(fname).split("\n"):
             header=addLine(header,"          "+l)
         header=addLine(header,"")
-        header+=" "+("*"*HLEN)+"/\n"
+        header+=" "+("*"*HLEN)+"/\n\n"
         return header
 
     def triplicate(self):
