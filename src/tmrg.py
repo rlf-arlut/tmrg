@@ -247,6 +247,34 @@ class TMR(VerilogElaborator):
         #print "cpy",cpy,len(cpy)
         return result
 
+
+    def __triplicate_initialStmt(self,tokens):
+        result=[]
+        tmr=self.checkIfTmrNeeded(tokens)
+        ids=self.getLeftRightHandSide(tokens)
+
+        self.logger.debug("[Initial block]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+
+        if not tmr:
+            return tokens
+
+        for i in self.EXT:
+            cpy=tokens.deepcopy()
+            for name in list(ids["right"])+list(ids["left"]):
+#                print name
+#                if self.checkIfContains(cpy,name):
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+            result.append(cpy)
+        #print "cpy",cpy,len(cpy)
+        return result
+
+
+
+
     def __triplicate_continuousassign(self,tokens):
         #check if the module needs triplication
         tmr=self.checkIfTmrNeeded(tokens)
