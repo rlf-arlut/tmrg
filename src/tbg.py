@@ -220,7 +220,7 @@ def main():
         try:
             tbg=TBG(options, args)
             tbg.parse()
-            tbg.elaborate()
+            tbg.elaborate(allowMissingModules=True)
             tbg.generate()
         except ParseException, err:
             logging.error("")

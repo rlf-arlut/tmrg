@@ -411,7 +411,8 @@ class VerilogElaborator():
         printDict(module["nets"],    "Nets")
 #        printDict(module["io"],      "IO")
         printDict(module["instances"], "Instantiations")
-        printDict(module["params"], "Params")
+        if "params" in module:
+           printDict(module["params"], "Params")
 
 
     def parse(self):
@@ -462,7 +463,7 @@ class VerilogElaborator():
                 raise ErrorMessage("Error during parsing")
 
 
-    def elaborate(self):
+    def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
         """
@@ -567,7 +568,7 @@ class VerilogElaborator():
                 if instance in self.modules:
                     self.modules[instance]["instantiated"]+=1
                 else:
-                    self.logger.error("Unknown module instantiaition! In module %s, instance name %s instance type %s."%(module,instName,instance))
+                    self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
                     elaborationError=True
         tops=0
         self.topFile=""
@@ -583,7 +584,7 @@ class VerilogElaborator():
             elaborationError=True
             self.logger.error("The design has multiple top cells! Output may not be correct!")
 
-        if elaborationError:
+        if not allowMissingModules and elaborationError:
             raise ErrorMessage("Serious error during elaboration.")
 
 

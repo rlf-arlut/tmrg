@@ -1191,11 +1191,11 @@ class TMR(VerilogElaborator):
             return rangeLen
 
 
-    def elaborate(self):
+    def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
         """
-        VerilogElaborator.elaborate(self)
+        VerilogElaborator.elaborate(self,allowMissingModules=allowMissingModules)
 
         #apply constrains
         self.logger.info("")
