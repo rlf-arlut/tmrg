@@ -104,6 +104,40 @@ class VerilogFormater:
             oStr+="%s %s%s%s;\n"%(nettype,range,delay,port_str)
         return oStr
 
+    def _format_genVarDecl(self,tokens,i=""):
+        oStr=""
+        genvar=str(tokens[0])
+        expr=self.format(tokens[1])
+        oStr=genvar+" "+expr+";\n"
+        return oStr
+
+    def _format_genvar_decl_assignment(self,tokens,i=""):
+        oStr=""
+        for i in tokens:
+            oStr+=self.format(i)
+        return oStr
+
+    def _format_generate_module_named_block(self,tokens,i=""):
+        oStr=i+"begin : %s\n"%self.format(tokens[0])
+        for stmt in tokens[1:]:
+            oStr+=self.format(stmt,i+"\t")
+        oStr+=i+"end\n"
+        return oStr
+
+    def _format_generate_module_loop_statement(self,tokens,i=""):
+        genvar_decl_assignment = self.format(tokens[0])
+        genvar_cond = self.format(tokens[1])
+        genvar_assignment = self.format(tokens[2])
+        oStr=i+"for(%s;%s;%s)\n"%(genvar_decl_assignment,genvar_cond,genvar_assignment)
+        oStr+=self.format(tokens[3],i=i+"\t")
+        return oStr
+
+    def _format_generate(self,tokens,i=""):
+        oStr=""
+        oStr="\n"+i
+        oStr+="generate\n"+ self.format(tokens[0],i+"\t") +"endgenerate\n"
+        return oStr
+
 
     def _format_Range(self,tokens,i=""):
         #print "~~~~~~~~",tokens
@@ -197,7 +231,7 @@ class VerilogFormater:
     def _format_DelimitedList(self,tokens,i=""):
         oStr=""
         sep=""
-#        print tokens
+#        print "bingo!"
         for el in tokens:
             oStr+=sep+self.format(el)
             sep+=", "
@@ -313,7 +347,7 @@ class VerilogFormater:
 #        moduleInstance = Group( Group ( identifier + Group(Optional(range)) ) + moduleArgs ).setResultsName("moduleInstance")
         id=self.format(tokens[0][0])
         range=self.format(tokens[0][1])
-        args=self.format(tokens[1])
+        args=self.format(tokens[1],i=i)
         return "%s %s%s"%(id,range,args);
 
     def _format_moduleArgs(self,tokens,i=""):
@@ -323,7 +357,7 @@ class VerilogFormater:
         for t in tokens:
             oStr+=sep+self.format(t,i)
             sep=",\n"+i
-        oStr+="\n)"
+        oStr+="\n"+i+")"
         return oStr
 
     def _format_modulePortConnection(self,tokens,i=""):
@@ -341,9 +375,8 @@ class VerilogFormater:
           modulesList=tokens[1]
 
         for modIns in modulesList:
-
-              modInsStr=self.format(modIns)
-              ostr+="\n%s %s%s;\n"%(identifier,parameterValueAssignment,modInsStr);
+              modInsStr=self.format(modIns,i=i+"\t")
+              ostr+="\n%s%s %s%s;\n"%(i,identifier,parameterValueAssignment,modInsStr);
 
         return ostr
 
