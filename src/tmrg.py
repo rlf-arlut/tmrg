@@ -1004,7 +1004,7 @@ class TMR(VerilogElaborator):
                 if not self.current_module["nets"][net]["tmr"]:
                     leftNoTMR=True
             else:
-                self.logger.warning("Unknown net %s"%i)
+                self.logger.warning("Unknown net '%s' (TMR may malfunction)"%net)
         if leftTMR and leftNoTMR:
             self.logger.error("Block contains both type of elements (should and should not be triplicated!). ")
             self.logger.error("This request will not be properly processed!")
@@ -1369,8 +1369,8 @@ class TMR(VerilogElaborator):
                 p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 out, err = p.communicate()
             except OSError as err:
-                self.logger.warning("Error running command '%s'"%cmd)
-                self.logger.warning(str(err))
+                self.logger.info("Error running command '%s'"%cmd)
+                self.logger.info(str(err))
                 out,err="",str(err)
 
             return out,err

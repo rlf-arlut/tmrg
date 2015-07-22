@@ -538,82 +538,122 @@ module CKBD8 (I, Z);
     output Z;
 endmodule
 module CKLHQD1 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD12 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD16 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD2 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD20 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD24 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD3 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD4 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD6 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLHQD8 ( Q, TE, CPN, E );
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, CPN, E;
     output Q;
 endmodule
 module CKLNQD1 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD12 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD16 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD2 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD20 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD24 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD3 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD4 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD6 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
 module CKLNQD8 (TE, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input TE, E, CP;
     output Q;
 endmodule
@@ -774,292 +814,436 @@ module DEL4 (I, Z);
     output Z;
 endmodule
 module DFCND1 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCND2 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCND4 (D, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q, QN;
 endmodule
 module DFCNQD1 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCNQD2 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCNQD4 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module DFCSND1 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSND2 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSND4 (D, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module DFCSNQD1 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFCSNQD2 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFCSNQD4 (D, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN, SDN;
     output Q;
 endmodule
 module DFD1 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFD2 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFD4 (D, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q, QN;
 endmodule
 module DFKCND1 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCND2 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCND4 (D, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q, QN;
 endmodule
 module DFKCNQD1 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCNQD2 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCNQD4 (D, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN;
     output Q;
 endmodule
 module DFKCSND1 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKCSND2 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKCSND4 (D, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CN, SN;
     output Q, QN;
 endmodule
 module DFKSND1 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFKSND2 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFKSND4 (D, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SN;
     output Q, QN;
 endmodule
 module DFNCND1 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCND2 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCND4 (D, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN;
     output Q, QN;
 endmodule
 module DFNCSND1 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFNCSND2 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFNCSND4 (D, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module DFND1 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFND2 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFND4 (D, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN;
     output Q, QN;
 endmodule
 module DFNSND1 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFNSND2 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFNSND4 (D, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CPN, SDN;
     output Q, QN;
 endmodule
 module DFQD1 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
     // tmrg seu_reset CDN
     // tmrg seu_set   SDN
 endmodule
 module DFQD2 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
 module DFQD4 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
 module DFSND1 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSND2 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSND4 (D, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q, QN;
 endmodule
 module DFSNQD1 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFSNQD2 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFSNQD4 (D, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, SDN;
     output Q;
 endmodule
 module DFXD1 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXD2 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXD4 (DA, DB, SA, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q, QN;
 endmodule
 module DFXQD1 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module DFXQD2 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module DFXQD4 (DA, DB, SA, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, CP;
     output Q;
 endmodule
 module EDFCND1 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCND2 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCND4 (D, E, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q, QN;
 endmodule
 module EDFCNQD1 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFCNQD2 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFCNQD4 (D, E, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CDN;  
     output Q;
 endmodule
 module EDFD1 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFD2 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFD4 (D, E, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q, QN;
 endmodule
 module EDFKCND1 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCND2 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCND4 (D, E, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q, QN;
 endmodule
 module EDFKCNQD1 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFKCNQD2 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFKCNQD4 (D, E, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP, CN;
     output Q;
 endmodule
 module EDFQD1 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
 module EDFQD2 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
 module EDFQD4 (D, E, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, E, CP;  
     output Q;
 endmodule
@@ -1186,10 +1370,14 @@ endmodule
 module GDCAP4;
 endmodule
 module GDFCNQD1 (D, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP, CDN;
     output Q;
 endmodule
 module GDFQD1 (D, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input D, CP;
     output Q;
 endmodule
@@ -1296,6 +1484,8 @@ module GOR2D2 (A1, A2, Z);
     output Z;
 endmodule
 module GSDFCNQD1 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
@@ -2620,498 +2810,746 @@ module OR4XD1 (A1, A2, A3, A4, Z);
     output Z;
 endmodule
 module SDFCND0 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCND1 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCND2 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCND4 (SI, D, SE, CP, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q, QN;
 endmodule
 module SDFCNQD0 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQD1 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQD2 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCNQD4 (SI, D, SE, CP, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN;
     output Q;
 endmodule
 module SDFCSND0 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSND1 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSND2 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSND4 (SI, D, SE, CP, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFCSNQD0 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQD1 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQD2 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFCSNQD4 (SI, D, SE, CP, CDN, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CDN, SDN;
     output Q;
 endmodule
 module SDFD0 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFD1 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFD2 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFD4 (SI, D, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q, QN;
 endmodule
 module SDFKCND0 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCND1 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCND2 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCND4 (SI, D, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q, QN;
 endmodule
 module SDFKCNQD0 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQD1 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQD2 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCNQD4 (SI, D, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN;
     output Q;
 endmodule
 module SDFKCSND0 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSND1 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSND2 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSND4 (SI, D, SE, CP, CN, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q, QN;
 endmodule
 module SDFKCSNQD0 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQD1 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQD2 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKCSNQD4 (SI, D, SE, CP, CN, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, SN;
     output Q;
 endmodule
 module SDFKSND0 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSND1 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSND2 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSND4 (SI, D, SE, CP, SN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q, QN;
 endmodule
 module SDFKSNQD0 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQD1 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQD2 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFKSNQD4 (SI, D, SE, CP, SN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SN;
     output Q;
 endmodule
 module SDFNCND0 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCND1 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCND2 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCND4 (SI, D, SE, CPN, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN;
     output Q, QN;
 endmodule
 module SDFNCSND0 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSND1 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSND2 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFNCSND4 (SI, D, SE, CPN, CDN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, CDN, SDN;
     output Q, QN;
 endmodule
 module SDFND0 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFND1 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFND2 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFND4 (SI, D, SE, CPN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN;
     output Q, QN;
 endmodule
 module SDFNSND0 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSND1 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSND2 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFNSND4 (SI, D, SE, CPN, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CPN, SDN;
     output Q, QN;
 endmodule
 module SDFQD0 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQD1 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQD2 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQD4 (SI, D, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output Q;
 endmodule
 module SDFQND0 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQND1 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQND2 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFQND4 (SI, D, SE, CP, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP;
     output QN;
 endmodule
 module SDFSND0 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSND1 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSND2 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSND4 (SI, D, SE, CP, SDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q, QN;
 endmodule
 module SDFSNQD0 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQD1 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQD2 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFSNQD4 (SI, D, SE, CP, SDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, SDN;
     output Q;
 endmodule
 module SDFXD0 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXD1 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXD2 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXD4 (DA, DB, SA, SI, SE, CP, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q, QN;
 endmodule
 module SDFXQD0 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQD1 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQD2 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SDFXQD4 (DA, DB, SA, SI, SE, CP, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input DA, DB, SA, SI, SE, CP;
     output Q;
 endmodule
 module SEDFCND0 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCND1 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCND2 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCND4 (E, SE, CP, SI, D, CDN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q, QN;
 endmodule
 module SEDFCNQD0 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQD1 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQD2 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFCNQD4 (E, SE, CP, SI, D, CDN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D, CDN; 
     output Q;
 endmodule
 module SEDFD0 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFD1 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFD2 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFD4 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFKCND0 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCND1 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCND2 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCND4 (SI, D, E, SE, CP, CN, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q, QN;
 endmodule
 module SEDFKCNQD0 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQD1 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQD2 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFKCNQD4 (SI, D, E, SE, CP, CN, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input SI, D, SE, CP, CN, E;
     output Q;
 endmodule
 module SEDFQD0 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQD1 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQD2 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQD4 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQND0 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQND1 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQND2 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQND4 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNXD0 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNXD1 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNXD2 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQNXD4 (E, SE, CP, SI, D, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output QN;
 endmodule
 module SEDFQXD0 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQXD1 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQXD2 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFQXD4 (E, SE, CP, SI, D, Q);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q;
 endmodule
 module SEDFXD0 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFXD1 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFXD2 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
 module SEDFXD4 (E, SE, CP, SI, D, Q, QN);
+    // tmrg seu_reset CDN
+    // tmrg seu_set   SDN
     input E, SE, CP, SI, D; 
     output Q, QN;
 endmodule
