@@ -165,7 +165,7 @@ class VerilogParser:
         funcCall = Group(identifier + "(" + Group(Optional( delimitedList( self.expr ) )) + ")").setResultsName("funcCall")
 
         subscrRef =      ( Suppress("[") +
-                            (delimitedList( self.expr, ":" ) )  +
+                            (delimitedList( Group(self.expr), ":" ) )  +
                            Suppress("]")
                          ).setResultsName("subscrRef")
 
@@ -406,6 +406,11 @@ class VerilogParser:
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
 
+        self.genVarDecl = Group(Keyword("genvar") +
+                                self.expr +
+                                Suppress(self.semi)
+                               ).setResultsName("genVarDecl")
+
         gateType = oneOf("and  nand  or  nor xor  xnor buf  bufif0 bufif1 "
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
                          "pmos rpmos cmos rcmos   tran rtran  tranif0  "
@@ -580,7 +585,6 @@ class VerilogParser:
         self.directive_slicing          = Group( tmrg + ("slicing") + Suppress(self.semi)).setResultsName("directive_slicing")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
-
         """
         x::= <specparam_declaration>
         x||= <path_declaration>
@@ -591,7 +595,9 @@ class VerilogParser:
         """
         specifyBlock = Group( "specify" + ZeroOrMore( specifyItem ) + "endspecify" )
 
-        self.moduleItem = ~Keyword("endmodule") + (
+
+
+        self.moduleOrGenerateItem = ~Keyword("endmodule") + (
             parameterDecl |
             localParameterDecl |
             self.inputDecl |
@@ -601,6 +607,7 @@ class VerilogParser:
             self.netDecl3 |
             self.netDecl1 |
             self.netDecl2 |
+            self.genVarDecl |
             timeDecl |
             integerDecl |
             realDecl |
@@ -625,6 +632,56 @@ class VerilogParser:
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
+
+#        generate_module_case_statement =Keyword("case")+  "(" + self.expr + ")" genvar_module_case_item { genvar_module_case_item } Keyword("endcase")
+
+        #genvar_module_case_item ::=
+        #constant_expression { , constant_expression } : generate_module_item
+        #|	default [ : ] generate_module_item
+        #generate_module_item = Forward()
+        #generate_module_conditional_statement = Keyword("if") + self.expr + generate_module_item + Group(Optional(Keyword("else") +  generate_module_item ))
+
+        generate_module_named_block = Group(Suppress(Keyword("begin") + ":")  + identifier + self.moduleOrGenerateItem +  Suppress(Keyword("end")) + Group(Optional(":" + identifier))).setResultsName("generate_module_named_block")
+
+        genvar_decl_assignment = Group(identifier + "=" +self.expr).setResultsName("genvar_decl_assignment")
+
+        #self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
+#                             + Group(self.expr) ).setResultsName( "assgnmt" )
+
+        generate_module_loop_statement = Group( Suppress(Keyword("for")) +
+                                                  Suppress("(")  +
+                                                  genvar_decl_assignment +
+                                                  Suppress(self.semi) +
+                                                  Group(self.expr) +
+                                                  Suppress(self.semi) +
+                                                  Group(self.assgnmt) +
+                                                  Suppress(")") +
+                                                  generate_module_named_block
+                                               ).setResultsName("generate_module_loop_statement")
+
+#genvar_assignment ::=
+#genvar_identifier assignment_operator constant_expression
+#|	inc_or_dec_operator genvar_identifier
+#|	genvar_identifier inc_or_dec_operator
+#genvar_decl_assignment ::=
+#[ genvar ] genvar_identifier = constant_expression
+#generate_module_named_block ::=
+#begin : generate_block_identifier { generate_module_item } end [ : generate_block_identifier ]
+#|	generate_block_identifier : generate_module_block
+#generate_module_block ::=
+#begin [ : generate_block_identifier ] { generate_module_item } end [ : generate_block_identifier ]
+
+        generate_body =  generate_module_loop_statement |  self.moduleOrGenerateItem
+
+#                                |	generate_module_case_statement\
+
+
+
+        generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
+
+
+        self.moduleItem= generate | self.moduleOrGenerateItem
+
 #            udpInstantiation
 
         """  All possible moduleItems, from Verilog grammar spec
