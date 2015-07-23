@@ -295,7 +295,7 @@ class VerilogParser:
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
         stmtOrNull = self.stmt | self.semi
-        caseItem = Group( delimitedList( self.expr ) + ":" + stmtOrNull ).setResultsName("caseItem") | \
+        caseItem = Group( Group(delimitedList( self.expr )) + Suppress(":") + stmtOrNull ).setResultsName("caseItem") | \
                    Group( default + Optional(":") + stmtOrNull )
         condition=Group("(" + self.expr + ")").setResultsName("condition")
         self.stmt <<  ( Group( Suppress(begin) +  ZeroOrMore( self.stmt )  + Suppress(end) ).setName("beginend").setResultsName("beginend") | \
@@ -316,7 +316,7 @@ class VerilogParser:
             Group( deassign + lvalue + self.semi ) |\
             Group( force + self.assgnmt + self.semi ) |\
             Group( release + lvalue + self.semi ) |\
-            Group( begin + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ).setName("begin:label-end").setResultsName("begin:label-end") |\
+            Group( Suppress(begin) + Suppress(Literal(":")) + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )

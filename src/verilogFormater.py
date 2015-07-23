@@ -183,11 +183,21 @@ class VerilogFormater:
         return oStr
 
     def _format_BeginEnd(self,tokens,i=""):
-        oStr="begin\n"
-        for stmt in tokens:
+         oStr="begin\n"
+         for stmt in tokens:
+             oStr+=i+"\t"+self.format(stmt,i+"\t")+"\n"
+         oStr+=i+"end"
+         return oStr
+
+    def _format_beginEndLabel(self,tokens,i=""):
+        #print tokens
+        oStr="begin : %s\n"%(self.format(tokens[0]))
+        for stmt in tokens[1:]:
             oStr+=i+"\t"+self.format(stmt,i+"\t")+"\n"
         oStr+=i+"end"
         return oStr
+
+
     def _format_taskEnable(self,tokens,i=""):
         oStr=""
         id=tokens[0]
@@ -277,19 +287,20 @@ class VerilogFormater:
         return oStr
 
     def _format_caseItem(self,tokens,i=""):
-        #print "caseitem",tokens
+        print "caseitem",tokens
         expr=self.format(tokens[0])
-        stm=self.format(tokens[2],i+"\t")
+        stm=self.format(tokens[1],i+"\t")
         if stm.find("\n")>=0:
             stm="\n%s%s"%(i+"\t",stm)
         return "%s : %s"%(expr,stm)
 
     def _format_case(self,tokens,i=""):
-#        print tokens
+        print tokens
         label=tokens[0]
         cond=self.format(tokens[1])
         oStr="%s (%s)\n"%(label,cond)
         for t in tokens[2]:
+            print "~~~~~~",t
             oStr+=i+"\t"+self.format(t,i+"\t")+"\n"
         oStr+=i+tokens[3]
         return oStr
