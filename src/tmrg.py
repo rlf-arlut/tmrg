@@ -347,7 +347,8 @@ class TMR(VerilogElaborator):
         #left=tokens[0][4][0][0][0]
         left=tokens[4][0][0][0]
 
-        right=tokens[4][0][2][0][0]
+        right=self.vf.format(tokens[4][0][2][0])
+
 
         # check if this is explicit fanout
         eFanout=False

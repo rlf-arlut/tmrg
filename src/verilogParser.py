@@ -194,7 +194,7 @@ class VerilogParser:
         unop  = oneOf( "+  -  !  ~  &  ~&  |  ^|  ^  ~^" ).setName("unop")
         binop = oneOf( "+  -  *  /  %  ==  !=  ===  !==  &&  "
                        "||  <  <=  >  >=  &  |  ^  ^~  >>  << ** <<< >>>" ).setName("binop")
-        inlineIfExpr= Group( primary + Suppress(Literal("?")) + self.expr + Suppress(Literal(":")) + self.expr ).setResultsName("inlineIfExpr")
+        inlineIfExpr= Group( Group(primary) + Suppress(Literal("?")) + Group(self.expr) + Suppress(Literal(":")) + Group(self.expr) ).setResultsName("inlineIfExpr")
 
         self.expr << (
                 ( unop + self.expr ) |  # must be first!
