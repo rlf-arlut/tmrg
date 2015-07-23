@@ -290,7 +290,6 @@ class TMR(VerilogElaborator):
             return tokens
 
         self._addFanoutsIfTmr(ids["right"],addWires="output")
-
         result=[]
         for i in self.EXT:
             cpy=tokens.deepcopy()
@@ -384,7 +383,7 @@ class TMR(VerilogElaborator):
 
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-        if "tmrError" == left and self.current_module["nets"]["tmrError"]:
+        if "tmrError" == left and "tmrError" in self.current_module["nets"]:
             self.logger.info("Removing declaration of %s"%(left))
             return []
 
@@ -1502,7 +1501,8 @@ class TMR(VerilogElaborator):
         header=addLine(header,"date    : %s"%(time.strftime("%d/%m/%Y %H:%M:%S")))
         header=addLine(header,"")
         header=addLine(header,"workdir : %s"%os.getcwd())
-        header=addLine(header,"cmd     : %s"%(" ".join(sys.argv)))
+        for l in textwrap.wrap("cmd     : %s"%(" ".join(sys.argv)) , 100,subsequent_indent="          "):
+            header=addLine(header,l)
 
         header=addLine(header,"tmrg rev: %s"%(getTmrgRev()))
 
