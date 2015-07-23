@@ -712,15 +712,15 @@ class VerilogParser:
         self.port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output")
-        portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
-        portOut  = Group( Keyword("output") + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
-        portInOut= Group( Keyword("inout")  +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
+        self.portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
+        self.portOut  = Group( Keyword("output") + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
+        self.portInOut= Group( Keyword("inout")  +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
 
 
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
                             Group(Optional( Suppress("(") +
-                                             Optional( delimitedList( portIn | portOut | portInOut | self.port ) )  +
+                                             Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
                                             Suppress(")") )).setResultsName("ports") +
                             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
 
