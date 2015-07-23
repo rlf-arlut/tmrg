@@ -81,6 +81,9 @@ class TBG(TMR):
                     for ext in self.EXT:
                         oStr+="%s.%s%s(%s%s)"%(sep,ioName,ext, ioName,ext)
                         sep=",\n    "
+                else:
+                        oStr+="%s.%s(%s)"%(sep,ioName, ioName)
+                        sep=",\n    "
             oStr+="\n  );\n"
             oStr+="`else\n"
             #dut instantiation
