@@ -421,10 +421,17 @@ class VerilogFormater:
         oStr="%s <= %s%s;"%(lval,delay,expr)
 
         return oStr
+    def _format_inlineIfExpr(self,tokens,i=""):
+        primary=self.format(tokens[0])
+        expr1=self.format(tokens[1])
+        expr2=self.format(tokens[2])
+
+        return "%s ? %s : %s"%(primary,expr1,expr2)
 
     def _format_Expr(self,tokens,i=""):
         oStr=""
         for t in tokens:
+            print t
             oStr+=self.format(t)
         return oStr
 
