@@ -11,8 +11,10 @@ trunk
   * module slicing added
   * testbench generator added (tbg)
   * grepable list of all wires added by seeg
-  * file header added to TMR files (together with revsion informations)
-
+  * file header added to TMR files (together with revision information)
+  * [bug] initial block triplication fixed
+  * [bug] tbg does not have to parse the full hierarchy
+  
 0.1.1
 -------
 
