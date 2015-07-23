@@ -272,6 +272,7 @@ class VerilogElaborator():
 #                print ids
                 name=assgmng[0][0]
 #                right=assgmng[2]
+                if len(ids["right"])==0:continue
                 idRight=ids["right"].pop()
 #                print idRight
                 dnt=False
