@@ -32,6 +32,7 @@ class TBG(TMR):
             parameters=""
             psep="\n    "
             for k in self.modules[module]["params"]:
+                if self.modules[module]["params"][k]['type'] == 'localparam':continue
                 oStr+="  parameter %s = %s;\n"%(k,self.modules[module]["params"][k]["value"])
                 parameters+="%s.%s(%s)"%(psep,k,k)
                 psep=",\n    "
