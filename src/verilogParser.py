@@ -709,7 +709,7 @@ class VerilogParser:
         """
         portRef = subscrIdentifier
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
-        self.port = (portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
+        self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output")
         self.portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")

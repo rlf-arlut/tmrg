@@ -85,6 +85,7 @@ class VerilogElaborator():
             self.config.read(userCnfg)
         else:
             self.logger.info("User config file does not exists at '%s'"%userCnfg)
+        self.portMode="non-ANSI"
 
 
     def __init_elaborate_callbacks(self):
@@ -192,13 +193,32 @@ class VerilogElaborator():
              details=""
 
          for name in tokens[-1]:
+             self.lastANSIPort={}
+             self.lastANSIPort["io"]={"atributes":_atrs,"range":_range, "len":_len, "type":"input" }
+             self.lastANSIPort["net"]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+
              if not name in  self.current_module["nets"]:
                  self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"input" }
              if not name in  self.current_module["nets"]:
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
     def _elaborate_inputhdr(self,tokens):
+        if self.portMode=="non-ANSI":
+            self.portMode="ANSI"
+            self.logger.info("Port mode : ANSI")
+
         self._elaborate_input(tokens)
+
+    def _elaborate_port(self,tokens):
+        if self.portMode=="ANSI":
+            name=tokens[0][0]
+            if not name in  self.current_module["nets"]:
+                 self.current_module["io"][name]=copy.deepcopy(self.lastANSIPort["io"])
+            if not name in  self.current_module["nets"]:
+                 self.current_module["nets"][name]=copy.deepcopy(self.lastANSIPort["net"])
+
+        #self._elaborate_input(tokens)
+
 
     def _elaborate_output(self,tokens):
          #tokens=tokens[0]
@@ -213,6 +233,10 @@ class VerilogElaborator():
              details=""
 
          for name in tokens[-1]:
+             self.lastANSIPort={}
+             self.lastANSIPort["io"]={"atributes":_atrs,"range":_range, "len":_len, "type":"output" }
+             self.lastANSIPort["net"]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+
              if not name in  self.current_module["nets"]:
                  self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"output" }
              if not name in  self.current_module["nets"]:
@@ -222,6 +246,10 @@ class VerilogElaborator():
 
     def _elaborate_outputhdr(self,tokens):
          #tokens=tokens[0]
+        if self.portMode=="non-ANSI":
+            self.portMode="ANSI"
+            self.logger.info("Port mode : ANSI")
+
         self._elaborate_output(tokens)
 
 

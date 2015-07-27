@@ -807,14 +807,14 @@ class TMR(VerilogElaborator):
             tokens[1]=moduleBody
 
             self.logger.debug("- module header "+"- "*42)
-            portMode="non-ANSI"
             #triplicate module header | add tmr signals
             if len(header)>2:
                 ports=header[2]
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
-                    if  port.getName()=="subscrIdentifier":
-                        portName=port[0]
+                    print port.getName(),port
+                    if  port.getName()=="port":
+                        portName=port[0][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
                             continue
@@ -832,9 +832,6 @@ class TMR(VerilogElaborator):
                             newports.append(port)
                         self.logger.debug(portstr)
                     else:
-                        if portMode=="non-ANSI":
-                            portMode="ANSI"
-                            self.logger.info("Port mode : ANSI")
                         portName=port[3][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
@@ -860,7 +857,7 @@ class TMR(VerilogElaborator):
                     groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
-                        if portMode=="ANSI":
+                        if self.portMode=="ANSI":
                             newport=self.vp.portOut.parseString("output %s"%newport)[0]
                             newports.append( newport )
                         else:
@@ -918,7 +915,7 @@ class TMR(VerilogElaborator):
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
-                    if portMode=="non-ANSI":
+                    if self.portMode=="non-ANSI":
                         moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                         moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     if group in self.tmrErr:
