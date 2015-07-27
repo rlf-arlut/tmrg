@@ -496,20 +496,25 @@ class TMR(VerilogElaborator):
                         instCpy=tokens.deepcopy()
                         instCpy[2][0][0][0]=instCpy[2][0][0][0]+post # change instance name
                         for port in instCpy[2][0][1]:
-                            port[0][2][0][0]=port[0][2][0][0]+post
+
+                            ids=self.getLeftRightHandSide(port[0][2][0])
+                            for rid in ids["right"]:
+                                self.replace(port[0][2][0],rid,rid+post)
                         ret.append(instCpy)
 
                     for port in tokens[2][0][1]:
                         dname=port[0][0][1:]
                         dtype=self.modules[identifier]["io"][dname]['type']
-                        sname=port[0][2][0][0]
-                        stmr=self.current_module["nets"][sname]["tmr"]
-                        self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
-                        if not stmr:
-                            if dtype=="input":
-                                self._addVoter(sname,addWires="output")
-                            else :
-                                self._addFanout(sname,addWires="input")
+                        sname=port[0]
+                        ids=self.getLeftRightHandSide(sname)
+                        for sname in ids["right"]:
+                            stmr=self.current_module["nets"][sname]["tmr"]
+                            self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
+                            if not stmr:
+                                if dtype=="input":
+                                    self._addVoter(sname,addWires="output")
+                                else :
+                                    self._addFanout(sname,addWires="input")
 
                     return ret
                 else:
@@ -802,7 +807,7 @@ class TMR(VerilogElaborator):
             tokens[1]=moduleBody
 
             self.logger.debug("- module header "+"- "*42)
-
+            portMode="non-ANSI"
             #triplicate module header | add tmr signals
             if len(header)>2:
                 ports=header[2]
@@ -827,6 +832,9 @@ class TMR(VerilogElaborator):
                             newports.append(port)
                         self.logger.debug(portstr)
                     else:
+                        if portMode=="non-ANSI":
+                            portMode="ANSI"
+                            self.logger.info("Port mode : ANSI")
                         portName=port[3][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
@@ -852,7 +860,11 @@ class TMR(VerilogElaborator):
                     groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
-                        newports.append( newport )
+                        if portMode=="ANSI":
+                            newport=self.vp.portOut.parseString("output %s"%newport)[0]
+                            newports.append( newport )
+                        else:
+                            newports.append( newport )
                         self.logger.debug("Port %s"%(newport))
                 header[2]=newports
 
@@ -906,8 +918,9 @@ class TMR(VerilogElaborator):
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
-                    moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
-                    moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
+                    if portMode=="non-ANSI":
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
+                        moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     if group in self.tmrErr:
                         errSignals=errSignals |self.tmrErr[group]
                     sep=""
