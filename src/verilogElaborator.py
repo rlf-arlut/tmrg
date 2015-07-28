@@ -529,6 +529,7 @@ class VerilogElaborator():
                             pdict(d[e],i+"  ",title=e)
                         else:
 #                            print "%s%s:%s"%(i+"  ",e,d[e])
+                             pass
 #                pdict(self.current_module)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
