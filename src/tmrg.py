@@ -1657,6 +1657,7 @@ def main():
     actionGroup = OptionGroup(parser, "Actions" )
     actionGroup.add_option("-p", "--parse-only",        action="store_true", dest="parse",     default=False, help="Parse")
     actionGroup.add_option("-e", "--elaborate",         action="store_true", dest="elaborate", default=False, help="Elaborate")
+    actionGroup.add_option("", "--log",                 dest="log",     default="",             help="Store detailed log to file")
     parser.add_option_group(actionGroup)
     dirGroup = OptionGroup(parser, "Directories" )
     dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
@@ -1676,17 +1677,33 @@ def main():
 
     parser.add_option_group(tmrGroup)
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+#    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.DEBUG)
 
     try:
         (options, args) = parser.parse_args()
 
+        logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+        rootLogger = logging.getLogger()
+
+        consoleHandler = logging.StreamHandler()
+        consoleHandler.setFormatter(logFormatter)
+        rootLogger.addHandler(consoleHandler)
+
+        if options.log!="":
+            logging.debug("Creating log file '%s'"%options.log)
+
+            fileHandler = logging.FileHandler(options.log)
+            fileHandler.setFormatter(logFormatter)
+            fileHandler.setLevel(logging.DEBUG)
+            rootLogger.addHandler(fileHandler)
+
+
         if options.verbose==0:
-            logging.getLogger().setLevel(logging.WARNING)
+            consoleHandler.setLevel(logging.WARNING)
         if options.verbose==1:
-            logging.getLogger().setLevel(logging.INFO)
+            consoleHandler.setLevel(logging.INFO)
         elif options.verbose==2:
-            logging.getLogger().setLevel(logging.DEBUG)
+            consoleHandler.setLevel(logging.DEBUG)
 
         tmrg=TMR(options, args)
 
