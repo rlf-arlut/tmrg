@@ -812,7 +812,6 @@ class TMR(VerilogElaborator):
                 ports=header[2]
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
-                    print port.getName(),port
                     if  port.getName()=="port":
                         portName=port[0][0]
                         if not portName in self.current_module["nets"]:

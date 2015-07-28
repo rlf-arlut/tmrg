@@ -523,12 +523,12 @@ class VerilogElaborator():
 
                 def pdict(d,i="",title=""):
 
-                    print i+title
+#                    print i+title
                     for e in d:
                         if isinstance(d[e],dict):
                             pdict(d[e],i+"  ",title=e)
                         else:
-                            print "%s%s:%s"%(i+"  ",e,d[e])
+#                            print "%s%s:%s"%(i+"  ",e,d[e])
 #                pdict(self.current_module)
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
