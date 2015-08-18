@@ -106,16 +106,30 @@ class VerilogElaborator():
             if res==None: res=set()
             if isinstance(t, ParseResults):
                name=str(t.getName()).lower()
+#               print ">",name
                if name=="subscridentifier":
-                   if not t[0] in self.current_module["nets"]:
-                       if not t[0] in self.current_module["params"]:
-                          self.logger.warning("Unknown net '%s'"%t[0])
-                       return res
-                   if not "dnt" in self.current_module["nets"][t[0]]:
-                       res.add(t[0])
+                       if not t[0] in self.current_module["nets"]:
+                           if not t[0] in self.current_module["params"]:
+                              self.logger.warning("Unknown net '%s'"%t[0])
+                           return res
+                       if not "dnt" in self.current_module["nets"][t[0]]:
+                           res.add(t[0])
+#                       print len(t[1]),t[1],type(t[1])
+                       _extractID(t[1],res=res)
+
                else:
+##               if 1:
                    for i in range(len(t)):
+#                       print i, t[i], type(t[i])
                        res=_extractID(t[i],res=res)
+#            else:
+#                       if not t in self.current_module["nets"]:
+#                           if not t in self.current_module["params"]:
+#                              self.logger.warning("Unknown net '%s'"%t)
+#                           return res
+#                       if not "dnt" in self.current_module["nets"][t]:
+#                           res.add(t)
+
             return res
 #        print "#",type(t),t
         if isinstance(t, ParseResults):
