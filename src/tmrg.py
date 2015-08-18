@@ -1595,18 +1595,24 @@ class TMR(VerilogElaborator):
         def _findVotersAndFanouts(module,i="",ret=[]):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout=self.modules[module]["fanouts"][fanoutInst]
-                ret.append(i+"nets/"+fanout["outA"])
-                ret.append(i+"nets/"+fanout["outB"])
-                ret.append(i+"nets/"+fanout["outC"])
-                ret.append(i+"nets/"+fanout["in"])
+                postfix=""
+                if fanout["len"]!="1":
+                    posttix="[*]"
+                ret.append(i+"nets/"+fanout["outA"]+posttix)
+                ret.append(i+"nets/"+fanout["outB"]+posttix)
+                ret.append(i+"nets/"+fanout["outC"]+posttix)
+                ret.append(i+"nets/"+fanout["in"]+posttix)
 
             for group in self.modules[module]["voters"]:
                 for voterInst in self.modules[module]["voters"][group]:
                     voter=self.modules[module]["voters"][group][voterInst]
-                    ret.append(i+"nets/"+voter["inA"])
-                    ret.append(i+"nets/"+voter["inB"])
-                    ret.append(i+"nets/"+voter["inC"])
-                    ret.append(i+"nets/"+voter["out"])
+                    postfix=""
+                    if voter["len"]!="1":
+                        posttix="[*]"
+                    ret.append(i+"nets/"+voter["inA"]+posttix)
+                    ret.append(i+"nets/"+voter["inB"]+posttix)
+                    ret.append(i+"nets/"+voter["inC"]+posttix)
+                    ret.append(i+"nets/"+voter["out"]+posttix)
             for instName in self.modules[module]["instances"]:
                 i=i+"instances_hier/%s/"%instName
                 inst=self.modules[module]["instances"][instName]["instance"]
