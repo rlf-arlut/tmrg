@@ -41,7 +41,7 @@ class TBG(TMR):
 
             oStr+="\n// - - - - - - - - - - - - - - Input/Output section  - - - - - - - - - - - - - \n"
             #initial declaration
-            for ioName in self.modules[module]["io"]:
+            for ioName in sorted(self.modules[module]["io"]):
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
                     oStr+="  reg %s %s;\n"%(io["range"], ioName)
@@ -57,7 +57,7 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - - Device Under Test section - - - - - - - - - - - -\n"
             oStr+="\n`ifdef TMR\n"
             #initial declaration
-            for ioName in self.modules[module]["io"]:
+            for ioName in sorted(self.modules[module]["io"]):
                 if self.modules[module]["nets"][ioName]["tmr"]:
                     io=self.modules[module]["io"][ioName]
                     if io["type"]=="input":
@@ -77,7 +77,7 @@ class TBG(TMR):
             oStr+="  %sTMR%s DUT (\n"%(module,parameters)
             sep="    "
             #initial declaration
-            for ioName in self.modules[module]["io"]:
+            for ioName in sorted(self.modules[module]["io"]):
                 if self.modules[module]["nets"][ioName]["tmr"]:
                     for ext in self.EXT:
                         oStr+="%s.%s%s(%s%s)"%(sep,ioName,ext, ioName,ext)
@@ -91,7 +91,7 @@ class TBG(TMR):
             oStr+="  %s%s DUT (\n"%(module,parameters)
             sep="    "
             #initial declaration
-            for ioName in self.modules[module]["io"]:
+            for ioName in sorted(self.modules[module]["io"]):
                 oStr+="%s.%s(%s)"%(sep,ioName, ioName)
                 sep=",\n    "
             oStr+="\n  );\n"
