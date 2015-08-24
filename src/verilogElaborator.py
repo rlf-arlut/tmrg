@@ -86,7 +86,7 @@ class VerilogElaborator():
         else:
             self.logger.info("User config file does not exists at '%s'"%userCnfg)
         self.portMode="non-ANSI"
-
+        self.translate=True
 
     def __init_elaborate_callbacks(self):
         #scan class looking for elaborator functions
@@ -355,6 +355,17 @@ class VerilogElaborator():
         self.current_module["constraints"]["slicing"]=True
 
 
+    def _elaborate_directive_translate(self,tokens):
+        # this function is not really used now, this happens at the preprocesor stage
+        if tokens[0].lower() == "off":
+            self.translate=False
+        elif tokens[0].lower() == "on":
+            self.translate=True
+        else:
+            self.logger.error("Unknown parameter for tmrg translate directive '%s'"%tokens[0])
+
+
+
     def _elaborate_directive_tmr_error(self,tokens):
         en=False
         if tokens[0].lower() in ('true','enable'):
@@ -533,6 +544,7 @@ class VerilogElaborator():
                     self._elaborate(port)
 
                 for moduleItem in module[1]:
+
                     self._elaborate(moduleItem)
 
                 def pdict(d,i="",title=""):

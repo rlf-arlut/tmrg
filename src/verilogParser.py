@@ -584,6 +584,7 @@ class VerilogParser:
         self.directive_seu_set          = Group( tmrg + Suppress("seu_set") + identifier + Suppress(self.semi)).setResultsName("directive_seu_set")
         self.directive_seu_reset        = Group( tmrg + Suppress("seu_reset") + identifier +  Suppress(self.semi)).setResultsName("directive_seu_reset")
         self.directive_slicing          = Group( tmrg + ("slicing") + Suppress(self.semi)).setResultsName("directive_slicing")
+        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
         """
@@ -630,6 +631,7 @@ class VerilogParser:
             self.directive_seu_reset |
             self.comp_directive |
             self.directive_slicing |
+            self.directive_translate |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -642,7 +644,7 @@ class VerilogParser:
         #generate_module_item = Forward()
         #generate_module_conditional_statement = Keyword("if") + self.expr + generate_module_item + Group(Optional(Keyword("else") +  generate_module_item ))
 
-        generate_module_named_block = Group(Suppress(Keyword("begin") + ":")  + identifier + self.moduleOrGenerateItem +  Suppress(Keyword("end")) + Group(Optional(":" + identifier))).setResultsName("generate_module_named_block")
+        generate_module_named_block = Group(Suppress(Keyword("begin") + ":")  + identifier + OneOrMore(self.moduleOrGenerateItem) +  Suppress(Keyword("end")) + Group(Optional(":" + identifier))).setResultsName("generate_module_named_block")
 
         genvar_decl_assignment = Group(identifier + "=" +self.expr).setResultsName("genvar_decl_assignment")
 
@@ -802,8 +804,24 @@ class VerilogParser:
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = self.tmrgDirective.transformString( strng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
-        self.verilog=preParsedStrng
-        self.tokens=self.verilogbnf.parseString( preParsedStrng )
+        preParsedStrngNew=""
+        translate=True
+#        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
+
+        for line in preParsedStrng.splitlines():
+            try:
+                parse=self.directive_translate.parseString(line)
+            #greeting = greet.parseString( "``DUPA" )
+                if parse[0][0].lower()=="off" : translate=False
+                else: translate=True
+            except:
+                pass
+            if translate:
+                preParsedStrngNew+=line+"\n"
+#                print translate, line
+        #print preParsedStrng
+        self.verilog=preParsedStrngNew
+        self.tokens=self.verilogbnf.parseString( preParsedStrngNew )
         return self.tokens
 
 if __name__=="__main__":
