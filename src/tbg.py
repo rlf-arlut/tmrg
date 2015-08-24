@@ -161,7 +161,7 @@ class TBG(TMR):
             oStr+="  initial\n"
             oStr+="    begin\n"
             resetsRelease=""
-            for ioName in self.modules[module]["io"]:
+            for ioName in sorted(self.modules[module]["io"]):
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
                     if ioName in resets:
