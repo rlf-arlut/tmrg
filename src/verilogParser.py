@@ -141,10 +141,9 @@ class VerilogParser:
 
         identLead = alphas+"$_"
         identBody = alphanums+"$_"
-        identifier1 = Regex( r"\.?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*"
-                            ).setName("baseIdent")
+        identifier1 = Regex( r"\.?`?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*").setName("baseIdent")
         identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
-        identifier = (identifier1 | identifier2).setResultsName("id")
+        identifier = ( identifier1 | identifier2).setResultsName("id")
 
         hexnums = nums + "abcdefABCDEF" + "_?"
         base = Regex("'[bBoOdDhH]").setName("base")
@@ -201,6 +200,7 @@ class VerilogParser:
                 inlineIfExpr |
                 ( primary + Optional( binop + self.expr ) )
                 )
+
         self.expr=self.expr.setResultsName("expr")
         lvalue = subscrIdentifier | Group(concat)
 
@@ -786,7 +786,7 @@ class VerilogParser:
             return " ".join(toks)+ ";"
         self.tmrgDirective.setParseAction(tmrgDirectiveAction)
 
-        self.compDirective = (Suppress('`') + restOfLine).setResultsName("compDirective")
+        self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
@@ -802,7 +802,6 @@ class VerilogParser:
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = self.tmrgDirective.transformString( strng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
-
         self.verilog=preParsedStrng
         self.tokens=self.verilogbnf.parseString( preParsedStrng )
         return self.tokens
