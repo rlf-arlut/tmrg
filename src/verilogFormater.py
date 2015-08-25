@@ -183,8 +183,9 @@ class VerilogFormater:
         return oStr
 
     def _format_BeginEnd(self,tokens,i=""):
+#         print "\nHERE!",tokens
          oStr="begin\n"
-         for stmt in tokens:
+         for stmt in tokens[1:-1]:
              oStr+=i+"\t"+self.format(stmt,i+"\t")+"\n"
          oStr+=i+"end"
          return oStr
@@ -286,9 +287,12 @@ class VerilogFormater:
         return oStr
 
     def _format_caseItem(self,tokens,i=""):
-#        print "caseitem",tokens[0].getName(),tokens
+#        print "caseitem",tokens[0].getName(),tokens[1].getName(), tokens
         expr=self.format(tokens[0])
         stm=self.format(tokens[1],i+"\t")
+        #print expr
+#        print
+        #print
         if stm.find("\n")>=0:
             stm="\n%s%s"%(i+"\t",stm)
         oStr="%s : %s"%(expr,stm)
@@ -296,7 +300,7 @@ class VerilogFormater:
         return oStr
 
     def _format_case(self,tokens,i=""):
-#        print tokens
+
         label=tokens[0]
         cond=self.format(tokens[1])
         oStr="%s (%s)\n"%(label,cond)

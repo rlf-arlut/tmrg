@@ -299,7 +299,7 @@ class VerilogParser:
         caseItem = Group( Group(delimitedList( self.expr )) + Suppress(":") + stmtOrNull ).setResultsName("caseItem") | \
                    Group( default + Optional(":") + stmtOrNull )
         condition=Group("(" + self.expr + ")").setResultsName("condition")
-        self.stmt <<  ( Group( Suppress(begin) +  ZeroOrMore( self.stmt )  + Suppress(end) ).setName("beginend").setResultsName("beginend") | \
+        self.stmt <<  ( Group( begin +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
             Group( delayOrEventControl + stmtOrNull ).setResultsName("delayStm") |\
