@@ -99,14 +99,17 @@ class VerilogElaborator():
 
 
     def getLeftRightHandSide(self,t,res=None):
-        #print "getLeftRightHandSide", res, t
+        #print "\ngetLeftRightHandSide"
+        #print "   res", res
+        #print "   tok", t
         if res==None: res={"left":set(),"right":set()}
 
         def _extractID(t,res=None):
+            #print "extractID",t
             if res==None: res=set()
             if isinstance(t, ParseResults):
                name=str(t.getName()).lower()
-#               print ">",name
+               #print ">",name
                if name=="subscridentifier":
                        if not t[0] in self.current_module["nets"]:
                            if not t[0] in self.current_module["params"]:
@@ -114,7 +117,7 @@ class VerilogElaborator():
                            return res
                        if not "dnt" in self.current_module["nets"][t[0]]:
                            res.add(t[0])
-#                       print len(t[1]),t[1],type(t[1])
+                       #print len(t[1]),t[1],type(t[1])
                        _extractID(t[1],res=res)
 
                else:
@@ -129,7 +132,7 @@ class VerilogElaborator():
 #                           return res
 #                       if not "dnt" in self.current_module["nets"][t]:
 #                           res.add(t)
-
+            #print "  res:",res
             return res
 #        print "#",type(t),t
         if isinstance(t, ParseResults):
@@ -149,12 +152,13 @@ class VerilogElaborator():
             elif name == "subscridentifier":
                 if t[0] in self.current_module["nets"]:
                     res["right"].add( t[0] )
+                    res=self.getLeftRightHandSide(t[1],res=res)
                 else:
                     pass
                     #self.logger.warning("Unknown net %s"%t[0])
             else:
                 for i in range(len(t)):
-#                    print "#(%d)>"%i,t[i]
+                    #print "#(%d)>"%i,t[i]
                     res=self.getLeftRightHandSide(t[i],res=res)
 
         return res
