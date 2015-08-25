@@ -265,7 +265,6 @@ class VerilogFormater:
 
     def _format_if(self,tokens,i=""):
         oStr=""
-#        print tokens
         if len(tokens)==1:
             stm=tokens[0]
         else:
