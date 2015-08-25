@@ -272,7 +272,7 @@ class VerilogParser:
                             ).setName("regDecl").setResultsName("regDecl")
 
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
-        integerDecl = Group( "integer" + delimitedList( regIdentifier ) + Suppress(self.semi) ).setResultsName("integerDecl")
+        integerDecl = Group( "integer" + Group(delimitedList( regIdentifier )) + Suppress(self.semi) ).setResultsName("integerDecl")
 
         strength0 = oneOf("supply0  strong0  pull0  weak0  highz0")
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
@@ -307,7 +307,7 @@ class VerilogParser:
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
-            Group( for_ + "(" + self.assgnmt + self.semi + Group( self.expr ) + self.semi + self.assgnmt + ")" + self.stmt ) |\
+            Group( for_ + Suppress("(") + Group(self.assgnmt) + Suppress(self.semi) + Group( self.expr ) + Suppress(self.semi) + Group(self.assgnmt) + Suppress(")") + self.stmt ).setResultsName("forstmt") |\
             Group( fork + ZeroOrMore( self.stmt ) + join ) |\
             Group( fork + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ) |\
             Group( wait + "(" + self.expr + ")" + stmtOrNull ) |\

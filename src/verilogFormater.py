@@ -493,6 +493,16 @@ class VerilogFormater:
 
         oStr="%s = %s%s"%(lvalue,delayOrEventControl,expr)
         return oStr
+
+    def _format_forstmt(self,tokens,i=""):
+#        print tokens
+        e1=self.format(tokens[1])
+        e2=self.format(tokens[2])
+        e3=self.format(tokens[3])
+        s=self.format(tokens[4],i=i+"\t")
+        oStr="for(%s;%s;%s)\n%s\t%s"%(e1,e2,e3,i,s)
+        return oStr
+
     def _format_driveStrength(self,tokens,i=""):
         oStr=""
         for t in tokens:

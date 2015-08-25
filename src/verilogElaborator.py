@@ -159,6 +159,20 @@ class VerilogElaborator():
 
         return res
 
+    def _elaborate_integerDecl(self,tokens):
+#        print tokens
+        #tokens=tokens[0] #self.registers
+        _atrs=""
+        _range=""
+        _len="1"
+
+        details=""
+
+        for reg in tokens[-1]:
+             name=reg[0]
+             if not name in  self.current_module["nets"]:
+                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,  "type":"int" }
+
     def _elaborate_regdecl(self,tokens):
         #tokens=tokens[0] #self.registers
         _atrs=""
