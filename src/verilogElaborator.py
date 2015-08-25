@@ -642,8 +642,11 @@ class VerilogElaborator():
                 if instance in self.modules:
                     self.modules[instance]["instantiated"]+=1
                 else:
-                    self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
-                    elaborationError=True
+                    if self.modules[module]["constraints"]["dnt"]:
+                        self.logger.warning("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
+                    else:
+                        self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
+                        elaborationError=True
         tops=0
         self.topFile=""
         self.topModule=""
