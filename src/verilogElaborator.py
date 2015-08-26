@@ -642,7 +642,7 @@ class VerilogElaborator():
                 if instance in self.modules:
                     self.modules[instance]["instantiated"]+=1
                 else:
-                    if self.modules[module]["constraints"]["dnt"]:
+                    if "dnt" in  self.modules[module]["constraints"] and  self.modules[module]["constraints"]["dnt"]:
                         self.logger.warning("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
                     else:
                         self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))

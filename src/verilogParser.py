@@ -587,6 +587,10 @@ class VerilogParser:
         self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
+
+        synopsys=Keyword("synopsys")
+        self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
+
         """
         x::= <specparam_declaration>
         x||= <path_declaration>
@@ -632,6 +636,7 @@ class VerilogParser:
             self.comp_directive |
             self.directive_slicing |
             self.directive_translate |
+            self.directive_synopsys |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )
@@ -788,6 +793,11 @@ class VerilogParser:
             return " ".join(toks)+ ";"
         self.tmrgDirective.setParseAction(tmrgDirectiveAction)
 
+        self.synopsysDirective = (Suppress('//') + "synopsys" + restOfLine).setResultsName("synopsysDirective")
+        def synopsysDirectiveAction(toks):
+            return " ".join(toks)+ ";"
+        self.synopsysDirective.setParseAction(synopsysDirectiveAction)
+
         self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
@@ -803,6 +813,7 @@ class VerilogParser:
     def parseString( self,strng ):
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = self.tmrgDirective.transformString( strng )
+        preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
         preParsedStrngNew=""
         translate=True

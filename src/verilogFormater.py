@@ -531,8 +531,13 @@ class VerilogFormater:
     def _format_initialStmt(self,tokens,i=""):
         oStr="initial\n\t%s\n"%self.format(tokens[1],i+"\t")
         return oStr
+
+    def _format_directive_synopsys(self,tokens,i=""):
+        return "// "+" ".join(tokens)+"\n"
+
     def _format_comp_directive(self,tokens,i=""):
         return "`"+tokens[0].lstrip()+"\n"
+
     def _format_directive_do_not_touch(self,tokens,i=""):
         return ""
 
