@@ -85,7 +85,6 @@ class VerilogElaborator():
             self.config.read(userCnfg)
         else:
             self.logger.info("User config file does not exists at '%s'"%userCnfg)
-        self.portMode="non-ANSI"
         self.translate=True
 
     def __init_elaborate_callbacks(self):
@@ -235,14 +234,14 @@ class VerilogElaborator():
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
     def _elaborate_inputhdr(self,tokens):
-        if self.portMode=="non-ANSI":
-            self.portMode="ANSI"
+        if self.current_module["portMode"]=="non-ANSI":
+            self.current_module["portMode"]="ANSI"
             self.logger.info("Port mode : ANSI")
 
         self._elaborate_input(tokens)
 
     def _elaborate_port(self,tokens):
-        if self.portMode=="ANSI":
+        if self.current_module["portMode"]=="ANSI":
             name=tokens[0][0]
             if not name in  self.current_module["nets"]:
                  self.current_module["io"][name]=copy.deepcopy(self.lastANSIPort["io"])
@@ -278,8 +277,8 @@ class VerilogElaborator():
 
     def _elaborate_outputhdr(self,tokens):
          #tokens=tokens[0]
-        if self.portMode=="non-ANSI":
-            self.portMode="ANSI"
+        if self.current_module["portMode"]=="non-ANSI":
+            self.current_module["portMode"]="ANSI"
             self.logger.info("Port mode : ANSI")
 
         self._elaborate_output(tokens)
@@ -329,15 +328,14 @@ class VerilogElaborator():
 
             for assgmng in tokens[4]:
                 ids=self.getLeftRightHandSide(assgmng)
-#                print ids
+                #print ids
                 name=assgmng[0][0]
 #                right=assgmng[2]
-                if len(ids["right"])==0:continue
-                idRight=ids["right"].pop()
-#                print idRight
                 dnt=False
-                for ex in self.EXT:
-                    if name==idRight+ex: dnt=True
+                if len(ids["right"])!=0:
+                    idRight=ids["right"].pop()
+                    for ex in self.EXT:
+                        if name==idRight+ex: dnt=True
 #                print idRight,dnt
  #               self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
 #                if _len!="1":
@@ -557,7 +555,9 @@ class VerilogElaborator():
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{}}
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},
+                                     "instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
+                                     "tmrErrNets":{}}
                 for port in modulePorts:
                     self._elaborate(port)
 
