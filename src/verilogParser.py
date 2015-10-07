@@ -804,6 +804,7 @@ class VerilogParser:
         self.compDirective.setParseAction(compDirectiveAction)
 
     def parseFile(self,fname):
+        self.logger.debug("Parsing file '%s'"%fname)
         self.fname=fname
         f=open(fname,"r")
         body=f.read()
