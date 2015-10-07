@@ -52,7 +52,7 @@ class TMR(VerilogElaborator):
     def __init__(self,options, args):
         VerilogElaborator.__init__(self,options,args,cnfgName="tmrg")
         self.EXT=('A','B','C')
-        self.tmrErr={}
+#        self.tmrErr={}
         self.__voterPresent=False
         self.__fanoutPresent=False
         self.__init_tripclicate_callbacks()
@@ -777,7 +777,7 @@ class TMR(VerilogElaborator):
                     self.logger.debug(portstr)
 
             if "tmrError" in self.current_module["nets"]:
-                groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
+                groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                 for group in sorted(groups):
                     newport="tmrError%s"%group
                     newports.append( newport )
@@ -881,10 +881,10 @@ class TMR(VerilogElaborator):
                         self.logger.debug(portstr)
 
                 if "tmrError" in self.current_module["nets"]:
-                    groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
+                    groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
-                        if self.portMode=="ANSI":
+                        if self.current_module["portMode"]=="ANSI":
                             newport=self.vp.portOut.parseString("output %s"%newport)[0]
                             newports.append( newport )
                         else:
@@ -893,7 +893,7 @@ class TMR(VerilogElaborator):
                 header[2]=newports
 
             self.logger.debug("- voters & fanouts  "+"- "*40)
-            groups = set(self.current_module["voters"].keys()) | set(self.tmrErr.keys())
+            groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
             for group in sorted(groups):
                 errSignals=set()
 
@@ -942,10 +942,10 @@ class TMR(VerilogElaborator):
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
-                    if self.portMode=="non-ANSI":
+                    if self.current_module["portMode"]=="non-ANSI":
                         moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                         moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
-                    if group in self.tmrErr:
+                    if group in self.current_module["tmrErrNets"]:
                         errSignals=errSignals |self.tmrErr[group]
                     sep=""
                     asgnStr="assign tmrError%s="%group
@@ -1230,9 +1230,9 @@ class TMR(VerilogElaborator):
 
 
     def _addTmrErrorWire(self,post,netName):
-        if not post in self.tmrErr:
-            self.tmrErr[post]=set()
-        self.tmrErr[post].add(netName)
+        if not post in self.current_module["tmrErrNets"]:
+            self.current_module["tmrErrNets"][post]=set()
+        self.current_module["tmrErrNets"][post].add(netName)
 
 
 
