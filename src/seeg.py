@@ -34,9 +34,9 @@ class SEE(VerilogElaborator):
                             res.append(prefix+net)
                         else:
                             #work around
-                            nn=atr.split()
-                            i1= int(nn[1])
-                            i2= int(nn[3])
+                            nn=_range[1:-1].split(":")
+                            i1= int(nn[0])
+                            i2= int(nn[1])
                             mmin = min ( (i1,i2) )
                             mmax = max ( (i1,i2) )
                             for i in range(mmin,mmax+1):
