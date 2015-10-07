@@ -345,7 +345,6 @@ class TMR(VerilogElaborator):
 
         ids=self.getLeftRightHandSide(tokens)
         vote=False
-
         #left=tokens[0][4][0][0][0]
         left=tokens[4][0][0][0]
 
@@ -856,7 +855,7 @@ class TMR(VerilogElaborator):
                                 sep=", "
                         else:
                             newports.append(portName)
-                            portstr+=newport
+                            portstr+=portName
                         self.logger.debug(portstr)
                     else:
                         portName=port[3][0]
@@ -877,6 +876,7 @@ class TMR(VerilogElaborator):
 #                                print portCpy,portCpy.getName()
                         else:
                             newports.append(port)
+                            portstr+=portName
 
                         self.logger.debug(portstr)
 
@@ -994,6 +994,14 @@ class TMR(VerilogElaborator):
                     moduleBody.append(self.vp.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
            # print "\n--\n",[tokens,tokens],"\n==\n"
+            for i,item in enumerate(moduleBody):
+                if item.getName()=="paramDecl":
+                     self.logger.debug("Moving declaration to front '%s'"%(str(item)))
+                     moduleBody.insert(0,item)
+                     del moduleBody[i+1]
+                     #print "x"
+
+
             return [tokens]
 #        except:
 #            self.exc()
