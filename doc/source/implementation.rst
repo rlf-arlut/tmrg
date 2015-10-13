@@ -70,12 +70,22 @@ instances of triplicated flip-flops should be placed relatively close together.
 
 There is a PLAG (Placement Generatror) tool in the TMRG toolset. 
 The tool operate on a final netlist and can assign registers to a specific ``Instances Group``. 
-An example usage of the tool for the netlist generated for an example ``fsm02`` can look like:
+In order to declare which cells (registers) should be assigned to placement groups, one has to
+create a configuration file, for example ``plag.cfg``. The file has to contain a group called ``[plag]`` and 
+one attribute ``cells`` which contains a space separated list of cells to be placed. An example file is shown below:
 
 .. code-block:: bash
 
-   plag --lib libs/tcbn65lp.v fsm02_r2g.v
+    [plag]
+    cells= DFQD1
 
+An example usage of the tool for the netlist generated for the example ``fsm02`` can look like:
+
+.. code-block:: bash
+
+   plag --lib libs/tcbn65lp.v fsm02_r2g.v 
+
+Alternatively the cell list can be specified as command line parameter (``--cells``).
 As a result a tcl script ``tmrPlace.tcl`` is generated. In the considered example a file will
 look like:
 
