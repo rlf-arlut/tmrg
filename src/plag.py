@@ -15,11 +15,23 @@ import re
 from verilogElaborator import *
 from string import Template
 from toolset import *
-
+from tmrg import makeSureDirExists
 
 class PLA(VerilogElaborator):
     def __init__(self,options, args):
         VerilogElaborator.__init__(self,options, args,cnfgName="plag")
+        #command line specified config files
+        for fname in self.options.config:
+            if os.path.exists(fname):
+                self.logger.debug("Loading command line specified config file from %s"%fname)
+                self.config.read(fname)
+                if self.options.generateBugReport:
+                    bn=os.path.basename(fname)
+                    fcopy=os.path.join(self.options.bugReportDir,"cmd_%s.cfg"%bn)
+                    self.logger.debug("Coping  command line specified config file from '%s' to '%s'"%(fname,fcopy))
+                    shutil.copyfile(fname,fcopy)
+            else:
+                self.logger.error("Command line specified config file does not exists at %s"%fname)
 
     def generate(self):
         logging.debug("")
@@ -114,16 +126,30 @@ def main():
     parser = OptionParser(version="PLAG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
     parser.add_option("-v", "--verbose",       dest="verbose",   action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",   "--doc",           dest="doc",       action="store_true",   default=False, help="Open documentation in web browser")
+    parser.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")
     parser.add_option("",   "--spaces",        dest="spaces",    default=2, type=int )
     parser.add_option("-e", "--exclude",       dest="exlude",    default="", help="Exlude nets from output file")
     parser.add_option("-o", "--output-file",   dest="ofile" ,    default="tmrPlace.tcl", help="Output file name")
-    parser.add_option("-c", "--cells",         dest="cells",     default="", help="Cells to be placed")
+    parser.add_option("",   "--cells",         dest="cells",     default="", help="Cells to be placed")
+    parser.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     try:
         (options, args) = parser.parse_args()
+
+        if options.generateBugReport:
+            bugReportDir="bugReport_%s_%s"%(getpass.getuser(),time.strftime("%d%m%Y_%H%M%S"))
+            options.bugReportDir=bugReportDir
+            makeSureDirExists(bugReportDir)
+            fileHandlerBug = logging.FileHandler(os.path.join(bugReportDir,"log.txt"))
+            fileHandlerBug.setFormatter(logFormatter)
+            fileHandlerBug.setLevel(logging.DEBUG)
+            logging.getLogger().addHandler(fileHandlerBug)
+            logging.info("Creating debug report in location '%s'"%bugReportDir)
+            logging.debug("Creating log file '%s'"%options.log)
+
 
         if options.verbose==0:
             logging.getLogger().setLevel(logging.WARNING)
