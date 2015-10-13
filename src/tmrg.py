@@ -17,6 +17,7 @@ import socket
 import time
 import datetime
 import hashlib
+import zipfile
 
 class CmdConstrainParser:
     def __init__(self):
@@ -62,6 +63,11 @@ class TMR(VerilogElaborator):
             if os.path.exists(fname):
                 self.logger.debug("Loading command line specified config file from %s"%fname)
                 self.config.read(fname)
+                if self.options.generateBugReport:
+                    bn=os.path.basename(fname)
+                    fcopy=os.path.join(self.options.bugReportDir,"cmd_%s.cfg"%bn)
+                    self.logger.debug("Coping  command line specified config file from '%s' to '%s'"%(fname,fcopy))
+                    shutil.copyfile(fname,fcopy)
             else:
                 self.logger.error("Command line specified config file does not exists at %s"%fname)
         if "tmr_dir" in dir(self.options) and self.options.tmr_dir:
@@ -610,7 +616,7 @@ class TMR(VerilogElaborator):
                                         if self.modules[identifier]["io"][dport]["type"]=="output":
                                                 self._addVoter(sport,addWires="input")
                                         else:
-                                            self._addFanout(sport)
+                                            self._addFanout(sport,addWires="output")
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
                         if "tmrError" in self.modules[identifier]["nets"]:
                             #print iname
@@ -1605,6 +1611,13 @@ class TMR(VerilogElaborator):
             file,ext=os.path.splitext(os.path.basename(fname))
             fout=os.path.join(self.config.get("tmrg","tmr_dir"), file+tmrSuffix+ext)
             foutnew=fout+'.new'
+
+            if self.options.generateBugReport:
+                bn=file+tmrSuffix+ext
+                fcopy=os.path.join(self.options.bugReportDir,bn)
+                self.logger.debug("Coping output file from '%s' to '%s'"%(foutnew,fcopy))
+                shutil.copyfile(foutnew,fcopy)
+
             if os.path.exists(fout):
                     if filecmp.cmp(fout,foutnew):
                         self.logger.info("File '%s' exists. Its content is up to date."%fout)
@@ -1690,6 +1703,13 @@ def version():
   verstr="$Id$"
   return verstr
 
+def makeSureDirExists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
     parser = OptionParser(version="TMRG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
@@ -1715,6 +1735,7 @@ def main():
     tmrGroup.add_option("",  "--sdc-generate",       dest="sdc_generate",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
     tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
     tmrGroup.add_option("",  "--sdc-file-name",      dest="sdc_fileName",    default="",   help="Specify SDC filename")
+    tmrGroup.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
 
 
     parser.add_option_group(tmrGroup)
@@ -1726,19 +1747,26 @@ def main():
 
         logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
         rootLogger = logging.getLogger()
-
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
         rootLogger.addHandler(consoleHandler)
-
         if options.log!="":
             logging.debug("Creating log file '%s'"%options.log)
-
             fileHandler = logging.FileHandler(options.log)
             fileHandler.setFormatter(logFormatter)
             fileHandler.setLevel(logging.DEBUG)
             rootLogger.addHandler(fileHandler)
 
+        if options.generateBugReport:
+            bugReportDir="bugReport_%s_%s"%(getpass.getuser(),time.strftime("%d%m%Y_%H%M%S"))
+            options.bugReportDir=bugReportDir
+            makeSureDirExists(bugReportDir)
+            fileHandlerBug = logging.FileHandler(os.path.join(bugReportDir,"log.txt"))
+            fileHandlerBug.setFormatter(logFormatter)
+            fileHandlerBug.setLevel(logging.DEBUG)
+            rootLogger.addHandler(fileHandlerBug)
+            logging.info("Creating debug report in location '%s'"%bugReportDir)
+            logging.debug("Creating log file '%s'"%options.log)
 
         if options.verbose==0:
             consoleHandler.setLevel(logging.WARNING)
@@ -1761,6 +1789,25 @@ def main():
         if options.elaborate: return
 
         tmrg.triplicate()
+
+        if options.generateBugReport:
+            options.bugReportDir=bugReportDir
+            zipFile=options.bugReportDir+".zip"
+            #!/usr/bin/env python
+            def zipdir(path, zipf):
+                # ziph is zipfile handle
+                for root, dirs, files in os.walk(path):
+                    for file in files:
+                        zipf.write(os.path.join(root, file))
+            fileHandlerBug.close()
+            zipf = zipfile.ZipFile(zipFile, 'w')
+            zipdir(options.bugReportDir, zipf)
+            zipf.close()
+            tmrg.logger.info("Creating zip archive with bug report '%s'"%zipFile)
+            try:
+                shutil.rmtree(options.bugReportDir)
+            except:
+                pass
 
     except ErrorMessage as e:
         logging.error(str(e))
