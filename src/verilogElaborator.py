@@ -11,6 +11,8 @@ import copy
 import ConfigParser
 from verilogParser import *
 from verilogFormater import VerilogFormater
+import shutil
+import zipfile
 
 class ErrorMessage(BaseException):
     def __init__(self,s):
@@ -75,6 +77,11 @@ class VerilogElaborator():
         if os.path.exists(masterCnfg):
             self.logger.debug("Loading master config file from %s"%masterCnfg)
             self.config.read(masterCnfg)
+            if self.options.generateBugReport:
+                fcopy=os.path.join(self.options.bugReportDir,"master.cfg")
+                self.logger.debug("Coping master config file from '%s' to '%s'"%(masterCnfg,fcopy))
+                shutil.copyfile(masterCnfg,fcopy)
+
         else:
             self.logger.warning("Master config file does not exists at '%s'"%masterCnfg)
 
@@ -83,6 +90,10 @@ class VerilogElaborator():
         if os.path.exists(userCnfg):
             self.logger.debug("Loading user config file from %s"%userCnfg)
             self.config.read(userCnfg)
+            if self.options.generateBugReport:
+                fcopy=os.path.join(self.options.bugReportDir,"user.cfg")
+                self.logger.debug("Coping user config file from '%s' to '%s'"%(userCnfg,fcopy))
+                shutil.copyfile(userCnfg,fcopy)
         else:
             self.logger.info("User config file does not exists at '%s'"%userCnfg)
         self.translate=True
@@ -429,11 +440,21 @@ class VerilogElaborator():
 
 
     def addFile(self,fname):
+        if self.options.generateBugReport:
+            bn=os.path.basename(fname)
+            fcopy=os.path.join(self.options.bugReportDir,bn)
+            self.logger.debug("Coping source file from '%s' to '%s'"%(fname,fcopy))
+            shutil.copyfile(fname,fcopy)
         tokens=self.vp.parseFile(fname)
 #        print tokens
         self.files[fname]=tokens
 
     def addLibFile(self,fname):
+        if self.options.generateBugReport:
+            bn=os.path.basename(fname)
+            fcopy=os.path.join(self.options.bugReportDir,bn)
+            self.logger.debug("Coping library file from '%s' to '%s'"%(fname,fcopy))
+            shutil.copyfile(fname,fcopy)
         tokens=self.vp.parseFile(fname)
 #        print tokens
         self.libs[fname]=tokens
