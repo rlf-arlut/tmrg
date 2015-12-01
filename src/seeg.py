@@ -13,6 +13,9 @@ import random
 import re
 from verilogElaborator import *
 from toolset import *
+import getpass
+import socket
+from tmrg import makeSureDirExists
 
 class SEE(VerilogElaborator):
     def __init__(self,options, args):
@@ -196,11 +199,23 @@ def main():
     parser.add_option("-e", "--exclude",       dest="exlude",    default="", help="Exlude nets from output file")
     parser.add_option("-o", "--output-file",   dest="ofile" ,    default="see.v", help="Output file name")
     parser.add_option("",   "--inputs-set",    dest="inputsSet", action="store_true",   default=False, help="Generete SET also on inputs of the module")
+    parser.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     try:
         (options, args) = parser.parse_args()
+
+        if options.generateBugReport:
+            bugReportDir="bugReport_%s_%s"%(getpass.getuser(),time.strftime("%d%m%Y_%H%M%S"))
+            options.bugReportDir=bugReportDir
+            makeSureDirExists(bugReportDir)
+            fileHandlerBug = logging.FileHandler(os.path.join(bugReportDir,"log.txt"))
+            fileHandlerBug.setFormatter(logFormatter)
+            fileHandlerBug.setLevel(logging.DEBUG)
+            logging.getLogger().addHandler(fileHandlerBug)
+            logging.info("Creating debug report in location '%s'"%bugReportDir)
+            logging.debug("Creating log file '%s'"%options.log)
 
         if options.verbose==0:
             logging.getLogger().setLevel(logging.WARNING)
