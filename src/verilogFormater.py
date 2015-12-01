@@ -64,6 +64,10 @@ class VerilogFormater:
     def _format_inouthdr(self,tokens,i=""):
         return self._formatIoHdr(tokens)
 
+    def _format_port(self,tokens,i=""):
+        print tokens
+        return tokens[0][0]
+
     def _format_RegDecl(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
