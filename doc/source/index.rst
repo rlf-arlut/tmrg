@@ -8,14 +8,14 @@ redundancy.
 
 .. note:: Before you start reading further, you should understand the purpose of 
    the tool. The TMRG tool **IS NOT** a single button solution which will make
-   yours CHIP / FPGA design single event upset proof. You, as a designer, have to know which
+   your CHIP / FPGA design safe from single event upsets. You, as a designer, have to know which
    parts of your circuits should (have to) be protected. The TMRG tool will save
-   you some time needed for copy-pasting your code and will minimize probability
+   you the time needed for copy-pasting your code and will minimize probability
    that you will forget to change some postfix in your triplicated variable
    names. It will also simplify the physical implementation and verification
    process by providing some routines. 
 
-.. note:: The TMRG tool is open source however it **CAN NOT**  be made publicly available. 
+.. note:: The TMRG tool is open source, however, it **CAN NOT**  be made publicly available. 
    By downloading the code, you become **RESPONSIBLE** for protecting it.
    For more details please refer :ref:`licesing`.
 
