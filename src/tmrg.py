@@ -1661,12 +1661,13 @@ class TMR(VerilogElaborator):
                     ret.append(i+"nets/"+voter["inB"]+postfix)
                     ret.append(i+"nets/"+voter["inC"]+postfix)
                     ret.append(i+"nets/"+voter["out"]+postfix)
+
             for instName in self.modules[module]["instances"]:
-                i=i+"instances_hier/%s/"%instName
+                ni=i+"instances_hier/%s/"%instName
                 inst=self.modules[module]["instances"][instName]["instance"]
                 if inst in self.modules:
 #                    self.logger.info(i+"- "+instName+":"+inst)
-                    _findVotersAndFanouts(inst,i,ret)
+                    _findVotersAndFanouts(inst,ni,ret)
                 else:
 #                    self.logger.info(i+"- [!] "+instName+":"+inst)
                      pass
@@ -1696,6 +1697,12 @@ class TMR(VerilogElaborator):
             for l in ret:
                 f.write("set_dont_touch %s\n"%l)
             f.close()
+
+            if self.options.generateBugReport:
+                fcopy=os.path.join(self.options.bugReportDir,os.path.basename(fsdc))
+                self.logger.debug("Coping output file from '%s' to '%s'"%(fsdc,fcopy))
+                shutil.copyfile(fsdc,fcopy)
+
 
 ########################################################################################################################
 
@@ -1747,9 +1754,18 @@ def main():
 
         logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
         rootLogger = logging.getLogger()
+        rootLogger.setLevel(logging.DEBUG)
         consoleHandler = logging.StreamHandler()
         consoleHandler.setFormatter(logFormatter)
         rootLogger.addHandler(consoleHandler)
+
+        if options.verbose==0:
+            consoleHandler.setLevel(logging.WARNING)
+        if options.verbose==1:
+            consoleHandler.setLevel(logging.INFO)
+        elif options.verbose==2:
+            consoleHandler.setLevel(logging.DEBUG)
+
         if options.log!="":
             logging.debug("Creating log file '%s'"%options.log)
             fileHandler = logging.FileHandler(options.log)
@@ -1767,13 +1783,8 @@ def main():
             rootLogger.addHandler(fileHandlerBug)
             logging.info("Creating debug report in location '%s'"%bugReportDir)
             logging.debug("Creating log file '%s'"%options.log)
+            logging.debug("Run cmd '%s'"%" ".join(sys.argv))
 
-        if options.verbose==0:
-            consoleHandler.setLevel(logging.WARNING)
-        if options.verbose==1:
-            consoleHandler.setLevel(logging.INFO)
-        elif options.verbose==2:
-            consoleHandler.setLevel(logging.DEBUG)
 
         tmrg=TMR(options, args)
 
@@ -1803,9 +1814,11 @@ def main():
             zipf = zipfile.ZipFile(zipFile, 'w')
             zipdir(options.bugReportDir, zipf)
             zipf.close()
-            tmrg.logger.info("Creating zip archive with bug report '%s'"%zipFile)
+            consoleHandler.setLevel(logging.INFO)
+            logging.info("Creating zip archive with bug report '%s'"%zipFile)
             try:
                 shutil.rmtree(options.bugReportDir)
+                os.rmdir(options.bugReportDir)
             except:
                 pass
 
