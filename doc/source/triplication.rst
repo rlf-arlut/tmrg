@@ -14,33 +14,32 @@ Triplication
 ############
 
 To ensure maximum robustness against SEU and SET one should triplicate all
-circuitry in the chip. Unfortunately it is not always possible, as the
-triplication does come with some penalties. Just to name few one should mention
-an increase in occupied area, an increase in power consumption, a reduction in
+circuitry in the chip. Unfortunately, it is not always possible as the
+triplication does come with some penalties. Just to name a few, one should mention
+an increase in occupied area, an increase in power consumption, and a reduction in
 the maximum clock frequency. Moreover, not all blocks can be easily triplicated,
 e.g. I/O ports or some analog blocks.
 
-The TMRG tool lets designer to decide which blocks and signals should be triplicated.
-It automatizes also "converting" between triplicated and not triplicated signals.
+The TMRG tool allows the designer to decide which blocks and signals should be triplicated.
+It also automates "converting" between triplicated and not-triplicated signals.
 There are two basic conversion schemes:
 
-  * if non triplicated signal is connected to a triplicated signal a simple passive fanout is added
-  * if triplicated signal is connected to a non triplicated signal a majority voter is added
+  * if a non-triplicated signal is connected to a triplicated signal a simple passive fanout is added
+  * if a triplicated signal is connected to a non-triplicated signal a majority voter is added
 
-Summary of all possible conversions is summarized in the table below:
-
+A summary of all possible conversions is provided in the table below:
 
 +-----------------------------+----------------------------+----------------------------+
-| Signal source / Signal sink | non triplicated            | triplicated                |
+| Signal source / Signal sink | non-triplicated            | triplicated                |
 +=============================+============================+============================+
-| **non triplicated**         | 1 wire connection          | fanout                     |
+| **non-triplicated**         | 1 wire connection          | fanout                     |
 +-----------------------------+                            +                            +
 | **triplicated**             | majority voter             | 3 wires connection         |
 +-----------------------------+----------------------------+----------------------------+
 
 
 There are several ways to pass constrains to the TMRG tool, the simplest and the most
-intuitive is to put a directives directly in the source code. The directives 
+intuitive is to put directives directly in the source code. The directives 
 are placed in comments, so they do not affect other tools. The TMRG directive
 always starts with **tmrg**  keyword. An example directive may look like:
 
@@ -59,9 +58,9 @@ For the time being, lets focus only on three directives:
    // tmrg triplicate netName
    // tmrg do_not_triplicate netName
 
-The first directive specifies the default behavior for the whole module.
+The first directive specifies the default behavior for the entire module.
 The default behavior can be changed for individual nets using directives from 
-line 2 and 3. 
+lines 2 and 3. 
 
 Let us consider simple combinatorial module:
 
@@ -93,7 +92,7 @@ The resulting module will look like:
 .. image:: comb02.png
    :align: center
 
-You should note that input, output and logic was triplicated. 
+You should note that input, output, and logic was triplicated. 
 
 .. include:: ../../examples/comb02.rst
 
@@ -101,8 +100,8 @@ You should note that input, output and logic was triplicated.
 comb03 - logic and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Imagine that you want to connect ``in`` signal directly to an input pad (or a signal coming from an analog block), in that case you should use directive 
-``do_not_triplicate`` as shown below:
+Imagine that you want to connect ``in`` signal directly to an input pad (or a signal coming from an analog block), in this case you should use the ``do_not_triplicate`` directive 
+ as shown below:
 
 
 .. literalinclude:: ../../examples/comb03.v
@@ -120,8 +119,8 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
 
 .. include:: ../../examples/comb03.rst
 
-As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, logic itself, modeled by ``wire combLogic`` is also triplicated. 
-At this point, one should be aware, that the output module would be the exactly the same if one applies constrains as shown below
+As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, the logic itself, modeled by ``wire combLogic`` is also triplicated. 
+At this point, one should be aware that the output module would be exactly the same if one applies constraints as shown below:
 
 .. code-block:: verilog
    :linenos:
@@ -153,7 +152,7 @@ As you can see, in order to generate non triplicated output a majority voter is 
 comb05- logic triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Nothing prevents you, from triplicating only logic.
+Nothing prevents you from triplicating only logic.
 
 .. literalinclude:: ../../examples/comb05.v
    :language: verilog
@@ -191,13 +190,13 @@ majorityVoter and fanout modules
 ################################
 
 Until now, ``majorityVoter`` and ``fanout`` modules were used without explicitly 
-saying what they are. An example implementation of voter can be found in file ``common/voter.v``:
+saying what they are. An example implementation of voter can be found in the file ``common/voter.v``:
 
 .. literalinclude:: ../../common/voter.v
    :language: verilog
    :linenos:
 
-While an example implementation of fanout can be found in file ``common/fanout.v``:
+While an example implementation of fanout can be found in the file ``common/fanout.v``:
 
 .. literalinclude:: ../../common/fanout.v
    :language: verilog
@@ -208,7 +207,7 @@ Voting
 ######
 
 Triplication by itself is not enough to ensure SEU robustness, especially when memory elements (flip-flops) are used.
-If an error occurs in one branch it will propagate along the branch. If there is no repair mechanism, after first error the effective cross section is doubled with respect to the non triplicated circuit. In order to eliminate this problem, a majority voting is needed.
+If an error occurs in one branch it will propagate along the branch. If there is no repair mechanism, after the first error the effective cross section is doubled with respect to the non triplicated circuit. In order to eliminate this problem, a majority voting is needed.
 
 .. You can see that for TMR modules additional output, tmrError, is added. It goes high whenever there is a mismatch between input signals. 
 .. Several examples how this feature can be used will be shown later.
@@ -217,7 +216,7 @@ vote01
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Majority voters can be added on a triplicated signal by adding a net declaration with a specific name (``Voted`` postfix). 
-By assigning a value of a source signal, one ensures that the module can be simulated or synthesized.
+By assigning a source signal value, one ensures that the module can be simulated or synthesized.
 
 .. code-block:: verilog
    :linenos:
@@ -261,7 +260,7 @@ vote02
 Finite state machine
 ####################
 
-Understanding how triplication and voting can be done, lets try to protect a state machine.
+Now we understand how triplication and voting can be done, lets try to protect a state machine.
 
 fsm01 - triplication without voting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -302,11 +301,11 @@ This type of configuration gives maximum protection.
 
 .. include:: ../../examples/fsm02.rst
 
-fsm03 - triplicating only register
+fsm03 - triplicating only the register
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Only memory elements are protected. 
-Single event transient appearing in the voting element of combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
+A single event transient appearing in the voting element of the combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
 
 .. image:: fsm03.png
    :align: center
@@ -324,18 +323,18 @@ Single event transient appearing in the voting element of combinatorial block cl
 Module instantiations
 #####################
 
-Until now, we were considering only single modules. In real designs we have 
-hierarchy of many modules. Lets try to understand how triplication works in that case.
+Until now, we have been considering only single modules. In real designs we have a
+hierarchy of many modules. Lets try to understand how triplication works in this case.
 
 Only named connections are supported!
 
 All modules must be known at the time of triplication. 
-In case of elements from library, one has to load the library (which may not
-be that ease) or provide a simple file in which definitions of modules and their
-inputs/outputs are provided. In that case, one has to add directive 
-''tmrg do_not_touch'' in the module body.
+In case of elements from a library, one has to load the library (which may not
+be that easy) or provide a simple file in which definitions of modules and their
+inputs/outputs are provided. In this case, one has to add ``tmrg do_not_touch`` directive 
+ in the module body.
 
-For all other modules (not from library and not having ''do_not_touch'' constrain) 
+For all other modules (not from a library and not having the ``do_not_touch`` constraint) 
 triplication is always done inside the module. It is NOT possible to have three copies
 of the module  inside another module. 
 
@@ -345,9 +344,9 @@ Lets go through some examples.
 inst01 - triplicating a fixed macrocell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In this example we have a cell ''mlogic'' (which presumably comes from the library)
-and we do not want to touch internal of the cell. That is why a directive 
-''do_not_touch'' is added in the module declaration. 
+In this example we have a cell ``mlogic`` (which presumably comes from the library)
+and we do not want to touch the internal of the cell. That is why the
+``do_not_touch`` directive is added in the module declaration. 
 
 
 .. image:: inst01.png
@@ -366,8 +365,8 @@ and we do not want to touch internal of the cell. That is why a directive
 inst02 - non triplicating a fixed macrocell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you do not want to triplicate a cell which has ''do_not_touch'' property, you 
-have to apply ''do_not_triplicate'' constrain specifying **INSTANCE** (not module), similarly as it was in case of signals.
+If you do not want to triplicate a cell which has ``do_not_touch`` property, you 
+have to apply ``do_not_triplicate`` directive specifying **INSTANCE** (not module), as was the case for signals.
 Voters and fanouts will be added if necessary. 
 
 
@@ -385,12 +384,12 @@ Voters and fanouts will be added if necessary.
 .. include:: ../../examples/inst02.rst
 
 
-inst03 - triplicating user's macrocell
+inst03 - triplicating a user's macrocell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When the module being instantiated is a subject of triplication as well, only connections
-are modified and voters and fanouts are added if necessary. An example bellow shows a
-situation when two modules (parent and child) are to be fully triplicated.
+are modified, and voters and fanouts are added if necessary. The example below shows a
+situation where two modules (parent and child) are to be fully triplicated.
 
 .. image:: inst03.png
    :align: center
@@ -409,15 +408,14 @@ situation when two modules (parent and child) are to be fully triplicated.
 Accessing individual signals from a triplicated bus
 ###################################################
 
-In some very spatial cases you may want to access signals after the triplication
-individually. Lets consider two examples:
+In some very special cases you may want to access individual signals after the triplication. Lets consider two examples:
 
 powerOnReset
 ^^^^^^^^^^^^
 
 Imagine that you are designing a reset circuit. You want to have a Power-on
-reset (POR) block and an external reset signal. As you do not want that SET in
-POR block resets your chip, you may decide to triplicate the block. From the 
+reset (POR) block and an external reset signal. As you do not want a situation in which SET in
+POR block resets your chip, you may decide to triplicate the block. For the 
 practical reasons, you still want to keep only one external reset pin.
 
 .. literalinclude:: ../../examples/resetBlock01.v
@@ -428,10 +426,11 @@ practical reasons, you still want to keep only one external reset pin.
    :language: verilog
    :linenos:
 
-There is not magic until now. If you decided that you would like to able to 
-check during normal operation what is the status of the POR output, the straight
-forward way of doing that would be:
-
+.. There is not magic until now.
+Up to this point, things have been fairly straight forward.
+ If you decided that you would like to able to 
+check the status of the POR output during normal operation, the straight
+forward way of doing this would be:
 
 .. literalinclude:: ../../examples/resetBlock02.v
    :language: verilog
@@ -442,14 +441,14 @@ forward way of doing that would be:
    :linenos:
 
 
-You may see that 'porStatus'' signal got triplicated 
+You may see that the ``porStatus`` signal is now triplicated,
 which is of course what we want.
-Lets think if this is what you really want. 
-If you connect it to some kind of digital bus, 
-most likely you will have some voting on the way, so you will not have an information
-about individual signals. In order to solve the problem, you have to "code" some triplication
-manually. If you declare a wire with a special name and with a special assignment (like bellow) 
-you gain access to the signal after triplication
+Lets now think if this is really what you want. 
+If you connect the ``porStatus`` to a digital bus, 
+most likely you will have some voting on the way, so you will not have information
+regarding individual signals. In order to solve this problem, you need to "code" some triplication
+manually. If you declare a wire with a special name and a special assignment (like below) 
+you gain access to the signal after triplication:
 
 .. code-block:: verilog
    :linenos:
@@ -459,9 +458,9 @@ you gain access to the signal after triplication
    wire myWireB=myWire;
    wire myWireC=myWire;
 
-This convention ensures that you can still simulate and synthesize you original design.
-TMRG will convert this declarations during elaboration process to the desired ones.
-Lets see how we can use this in our resetBlock example.
+This coding convention ensures that you can still simulate and synthesize you original design.
+TMRG will convert these declarations during the elaboration process to the desired declarations.
+Lets see how it works in our resetBlock example:
 
 .. literalinclude:: ../../examples/resetBlock03.v
    :language: verilog
@@ -471,9 +470,9 @@ Lets see how we can use this in our resetBlock example.
    :language: verilog
    :linenos:
 
-As you can see, we ended up with triplicated bus (9 signals!). To finish 
-the considerations about resetBlock, one may want also to make it more robust
-by voting porRst signal.
+As you can see, we ended up with the triplicated bus (9 signals!). To finish 
+the resetBlock considerations, you may also want to make it more robust
+by voting porRst signal:
 
 .. literalinclude:: ../../examples/resetBlock04.v
    :language: verilog
@@ -552,11 +551,11 @@ single-event upsets.
 
 
 
-Available constrains 
+Available constraints 
 ###################################################
 
-If you do not like an idea of putting constrains in your source code directly, 
-you do not have to do it. You may put your constrains in a configuration file
+If you do not like an idea of putting constraints in your source code directly, 
+you do not have to do it. You may put your constraints in a configuration file
 or you can provide them as a command line arguments.
 
 The configuration file uses standard INI file format. It is a simple text file with a basic structure composed of sections, properties, and values.
@@ -570,7 +569,7 @@ An example file may look like:
      net : do_not_triplicate
      tmr_error : true
 
-There should be one section per module, each property/value pair sets a constrain. To load a configuration file, you have to specify its name
+There should be one section per module, each property/value pair sets a constraint. To load a configuration file, you have to specify its name
 as a command line argument:
 
 .. code-block:: bash
@@ -578,8 +577,8 @@ as a command line argument:
     $ tmrg -c config.cfg [other_options]
     $ tmrg --config config.cfg [other_options]
 
-Applying constrains is also possible via command line arguments. This approach is net very effective for constraining the whole project, but
-may be really handy in the initial phase. A possible constrains are shown bellow:
+Applying constraints is also possible via command line arguments. This approach is net very effective for constraining the whole project, but
+may be really handy in the initial phase. A possible constraints are shown below:
 
 .. code-block:: bash
 
@@ -588,9 +587,9 @@ may be really handy in the initial phase. A possible constrains are shown bellow
     $ tmrg -d "do_not_triplicate modName.net" [other_options]
     $ tmrg -d "tmr_error true modName" [other_options]
 
-As one can see, syntax is quire similar, however module name has to be specified for each constrain.
+As one can see, syntax is quire similar, however module name has to be specified for each constraint.
 
-A brief summary of all constrains, ways of specifying it, and priorities is shown in Table below.
+A brief summary of all constraints, ways of specifying it, and priorities is shown in Table below.
 
 +------------------------------------------------+------------------------------------------------+------------------------------------------------+
 | directive in code (lowest priority)            | configuration file (medium priority)           | command line argument (highest priority)       |
@@ -605,7 +604,7 @@ A brief summary of all constrains, ways of specifying it, and priorities is show
 |                                                |                                                |                                                |
 +------------------------------------------------+------------------------------------------------+------------------------------------------------+
 
-There is one more important feature which should be mentioned at this point. As there are several ways of specifying constrains and one constrain 
+There is one more important feature which should be mentioned at this point. As there are several ways of specifying constraints and one constraint 
 can be overwritten by another, there is mechanism which can ensure the designer that all his intentions are interpreted properly.
 When you are calling TMRG tool you can ask for a verbose output using ``-v`` option. Lets consider ``comb06`` module from above example. Lets write a configuration files ``comb06.cnf``
 
@@ -618,7 +617,7 @@ When you are calling TMRG tool you can ask for a verbose output using ``-v`` opt
    combLogic : triplicate
    tmr_error : true
 
-When you run TMRG with additional options and constrains as shown below:
+When you run TMRG with additional options and constraints as shown below:
  
 .. code-block:: bash
 
@@ -676,8 +675,8 @@ from the point of this chapter is shown below:
    [INFO   ] +----------------------------------------------------+------------------+------------+
    [..]
 
-You can check in the last table whether the constrains are applied as intended.
-If not, you can follow step by step process of applying constrains to understand
+You can check in the last table whether the constraints are applied as intended.
+If not, you can follow step by step process of applying constraints to understand
 at which point something went wrong.
 
 Limitations
