@@ -585,6 +585,7 @@ class VerilogParser:
         self.directive_seu_reset        = Group( tmrg + Suppress("seu_reset") + identifier +  Suppress(self.semi)).setResultsName("directive_seu_reset")
         self.directive_slicing          = Group( tmrg + ("slicing") + Suppress(self.semi)).setResultsName("directive_slicing")
         self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
+        self.directive_majority_voter_cell  = Group( tmrg + Suppress("majority_voter_cell")  + OneOrMore(identifier) + Suppress(self.semi)).setResultsName("directive_majority_voter_cell")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
@@ -637,6 +638,7 @@ class VerilogParser:
             self.directive_slicing |
             self.directive_translate |
             self.directive_synopsys |
+            self.directive_majority_voter_cell  |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation
             )

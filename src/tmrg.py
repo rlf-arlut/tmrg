@@ -724,7 +724,10 @@ class TMR(VerilogElaborator):
                     width=""
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
-                    newModuleItems.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
+                    majorityVoterCell="majorityVoter"
+                    if "majority_voter_cell" in self.modules[modName]["constraints"]:
+                        majorityVoterCell=self.modules[modName]["constraints"]["majority_voter_cell"]
+                    newModuleItems.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
                                                                             (width,inst,_a,_b,_c,_out) )[0]);
                     self.__voterPresent=True
             slice[1]=newModuleItems
@@ -935,13 +938,17 @@ class TMR(VerilogElaborator):
                         if _len!="1":
                             width+="#(.WIDTH(%s)) "%_len
 
+                        majorityVoterCell="majorityVoter"
+                        if "majority_voter_cell" in self.current_module["constraints"]:
+                            majorityVoterCell=self.current_module["constraints"]["majority_voter_cell"]
+
                         if "tmrError" in self.current_module["nets"]:
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
-                            moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
                                                                                (width,inst,_a,_b,_c,_out,_err) )[0]);
                             errSignals.add(_err)
                         else:
-                            moduleBody.append(self.vp.moduleInstantiation.parseString("majorityVoter %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
+                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
                                                                                (width,inst,_a,_b,_c,_out) )[0]);
 
 
@@ -1691,9 +1698,11 @@ class TMR(VerilogElaborator):
             f=open(fsdc,"w")
             f.write(header)
             if self.__voterPresent:
-                f.write("set_dont_touch majorityVoter\n")
+#                f.write("set_dont_touch majorityVoter\n")
+                pass
             if self.__fanoutPresent:
-                f.write("set_dont_touch fanout\n")
+#                f.write("set_dont_touch fanout\n")
+                pass
             for l in ret:
                 f.write("set_dont_touch %s\n"%l)
             f.close()

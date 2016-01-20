@@ -381,7 +381,6 @@ class VerilogElaborator():
     def _elaborate_directive_slicing(self,tokens):
         self.current_module["constraints"]["slicing"]=True
 
-
     def _elaborate_directive_translate(self,tokens):
         # this function is not really used now, this happens at the preprocesor stage
         if tokens[0].lower() == "off":
@@ -390,8 +389,6 @@ class VerilogElaborator():
             self.translate=True
         else:
             self.logger.error("Unknown parameter for tmrg translate directive '%s'"%tokens[0])
-
-
 
     def _elaborate_directive_tmr_error(self,tokens):
         en=False
@@ -404,6 +401,11 @@ class VerilogElaborator():
 
     def _elaborate_directive_seu_reset(self,tokens):
         self.current_module["constraints"]["seu_reset"]=tokens[0]
+
+    def _elaborate_directive_majority_voter_cell(self,tokens):
+        self.current_module["constraints"]["majority_voter_cell"]=tokens[0]
+
+
 
     def _elaborate(self,tokens):
         """ Elaborates tokens

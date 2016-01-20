@@ -545,6 +545,9 @@ class VerilogFormater:
     def _format_directive_do_not_touch(self,tokens,i=""):
         return ""
 
+    def _format_directive_majority_voter_cell(self,tokens,i=""):
+        return ""
+
     def _format_directive_do_not_triplicate(self,tokens,i=""):
         return ""
 
