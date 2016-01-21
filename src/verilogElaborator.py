@@ -405,7 +405,8 @@ class VerilogElaborator():
     def _elaborate_directive_majority_voter_cell(self,tokens):
         self.current_module["constraints"]["majority_voter_cell"]=tokens[0]
 
-
+    def _elaborate_directive_fanout_cell(self,tokens):
+        self.current_module["constraints"]["fanout_cell"]=tokens[0]
 
     def _elaborate(self,tokens):
         """ Elaborates tokens

@@ -390,7 +390,8 @@ class TMR(VerilogElaborator):
 
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-        if "tmrError" == left and "tmrError" in self.current_module["nets"]:
+
+        if left.lower().find("tmrerror")>=0 and "tmrError" in self.current_module["nets"]:
             self.logger.info("Removing declaration of %s"%(left))
             return []
 
@@ -943,7 +944,7 @@ class TMR(VerilogElaborator):
                             majorityVoterCell=self.current_module["constraints"]["majority_voter_cell"]
 
                         if "tmrError" in self.current_module["nets"]:
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
                             moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
                                                                                (width,inst,_a,_b,_c,_out,_err) )[0]);
                             errSignals.add(_err)
@@ -959,11 +960,13 @@ class TMR(VerilogElaborator):
                         moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                         moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     if group in self.current_module["tmrErrNets"]:
-                        errSignals=errSignals |self.tmrErr[group]
+                        #print group
+                        errSignals=errSignals | self.current_module["tmrErrNets"][group]
                     sep=""
                     asgnStr="assign tmrError%s="%group
                     if len(errSignals):
                         for signal in sorted(errSignals):
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
                             asgnStr+=sep+signal
                             sep="|"
                     else:
@@ -1004,7 +1007,13 @@ class TMR(VerilogElaborator):
                     width=""
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
-                    moduleBody.append(self.vp.moduleInstantiation.parseString("fanout %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
+
+                    fanoutCell="fanout"
+                    if "fanout_cell" in self.current_module["constraints"]:
+                        fanoutCell=self.current_module["constraints"]["fanout_cell"]
+
+
+                    moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
            # print "\n--\n",[tokens,tokens],"\n==\n"
             for i,item in enumerate(moduleBody):
