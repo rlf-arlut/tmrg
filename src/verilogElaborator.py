@@ -396,6 +396,11 @@ class VerilogElaborator():
             en=True
         self.current_module["constraints"]["tmr_error"]=en
 
+    def _elaborate_directive_tmr_error_exclude(self,tokens):
+        if not "tmr_error_exclude" in self.current_module["constraints"]:
+            self.current_module["constraints"]["tmr_error_exclude"]=[]
+        self.current_module["constraints"]["tmr_error_exclude"].append(tokens[0])
+
     def _elaborate_directive_seu_set(self,tokens):
         self.current_module["constraints"]["seu_set"]=tokens[0]
 

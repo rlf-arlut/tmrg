@@ -966,6 +966,10 @@ class TMR(VerilogElaborator):
                     asgnStr="assign tmrError%s="%group
                     if len(errSignals):
                         for signal in sorted(errSignals):
+                            signalRaw=signal[:-len("TmrError"+group)]
+                            if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
+                                self.logger.debug("Removing signal '%s' from tmrError",signal)
+                                continue
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
                             asgnStr+=sep+signal
                             sep="|"

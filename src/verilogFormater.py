@@ -551,6 +551,9 @@ class VerilogFormater:
     def _format_directive_fanout_cell(self,tokens,i=""):
         return ""
 
+    def _format_directive_tmr_error_exclude(self,tokens,i=""):
+        return ""
+
     def _format_directive_do_not_triplicate(self,tokens,i=""):
         return ""
 
