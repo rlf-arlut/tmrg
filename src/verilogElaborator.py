@@ -607,6 +607,7 @@ class VerilogElaborator():
             tokens=self.libs[fname]
 #            print tokens
             for module in tokens:
+                if module.getName()!="module" : continue
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]
                 modulePorts=moduleHdr[2]
@@ -618,6 +619,7 @@ class VerilogElaborator():
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
                 self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}, "lib":fname}
+
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
                 self.current_module["constraints"]["dnt"]=True
