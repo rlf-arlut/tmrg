@@ -1712,7 +1712,8 @@ class TMR(VerilogElaborator):
             if self.__fanoutPresent:
 #                f.write("set_dont_touch fanout\n")
                 pass
-            for l in ret:
+            retset = set(ret) # we can have some duplicates because of voters
+            for l in sorted(retset):
                 f.write("set_dont_touch %s\n"%l)
             f.close()
 
