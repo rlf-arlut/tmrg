@@ -1,10 +1,10 @@
 .. _licesing:
 
-Licesing and distribution
+Licensing and distribution
 #########################
 
-Licese
-======
+License
+=======
 
 The TMRG program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -27,16 +27,37 @@ The TMRG tool can be considered as dual-use item as it can be used to produce
 electronic circuits which are resistant to radiation. It is users responsibility
 to ensure that the TMRG software is not distributed to forbidden countries.
 
-The EU and Switzerland therefore control the export, transit and brokering of
+The EU and Switzerland therefore control the export, transit, and brokering of
 dual-use items as a key instrument contributing to international peace and
 security. Please refer to `Dual-use controls
 <http://ec.europa.eu/trade/import-and-export-rules/export-from-eu/dual-use-controls/>`_
 for more informations.
 
 
+End User License Agreement
+==================================
+
+Please reply that you had understood and you agree to all conditions bellow, so
+you can be added to the TMRG authorized users list.
+
+The access to TMRG tools comes under several conditions:
+
+1) Access is granted strictly to YOU and it is not transferable
+
+2) Access is granted for R&D and non-commercial type of projects related to High
+   Energy Physics experiments
+
+3) The TMRG software and documentation has to be protected from third-party
+   access (i.e. should be accessible only to people that applied for the
+   access). 
+
+An unauthorized use or distribution of TMRG tool, may in particular lead
+to action being initiated against you according to EU and Switzerland Dual-use
+export controls regulations.
 
 
-GNU General Public Locense
+
+GNU General Public License
 ==========================
 
 Version 2, June 1991

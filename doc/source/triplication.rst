@@ -94,7 +94,6 @@ The resulting module will look like:
 
 You should note that input, output, and logic was triplicated. 
 
-.. include:: ../../examples/comb02.rst
 
 
 comb03 - logic and output triplication
@@ -117,7 +116,6 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
    :align: center
 
 
-.. include:: ../../examples/comb03.rst
 
 As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, the logic itself, modeled by ``wire combLogic`` is also triplicated. 
 At this point, one should be aware that the output module would be exactly the same if one applies constraints as shown below:
@@ -144,7 +142,6 @@ Lets us consider the opposite situation, where the output is left non triplicate
 .. image:: comb04.png
    :align: center
 
-.. include:: ../../examples/comb04.rst
 
 As you can see, in order to generate non triplicated output a majority voter is added.
 
@@ -165,7 +162,6 @@ Nothing prevents you from triplicating only logic.
 .. image:: comb05.png
    :align: center
 
-.. include:: ../../examples/comb05.rst
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,7 +179,6 @@ You can also triplicate everything except logic.
 .. image:: comb06.png
    :align: center
 
-.. include:: ../../examples/comb06.rst
 
 
 majorityVoter and fanout modules
@@ -236,7 +231,6 @@ A simple pass through is shown below:
 .. image:: vote01.png
    :align: center
 
-.. include:: ../../examples/vote01.rst
 
 
 vote02
@@ -255,7 +249,6 @@ vote02
    :linenos:
 
 
-.. include:: ../../examples/vote02.rst
 
 Finite state machine
 ####################
@@ -279,7 +272,6 @@ Simple case. Everything is triplicated but the errors are not fixed.
    :language: verilog
    :linenos:
 
-.. include:: ../../examples/fsm01.rst
 
 
 fsm02 - triplication and voting
@@ -299,10 +291,9 @@ This type of configuration gives maximum protection.
    :language: verilog
    :linenos:
 
-.. include:: ../../examples/fsm02.rst
 
 fsm03 - triplicating only the register
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Only memory elements are protected. 
 A single event transient appearing in the voting element of the combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
@@ -318,25 +309,25 @@ A single event transient appearing in the voting element of the combinatorial bl
    :language: verilog
    :linenos:
 
-.. include:: ../../examples/fsm03.rst
 
 Module instantiations
 #####################
 
-Until now, we have been considering only single modules. In real designs we have a
-hierarchy of many modules. Lets try to understand how triplication works in this case.
+Until now, we have been considering only single modules. In real designs we have
+a hierarchy of many modules. Lets try to understand how triplication works in
+this case.
 
 Only named connections are supported!
 
-All modules must be known at the time of triplication. 
-In case of elements from a library, one has to load the library (which may not
-be that easy) or provide a simple file in which definitions of modules and their
-inputs/outputs are provided. In this case, one has to add ``tmrg do_not_touch`` directive 
- in the module body.
+All modules must be known at the time of triplication. In case of elements from
+a library, one has to load the library (which may not be that easy) or provide a
+simple file in which definitions of modules and their inputs/outputs are
+provided. In this case, one has to add ``tmrg do_not_touch`` directive in the
+module body.
 
-For all other modules (not from a library and not having the ``do_not_touch`` constraint) 
-triplication is always done inside the module. It is NOT possible to have three copies
-of the module  inside another module. 
+For all other modules (not from a library and not having the ``do_not_touch``
+constraint) triplication is always done inside the module. It is NOT possible to
+have three copies of the module inside another module. 
 
 Lets go through some examples.
 
@@ -360,8 +351,6 @@ and we do not want to touch the internal of the cell. That is why the
    :language: verilog
    :linenos:
 
-.. include:: ../../examples/inst01.rst
-
 inst02 - non triplicating a fixed macrocell
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -381,11 +370,9 @@ Voters and fanouts will be added if necessary.
    :language: verilog
    :linenos:
 
-.. include:: ../../examples/inst02.rst
-
 
 inst03 - triplicating a user's macrocell
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When the module being instantiated is a subject of triplication as well, only connections
 are modified, and voters and fanouts are added if necessary. The example below shows a
@@ -401,8 +388,6 @@ situation where two modules (parent and child) are to be fully triplicated.
 .. literalinclude:: ../../examples/doc/inst03TMR.v
    :language: verilog
    :linenos:
-
-.. include:: ../../examples/inst03.rst
 
 
 Accessing individual signals from a triplicated bus
@@ -427,10 +412,10 @@ practical reasons, you still want to keep only one external reset pin.
    :linenos:
 
 .. There is not magic until now.
-Up to this point, things have been fairly straight forward.
- If you decided that you would like to able to 
-check the status of the POR output during normal operation, the straight
-forward way of doing this would be:
+
+Up to this point, things have been fairly straight forward. If you decided that
+you would like to able to check the status of the POR output during normal
+operation, the straight forward way of doing this would be:
 
 .. literalinclude:: ../../examples/resetBlock02.v
    :language: verilog
@@ -441,7 +426,7 @@ forward way of doing this would be:
    :linenos:
 
 
-You may see that the ``porStatus`` signal is now triplicated,
+You may see that the ``porStatus`` signal is now triplicated
 which is of course what we want.
 Lets now think if this is really what you want. 
 If you connect the ``porStatus`` to a digital bus, 
@@ -487,12 +472,12 @@ clockGating
 ^^^^^^^^^^^
 
 In the previous example it was shown how to fanout a signal in order to access 
-sub-signals in a triplicated signal. Now let us consider opposite situation, how
+sub-signals in a triplicated signal. Now let us consider the opposite situation, how
 to generate triplicated signal from arbitrary combination of other signals.
 
-To make example easier to understand, lets take real-life problem: we want
+To make the example easier to understand, lets take a real-life problem: we want
 to make a clock gating circuit. A simple implementation with only one gating signal 
-may look like:
+may look like this:
 
 .. literalinclude:: ../../examples/clockGating01.v
    :language: verilog
@@ -504,7 +489,7 @@ may look like:
 
 
 If we want to be able to gate individual sub-signals in a triplicate clock, 
-we have to use similar trick as in the resetBlock.
+we have to use a similar trick to the one used in the resetBlock:
 
 
 .. literalinclude:: ../../examples/clockGating02.v
@@ -519,18 +504,18 @@ we have to use similar trick as in the resetBlock.
 Using voting error output
 ###################################################
 
-Until now, we did not care whether any of the triplicated signals was
-different than others (it is whether an single event upset happened or not).
-In some cases it may be desirable to have access to that information.
+Until now, we did not care whether any one of the triplicated signals was
+different than the other two (it is whether an single event upset happened or not).
+In some cases, it may be desirable to have access to information about this difference. 
 Imagine that you have a part of the circuit which utilizes clock gating, 
-in case of SEU during absence of clock, a voting mechanism is not able
+in the case of SEU during clock absence, a voting mechanism is not able
 to fix the error to restore the proper state in all memory cells. 
-One can think about using information from the majority voter cell to re-enable the
-clock for short period of time (one clock cycle) until the error is fixed.
+One can then consider using the information from the majority voter cell to re-enable the
+clock for a short period of time (one clock cycle) until the error is fixed.
 
-To do this with TMRG tool, one has to use a dedicated directive ``tmr_error
+To do this with the TMRG tool, one has to use a dedicated directive ``tmr_error
 true`` as well as instantiate a net with a specific name ``tmrError``. 
-An example below illustrates how it can be done:
+The example below illustrates how this can be done:
 
 .. literalinclude:: ../../examples/tmrOut01.v
    :language: verilog
@@ -540,26 +525,26 @@ An example below illustrates how it can be done:
    :language: verilog
    :linenos:
 
-As one can see, in non triplicated code tmrError wire has to be set to zero. In
-that way the non triplicated circuit is not affected and can be simulated. 
-The triplicated tmrError
-signal is an OR of all signals from the current module and all instances
-instantiated in the module.
+As one can see, in non-triplicated code tmrError wire has to be set to zero. In
+that way the non triplicated circuit is not affected and can be simulated. The
+triplicated tmrError signal is an OR of all signals from the current module and
+all instances instantiated in the module.
 
-Another good use of this feature may be to implement a counter of detected 
-single-event upsets.
-
+Another good use of this feature may be to implement a mechanism for counting
+number of detected single-event upsets.
 
 
-Available constraints 
+
+Available constrains 
 ###################################################
 
-If you do not like an idea of putting constraints in your source code directly, 
-you do not have to do it. You may put your constraints in a configuration file
+If you do not like the idea of putting constraints in your source code directly, 
+you do not have to. You can put your constrains in a configuration file
 or you can provide them as a command line arguments.
 
-The configuration file uses standard INI file format. It is a simple text file with a basic structure composed of sections, properties, and values.
-An example file may look like:
+The configuration file uses standard INI file format. This is a simple text file
+with a basic structure composed of sections, properties, and values. An example
+file may look like:
 
 .. code-block:: ini
 
@@ -569,16 +554,17 @@ An example file may look like:
      net : do_not_triplicate
      tmr_error : true
 
-There should be one section per module, each property/value pair sets a constraint. To load a configuration file, you have to specify its name
-as a command line argument:
+There should be one section per module, each property/value pair sets a
+constrain. To load the configuration file, you have to specify its name as
+command line arguments:
 
 .. code-block:: bash
 
     $ tmrg -c config.cfg [other_options]
     $ tmrg --config config.cfg [other_options]
 
-Applying constraints is also possible via command line arguments. This approach is net very effective for constraining the whole project, but
-may be really handy in the initial phase. A possible constraints are shown below:
+Applying constraints is also possible via command line arguments. This approach is not very effective for constraining the whole project, but
+may be really handy in the initial phase. A possible constrains are shown below:
 
 .. code-block:: bash
 
@@ -587,7 +573,7 @@ may be really handy in the initial phase. A possible constraints are shown below
     $ tmrg -d "do_not_triplicate modName.net" [other_options]
     $ tmrg -d "tmr_error true modName" [other_options]
 
-As one can see, syntax is quire similar, however module name has to be specified for each constraint.
+As one can see, the syntax is quire similar, however the module name has to be specified for each constrain.
 
 A brief summary of all constraints, ways of specifying it, and priorities is shown in Table below.
 
@@ -605,8 +591,8 @@ A brief summary of all constraints, ways of specifying it, and priorities is sho
 +------------------------------------------------+------------------------------------------------+------------------------------------------------+
 
 There is one more important feature which should be mentioned at this point. As there are several ways of specifying constraints and one constraint 
-can be overwritten by another, there is mechanism which can ensure the designer that all his intentions are interpreted properly.
-When you are calling TMRG tool you can ask for a verbose output using ``-v`` option. Lets consider ``comb06`` module from above example. Lets write a configuration files ``comb06.cnf``
+can be overwritten by another, there is a mechanism which can ensure that all the designer's in intentions are interpreted properly.
+When you execute the TMRG tool you can ask for a verbose output using ``-v`` option. Lets consider the ``comb06`` from the above example. Lets write a configuration file ``comb06.cnf``:
 
 .. code-block:: ini
 
@@ -628,8 +614,8 @@ When you run TMRG with additional options and constraints as shown below:
            -c comb06.cnf \
            comb06.v
 
-You will see the detailed log of what is being done. The part which is interesting
-from the point of this chapter is shown below:
+You will see a detailed log of what is being done. The part which is interesting
+in the context of this chapter is shown below:
 
 .. code-block:: bash
 
@@ -676,13 +662,13 @@ from the point of this chapter is shown below:
    [..]
 
 You can check in the last table whether the constraints are applied as intended.
-If not, you can follow step by step process of applying constraints to understand
+If not, you can follow the step by step process of applying constraints to understand
 at which point something went wrong.
 
 Limitations
 ############
 
-  * do not use concatenation on left hand side of any assignment
+  * do not use concatenation on the left hand side of any assignment
   * do not mix triplicated and non triplicated signals (on the left hand side of any assignment) 
     in blocks
   * only named connections are supported for module instantiation

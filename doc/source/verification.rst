@@ -3,12 +3,12 @@
 Verification
 ************
 
-Once the design is implemented (you have a verilog netlist) you should verify 
+Once the design is implemented (i.e. you have a verilog netlist) you should verify 
 that the design still  does what you want it to do and that the design in immune to SEE. 
-The TMRG toolset contains SEEG (Single Event Effect Generator) tool which can
-assist you in that process.
-The SEEG generates a verilog file, which contains several useful verilog tasks,
-which can toggle nets (to simulate SET) or toggle flip-flip flops (to simmulate
+The TMRG toolset contains a SEEG (Single Event Effect Generator) tool which can
+assist you in this process.
+The SEEG generates a verilog file which contains several useful verilog tasks,
+which can toggle nets (to simulate SET) or toggle flip-flops (to simulate
 SEU).
 
 The SEEG tool operate on a final netlist. An example usage of the tool for the
@@ -18,7 +18,7 @@ netlist generated for an example ``fsm02`` can look like:
 
    seeg --lib libs/tcbn65lp.v --output fsm02TMR_see.v fsm02_r2g.v
 
-As a result a verilog file ``see.v`` is generated. In the considered example a file will
+As a result a verilog file ``see.v`` is generated. In this example a file will
 look like:
 
 .. code-block:: verilog
@@ -193,8 +193,8 @@ look like:
      end
    endtask
    
-Having these tasks in place, the developer can easily generate SET, SEU, or SEE
-upsets in his design. The simpliest implementation may look like:
+Having these tasks in place, the developers can easily generate SET, SEU, or SEE
+upsets in their design. The simpliest implementation may look like:
 
 .. code-block:: verilog
 
