@@ -18,10 +18,16 @@ class TBG(TMR):
     def __init__(self,options, args):
         TMR.__init__(self,options, args)
 
+    def loadVoterDefinition(self,voterName="majorityVoterTB"):
+            vfile=os.path.join( self.scriptDir,  self.config.get("tmrg","voter_definition"))
+            self.logger.info("Taking voter declaration from %s"%vfile)
+            return readFile(vfile).replace("majorityVoter",voterName)
+
     def generate(self):
         logging.debug("")
-        oStr="`timescale 1 ns / 1 ns\n"
-
+        oStr="`timescale 1 ps / 1 ps\n"
+        voterCell="majorityVoterTB"
+        oStr+=self.loadVoterDefinition(voterCell)+"\n"
         for module in self.modules:
             clocks=[]
             resets=[]
@@ -68,7 +74,16 @@ class TBG(TMR):
                         oStr+="  // voter for %s\n"%(ioName)
                         for ext in self.EXT:
                             oStr+="  wire %s %s%s;\n"%(io["range"], ioName,ext)
-                        oStr+="  assign %s = (%sA & %sB) | (%sB & %sC) | (%sA & %sC);\n"%(ioName,ioName,ioName,ioName,ioName,ioName,ioName)
+#                        oStr+="  assign %s = (%sA & %sB) | (%sB & %sC) | (%sA & %sC);\n"%(ioName,ioName,ioName,ioName,ioName,ioName,ioName)
+                        oStr+="  wire %stmrErr;\n"%(ioName)
+                        oStr+="  %s %s (\n"%(voterCell,ioName+"Voter")
+                        oStr+="    .inA(%sA),\n"%(ioName)
+                        oStr+="    .inB(%sB),\n"%(ioName)
+                        oStr+="    .inC(%sC),\n"%(ioName)
+                        oStr+="    .out(%s),\n"%(ioName)
+                        oStr+="    .tmrErr(%stmrErr)\n"%(ioName)
+                        oStr+="  );\n"
+
                     else:
                         self.logger.warning("Unsuported IO type: %s"%io["type"])
 
@@ -108,15 +123,15 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
             oStr+="""`ifdef SEE
 
-  reg     SEEEnable=0;        // enables SEE generator
-  reg     SEEActive=0;        // high during any SEE event
-  integer SEEnextTime=0;      // time until the next SEE event
-  integer SEEduration=0;      // duration of the next SEE event
-  integer SEEwireId=0;        // wire to be affected by the next SEE event
-  integer SEEmaxWireId=0;     // number of wires in the design which can be affected by SEE event
-  integer SEEmaxUpaseTime=10; // 10 ns  (change if you are using different timescale)
-  integer SEEDel=200;         // 200 ns (change if you are using different timescale)
-  integer SEECounter=0;       // number of simulated SEE events
+  reg     SEEEnable=0;          // enables SEE generator
+  reg     SEEActive=0;          // high during any SEE event
+  integer SEEnextTime=0;        // time until the next SEE event
+  integer SEEduration=0;        // duration of the next SEE event
+  integer SEEwireId=0;          // wire to be affected by the next SEE event
+  integer SEEmaxWireId=0;       // number of wires in the design which can be affected by SEE event
+  integer SEEmaxUpaseTime=1000; // 1 ns  (change if you are using different timescale)
+  integer SEEDel=100_000;       // 100 ns (change if you are using different timescale)
+  integer SEECounter=0;         // number of simulated SEE events
 
   `include "see.v"
 
@@ -124,9 +139,6 @@ class TBG(TMR):
   initial
     see_max_net (SEEmaxWireId);
 
-  // enable SEE after some time
-  initial
-      #1000 SEEEnable=1;
 
   always
     begin
@@ -165,20 +177,41 @@ class TBG(TMR):
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
                     if ioName in resets:
-                        oStr+="      %s=1;\n"%(ioName)
-                        resetsRelease="      %s=0;\n"%(ioName)
+                        if ioName.find("n")>=0 or ioName.find("b")>=0:
+                            oStr+="      %s=0;\n"%(ioName)
+                            resetsRelease="      %s=1;\n"%(ioName)
+                        else:
+                            oStr+="      %s=1;\n"%(ioName)
+                            resetsRelease="      %s=0;\n"%(ioName)
                     else:
                         oStr+="      %s=0;\n"%(ioName)
             if len(resetsRelease):
-                oStr+="      #100\n"+resetsRelease
-            oStr+="      #2000 $finish;\n"
+                oStr+="      #10_000\n"+resetsRelease
+            oStr+="`ifdef SEE\n"
+            oStr+="      // enable SEE after 1ms\n"
+            oStr+="      #1000_000 SEEEnable=1;\n\n"
+            oStr+="`endif\n"
+            oStr+="      // finish simulation after 1ms\n"
+            oStr+="      #1000_000 $finish;\n"
             oStr+="    end\n"
 
             oStr+="\n"
             for clock in clocks:
-                oStr+="  localparam %s_PERIOD = 100;\n"%(clock.upper())
-                oStr+="  always\n"
-                oStr+="    #(%s_PERIOD/2) %s = !%s;\n"%(clock.upper(),clock,clock)
+                def guessClkFreq(clkName):
+                    try:
+                        return int(1e6/float(re.search(r'\d+', clock).group()))
+                    except:
+                        return 100
+                oStr+="  localparam %s_PERIOD = %d;\n"%(clock.upper(),guessClkFreq(clock))
+                oStr+="  initial\n"
+                oStr+="    begin\n"
+                oStr+="      #1000;\n"
+                oStr+="      forever\n"
+                oStr+="        begin\n"
+                oStr+="          %s = !%s;\n"%(clock,clock)
+                oStr+="          #(%s_PERIOD/2);\n"%(clock.upper())
+                oStr+="        end\n"
+                oStr+="    end\n"
 
             oStr+="endmodule\n"
         if self.options.outputFname!="":
