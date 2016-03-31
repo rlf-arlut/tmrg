@@ -20,7 +20,7 @@ redundancy.
    For more details please refer :ref:`licesing`.
 
 .. note:: 
-   `TMRG introduction presentation <http://cern.ch/tmrg/tmrg_introduction.pdf>`_ [PDF] Presented on 12 June 2015.
+   `TMRG introduction presentation <http://cern.ch/tmrg/html/tmrg_introduction.pdf>`_ [PDF] Presented on 12 June 2015.
 
 
 Content:
