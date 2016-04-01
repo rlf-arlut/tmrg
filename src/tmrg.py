@@ -1484,48 +1484,51 @@ class TMR(VerilogElaborator):
             out,err=runCommand('soscmd status -f%%T\\t%%S\\t%%C\\t%%N\\t%%R\\t%%L\\t%%V\\t%%P\\t%%A\\t%%I\\t%%O %s'%fname)
             if len(err)>0:
                 return False,""
-            info=out.split("\n")[1]
-            info=info.split("\t")
-            oStr="Type of the object          : "
-            if info[0]=='f' :oStr+="File"
-            if info[0]=='p' :oStr+="Package"
-            if info[0]=='d' :oStr+="Directory"
-            if info[0]=='s' :oStr+="Symbolic Link"
-            if info[0]=='F' :oStr+="Reference File"
-            if info[0]=='P' :oStr+="Reference Package"
-            if info[0]=='D' :oStr+="Reference Dir"
-            if info[0]=='S' :oStr+="Reference Symbolic Link"
+            try:
+                info=out.split("\n")[1]
+                info=info.split("\t")
+                oStr="Type of the object          : "
+                if info[0]=='f' :oStr+="File"
+                if info[0]=='p' :oStr+="Package"
+                if info[0]=='d' :oStr+="Directory"
+                if info[0]=='s' :oStr+="Symbolic Link"
+                if info[0]=='F' :oStr+="Reference File"
+                if info[0]=='P' :oStr+="Reference Package"
+                if info[0]=='D' :oStr+="Reference Dir"
+                if info[0]=='S' :oStr+="Reference Symbolic Link"
 
-            oStr+="\nRevision number             : %s"%info[6]
-            if info[4]=='-' :oStr+="\n                              Workarea has  the latest revision"
-            if info[4]=='N' :oStr+="\n                              Not using latest revision i.e a newer revision exists in the repository"
+                oStr+="\nRevision number             : %s"%info[6]
+                if info[4]=='-' :oStr+="\n                              Workarea has  the latest revision"
+                if info[4]=='N' :oStr+="\n                              Not using latest revision i.e a newer revision exists in the repository"
 
-            if info[5]=='-' :oStr+="\n                              Current revision of object matches RSO."
-            if info[5]=='R' :oStr+="\n                              Current revision of object DOES NOT match the RSO"
-            oStr+="\nPath of object              : %s"%info[7]
-            oStr+="\nAuthor name                 : %s"%info[8]
+                if info[5]=='-' :oStr+="\n                              Current revision of object matches RSO."
+                if info[5]=='R' :oStr+="\n                              Current revision of object DOES NOT match the RSO"
+                oStr+="\nPath of object              : %s"%info[7]
+                oStr+="\nAuthor name                 : %s"%info[8]
 
-            oStr+="\nCheck in/out time           : %s"%info[9]
-            oStr+="\nCheck in/out log            : %s"%info[10]
+                oStr+="\nCheck in/out time           : %s"%info[9]
+                oStr+="\nCheck in/out log            : %s"%info[10]
 
-            oStr+="\nState of the object         : "
-            if info[1]=='O' :oStr+="Checked out"
-            if info[1]=='-' :oStr+="Checked In"
-            if info[1]=='W' :oStr+="Checked out without Lock"
-            if info[1]=='N' :oStr+="Unpopulated"
-            if info[1]=='X' :oStr+="Read access denied"
-            if info[1]=='?' :oStr+="Unmanaged"
+                oStr+="\nState of the object         : "
+                if info[1]=='O' :oStr+="Checked out"
+                if info[1]=='-' :oStr+="Checked In"
+                if info[1]=='W' :oStr+="Checked out without Lock"
+                if info[1]=='N' :oStr+="Unpopulated"
+                if info[1]=='X' :oStr+="Read access denied"
+                if info[1]=='?' :oStr+="Unmanaged"
 
-            oStr+="\nChange status of the object : "
-            if info[2]=='M' :oStr+="Modified in this workarea"
-            if info[2]=='!' :oStr+="Deleted in workarea"
-            if info[2]=='-' :oStr+="Not modified"
-            if info[2]=='?' :oStr+="Not applicable"
+                oStr+="\nChange status of the object : "
+                if info[2]=='M' :oStr+="Modified in this workarea"
+                if info[2]=='!' :oStr+="Deleted in workarea"
+                if info[2]=='-' :oStr+="Not modified"
+                if info[2]=='?' :oStr+="Not applicable"
 
-            oStr+="\nLock status of the object   : "
-            if info[3]=='L' :oStr+="Locked"
-            if info[3]=='-' :oStr+="Not locked"
-            if info[3]=='?' :oStr+="Not applicable"
+                oStr+="\nLock status of the object   : "
+                if info[3]=='L' :oStr+="Locked"
+                if info[3]=='-' :oStr+="Not locked"
+                if info[3]=='?' :oStr+="Not applicable"
+            except:
+                oStr="Error during processing SOS data"
 
             return True, oStr
 
