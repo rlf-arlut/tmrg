@@ -76,7 +76,13 @@ class TBG(TMR):
                             oStr+="  wire %s %s%s;\n"%(io["range"], ioName,ext)
 #                        oStr+="  assign %s = (%sA & %sB) | (%sB & %sC) | (%sA & %sC);\n"%(ioName,ioName,ioName,ioName,ioName,ioName,ioName)
                         oStr+="  wire %stmrErr;\n"%(ioName)
-                        oStr+="  %s %s (\n"%(voterCell,ioName+"Voter")
+
+                        _len=self.modules[module]["nets"][ioName]["len"]
+                        width=""
+                        if _len!="1":
+                            width+="#(.WIDTH(%s)) "%_len
+
+                        oStr+="  %s %s%s (\n"%(voterCell,width,ioName+"Voter")
                         oStr+="    .inA(%sA),\n"%(ioName)
                         oStr+="    .inB(%sB),\n"%(ioName)
                         oStr+="    .inC(%sC),\n"%(ioName)
