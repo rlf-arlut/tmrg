@@ -587,6 +587,10 @@ A brief summary of all constraints, ways of specifying it, and priorities is sho
 |      // tmrg triplicate net                    |       net : triplicate                         |     -d "triplicate modName.net"                |
 |      // tmrg do_not_triplicate net             |       net : do_not_triplicate                  |     -d "do_not_triplicate modName.net"         |
 |      // tmrg tmr_error true                    |       tmr_error : true                         |     -d "tmr_error true modName"                |
+|      // tmrg tmr_error_exclude net             |       tmr_error_exclude : net                  |     -d "tmr_error_exclude modName.net"         |
+|      // tmrg slicing                           |       slicing : net                            |     -d "slicing modName"                       |
+|      // tmrg majority_voter_cell name          |       majority_voter_cell : name               |     -d "majority_voter_cell name modName"      |
+|      // tmrg fanout_cell name                  |       fanout_cell : name                       |     -d "fanout_cell name modName"              |
 |                                                |                                                |                                                |
 +------------------------------------------------+------------------------------------------------+------------------------------------------------+
 
