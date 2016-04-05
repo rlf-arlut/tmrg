@@ -3,6 +3,9 @@
 Verification
 ************
 
+Single Event Effects generation
+===============================
+
 Once the design is implemented (i.e. you have a verilog netlist) you should verify 
 that the design still  does what you want it to do and that the design in immune to SEE. 
 The TMRG toolset contains a SEEG (Single Event Effect Generator) tool which can
@@ -193,6 +196,12 @@ look like:
      end
    endtask
    
+
+
+
+Test bench template generator
+=============================
+
 Having these tasks in place, the developers can easily generate SET, SEU, or SEE
 upsets in their design. The simpliest implementation may look like:
 
