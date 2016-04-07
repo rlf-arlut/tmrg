@@ -309,6 +309,23 @@ A single event transient appearing in the voting element of the combinatorial bl
    :language: verilog
    :linenos:
 
+fsm04 - triplicating the register and clock skew
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. image:: fsm04.png
+   :align: center
+
+.. literalinclude:: ../../examples/fsm04.v
+   :language: verilog
+   :linenos:
+
+.. literalinclude:: ../../examples/doc/fsm04TMR.v
+   :language: verilog
+   :linenos:
+
+
+
 
 Module instantiations
 #####################
