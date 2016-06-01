@@ -335,7 +335,6 @@ class TMR(VerilogElaborator):
 
 
     def __triplicate_NetDecl3(self,tokens):
-
         def tmr_reg_list(tokens):
             newtokens=ParseResults([],name=tokens.getName())
             for element in tokens:
@@ -352,9 +351,18 @@ class TMR(VerilogElaborator):
         ids=self.getLeftRightHandSide(tokens)
         vote=False
         #left=tokens[0][4][0][0][0]
+
+        tmr=self.checkIfTmrNeeded(tokens)
+
         left=tokens[4][0][0][0]
 
         right=self.vf.format(tokens[4][0][2][0])
+
+        self.logger.debug("[net declaration with assigment]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+
 
         # check if this is explicit fanout
         eFanout=False
@@ -429,6 +437,8 @@ class TMR(VerilogElaborator):
               return tokens
         # in any other case, triplicate right hand side
         result = []
+        if not tmr:
+            return tokens
 
         for i in self.EXT:
 #            print i
