@@ -822,6 +822,7 @@ class VerilogParser:
         preParsedStrng = self.tmrgDirective.transformString( strng )
         preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
+        preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
         preParsedStrngNew=""
         translate=True
 #        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
