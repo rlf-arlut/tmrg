@@ -376,7 +376,10 @@ class VerilogElaborator():
             self.current_module["constraints"][net]=True
 
     def _elaborate_directive_do_not_touch(self,tokens):
-        self.current_module["constraints"]["dnt"]=True
+        if len(tokens)==1:
+            self.current_module["constraints"]["dnt"]=True
+        else:
+            self.current_module["constraints"]["dntinst"]=tokens[1:]
 
     def _elaborate_directive_slicing(self,tokens):
         self.current_module["constraints"]["slicing"]=True
