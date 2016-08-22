@@ -3,13 +3,13 @@ import logging
 from optparse import *
 #import tempita
 #import pygraphviz as pgv
-from vp import *
+#from vp import *
 import traceback
 import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,args2files,readFile,resultLine
+#from tmrg import VerilogFormater,args2files,readFile,resultLine
 import random
 import re
 
