@@ -39,11 +39,13 @@ class CmdConstrainParser:
         self.directive_triplicate       =(  Suppress("triplicate")        + OneOrMore(identifier)                ).setResultsName("directive_triplicate")
         self.directive_default          =(  Suppress("default")           + oneOf("triplicate do_not_triplicate") + Group(Optional(identifier)) ).setResultsName("directive_default")
         self.directive_tmr_error        =(  Suppress("tmr_error")         + oneOf("true false") + Group(Optional(identifier))                   ).setResultsName("directive_tmr_error")
+        self.directive_do_not_touch     =(  Suppress("do_not_touch")      + OneOrMore(identifier)                ).setResultsName("directive_do_not_touch")
 
         self.directiveItem =  ( self.directive_triplicate |
                                 self.directive_doNotTriplicate |
                                 self.directive_default |
-                                self.directive_tmr_error
+                                self.directive_tmr_error |
+                                self.directive_do_not_touch
                                 )
     def parse(self,s):
         return self.directiveItem.parseString(s)
@@ -151,6 +153,15 @@ class TMR(VerilogElaborator):
                     if not "global" in self.cmdLineConstrains:
                         self.cmdLineConstrains["global"]={}
                     self.cmdLineConstrains["global"]["default"]=tmrErr
+            elif name=="directive_do_not_touch":
+                for module in tokens:
+                    if not module in self.cmdLineConstrains:
+                        self.cmdLineConstrains[module]={}
+                    if not "constraints" in self.cmdLineConstrains[module]:
+                        self.cmdLineConstrains[module]["constraints"]={}
+                    self.cmdLineConstrains[module]["constraints"]["dnt"]=True
+                    self.logger.info("Command line constrain '%s' for module '%s')"%(name, module))
+
             else:
                 self.logger.warning("Unknown constrain '%s'"%name)
 
@@ -167,8 +178,6 @@ class TMR(VerilogElaborator):
                 token=member[len("_TMR__triplicate_"):].lower()
                 self.triplicator[token]=getattr(self,member)
                 self.logger.debug("Found triplicator for %s"%token)
-
-
 
     def __triplicate_directive_default(self,tokens):
         return []
@@ -387,7 +396,7 @@ class TMR(VerilogElaborator):
         if eVoter:
             self.logger.info("Explicit fanin '%s' part of '%s' (group %s)"%(left,eNet,eGroup))
             for name in list(ids["right"]):
-                self._addVoter(name,"","output")
+                self._addVoter(name,"",addWires="output")
             return tokens
         eFanin=False
         for ext in self.EXT:
@@ -528,7 +537,10 @@ class TMR(VerilogElaborator):
                 self.logger.error("")
                 self.logger.info("      Module %s is unknown"%identifier)
                 raise ErrorMessage("      Module %s is unknown"%identifier)
-
+            if "dntinst" in self.current_module["constraints"]:
+                if instance in self.current_module["constraints"]["dntinst"]:
+                    self.logger.debug("Instance '%s' has property do_not_touch."%instance)
+                    return tokens
             if "dnt" in self.modules[identifier]["constraints"]:
                 self.logger.debug("      Module '%s' will not be touched (id:%s)"%(identifier,instance))
                 tmr=self.current_module["instances"][instance]["tmr"]
@@ -608,7 +620,7 @@ class TMR(VerilogElaborator):
                                     sportTmr=self.current_module["nets"][sport]["tmr"]
                                     if sportTmr:
                                         if self.modules[identifier]["io"][dport]["type"]=="input":
-                                            self._addVoter(sport,group="")
+                                            self._addVoter(sport,group="",addWires="output")
     #                                        print "voter"
                                         else:
                                             self._addFanout(sport,addWires="input")
@@ -923,7 +935,6 @@ class TMR(VerilogElaborator):
                     for voter in self.current_module["voters"][group]:
                         inst=voter
                         voter=self.current_module["voters"][group][voter]
-                        self.logger.info("Instializaing voter %s"%inst)
                         _range=voter["range"]
 
                         _len=voter["len"]
@@ -933,6 +944,7 @@ class TMR(VerilogElaborator):
                         _b=voter["inB"]
                         _c=voter["inC"]
                         addWires=voter["addWires"]
+                        self.logger.info("Instializaing voter %s (addWires:%s)"%(inst,addWires))
                         if addWires=="output":
                             self.logger.debug("Adding output wire %s"%(_out))
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
@@ -1163,7 +1175,7 @@ class TMR(VerilogElaborator):
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
         if not voterInstName in self.current_module["voters"][group]:
-            self.logger.debug("Adding voter '%s' to group '%s'"%(voterInstName,group))
+            self.logger.debug("Adding voter '%s' to group '%s' (extended)"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,out,tmrError))
             self.current_module["voters"][group][voterInstName]={
                                  "inA":inA,
@@ -1192,7 +1204,7 @@ class TMR(VerilogElaborator):
             range=self.current_module["nets"][netID]["range"]
             len=self.current_module["nets"][netID]["len"]
 
-            self.logger.debug("Adding voter '%s' to group '%s'"%(voterInstName,group))
+            self.logger.debug("Adding voter '%s' to group '%s' (simple)"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
             self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
@@ -1304,8 +1316,8 @@ class TMR(VerilogElaborator):
         """ Elaborate the design
         :return:
         """
+        allowMissingModules = True # FIXME shoudl not be here like that (added for wrappers)
         VerilogElaborator.elaborate(self,allowMissingModules=allowMissingModules)
-
         #apply constrains
         self.logger.info("")
         self.logger.info("Applying constrains")
@@ -1432,6 +1444,12 @@ class TMR(VerilogElaborator):
 
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
+        for module in sorted(self.cmdLineConstrains):
+            if not module in self.modules:
+                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
+                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
+                                     "tmrErrNets":{}}
+            self.modules[module]["constraints"]["dnt"]=True
 
         #apply special constrains by name conventions
         self.logger.info("")
