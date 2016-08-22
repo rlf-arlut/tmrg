@@ -581,7 +581,7 @@ class VerilogParser:
         self.directive_default          = Group( tmrg + Suppress("default")           + oneOf("triplicate do_not_triplicate")+ Suppress(self.semi)).setResultsName("directive_default")
         self.directive_tmr_error        = Group( tmrg + Suppress("tmr_error")         + oneOf("true false")                  + Suppress(self.semi)).setResultsName("directive_tmr_error")
         self.directive_tmr_error_exclude= Group( tmrg + Suppress("tmr_error_exclude") + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_tmr_error_exclude")
-        self.directive_do_not_touch     = Group( tmrg + ("do_not_touch") + Suppress(self.semi)).setResultsName("directive_do_not_touch")
+        self.directive_do_not_touch     = Group( tmrg + ("do_not_touch") + ZeroOrMore(identifier) + Suppress(self.semi)).setResultsName("directive_do_not_touch")
         self.directive_seu_set          = Group( tmrg + Suppress("seu_set") + identifier + Suppress(self.semi)).setResultsName("directive_seu_set")
         self.directive_seu_reset        = Group( tmrg + Suppress("seu_reset") + identifier +  Suppress(self.semi)).setResultsName("directive_seu_reset")
         self.directive_slicing          = Group( tmrg + ("slicing") + Suppress(self.semi)).setResultsName("directive_slicing")
@@ -823,6 +823,7 @@ class VerilogParser:
         preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
         preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
+        
         preParsedStrngNew=""
         translate=True
 #        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
