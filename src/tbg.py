@@ -195,7 +195,8 @@ class TBG(TMR):
                 oStr+="      #10_000\n"+resetsRelease
             oStr+="`ifdef SEE\n"
             oStr+="      // enable SEE after 1ms\n"
-            oStr+="      #1000_000 SEEEnable=1;\n\n"
+            oStr+="      #1000_000 SEEEnable=1;\n"
+            oStr+="      $display(\"Enabling SEE generation\");\n"
             oStr+="`endif\n"
             oStr+="      // finish simulation after 1ms\n"
             oStr+="      #1000_000 $finish;\n"
@@ -207,7 +208,7 @@ class TBG(TMR):
                     try:
                         return int(1e6/float(re.search(r'\d+', clock).group()))
                     except:
-                        return 100
+                        return 1e5
                 oStr+="  localparam %s_PERIOD = %d;\n"%(clock.upper(),guessClkFreq(clock))
                 oStr+="  initial\n"
                 oStr+="    begin\n"
