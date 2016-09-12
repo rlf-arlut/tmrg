@@ -408,7 +408,7 @@ class TMR(VerilogElaborator):
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
 
-        if left.lower().find("tmrerror")>=0 and "tmrError" in self.current_module["nets"]:
+        if left.lower().find("tmrerror")>=0 :# commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
             self.logger.info("Removing declaration of %s"%(left))
             return []
 
@@ -967,14 +967,16 @@ class TMR(VerilogElaborator):
 
                         if "tmrError" in self.current_module["nets"]:
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s;"%(_err))[0])
-                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
-                                                                               (width,inst,_a,_b,_c,_out,_err) )[0]);
+#                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
+#                                                                               (width,inst,_a,_b,_c,_out,_err) )[0]);
                             errSignals.add(_err)
-                        else:
-                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
-                                                                               (width,inst,_a,_b,_c,_out) )[0]);
-
-
+#                        else:
+#                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
+#                                                                               (width,inst,_a,_b,_c,_out) )[0]);
+                        moduleBody.append(self.vp.moduleInstantiation.parseString(
+                            majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
+                            (width, inst, _a, _b, _c, _out, _err))[0]);
+                        moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
@@ -992,7 +994,7 @@ class TMR(VerilogElaborator):
                             if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
                                 self.logger.debug("Removing signal '%s' from tmrError",signal)
                                 continue
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
+#                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
                             asgnStr+=sep+signal
                             sep="|"
                     else:
