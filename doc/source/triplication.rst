@@ -54,9 +54,9 @@ For the time being, lets focus only on three directives:
 .. code-block:: verilog
    :linenos:
 
-   // tmrg default [triplicate|do_not_triplicate]
    // tmrg triplicate netName
    // tmrg do_not_triplicate netName
+   // tmrg default [triplicate|do_not_triplicate]
 
 The first directive specifies the default behavior for the entire module.
 The default behavior can be changed for individual nets using directives from 

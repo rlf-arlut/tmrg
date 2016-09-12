@@ -24,8 +24,6 @@ can look like this:
 .. code-block:: bash
 
     set sdc_version 1.3
-    set_dont_touch majorityVoter
-    set_dont_touch fanout
     set_dont_touch /designs/comb06TMR/nets/combLogicA
     set_dont_touch /designs/comb06TMR/nets/combLogicB
     set_dont_touch /designs/comb06TMR/nets/combLogicC
