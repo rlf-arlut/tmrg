@@ -429,6 +429,8 @@ class VerilogFormater:
 
         return oStr
     def _format_inlineIfExpr(self,tokens,i=""):
+        if len(tokens) == 1:
+            return self.format(tokens[0])
         primary=self.format(tokens[0])
         expr1=self.format(tokens[1])
         expr2=self.format(tokens[2])
