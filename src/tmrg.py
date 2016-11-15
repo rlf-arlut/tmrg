@@ -866,6 +866,7 @@ class TMR(VerilogElaborator):
     def __triplicate_module(self,tokens):
 #        try:
             header=tokens[0]
+
             moduleName=header[1]
             self.current_module=self.modules[moduleName]
             if "dnt" in   self.modules[moduleName]["constraints"]:
@@ -888,8 +889,8 @@ class TMR(VerilogElaborator):
 
             self.logger.debug("- module header "+"- "*42)
             #triplicate module header | add tmr signals
-            if len(header)>2:
-                ports=header[2]
+            if len(header)>3:
+                ports=header[3]
                 newports=ParseResults([],name=ports.getName())
                 for port in ports:
                     if  port.getName()=="port":
@@ -944,7 +945,7 @@ class TMR(VerilogElaborator):
                         else:
                             newports.append( newport )
                         self.logger.debug("Port %s"%(newport))
-                header[2]=newports
+                header[3]=newports
 
             self.logger.debug("- voters & fanouts  "+"- "*40)
             groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())

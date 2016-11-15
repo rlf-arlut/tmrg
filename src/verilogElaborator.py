@@ -589,7 +589,8 @@ class VerilogElaborator():
 
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]
-                modulePorts=moduleHdr[2]
+                moduleParams=moduleHdr[2]
+                modulePorts=moduleHdr[3]
                 self.logger.debug("")
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
@@ -597,11 +598,16 @@ class VerilogElaborator():
                 self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},
                                      "instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
                                      "tmrErrNets":{}}
+                for param in moduleParams:
+                    pname=param[0]
+                    pval=self.vf.format(param[1])
+                    self.logger.debug("Parameter %s = %s"%(pname,pval))
+                    self.current_module["params"][pname]={"value":pval,"range":"","len":"","type":"param"}
+
                 for port in modulePorts:
                     self._elaborate(port)
 
                 for moduleItem in module[1]:
-
                     self._elaborate(moduleItem)
 
                 def pdict(d,i="",title=""):

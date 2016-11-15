@@ -734,6 +734,7 @@ class VerilogParser:
 
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
+                            Group(Optional( Suppress("#")+Suppress("(") +delimitedList( Suppress("parameter")+paramAssgnmt ) + Suppress(")") ))+
                             Group(Optional( Suppress("(") +
                                              Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
                                             Suppress(")") )).setResultsName("ports") +

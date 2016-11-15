@@ -407,9 +407,16 @@ class VerilogFormater:
         header=tokens[0]
         modname=header[1]
         oStr="module %s"%modname
+        if len(header[2])>0:
+            oStr+=" #(\n  "
+            sep=""
+            for p in header[2]:
+                oStr+="%sparameter %s=%s"%(sep,p[0],p[1])
+                sep=",\n  "
+            oStr+="\n)"
         sep=""
-        if len(header)>2:
-            ports=header[2]
+        if len(header)>3:
+            ports=header[3]
             oStr+="(\n"
             for port in ports:
                 oStr+=sep+"\t"+self.format(port)
