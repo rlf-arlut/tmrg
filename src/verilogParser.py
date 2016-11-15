@@ -382,10 +382,12 @@ class VerilogParser:
 
         inputOutput = oneOf("input output")
 
+        netIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
+
         self.netDecl1 = Group(nettype +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
-                              Group( delimitedList( identifier ) ) +
+                              Group( delimitedList( netIdentifier ) ) +
                               Suppress(self.semi)
                              ).setResultsName("netDecl1")
 
@@ -804,7 +806,7 @@ class VerilogParser:
             return " ".join(toks)+ ";"
         self.synopsysDirective.setParseAction(synopsysDirectiveAction)
 
-        self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef")+ restOfLine).setResultsName("compDirective")
+        self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)

@@ -158,6 +158,12 @@ class VerilogElaborator():
                 for tt in t[3]:
                     left_id=tt[0]
                     res["left"].add(left_id)
+            elif name in ("netdecl1"):
+                #print t[3]
+                for tt in t[3]:
+                    #print tt
+                    left_id=tt[0]
+                    res["left"].add(left_id)
 
             elif name == "subscridentifier":
                 if t[0] in self.current_module["nets"]:
@@ -301,7 +307,8 @@ class VerilogElaborator():
             _range=self.vf.format(tokens[1])
             _len=self.__getLenStr(tokens[1])
             type=tokens[0]
-            for name in tokens[3]:
+            for net in tokens[3]:
+                name=net[0]
                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , "type":type}
                 if _len!="1":
                     details="(range:%s len:%s)"%(_range,_len)
@@ -606,7 +613,7 @@ class VerilogElaborator():
                         else:
 #                            print "%s%s:%s"%(i+"  ",e,d[e])
                              pass
-#                pdict(self.current_module)
+
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
 
         for fname in sorted(self.libs):

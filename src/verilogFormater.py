@@ -72,9 +72,13 @@ class VerilogFormater:
         oStr=""
         label=str(tokens[0])
         spec=self.format(tokens[2])
+       # print tokens
         if spec!="":spec+=" "
         for port in tokens[3]:
-            oStr+="%s %s%s;\n"%(label,spec,port[0])
+            r=""
+            if len(port)>1:
+                r=" "+"".join(port[1:])
+            oStr+="%s %s%s%s;\n"%(label,spec,port[0],r)
         return oStr
 
     def _format_netDecl3(self,tokens,i=""):
@@ -101,11 +105,12 @@ class VerilogFormater:
         if range!="":range+=" "
         if delay!="":delay+=" "
         ports=tokens[3]
-
         for port in ports:
+            r=""
+            if len(port)>1:r=" "+"".join(port[1:])
             port_str=self.format(port)
             #print nettype,range,delay,port_str
-            oStr+="%s %s%s%s;\n"%(nettype,range,delay,port_str)
+            oStr+="%s %s%s%s%s;\n"%(nettype,range,delay,port_str,r)
         return oStr
 
     def _format_genVarDecl(self,tokens,i=""):

@@ -18,6 +18,18 @@ import time
 import datetime
 import hashlib
 import zipfile
+def tmr_reg_list(tokens):
+    newtokens=ParseResults([],name=tokens.getName())
+    for element in tokens:
+#                print element
+        if element[0] in self.toTMR:
+            for post in self.EXT:
+                newtokens2=element.deepcopy()
+                newtokens2[0]=element[0]+post
+                newtokens.append(newtokens2)
+        else:
+            newtokens.append(element)
+    return newtokens
 
 class CmdConstrainParser:
     def __init__(self):
@@ -460,22 +472,32 @@ class TMR(VerilogElaborator):
         return result
 
     def __triplicate_NetDecl1(self,tokens):
-        tokens[3]=self._tmr_list(tokens[3])
-        return tokens
+#        print tokens[3][0]
+#        tokens[3][0]=self._tmr_list(tokens[3][0])
+#        return tokens
+        #print tokens
+        tmr=self.checkIfTmrNeeded(tokens)
+        ids=self.getLeftRightHandSide(tokens)
+
+        self.logger.debug("[net1decl]")
+        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
+        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
+        self.logger.debug("      TMR  :"+str(tmr))
+        if not tmr:
+            return tokens
+
+        result = []
+        for i in self.EXT:
+            cpy=tokens.deepcopy()
+            for name in list(ids["right"])+list(ids["left"]):
+                _to_name=name+i
+                self.replace(cpy,name,_to_name)
+            result.append(cpy)
+
+        return result
 
     def __triplicate_RegDecl(self,tokens):
-        def tmr_reg_list(tokens):
-            newtokens=ParseResults([],name=tokens.getName())
-            for element in tokens:
-#                print element
-                if element[0] in self.toTMR:
-                    for post in self.EXT:
-                        newtokens2=element.deepcopy()
-                        newtokens2[0]=element[0]+post
-                        newtokens.append(newtokens2)
-                else:
-                    newtokens.append(element)
-            return newtokens
+
         tmr=self.checkIfTmrNeeded(tokens)
         ids=self.getLeftRightHandSide(tokens)
 
