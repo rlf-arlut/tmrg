@@ -24,6 +24,17 @@ class VerilogFormater:
             oStr+=self.format(t)+" "
         return oStr
 
+    def _format_assign(self,tokens,i=""):
+        oStr=tokens[0]
+        oStr+=" %s"%self.format(tokens[1])
+        oStr+="="
+        #print type(tokens),tokens
+#        return self.format(tokens)
+        for t in tokens[2:]:
+            oStr+=self.format(t)+" "
+            #print t
+        return oStr
+
     def _formatIo(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
@@ -65,7 +76,7 @@ class VerilogFormater:
         return self._formatIoHdr(tokens)
 
     def _format_port(self,tokens,i=""):
-        print tokens
+#        print tokens
         return tokens[0][0]
 
     def _format_RegDecl(self,tokens,i=""):
@@ -98,7 +109,7 @@ class VerilogFormater:
 
     def _format_netDecl1(self,tokens,i=""):
         oStr=""
-       # print ">",tokens
+        #print ">",tokens
         nettype=str(tokens[0])
         range=self.format(tokens[1])
         delay=self.format(tokens[2])
@@ -107,7 +118,10 @@ class VerilogFormater:
         ports=tokens[3]
         for port in ports:
             r=""
-            if len(port)>1:r=" "+"".join(port[1:])
+            #print "P]",port
+            #if len(port)>1:r=" "+"".join(port[1:])
+            #print "F]",self.format(port[1:])
+            if len(port) > 1: r = " " +self.format(port[1:])
             port_str=self.format(port)
             #print nettype,range,delay,port_str
             oStr+="%s %s%s%s%s;\n"%(nettype,range,delay,port_str,r)
@@ -116,7 +130,7 @@ class VerilogFormater:
     def _format_genVarDecl(self,tokens,i=""):
         oStr=""
         genvar=str(tokens[0])
-        expr=self.format(tokens[1])
+        expr=self.format(tokens[1:])
         oStr=genvar+" "+expr+";\n"
         return oStr
 
@@ -127,7 +141,8 @@ class VerilogFormater:
         return oStr
 
     def _format_generate_module_named_block(self,tokens,i=""):
-        oStr=i+"begin : %s\n"%self.format(tokens[0])
+        #print tokens
+        oStr=i+"begin %s\n"%self.format(tokens[0])
         for stmt in tokens[1:]:
             oStr+=self.format(stmt,i+"\t")
         oStr+=i+"end\n"
@@ -285,6 +300,9 @@ class VerilogFormater:
         return oStr
 
     def _format_concat(self,tokens,i=""):
+        #print "*"*80+"\n",tokens
+        #for t in tokens:
+        #    print t
         oStr="{"
         sep=""
         for t in tokens:
@@ -478,12 +496,15 @@ class VerilogFormater:
         oStr=""
         range=self.format(tokens[1])
 #        print tokens[2]
-        for p in tokens[2]:
-            oStr+=tokens[0]+" "
+        for p in tokens[2:]:
+            pname=p[0][0][0]
+#            print "pname", pname
+            oStr+=tokens[0]+" %s="%(pname)
             if range:
                 oStr+="%s "%range
-            oStr+=self.format(p)+";\n"
-#            print p
+#            print "p:",p
+            oStr+=self.format(p[0][0][1:])+";\n"
+#        print oStr
         return oStr
 
     def _format_localparamdecl(self,tokens,i=""):
@@ -593,6 +614,7 @@ class VerilogFormater:
 
     def format(self,tokens,i=""):
         outStr=""
+        #print type(tokens),tokens
         if tokens==None:
             return ""
         if isinstance(tokens, ParseResults):
@@ -603,6 +625,8 @@ class VerilogFormater:
                 outStr=self.formater[name](tokens,i)
             else:
                 outStr=self.formater["default"](tokens,i)
+        elif isinstance(tokens, list):
+            outStr="".join(map(self.format,tokens))
         else:
             outStr=tokens
         return outStr

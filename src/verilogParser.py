@@ -159,7 +159,7 @@ class VerilogParser:
         #~ octnums = "01234567" + "_"
         self.expr = Forward()
 
-        concat = Group( Suppress("{") + delimitedList( self.expr ) + Suppress("}") ).setResultsName("concat")
+        concat = Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
         funcCall = Group(identifier + "(" + Group(Optional( delimitedList( self.expr ) )) + ")").setResultsName("funcCall")
 
@@ -174,7 +174,7 @@ class VerilogParser:
                          ).setResultsName("subscrIndxRef")
 
         subscrIdentifier = Group( identifier +
-                                  Group( Optional( subscrIndxRef | subscrRef ))
+                                  Group( Optional( Group(subscrIndxRef) | Group(subscrRef) ) + Optional( Group(subscrIndxRef) | Group(subscrRef) ) )
                                 ).setResultsName("subscrIdentifier")
         #~ scalarConst = "0" | (( FollowedBy('1') + oneOf("1'b0 1'b1 1'bx 1'bX 1'B0 1'B1 1'Bx 1'BX 1") ))
         scalarConst = Regex("0|1('[Bb][01xX])?")
@@ -256,14 +256,14 @@ class VerilogParser:
         paramAssgnmt = Group( identifier + Suppress("=") + self.expr ).setResultsName("paramAssgnmt")
 
 
-        parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("paramDecl")
-        localParameterDecl = Group("localparam" + Group(Optional( self.range )) + Group(delimitedList( paramAssgnmt )) + self.semi).setResultsName("localparamDecl")
+        parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
+        localParameterDecl = Group("localparam" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
-        self.inputDecl  = Group( "input"  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
+        self.inputDecl  = Group( "input"  + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
         self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
-        inoutDecl = Group( "inout" + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
+        self.inoutDecl  = Group( "inout"  + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
 
-        regIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
+        regIdentifier = Group( identifier + Optional( "[" + self.expr + oneOf(": +:") + self.expr + "]" ) )
         self.regDecl = Group( "reg" +
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
@@ -366,7 +366,7 @@ class VerilogParser:
             localParameterDecl |
             self.inputDecl |
             self.outputDecl |
-            inoutDecl |
+            self.inoutDecl |
             self.regDecl |
             timeDecl |
             integerDecl |
@@ -410,7 +410,7 @@ class VerilogParser:
                              ).setResultsName("netDecl3")
 
         self.genVarDecl = Group(Keyword("genvar") +
-                                self.expr +
+                                Group(delimitedList(self.expr)) +
                                 Suppress(self.semi)
                                ).setResultsName("genVarDecl")
 
@@ -606,14 +606,22 @@ class VerilogParser:
         """
         specifyBlock = Group( "specify" + ZeroOrMore( specifyItem ) + "endspecify" )
 
+        generate_module_loop_statement = Forward()
+        self.moduleOrGenerateItem = Forward()
+        generate_module_named_block = Group(Suppress("begin") +
+                                            Group(Optional(":" + identifier)) +
+                                            OneOrMore(self.moduleOrGenerateItem) +
+                                            Suppress("end") +
+                                            Group(Optional(":" + identifier))
+                                            ).setResultsName("generate_module_named_block")
 
-
-        self.moduleOrGenerateItem = ~Keyword("endmodule") + (
+#        self.moduleOrGenerateItem << ~Keyword("endmodule") + (
+        self.moduleOrGenerateItem << (
             parameterDecl |
             localParameterDecl |
             self.inputDecl |
             self.outputDecl |
-            inoutDecl |
+            self.inoutDecl |
             self.regDecl |
             self.netDecl3 |
             self.netDecl1 |
@@ -645,9 +653,23 @@ class VerilogParser:
             self.directive_synopsys |
             self.directive_majority_voter_cell  |
             self.directive_fanout_cell  |
+            # this should not be here, however it can be used in modert ga
+            Group(if_ + condition + stmtOrNull).setName("if").setResultsName("if") |
             # these have to be at the end - they start with identifiers
-            self.moduleInstantiation
-            )
+            self.moduleInstantiation |
+            Group(Suppress(for_) +
+                  Suppress("(") +
+                  Group(self.assgnmt) +
+                  Suppress(self.semi) +
+                  Group(self.expr) +
+                  Suppress(self.semi) +
+                  Group(self.assgnmt) +
+                  Suppress(")") +
+                  generate_module_named_block
+                  ).setResultsName("generate_module_loop_statement")
+            | "dupa"
+        )
+
 
 #        generate_module_case_statement =Keyword("case")+  "(" + self.expr + ")" genvar_module_case_item { genvar_module_case_item } Keyword("endcase")
 
@@ -657,20 +679,23 @@ class VerilogParser:
         #generate_module_item = Forward()
         #generate_module_conditional_statement = Keyword("if") + self.expr + generate_module_item + Group(Optional(Keyword("else") +  generate_module_item ))
 
-        generate_module_named_block = Group(Suppress(Keyword("begin") + ":")  + identifier + OneOrMore(self.moduleOrGenerateItem) +  Suppress(Keyword("end")) + Group(Optional(":" + identifier))).setResultsName("generate_module_named_block")
 
-        genvar_decl_assignment = Group(identifier + "=" +self.expr).setResultsName("genvar_decl_assignment")
+#        genvar_decl_assignment = Group(identifier + "=" +self.expr).setResultsName("genvar_decl_assignment")
 
         #self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
 #                             + Group(self.expr) ).setResultsName( "assgnmt" )
 
-        generate_module_loop_statement = Group( Suppress(Keyword("for")) +
+        #Group(for_ + Suppress("(") + Group(self.assgnmt) + Suppress(self.semi) + Group(self.expr) + Suppress(
+#            self.semi) + Group(self.assgnmt) + Suppress(")") + self.stmt).setResultsName("forstmt") |
+#        \
+# \
+        generate_module_loop_statement = Group( Suppress(for_) +
                                                   Suppress("(")  +
-                                                  genvar_decl_assignment +
+                                                    Group(self.assgnmt) +
                                                   Suppress(self.semi) +
-                                                  Group(self.expr) +
+                                                    Group(self.expr) +
                                                   Suppress(self.semi) +
-                                                  Group(self.assgnmt) +
+                                                    Group(self.assgnmt) +
                                                   Suppress(")") +
                                                   generate_module_named_block
                                                ).setResultsName("generate_module_loop_statement")
@@ -687,7 +712,7 @@ class VerilogParser:
 #generate_module_block ::=
 #begin [ : generate_block_identifier ] { generate_module_item } end [ : generate_block_identifier ]
 
-        generate_body =  generate_module_loop_statement |  self.moduleOrGenerateItem
+        generate_body =  self.moduleOrGenerateItem# |generate_module_loop_statement
 
 #                                |	generate_module_case_statement\
 
@@ -696,7 +721,8 @@ class VerilogParser:
         generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
 
 
-        self.moduleItem= generate | self.moduleOrGenerateItem
+        self.moduleItem= generate | self.moduleOrGenerateItem | generate_module_loop_statement
+        #self.moduleItem =  self.moduleOrGenerateItem
 
 #            udpInstantiation
 
@@ -726,7 +752,7 @@ class VerilogParser:
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
         self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
-        inputOutput = oneOf("input output")
+        inputOutput = oneOf("input output inout")
         self.portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
         self.portOut  = Group( Keyword("output") + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
         self.portInOut= Group( Keyword("inout")  +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")

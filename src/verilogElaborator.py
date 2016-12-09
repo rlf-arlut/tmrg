@@ -250,6 +250,29 @@ class VerilogElaborator():
              if not name in  self.current_module["nets"]:
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
+    def _elaborate_inout(self, tokens):
+        # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
+        # tokens=tokens[0]
+        _dir = tokens[0]
+        _atrs = ""
+        _range = self.vf.format(tokens[2])
+        _len = self.__getLenStr(tokens[2])
+
+        if _len != "1":
+            details = "(range:%s len:%s)" % (_range, _len)
+        else:
+            details = ""
+
+        for name in tokens[-1]:
+            self.lastANSIPort = {}
+            self.lastANSIPort["io"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "input"}
+            self.lastANSIPort["net"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire"}
+
+            if not name in self.current_module["nets"]:
+                self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "inout"}
+            if not name in self.current_module["nets"]:
+                self.current_module["nets"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire"}
+
     def _elaborate_inputhdr(self,tokens):
         if self.current_module["portMode"]=="non-ANSI":
             self.current_module["portMode"]="ANSI"
@@ -322,8 +345,11 @@ class VerilogElaborator():
         _range=self.vf.format(tokens[1])
         _len=self.__getLenStr(tokens[1])
         for param in tokens[2]:
-            pname=param[0]
-            pval=self.vf.format(param[1])
+            #pname=param[0]
+            #pval=self.vf.format(param[1])
+            pname=param[0][0]
+            pval=self.vf.format(param[0][1:])
+
             self.logger.debug("Parameter %s = %s"%(pname,pval))
             self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len,"type":"localparam"}
 
@@ -331,8 +357,9 @@ class VerilogElaborator():
         _range=self.vf.format(tokens[1])
         _len=self.__getLenStr(tokens[1])
         for param in tokens[2]:
-            pname=param[0]
-            pval=self.vf.format(param[1])
+            #print param
+            pname=param[0][0]
+            pval=self.vf.format(param[0][1:])
             self.logger.debug("Parameter %s = %s"%(pname,pval))
             self.current_module["params"][pname]={"value":pval,"range":_range,"len":_len,"type":"param"}
 

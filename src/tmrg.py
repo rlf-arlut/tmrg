@@ -573,10 +573,10 @@ class TMR(VerilogElaborator):
                         instCpy=tokens.deepcopy()
                         instCpy[2][0][0][0]=instCpy[2][0][0][0]+post # change instance name
                         for port in instCpy[2][0][1]:
-
-                            ids=self.getLeftRightHandSide(port[0][2][0])
-                            for rid in ids["right"]:
-                                self.replace(port[0][2][0],rid,rid+post)
+                            if len(port[0][2]) : # if the port is disconected, the lenght will be 0
+                                ids=self.getLeftRightHandSide(port[0][2][0])
+                                for rid in ids["right"]:
+                                    self.replace(port[0][2][0],rid,rid+post)
                         ret.append(instCpy)
 
                     for port in tokens[2][0][1]:
@@ -598,14 +598,18 @@ class TMR(VerilogElaborator):
                     for port in tokens[2][0][1]:
                         dname=port[0][0][1:]
                         dtype=self.modules[identifier]["io"][dname]['type']
-                        sname=port[0][2][0][0]
-                        stmr=self.current_module["nets"][sname]["tmr"]
-                        self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
-                        if stmr:
-                            if dtype=="input":
-                                self._addVoter(sname,addWires="output")
-                            else :
-                                self._addFanout(sname,addWires="input")
+                        #print dname, dtype
+                        if len(port[0][2]): # can be zero if the port is unconected
+                            sname=port[0][2][0][0]
+                            if type(port[0][2][0])==type(""):continue
+
+                            stmr=self.current_module["nets"][sname]["tmr"]
+                            self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
+                            if stmr:
+                                if dtype=="input":
+                                    self._addVoter(sname,addWires="output")
+                                else :
+                                    self._addFanout(sname,addWires="input")
             else:
 #                self.logger.info("Module %s is known"%identifier)
                 identifierTMR=identifier+"TMR"
@@ -1067,10 +1071,12 @@ class TMR(VerilogElaborator):
                     moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
                                                                        (width,inst,_in,_a,_b,_c) )[0]);
            # print "\n--\n",[tokens,tokens],"\n==\n"
+            paramPos=0
             for i,item in enumerate(moduleBody):
                 if item.getName()=="paramDecl":
                      self.logger.debug("Moving declaration to front '%s'"%(str(item)))
-                     moduleBody.insert(0,item)
+                     moduleBody.insert(paramPos,item)
+                     paramPos+=1
                      del moduleBody[i+1]
                      #print "x"
 
