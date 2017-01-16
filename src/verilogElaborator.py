@@ -653,26 +653,33 @@ class VerilogElaborator():
             self.logger.info("")
             self.logger.info("Elaborating library %s"%(fname))
             tokens=self.libs[fname]
-#            print tokens
             for module in tokens:
                 if module.getName()!="module" : continue
                 moduleHdr=module[0]
                 moduleName=moduleHdr[1]
-                modulePorts=moduleHdr[2]
-                for port in modulePorts:
-                    pass
-                    #print port
+                moduleParams = moduleHdr[2]
+                modulePorts=moduleHdr[3]
+
                 self.logger.debug("")
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,'file':fname,"fanouts":{}, "voters":{}, "lib":fname}
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},"instantiated":0,
+                                     'file':fname,"fanouts":{}, "voters":{}, "lib":fname,"portMode":"non-ANSI"}
+
+                for param in moduleParams:
+                    pname=param[0]
+                    pval=self.vf.format(param[1])
+                    self.logger.debug("Parameter %s = %s"%(pname,pval))
+                    self.current_module["params"][pname]={"value":pval,"range":"","len":"","type":"param"}
+
+                for port in modulePorts:
+                    self._elaborate(port)
 
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
                 self.current_module["constraints"]["dnt"]=True
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
-
 
         # display summary
         if len(self.modules)>1:
