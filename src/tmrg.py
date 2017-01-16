@@ -1377,6 +1377,12 @@ class TMR(VerilogElaborator):
                 self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
 
 
+            if self.config.has_section(module) and self.config.has_option(module, "do_not_touch"):
+                do_not_touch = self.config.getboolean(module, "do_not_touch")
+                if do_not_touch:
+                    self.modules[module]["constraints"]["dnt"]=True
+                    s += " -> do_not_touch:%s" % (str(tmr))
+
             for net in self.modules[module]["nets"]:
                 tmr=False
                 # default from global configuration
@@ -1425,6 +1431,9 @@ class TMR(VerilogElaborator):
                 if "slicing" in self.modules[module]["constraints"]:
                     tmr=True
                     s+=" -> slicing:%s"%(str(tmr))
+
+
+
                 if "dnt" in self.modules[module]["constraints"]:
                     tmr=False
                     s+=" -> do_not_touch:%s"%(str(tmr))
