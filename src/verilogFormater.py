@@ -574,6 +574,10 @@ class VerilogFormater:
     def _format_directive_synopsys(self,tokens,i=""):
         return "// "+" ".join(tokens)+"\n"
 
+
+    def _format_directive_synopsys_case(self,tokens,i=""):
+        return "// "+" ".join(tokens[0])+"\n"
+
     def _format_comp_directive(self,tokens,i=""):
         return "`"+tokens[0].lstrip()+"\n"
 
