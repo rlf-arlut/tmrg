@@ -294,10 +294,16 @@ class VerilogParser:
             eventDecl
             )
 
+        synopsys=Keyword("synopsys")
+        self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
+        self.directive_synopsys_case   = Group( synopsys + ("full_case") + ("parallel_case") + Suppress(self.semi)).setResultsName("directive_synopsys_case")
+
+
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
         stmtOrNull = self.stmt | self.semi
         caseItem = Group( Group(delimitedList( self.expr )) + Suppress(":") + stmtOrNull ).setResultsName("caseItem") | \
-                   Group( default + Optional(":") + stmtOrNull )
+                   Group( default + Optional(":") + stmtOrNull ) | \
+                   Group(self.directive_synopsys_case)
         condition=Group("(" + self.expr + ")").setResultsName("condition")
         self.stmt <<  ( Group( begin +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
@@ -316,6 +322,7 @@ class VerilogParser:
             Group( assign + self.assgnmt + self.semi ).setResultsName("assign") |\
             Group( deassign + lvalue + self.semi ) |\
             Group( force + self.assgnmt + self.semi ) |\
+            Group( self.directive_synopsys_case )| \
             Group( release + lvalue + self.semi ) |\
             Group( Suppress(begin) + Suppress(Literal(":")) + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
@@ -593,8 +600,6 @@ class VerilogParser:
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
-        synopsys=Keyword("synopsys")
-        self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
 
         """
         x::= <specparam_declaration>
