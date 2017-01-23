@@ -13,3 +13,7 @@ module paramtest3 #(parameter f=3, parameter k=3) (input clk,input [f:k]d , outp
   parameter p2=1;
 endmodule
 
+module paramtest4 #(parameter f=3, parameter k= (f>2) ? 3 : 1) (input clk,input [f:k]d , output q);
+  parameter p1=1;
+  parameter p2=1;
+endmodule
