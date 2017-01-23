@@ -429,7 +429,7 @@ class VerilogFormater:
             oStr+=" #(\n  "
             sep=""
             for p in header[2]:
-                oStr+="%sparameter %s=%s"%(sep,p[0],p[1])
+                oStr+="%sparameter %s=%s"%(sep,p[0],self.format(p[1]))
                 sep=",\n  "
             oStr+="\n)"
         sep=""
