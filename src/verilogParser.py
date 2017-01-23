@@ -305,6 +305,7 @@ class VerilogParser:
                    Group( default + Optional(":") + stmtOrNull ) | \
                    Group(self.directive_synopsys_case)
         condition=Group("(" + self.expr + ")").setResultsName("condition")
+        blockName=Group(identifier).setResultsName("blockName")
         self.stmt <<  ( Group( begin +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
@@ -324,7 +325,7 @@ class VerilogParser:
             Group( force + self.assgnmt + self.semi ) |\
             Group( self.directive_synopsys_case )| \
             Group( release + lvalue + self.semi ) |\
-            Group( Suppress(begin) + Suppress(Literal(":")) + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
+            Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )

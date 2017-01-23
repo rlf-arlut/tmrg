@@ -270,6 +270,7 @@ class TMR(VerilogElaborator):
 #                if self.checkIfContains(cpy,name):
                 _to_name=name+i
                 self.replace(cpy,name,_to_name)
+            self.appendToBlockName(cpy,i)
             result.append(cpy)
         #print "cpy",cpy,len(cpy)
         return result
@@ -287,7 +288,6 @@ class TMR(VerilogElaborator):
 
         if not tmr:
             return tokens
-
         for i in self.EXT:
             cpy=tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
@@ -295,6 +295,7 @@ class TMR(VerilogElaborator):
 #                if self.checkIfContains(cpy,name):
                 _to_name=name+i
                 self.replace(cpy,name,_to_name)
+            self.appendToBlockName(cpy,i)
             result.append(cpy)
         #print "cpy",cpy,len(cpy)
         return result
@@ -1121,6 +1122,17 @@ class TMR(VerilogElaborator):
                         if tokens[i]==_from:
                             tokens[i]=_to
         return _replace(tokens,_from,_to)
+
+    def appendToBlockName(self,tokens,postfix):
+        def _appendToBlockName(tokens,postfix):
+            if isinstance(tokens, ParseResults):
+                for i in range(len(tokens)):
+                    if isinstance(tokens[i], ParseResults):
+                        if tokens[i].getName()=="blockName":
+                            tokens[i][0]+=postfix
+                        else:
+                            res=_appendToBlockName(tokens[i],postfix)
+        return _appendToBlockName(tokens,postfix)
 
     def replaceDot(self,tokens,post):
         def _replace(tokens,post):

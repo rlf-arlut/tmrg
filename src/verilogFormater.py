@@ -515,6 +515,10 @@ class VerilogFormater:
 #        print tokens
         return oStr
 
+    def _format_blockName(self,tokens,i=""):
+        oStr=tokens[0]
+        return oStr
+
     def _format_integerDecl(self,tokens,i=""):
         oStr=""
         label=tokens[0]
