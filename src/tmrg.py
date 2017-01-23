@@ -521,7 +521,7 @@ class TMR(VerilogElaborator):
     def __triplicate_integerDecl(self,tokens):
 #        print tokens
         self.logger.debug("[integer dec]")
-        #self.logger.debug("      Left : "+" ".join(tokens[-1]))
+        self.logger.debug("      Left : "+str(tokens[-1]))
         toTMR=set()
         for _id in tokens[-1]:
             name=_id[0]
@@ -532,16 +532,17 @@ class TMR(VerilogElaborator):
             else:
                 self.logger.warning("Unknown net '%s' (TMR may malfunction)"%name)
             if TMR : toTMR.add(name)
-
         result = []
-        for i in self.EXT:
-            cpy=tokens.deepcopy()
-            for name in toTMR:
-                _to_name=name+i
-                self.replace(cpy,name,_to_name)
-            result.append(cpy)
-
-        return result
+        if len(toTMR):
+            for i in self.EXT:
+                cpy=tokens.deepcopy()
+                for name in toTMR:
+                    _to_name=name+i
+                    self.replace(cpy,name,_to_name)
+                result.append(cpy)
+            return result
+        else:
+            return tokens
 
 
     def __triplicate_ModuleInstantiation(self,tokens):
