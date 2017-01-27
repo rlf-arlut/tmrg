@@ -604,14 +604,17 @@ class TMR(VerilogElaborator):
                         if len(port[0][2]): # can be zero if the port is unconected
                             sname=port[0][2][0][0]
                             if type(port[0][2][0])==type(""):continue
-
-                            stmr=self.current_module["nets"][sname]["tmr"]
-                            self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
-                            if stmr:
-                                if dtype=="input":
-                                    self._addVoter(sname,addWires="output")
-                                else :
-                                    self._addFanout(sname,addWires="input")
+                            if sname in self.current_module["nets"]:
+                                stmr=self.current_module["nets"][sname]["tmr"]
+                                self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
+                                if stmr:
+                                    if dtype=="input":
+                                        self._addVoter(sname,addWires="output")
+                                    else :
+                                        self._addFanout(sname,addWires="input")
+                            else:
+                                self.logger.warning("Wire '%s' does not exist in the net database"%sname)
+                                self.logger.warning("The conection will not be changed.")
             else:
 #                self.logger.info("Module %s is known"%identifier)
                 identifierTMR=identifier+"TMR"
@@ -1850,6 +1853,7 @@ def main():
     tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
     tmrGroup.add_option("",  "--sdc-file-name",      dest="sdc_fileName",    default="",   help="Specify SDC filename")
     tmrGroup.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
+    tmrGroup.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
 
 
     parser.add_option_group(tmrGroup)

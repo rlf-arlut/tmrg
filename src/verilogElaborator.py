@@ -13,6 +13,7 @@ from verilogParser import *
 from verilogFormater import VerilogFormater
 import shutil
 import zipfile
+import mmap
 
 class ErrorMessage(BaseException):
     def __init__(self,s):
@@ -97,6 +98,7 @@ class VerilogElaborator():
         else:
             self.logger.info("User config file does not exists at '%s'"%userCnfg)
         self.translate=True
+        self.linesTotal=0
 
     def __init_elaborate_callbacks(self):
         #scan class looking for elaborator functions
@@ -277,8 +279,14 @@ class VerilogElaborator():
         if self.current_module["portMode"]=="non-ANSI":
             self.current_module["portMode"]="ANSI"
             self.logger.info("Port mode : ANSI")
-
         self._elaborate_input(tokens)
+
+    def _elaborate_inouthdr(self,tokens):
+        if self.current_module["portMode"]=="non-ANSI":
+            self.current_module["portMode"]="ANSI"
+            self.logger.info("Port mode : ANSI")
+
+        self._elaborate_inout(tokens)
 
     def _elaborate_port(self,tokens):
         if self.current_module["portMode"]=="ANSI":
@@ -483,6 +491,17 @@ class VerilogElaborator():
 
 
 
+    def lineCount(self,fname):
+            f = open(fname)
+            lines = 0
+            buf_size = 1024 * 1024
+            read_f = f.read  # loop optimization
+
+            buf = read_f(buf_size)
+            while buf:
+                lines += buf.count('\n')
+                buf = read_f(buf_size)
+            return lines
 
     def addFile(self,fname):
         if self.options.generateBugReport:
@@ -491,6 +510,10 @@ class VerilogElaborator():
             self.logger.debug("Coping source file from '%s' to '%s'"%(fname,fcopy))
             shutil.copyfile(fname,fcopy)
         tokens=self.vp.parseFile(fname)
+        if self.options.stats:
+            lines=self.lineCount(fname)
+            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.linesTotal += lines
 #        print tokens
         self.files[fname]=tokens
 
@@ -501,6 +524,10 @@ class VerilogElaborator():
             self.logger.debug("Coping library file from '%s' to '%s'"%(fname,fcopy))
             shutil.copyfile(fname,fcopy)
         tokens=self.vp.parseFile(fname)
+        if self.options.stats:
+            lines=self.lineCount(fname)
+            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.linesTotal += lines
 #        print tokens
         self.libs[fname]=tokens
 
@@ -597,7 +624,8 @@ class VerilogElaborator():
                 for l in traceback.format_exc().split("\n"):
                     logging.error(l)
                 raise ErrorMessage("Error during parsing")
-
+        if self.options.stats:
+            self.logger.info("Total number of lines parsed: %d",self.linesTotal)
 
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
