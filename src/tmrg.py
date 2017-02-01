@@ -1840,6 +1840,9 @@ def main():
     parser.add_option_group(actionGroup)
     dirGroup = OptionGroup(parser, "Directories" )
     dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
+    dirGroup.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Include directories")
+
+
     dirGroup.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="")
     dirGroup.add_option("-l",  "--lib",            dest="libs",       action="append",   default=[], help="Library")
     parser.add_option_group(dirGroup)

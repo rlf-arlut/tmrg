@@ -841,8 +841,13 @@ class VerilogParser:
 
         self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
+            if toks[0]=="include":
+                fname=toks[1].replace('"','').strip()
+                self.logger.info("Including '%s'"% fname)
+
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
+
 
     def parseFile(self,fname):
         self.logger.debug("Parsing file '%s'"%fname)
@@ -854,9 +859,11 @@ class VerilogParser:
 
     def parseString( self,strng ):
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
-        preParsedStrng = self.tmrgDirective.transformString( strng )
-        preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
+        preParsedStrng = strng
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
+
+        preParsedStrng = self.tmrgDirective.transformString( preParsedStrng )
+        preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
         
         preParsedStrngNew=""
