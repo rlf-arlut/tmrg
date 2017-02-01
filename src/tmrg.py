@@ -1857,6 +1857,7 @@ def main():
     tmrGroup.add_option("",  "--sdc-file-name",      dest="sdc_fileName",    default="",   help="Specify SDC filename")
     tmrGroup.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
     tmrGroup.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
+    tmrGroup.add_option("",  "--include",            dest="include",    action="store_true", default="false",   help="Include include files")
 
 
     parser.add_option_group(tmrGroup)

@@ -52,6 +52,9 @@ class VerilogElaborator():
         self.options=options
         self.args=args
         self.vp=VerilogParser()
+        self.vp.include=options.include
+        self.vp.inc_dir = options.inc_dir
+
         self.vf=VerilogFormater()
         self.logger = logging.getLogger('TMR')
         self.libFiles=[]

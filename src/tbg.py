@@ -242,7 +242,10 @@ def main():
     parser.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
     parser.add_option("-o",  "--output-file",      dest="outputFname",    default="", help="Output file name")
     parser.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
-    parser.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
+    parser.add_option("", "--stats", dest="stats", action="store_true", help="Print statistics")
+    parser.add_option("", "--include", dest="include", action="store_true", default="false",
+                      help="Include include files")
+    parser.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Include directories")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 

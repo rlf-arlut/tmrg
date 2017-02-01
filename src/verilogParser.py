@@ -71,7 +71,7 @@ __version__ = "1.0.10"
 import functools
 import logging
 import textwrap
-
+import os
 from pyparsing import *
 import pyparsing
 
@@ -124,6 +124,9 @@ class VerilogParser:
 
     def __init__(self):
         sys.setrecursionlimit(2000)
+        self.include=False
+        self.inc_dir=[]
+
         self.logger = logging.getLogger('VP')
 
         self.compilerDirective = Combine( "`" + \
@@ -842,9 +845,21 @@ class VerilogParser:
         self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
             if toks[0]=="include":
-                fname=toks[1].replace('"','').strip()
-                self.logger.info("Including '%s'"% fname)
-
+                if self.include:
+                    fname=toks[1].replace('"','').strip()
+                    self.logger.info("Including '%s'"% fname)
+                    found = False
+                    for d in self.inc_dir:
+                        fullname=os.path.join(d,fname)
+                        if os.path.isfile(fullname):
+                            self.logger.info("File '%s' found in '%s'"%(fname,fullname))
+                            fin=open(fullname)
+                            fcontent=fin.read()
+                            fin.close()
+                            return fcontent
+                            found=True
+                    if not found:
+                        self.logger.warning("File '%s' not found" % (fname))
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
 
