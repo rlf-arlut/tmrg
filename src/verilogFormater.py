@@ -222,7 +222,6 @@ class VerilogFormater:
         oStr+=i+"end"
         return oStr
 
-
     def _format_taskEnable(self,tokens,i=""):
         oStr=""
         id=tokens[0]
@@ -495,15 +494,14 @@ class VerilogFormater:
 #        print tokens
         oStr=""
         range=self.format(tokens[1])
-#        print tokens[2]
-        for p in tokens[2:]:
-            pname=p[0][0][0]
-#            print "pname", pname
-            oStr+=tokens[0]+" %s="%(pname)
-            if range:
-                oStr+="%s "%range
+        if len(range)>=0: range=" "+range
+        #print tokens[2]
+        for p in tokens[2]:
+            pname=p[0][0]
+            #print "pname", pname
+            oStr+=tokens[0]+"%s %s="%(range,pname)
 #            print "p:",p
-            oStr+=self.format(p[0][0][1:])+";\n"
+            oStr+=self.format(p[0][1:])+";\n"
 #        print oStr
         return oStr
 

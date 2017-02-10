@@ -432,7 +432,6 @@ class TMR(VerilogElaborator):
         if len(self.voting_nets):
             if (right, left) in self.voting_nets:
                 vote=True
-
         if vote:
               self.logger.info("TMR voting %s -> %s (bits:%s)"%(right,left,self.current_module["nets"][right]["len"]))
               newtokens=ParseResults([],name=tokens.getName())
@@ -461,6 +460,7 @@ class TMR(VerilogElaborator):
         result = []
         if not tmr:
             return tokens
+        self._addFanoutsIfTmr(ids["right"], addWires="output")
 
         for i in self.EXT:
 #            print i
@@ -1857,7 +1857,7 @@ def main():
     tmrGroup.add_option("",  "--sdc-file-name",      dest="sdc_fileName",    default="",   help="Specify SDC filename")
     tmrGroup.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
     tmrGroup.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
-    tmrGroup.add_option("",  "--include",            dest="include",    action="store_true", default="false",   help="Include include files")
+    tmrGroup.add_option("",  "--include",            dest="include",    action="store_true", default=False,   help="Include include files")
 
 
     parser.add_option_group(tmrGroup)

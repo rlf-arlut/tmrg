@@ -876,11 +876,11 @@ class VerilogParser:
         #self.tmrgDirective = (Suppress('//') + Suppress("tmrg") + OneOrMore(Word(alphanums))).setResultsName("directive")
         preParsedStrng = strng
         preParsedStrng = self.compDirective.transformString(preParsedStrng)
-
         preParsedStrng = self.tmrgDirective.transformString( preParsedStrng )
         preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
-        
+        preParsedStrng = self.compDirective.transformString(preParsedStrng) # do it twice in case there are defines in included files
+
         preParsedStrngNew=""
         translate=True
 #        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
@@ -898,7 +898,13 @@ class VerilogParser:
 #                print translate, line
         #print preParsedStrng
         self.verilog=preParsedStrngNew
-        self.tokens=self.verilogbnf.parseString( preParsedStrngNew )
+        try:
+            self.tokens = self.verilogbnf.parseString(preParsedStrngNew)
+        except:
+            for i,l in enumerate(preParsedStrngNew.split("\n")):
+                self.logger.debug("[%d] %s"%(i,l))
+            raise
+
         return self.tokens
 
 if __name__=="__main__":
