@@ -1397,7 +1397,7 @@ class TMR(VerilogElaborator):
                 do_not_touch = self.config.getboolean(module, "do_not_touch")
                 if do_not_touch:
                     self.modules[module]["constraints"]["dnt"]=True
-                    s += " -> do_not_touch:%s" % (str(tmr))
+                    s += " -> do_not_touch:%s" % (str(self.modules[module]["constraints"]["dnt"]))
 
             for net in self.modules[module]["nets"]:
                 tmr=False
