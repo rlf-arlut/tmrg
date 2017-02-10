@@ -140,6 +140,12 @@ class VerilogFormater:
             oStr+=self.format(i)
         return oStr
 
+    def _format_namedPortConnection(self,tokens,i=""):
+        #print tokens
+        oStr=""
+        for i in tokens:
+            oStr+=self.format(i)
+        return oStr
     def _format_generate_module_named_block(self,tokens,i=""):
         #print tokens
         oStr=i+"begin %s\n"%self.format(tokens[0])
@@ -419,6 +425,17 @@ class VerilogFormater:
               ostr+="\n%s%s %s%s;\n"%(i,identifier,parameterValueAssignment,modInsStr);
 
         return ostr
+
+    def _format_functionDecl(self,tokens,i=""):
+        print len(tokens)
+        oStr="%s%s %s %s%s\n"%(i,tokens[0],self.format(tokens[1]), tokens[2],tokens[3])
+        for item in tokens[4]:
+            oStr += i + "\t" + self.format(item)
+        for item in tokens[5]:
+            oStr += i + "\t" + self.format(item)
+        oStr+="\n%s%s\n"%(i,tokens[6])
+        return oStr
+
 
     def _format_Module(self,tokens,i=""):
         header=tokens[0]
