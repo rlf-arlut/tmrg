@@ -164,7 +164,7 @@ class VerilogParser:
 
         concat = Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
-        funcCall = Group(identifier + "(" + Group(Optional( delimitedList( self.expr ) )) + ")").setResultsName("funcCall")
+        funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( self.expr )) )) + ")").setResultsName("funcCall")
 
         subscrRef =      ( Suppress("[") +
                             (delimitedList( Group(self.expr), ":" ) )  +
@@ -385,7 +385,7 @@ class VerilogParser:
             ).setResultsName("tfDecl")
 
         functionDecl = Group(
-            "function" + Optional( self.range | "integer" | "real" ) + identifier + self.semi +
+            "function" + Group(Optional( self.range | "integer" | "real" )) + identifier + self.semi +
             Group( OneOrMore( tfDecl ) ) +
             Group( ZeroOrMore( self.stmt ) ) +
             "endfunction"
@@ -445,16 +445,19 @@ class VerilogParser:
             delimitedList( udpInstance ) +
             self.semi ).setName("udpInstantiation")#.setParseAction(dumpTokens).setDebug()
 
+        namedPortConnection = Group( "." + identifier + "(" + Group(self.expr) + ")" ).setResultsName("namedPortConnection")
+        self.modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
+
         parameterValueAssignment = Group ( Suppress(Literal("#")) +
                                            Suppress("(") +
-                                           Group( delimitedList( self.expr ) ) +
+                                           Group( namedPortConnection ) +
                                            Suppress(")")
                                          ).setResultsName("parameterValueAssignment")
 
-        namedPortConnection = Group( "." + identifier + "(" + self.expr + ")" ).setResultsName("namedPortConnection")
-        self.modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
+        #(delimitedList(self.modulePortConnection) | delimitedList(namedPortConnection)) +
         moduleArgs = Group( Suppress("(") +
-                            (delimitedList( self.modulePortConnection ) | delimitedList( namedPortConnection )) +
+                        #    Group(delimitedList( namedPortConnection )) +
+                             (delimitedList(self.modulePortConnection) | delimitedList(namedPortConnection)) +
                             Suppress(")")
                           ).setResultsName("moduleArgs")#.setDebug()
 
