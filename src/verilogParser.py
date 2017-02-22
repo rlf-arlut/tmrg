@@ -450,7 +450,7 @@ class VerilogParser:
 
         parameterValueAssignment = Group ( Suppress(Literal("#")) +
                                            Suppress("(") +
-                                           Group( namedPortConnection ) +
+                                           Group( delimitedList(namedPortConnection) ) +
                                            Suppress(")")
                                          ).setResultsName("parameterValueAssignment")
 
