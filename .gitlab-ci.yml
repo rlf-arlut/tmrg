@@ -2,6 +2,7 @@ image: python
 
 test_help:
     script: 
-        - echo "Hello"
-        #- source etc/tmrg.sh
-        #- tmrg --help
+        - which python
+        - python --version
+        - source etc/tmrg.sh
+        - tmrg --help
