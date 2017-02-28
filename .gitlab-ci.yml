@@ -1,15 +1,15 @@
 image: python:2.7
 
 before_script:
+  - uname -r
+  - which python
+  - python --version
   - apt-get update -y
   - apt-get install iverilog -y
+  - source etc/tmrg.sh
 
 test_help:
     script: 
-        - uname -r
-        - which python
-        - python --version
-        - source etc/tmrg.sh
         - tmrg --help
 
 test_examples:
