@@ -1,0 +1,8 @@
+image: python
+
+test_help:
+    script: 
+        - which python
+        - python --version
+        - source etc/tmrg.sh
+        - tmrg --help
