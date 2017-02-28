@@ -6,3 +6,9 @@ test_help:
         - python --version
         - source etc/tmrg.sh
         - tmrg --help
+
+test_examples:
+    script: 
+        - cd examples
+        - ../tests/run_all.py 
+
