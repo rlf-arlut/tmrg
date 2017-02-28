@@ -8,12 +8,10 @@ before_script:
   - apt-get install iverilog -y
   - source etc/tmrg.sh
 
-test_help:
+
+test:
     script: 
         - tmrg --help
-
-test_examples:
-    script: 
         - cd examples
         - ../tests/run_all.py 
 
