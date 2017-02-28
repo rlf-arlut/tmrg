@@ -1,5 +1,6 @@
 #image: python
 
-help: 
-    - source etc/tmrg.sh
-    - tmrg --help
+help:
+    - echo "Hello"
+    #- source etc/tmrg.sh
+    #- tmrg --help
