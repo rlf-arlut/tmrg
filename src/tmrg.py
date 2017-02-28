@@ -602,7 +602,8 @@ class TMR(VerilogElaborator):
                         dtype=self.modules[identifier]["io"][dname]['type']
                         #print dname, dtype
                         if len(port[0][2]): # can be zero if the port is unconected
-                            sname=port[0][2][0][0]
+                            sname=port[0][2][0][0][0]
+                            
                             if type(port[0][2][0])==type(""):continue
                             if sname in self.current_module["nets"]:
                                 stmr=self.current_module["nets"][sname]["tmr"]
