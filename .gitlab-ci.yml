@@ -1,6 +1,7 @@
 image: python
 
 test_help:
-    - echo "Hello"
-    #- source etc/tmrg.sh
-    #- tmrg --help
+    script: 
+        - echo "Hello"
+        #- source etc/tmrg.sh
+        #- tmrg --help
