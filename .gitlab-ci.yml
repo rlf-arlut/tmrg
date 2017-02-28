@@ -1,6 +1,6 @@
-#image: python
+image: python
 
-help:
+test_help:
     - echo "Hello"
     #- source etc/tmrg.sh
     #- tmrg --help
