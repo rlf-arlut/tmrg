@@ -1,0 +1,5 @@
+image: python
+
+help: 
+    - source etc/tmrg.sh
+    - tmrg --help
