@@ -155,8 +155,13 @@ class VerilogElaborator():
             #print name, len(t), t
             if len(t)==0: return res
             if name in ("assgnmt", "nbassgnmt"):
-                left_id=t[0][0]
-                res["left"].add(left_id)
+                if t[0].getName()=="subscrIdentifier":
+                    left_id=t[0][0]
+                    res["left"].add(left_id)
+                    #print _extractID(t[0][1])
+                    res["right"].update(_extractID(t[0][1]))
+                else:
+                    logging.error("Unsupported syntax (%s)"%str(t))
                 #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
             elif name in ("regdecl"):
