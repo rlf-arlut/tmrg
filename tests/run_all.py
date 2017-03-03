@@ -83,7 +83,7 @@ def main():
     logging.info("Files checked : %d"%tests)
     if errCode:
         logging.error("Erorrs %d "%errCode)
-    return errCode
+    os._exit(errCode)
 
 #os.system("rm -rf *TMR.v *.new")
 #for prefix in ("comb","vote","fsm","mod"):
