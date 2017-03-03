@@ -88,7 +88,8 @@ class VerilogFormater:
         for port in tokens[3]:
             r=""
             if len(port)>1:
-                r=" "+"".join(port[1:])
+                #r=" "+"".join(port[1:])
+                r=" "+self.format(port[1:])
             oStr+="%s %s%s%s;\n"%(label,spec,port[0],r)
         return oStr
 
