@@ -3,3 +3,4 @@ a.out
 *.pyc
 *TMR.v
 *TMR.sdc
+.coverage
