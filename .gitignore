@@ -1,3 +1,5 @@
+*~
+a.out
 *.pyc
-*.sdc
-.idea
+*TMR.v
+*TMR.sdc

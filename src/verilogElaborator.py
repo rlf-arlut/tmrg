@@ -127,7 +127,7 @@ class VerilogElaborator():
                #print ">",name
                if name=="subscridentifier":
                        if not t[0] in self.current_module["nets"]:
-                           if not t[0] in self.current_module["params"]:
+                           if not t[0] in self.current_module["params"] and  t[0][0]!='`':
                               self.logger.warning("Unknown net '%s'"%t[0])
                            return res
                        if not "dnt" in self.current_module["nets"][t[0]]:

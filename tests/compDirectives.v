@@ -1,3 +1,6 @@
+`timescale 10 ns /10 ps 
+// `include "mux.v" does not work for automatic testing because of paths
+
 module mlogic (I,ZN);
   // tmrg default triplicate
   input  I;
@@ -5,8 +8,7 @@ module mlogic (I,ZN);
   assign ZN=~I;
 endmodule
 
-`timescale s10n/s10p
-`include "dsad.v"
+
 module inst03 (in,out);
   // tmrg default triplicate
   input in;
@@ -16,5 +18,5 @@ module inst03 (in,out);
 `ifdef FIRST
   reg in3;
 `endif
-  mlogic logic01(.I((in|in2)&in3|1'b1),.ZN(out));
+  mlogic logic01(.I(1'b1),.ZN(out));
 endmodule

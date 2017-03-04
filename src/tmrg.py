@@ -533,7 +533,10 @@ class TMR(VerilogElaborator):
                 if self.current_module["nets"][name]["tmr"]:
                     TMR=True
             else:
-                self.logger.warning("Unknown net '%s' (TMR may malfunction)"%name)
+                if len(name) and name[0]=='`':
+                    self.logger.warning("Define %s"%name)
+                else:
+                    self.logger.warning("Unknown net '%s' (TMR may malfunction)"%name)
             if TMR : toTMR.add(name)
         result = []
         if len(toTMR):
@@ -1197,7 +1200,6 @@ class TMR(VerilogElaborator):
         res=self.getLeftRightHandSide(t)
         leftTMR=False
         leftNoTMR=False
-
         for net in res["left"]:
             if net in self.current_module["nets"]:
                 if self.current_module["nets"][net]["tmr"]:
@@ -1205,7 +1207,10 @@ class TMR(VerilogElaborator):
                 if not self.current_module["nets"][net]["tmr"]:
                     leftNoTMR=True
             else:
-                self.logger.warning("Unknown net '%s' (TMR may malfunction)"%net)
+                if len(net) and net[0]=='`':
+                    self.logger.warning("Define %s"%net)
+                else:
+                    self.logger.warning("Unknown net '%s' (TMR may malfunction)"%net)
         if leftTMR and leftNoTMR:
             self.logger.error("Block contains both type of elements (should and should not be triplicated!). ")
             self.logger.error("This request will not be properly processed!")

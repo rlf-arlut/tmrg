@@ -1,7 +1,8 @@
 `define XXX 1'b1
-`include "x.v"
+
 module test;
   reg x;
+  wire y;
   always @*
-    x= `XXX;
+    x = y+ `XXX;
 endmodule
