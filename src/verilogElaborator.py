@@ -431,7 +431,8 @@ class VerilogElaborator():
 #                    details=""
 #                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
                 if not name in  self.current_module["nets"]:
-                    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , 'type':'wire'}
+                    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , 'type':'wire',
+                                                       "array_range":"", "array_len":""}
                     if dnt:
                         self.current_module["nets"][name]["dnt"]=True
                         self.logger.debug("Net %s will not be touched!"%name)

@@ -445,19 +445,21 @@ class VerilogParser:
             delimitedList( udpInstance ) +
             self.semi ).setName("udpInstantiation")#.setParseAction(dumpTokens).setDebug()
 
-        namedPortConnection = Group( "." + identifier + "(" + Group(self.expr) + ")" ).setResultsName("namedPortConnection")
-        self.modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
+        self.namedPortConnection = Group( "." + identifier + "(" + Group(Optional(self.expr)) + ")" ).setResultsName("namedPortConnection")
+        #self.modulePortConnection = Group(self.expr | empty).setResultsName("modulePortConnection")
 
         parameterValueAssignment = Group ( Suppress(Literal("#")) +
                                            Suppress("(") +
-                                           Group( delimitedList(namedPortConnection) ) +
+                                           Group( delimitedList(self.namedPortConnection) ) + # expresion is only for compatibility reasons
+                                                                                                          # if someone tries to TMR expresion (unnamed conenection)
+                                                                                                          # it will crash ....
                                            Suppress(")")
                                          ).setResultsName("parameterValueAssignment")
 
         #(delimitedList(self.modulePortConnection) | delimitedList(namedPortConnection)) +
         moduleArgs = Group( Suppress("(") +
                         #    Group(delimitedList( namedPortConnection )) +
-                             (delimitedList(self.modulePortConnection) | delimitedList(namedPortConnection)) +
+                              delimitedList(self.namedPortConnection | Group(self.expr)) +
                             Suppress(")")
                           ).setResultsName("moduleArgs")#.setDebug()
 
