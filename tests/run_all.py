@@ -7,6 +7,8 @@ import logging
 import commands
 from difflib import *
 
+from distutils.spawn import find_executable
+
 def main():
     FORMAT = '[%(levelname)-8s] %(message)s'
     logging.basicConfig(format=FORMAT)
@@ -26,6 +28,9 @@ def main():
     logging.info("Creating temporary directory %s"%tmpDir)
     os.chdir(tmpDir)
     tests=0
+    tmrg=find_executable("tmrg")[:-4]+"../src/tmrg.py"
+    cmd = "python-coverage erase"
+    err, outLog = commands.getstatusoutput(cmd)
     for f in srcFiles:
 
         logging.info("Checking '%s'"%f)
@@ -38,7 +43,7 @@ def main():
                 logging.info("  | %s"%l)
 
         logging.info("Triplicating '%s'" % f)
-        cmd = "tmrg --no-header %s" % f
+        cmd = "python-coverage run -a %s --no-header %s" % (tmrg,f)
         err, outLog = commands.getstatusoutput(cmd)
         if err or len(outLog)>0:
             errCode += 1
@@ -80,9 +85,17 @@ def main():
                 logging.info("  | ")
                 errCode+=1
         tests+=1
+
+
     logging.info("Files checked : %d"%tests)
     if errCode:
         logging.error("Erorrs %d "%errCode)
+    cmd = "python-coverage report "
+    err,outLog = commands.getstatusoutput(cmd)
+    logging.info("")
+    logging.info("Coverage")
+    for l in outLog.split("\n"):
+        logging.info("  | %s"%l)
     os._exit(errCode)
 
 #os.system("rm -rf *TMR.v *.new")
