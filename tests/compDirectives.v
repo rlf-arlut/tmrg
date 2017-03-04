@@ -1,5 +1,5 @@
 `timescale 10 ns /10 ps 
-`include "mux.v"
+// `include "mux.v" does not work for automatic testing because of paths
 
 module mlogic (I,ZN);
   // tmrg default triplicate
