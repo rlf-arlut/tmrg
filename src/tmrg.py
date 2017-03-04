@@ -992,8 +992,8 @@ class TMR(VerilogElaborator):
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                         elif addWires=="input":
                             self.logger.debug("Adding input wires %s, %s , %s"%(_a,_b,_c))
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a),_array_range)[0])
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b),_array_range)[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a,_array_range))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b,_array_range))[0])
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_c,_array_range))[0])
 
                         width=""
