@@ -452,6 +452,8 @@ class TMR(VerilogElaborator):
                                  tmrError=netErrorName,
                                  range=self.current_module["nets"][right]["range"],
                                  len=self.current_module["nets"][right]["len"],
+                                 array_range=self.current_module["nets"][right]["array_range"],
+                                 array_len=self.current_module["nets"][right]["array_len"],
                                  group=ext,
                                  addWires="output")
               tokens=newtokens
@@ -969,7 +971,8 @@ class TMR(VerilogElaborator):
                         inst=voter
                         voter=self.current_module["voters"][group][voter]
                         _range=voter["range"]
-
+                        _array_range=voter["array_range"]
+                        _array_len=voter["array_len"]
                         _len=voter["len"]
                         _out=voter["out"]
                         _err=voter["err"]
@@ -980,15 +983,15 @@ class TMR(VerilogElaborator):
                         self.logger.info("Instializaing voter %s (addWires:%s)"%(inst,addWires))
                         if addWires=="output":
                             self.logger.debug("Adding output wire %s"%(_out))
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_out))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_out,_array_range))[0])
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                         elif addWires=="input":
                             self.logger.debug("Adding input wires %s, %s , %s"%(_a,_b,_c))
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a),_array_range)[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b),_array_range)[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_c,_array_range))[0])
 
                         width=""
                         if _len!="1":
@@ -1006,9 +1009,23 @@ class TMR(VerilogElaborator):
 #                        else:
 #                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
 #                                                                               (width,inst,_a,_b,_c,_out) )[0]);
-                        moduleBody.append(self.vp.moduleInstantiation.parseString(
-                            majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
-                            (width, inst, _a, _b, _c, _out, _err))[0]);
+                        if _array_range!="":
+                            varname="gen_%s"%inst
+                            genstr="genvar %s;"%varname;
+                            moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
+                            voterStr=majorityVoterCell + " %s%s (.inA(%s[%s]), .inB(%s[%s]), .inC(%s[%s]), .out(%s[%s]), .tmrErr(%s));" % \
+                                           (width, inst, _a, varname, _b, varname, _c, varname, _out, varname, _err)
+                            genstr="""generate
+                                      for(%s=0;%s<%s;%s=%s+1)
+                                        begin : %s_fanout
+                                          %s
+                                        end
+                                      endgenerate"""%(varname,varname,_array_len,varname,varname,varname,voterStr)
+                            moduleBody.append( self.vp.generate.parseString(genstr)[0])
+                        else : # normal voter
+                            moduleBody.append(self.vp.moduleInstantiation.parseString(
+                                majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
+                                (width, inst, _a, _b, _c, _out, _err))[0]);
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
 
                 #after all voters are added, we can create or them all
@@ -1044,6 +1061,8 @@ class TMR(VerilogElaborator):
     #                print voter
                     self.logger.info("Instializaing fanout %s"%inst)
                     _range=fanout["range"]
+                    _array_range=fanout["array_range"]
+                    _array_len=fanout["array_len"]
                     _len=fanout["len"]
                     _in=fanout["in"]
                     _a=fanout["outA"]
@@ -1052,12 +1071,12 @@ class TMR(VerilogElaborator):
                     addWires=fanout["addWires"]
                     if addWires=="output":
                         self.logger.debug("Adding output wires %s, %s , %s"%(_a,_b,_c))
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a,_array_range))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b,_array_range))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_c,_array_range))[0])
                     elif addWires=="input":
                         self.logger.debug("Adding input wire %s"%(_in))
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_in))[0])
+                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_in,_array_range))[0])
 #
     #                     comment=ParseResults(["cadence set_dont_touch %s"%name_voted],name="lineComment")
     #                   newtokens.insert(0,comment)
@@ -1073,9 +1092,22 @@ class TMR(VerilogElaborator):
                     if "fanout_cell" in self.current_module["constraints"]:
                         fanoutCell=self.current_module["constraints"]["fanout_cell"]
 
-
-                    moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
-                                                                       (width,inst,_in,_a,_b,_c) )[0]);
+                    if _array_range!="":
+                        varname="gen_%s"%inst
+                        genstr="genvar %s;"%varname;
+                        moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
+                        fanoutStr=fanoutCell+" %s%s (.in(%s[%s]), .outA(%s[%s]), .outB(%s[%s]), .outC(%s[%s]));"% \
+                                                                       (width,inst,_in,varname,_a,varname,_b,varname,_c,varname)
+                        genstr="""generate
+                                  for(%s=0;%s<%s;%s=%s+1)
+                                    begin : %s_fanout
+                                      %s
+                                    end
+                                  endgenerate"""%(varname,varname,_array_len,varname,varname,varname,fanoutStr)
+                        moduleBody.append( self.vp.generate.parseString(genstr)[0])
+                    else : # normal fanout
+                        moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
+                                                                       (width,inst,_in,_a,_b,_c) )[0])
            # print "\n--\n",[tokens,tokens],"\n==\n"
             paramPos=0
             for i,item in enumerate(moduleBody):
@@ -1218,7 +1250,7 @@ class TMR(VerilogElaborator):
                 break
         return toTMR
 
-    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,addWires=""):
+    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,array_range,array_len,addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -1233,6 +1265,8 @@ class TMR(VerilogElaborator):
                                  "err":tmrError,
                                  "range":range,
                                  "len":len,
+                                 "array_range":array_range,
+                                 "array_len":array_len,
                                  "group":group,
                                "addWires":addWires}
             self.__voterPresent=True
@@ -1249,11 +1283,14 @@ class TMR(VerilogElaborator):
             inA=netID+self.EXT[0]
             inB=netID+self.EXT[1]
             inC=netID+self.EXT[2]
-            range=self.current_module["nets"][netID]["range"]
-            len=self.current_module["nets"][netID]["len"]
-
             self.logger.debug("Adding voter '%s' to group '%s' (simple)"%(voterInstName,group))
             self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
+
+            range=self.current_module["nets"][netID]["range"]
+            len=self.current_module["nets"][netID]["len"]
+            array_range=self.current_module["nets"][netID]["array_range"]
+            array_len=self.current_module["nets"][netID]["array_len"]
+
             self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
                                "inB"  :inB,
@@ -1261,6 +1298,8 @@ class TMR(VerilogElaborator):
                                "out"  :nameVoted,
                                "err"  :netErrorName,
                                "range":range,
+                               "array_range":array_range,
+                               "array_len":array_len,
                                "len"  :len,
                                "group":group,
                                "addWires":addWires}
@@ -1289,6 +1328,8 @@ class TMR(VerilogElaborator):
             outB=netID+self.EXT[1]
             outC=netID+self.EXT[2]
             range=self.current_module["nets"][netID]["range"]
+            array_range=self.current_module["nets"][netID]["array_range"]
+            array_len=self.current_module["nets"][netID]["array_len"]
             len=self.current_module["nets"][netID]["len"]
 
             self.logger.debug("Adding fanout %s"%inst)
@@ -1298,6 +1339,8 @@ class TMR(VerilogElaborator):
                                "outB":outB,
                                "outC":outC,
                                "range":range,
+                               "array_range":array_range,
+                               "array_len":array_len,
                                "len":len,
                                "addWires":addWires}
             self.__fanoutPresent=True

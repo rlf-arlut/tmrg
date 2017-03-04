@@ -266,7 +266,7 @@ class VerilogParser:
         self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
         self.inoutDecl  = Group( "inout"  + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
 
-        regIdentifier = Group( identifier + Optional( "[" + self.expr + oneOf(": +:") + self.expr + "]" ) )
+        regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
         self.regDecl = Group( "reg" +
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
@@ -393,7 +393,7 @@ class VerilogParser:
 
         inputOutput = oneOf("input output")
 
-        netIdentifier = Group( identifier + Optional( "[" + self.expr + ":" + self.expr + "]" ) )
+        netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
 
         self.netDecl1 = Group(nettype +
                               Group(Optional( expandRange )).setResultsName("range") +
@@ -730,10 +730,10 @@ class VerilogParser:
 
 
 
-        generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
+        self.generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
 
 
-        self.moduleItem= generate | self.moduleOrGenerateItem | generate_module_loop_statement
+        self.moduleItem= self.generate | self.moduleOrGenerateItem | generate_module_loop_statement
         #self.moduleItem =  self.moduleOrGenerateItem
 
 #            udpInstantiation
