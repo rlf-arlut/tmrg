@@ -452,6 +452,8 @@ class TMR(VerilogElaborator):
                                  tmrError=netErrorName,
                                  range=self.current_module["nets"][right]["range"],
                                  len=self.current_module["nets"][right]["len"],
+                                 array_range=self.current_module["nets"][right]["array_range"],
+                                 array_len=self.current_module["nets"][right]["array_len"],
                                  group=ext,
                                  addWires="output")
               tokens=newtokens
@@ -1250,7 +1252,7 @@ class TMR(VerilogElaborator):
                 break
         return toTMR
 
-    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,addWires=""):
+    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,array_range,array_len,addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -1265,6 +1267,8 @@ class TMR(VerilogElaborator):
                                  "err":tmrError,
                                  "range":range,
                                  "len":len,
+                                 "array_range":array_range,
+                                 "array_len":array_len,
                                  "group":group,
                                "addWires":addWires}
             self.__voterPresent=True
@@ -1281,13 +1285,14 @@ class TMR(VerilogElaborator):
             inA=netID+self.EXT[0]
             inB=netID+self.EXT[1]
             inC=netID+self.EXT[2]
+            self.logger.debug("Adding voter '%s' to group '%s' (simple)"%(voterInstName,group))
+            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
+
             range=self.current_module["nets"][netID]["range"]
             len=self.current_module["nets"][netID]["len"]
             array_range=self.current_module["nets"][netID]["array_range"]
             array_len=self.current_module["nets"][netID]["array_len"]
 
-            self.logger.debug("Adding voter '%s' to group '%s' (simple)"%(voterInstName,group))
-            self.logger.debug("    %s %s %s -> %s & %s"%(inA,inB,inC,nameVoted,netErrorName))
             self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
                                "inB"  :inB,

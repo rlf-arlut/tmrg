@@ -272,7 +272,7 @@ class VerilogElaborator():
              if not name in  self.current_module["nets"]:
                  self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"input" }
              if not name in  self.current_module["nets"]:
-                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire", "array_len":"", "array_range":""} # TODO add better array support ?
 
     def _elaborate_inout(self, tokens):
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
@@ -295,7 +295,7 @@ class VerilogElaborator():
             if not name in self.current_module["nets"]:
                 self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "inout"}
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire"}
+                self.current_module["nets"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire", "array_len":"", "array_range":""}
 
     def _elaborate_inputhdr(self,tokens):
         if self.current_module["portMode"]=="non-ANSI":
@@ -341,7 +341,7 @@ class VerilogElaborator():
              if not name in  self.current_module["nets"]:
                  self.current_module["io"][name]={"atributes":_atrs,"range":_range, "len":_len, "type":"output" }
              if not name in  self.current_module["nets"]:
-                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire", "array_len":"", "array_range":""}
              #if not name in  self.current_module["nets"]:
              #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
