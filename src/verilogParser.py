@@ -730,10 +730,10 @@ class VerilogParser:
 
 
 
-        generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
+        self.generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
 
 
-        self.moduleItem= generate | self.moduleOrGenerateItem | generate_module_loop_statement
+        self.moduleItem= self.generate | self.moduleOrGenerateItem | generate_module_loop_statement
         #self.moduleItem =  self.moduleOrGenerateItem
 
 #            udpInstantiation

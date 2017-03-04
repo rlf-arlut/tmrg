@@ -610,7 +610,8 @@ class VerilogElaborator():
                 item=d[k]
                 #print k,item
                 range=item["range"]
-                array_range=item["array_range"]
+                if "array_range" in item : array_range=item["array_range"]
+                else : array_range=""
                 if "tmr" in item: tmr=item["tmr"]
                 else: tmr="-"
                 if "dnt" in item: tmr="DNT"
