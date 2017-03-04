@@ -46,8 +46,8 @@ endmodule
 // comment
 module instantiation3(input x);
   // tmrg do_not_touch
-  wire i1,i2;
-  gates2 g2(i1,i2); // not recomended!
+  wire i1,i2,o1,o2;
+  gates2 g2(i1,i2,o1,o2); // not recomended!
 endmodule
 
 module instantiation;
