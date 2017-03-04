@@ -14,4 +14,4 @@ test:
         - tmrg --help
         - cd tests/enabled
         - ../run_all.py 
-# coverage regexp : ^\[INFO\s+\]\s\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
+# coverage regexp : ^\[INFO\s+\]\s+\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
