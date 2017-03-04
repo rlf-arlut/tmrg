@@ -1010,7 +1010,6 @@ class TMR(VerilogElaborator):
 #                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
 #                                                                               (width,inst,_a,_b,_c,_out) )[0]);
                         if _array_range!="":
-                            print "we need more !"
                             varname="gen_%s"%inst
                             genstr="genvar %s;"%varname;
                             moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
@@ -1094,7 +1093,6 @@ class TMR(VerilogElaborator):
                         fanoutCell=self.current_module["constraints"]["fanout_cell"]
 
                     if _array_range!="":
-                        print "we need more !"
                         varname="gen_%s"%inst
                         genstr="genvar %s;"%varname;
                         moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
