@@ -1,10 +1,9 @@
 module tmr(in1, in2, out1, clk, rst);
   input in1,in2,clk,rst;
-  output out1;
-  reg [1:0] out1;
-  reg out1next;
+  output reg [1:0] out1;
+  reg [1:0] out1next;
 
-  always 
+  always @*
       out1next = in1 & (in2 ^ out1);
   
   always @(posedge clk or posedge rst)
@@ -14,8 +13,5 @@ module tmr(in1, in2, out1, clk, rst);
     else
       out1 <= out1next;
   end
-  //x
-  
-  //fds
 endmodule
 
