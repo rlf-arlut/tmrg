@@ -578,12 +578,13 @@ class TMR(VerilogElaborator):
                     # triplicate istances
                     for post in self.EXT:
                         instCpy=tokens.deepcopy()
-                        instCpy[2][0][0][0]=instCpy[2][0][0][0]+post # change instance name
-                        for port in instCpy[2][0][1]:
-                            if len(port[0][2]) : # if the port is disconected, the lenght will be 0
-                                ids=self.getLeftRightHandSide(port[0][2][0])
-                                for rid in ids["right"]:
-                                    self.replace(port[0][2][0],rid,rid+post)
+                        for inst in range(len(instCpy[2])): #iterage over all instances
+                            instCpy[2][inst][0][0]=instCpy[2][inst][0][0]+post # change instance name
+                            for port in instCpy[2][inst][1]:
+                                if len(port[0][2]) : # if the port is disconected, the lenght will be 0
+                                    ids=self.getLeftRightHandSide(port[0][2][0])
+                                    for rid in ids["right"]:
+                                        self.replace(port[0][2][0],rid,rid+post)
                         ret.append(instCpy)
 
                     for port in tokens[2][0][1]:
@@ -992,8 +993,8 @@ class TMR(VerilogElaborator):
                             #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                         elif addWires=="input":
                             self.logger.debug("Adding input wires %s, %s , %s"%(_a,_b,_c))
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a),_array_range)[0])
-                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b),_array_range)[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_a,_array_range))[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_b,_array_range))[0])
                             moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s %s;"%(_range,_c,_array_range))[0])
 
                         width=""

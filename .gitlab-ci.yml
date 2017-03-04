@@ -5,7 +5,7 @@ before_script:
   - which python
   - python --version
   - apt-get update -y
-  - apt-get install iverilog -y
+  - apt-get install iverilog python-coverage -y
   - source etc/tmrg.sh
 
 
