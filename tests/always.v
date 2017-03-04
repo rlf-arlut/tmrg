@@ -1,11 +1,11 @@
-module al(input clk,input d, output q);
+module al(input clk,input d, output reg q);
 always @(posedge clk)
-  d<=q;
+  q<=d;
 
 always @(clk)
-  d<=q;
+  q<=d;
 
 always @*
-  d<=q;
+  q=d;
 
 endmodule
