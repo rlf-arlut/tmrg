@@ -637,6 +637,7 @@ class VerilogFormater:
         self.trace=False
 
     def format(self,tokens,i=""):
+        self.trace=0
         outStr=""
         #print type(tokens),tokens
         if tokens==None:

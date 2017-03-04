@@ -581,16 +581,17 @@ class TMR(VerilogElaborator):
                         for inst in range(len(instCpy[2])): #iterage over all instances
                             instCpy[2][inst][0][0]=instCpy[2][inst][0][0]+post # change instance name
                             for port in instCpy[2][inst][1]:
-                                if len(port[0][2]) : # if the port is disconected, the lenght will be 0
-                                    ids=self.getLeftRightHandSide(port[0][2][0])
+                                #print port
+                                if len(port[3]) : # if the port is disconected, the lenght will be 0
+                                    ids=self.getLeftRightHandSide(port[3])
                                     for rid in ids["right"]:
-                                        self.replace(port[0][2][0],rid,rid+post)
+                                        self.replace(port[3],rid,rid+post)
                         ret.append(instCpy)
 
                     for port in tokens[2][0][1]:
-                        dname=port[0][0][1:]
+                        dname=port[1]
                         dtype=self.modules[identifier]["io"][dname]['type']
-                        sname=port[0]
+                        sname=port[3]
                         ids=self.getLeftRightHandSide(sname)
                         for sname in ids["right"]:
                             stmr=self.current_module["nets"][sname]["tmr"]
@@ -604,13 +605,13 @@ class TMR(VerilogElaborator):
                     return ret
                 else:
                     for port in tokens[2][0][1]:
-                        dname=port[0][0][1:]
+                        dname=port[1]
                         dtype=self.modules[identifier]["io"][dname]['type']
                         #print dname, dtype
-                        if len(port[0][2]): # can be zero if the port is unconected
-                            sname=port[0][2][0][0][0]
-                            
-                            if type(port[0][2][0])==type(""):continue
+                        if len(port[3]): # can be zero if the port is unconected
+                            sname=port[3][0][0]
+                            #print sname
+                            if type(port[3][0])==type(""):continue
                             if sname in self.current_module["nets"]:
                                 stmr=self.current_module["nets"][sname]["tmr"]
                                 self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
@@ -635,11 +636,11 @@ class TMR(VerilogElaborator):
                         newPorts=ParseResults([],name=instance2[1].getName())
 
                         for port in instance2[1]:
-                            dport=port[0][0][1:] #skip dot
-                            sport=port[0][2]
-#                            print dport,"------",sport
-                            ids=self.getLeftRightHandSide(port[0][2])
-#                            print ids
+                            dport=port[1] #skip dot
+                            sport=port[3]
+                            #print dport,"------",sport
+                            ids=self.getLeftRightHandSide(sport)
+                            #print ids
                             dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
                             #sportTmr=self.checkIfTmrNeeded(sport)
 
@@ -666,12 +667,16 @@ class TMR(VerilogElaborator):
                             elif dportTmr:
                                 for post in self.EXT:
                                     portCpy=port.deepcopy()
-                                    portCpy[0][0]="."+dport+post
+                                    #print portCpy
+                                    portCpy[1]=dport+post
                                     for name in list(ids["right"]):
                                         _to_name=name+post
+                                        #print name, _to_name
                                         self.replace(portCpy,name,_to_name)
                                     newPorts.append(portCpy)
+                                    #print newPorts
                                 for sport in ids['right']:
+                                    #print sport
                                     sportTmr=self.current_module["nets"][sport]["tmr"]
                                     if not sportTmr:
                                         if self.modules[identifier]["io"][dport]["type"]=="output":
@@ -683,7 +688,7 @@ class TMR(VerilogElaborator):
                             #print iname
                             for post in self.EXT:
                                 netName="%stmrError%s"%(iname,post)
-                                tmrErrOut=self.vp.modulePortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
+                                tmrErrOut=self.vp.namedPortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
                                 self._addTmrErrorWire(post,netName)
                                 newPorts.append(tmrErrOut)
 
@@ -1284,6 +1289,7 @@ class TMR(VerilogElaborator):
 
         voterInstName="%sVoter"%(netID)
         if not voterInstName in self.current_module["voters"][group]:
+
             nameVoted="%s"%(netID)
             netErrorName="%sTmrError"%(netID)
             inA=netID+self.EXT[0]
