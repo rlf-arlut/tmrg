@@ -216,11 +216,25 @@ class VerilogElaborator():
 
         for reg in tokens[-1]:
              name=reg[0]
+             _array_range=""
+             _array_len=""
+             if len(reg)>1:
+                 arrayDec=reg[1]
+                 _array_range=self.vf.format(arrayDec)
+                 _array_len=self.__getArrayLenStr(arrayDec)
+                 #print _array_range
+                 #print _array_len
+            # print len(arrayDec)
              #self.registers[name]=
              #print  {"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
              #self.debugInModule("gotReg: %s %s" % (name,details), type="regs")
              if not name in  self.current_module["nets"]:
-                 self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,  "type":"reg" }
+                 self.current_module["nets"][name]={"atributes":_atrs,
+                                                    "range":_range,
+                                                    "len":_len,
+                                                    "type":"reg",
+                                                    "array_range":_array_range,
+                                                    "array_len":_array_len}
 
     def _elaborate_moduleinstantiation(self,tokens):
         #toks=toks[0]
@@ -348,7 +362,19 @@ class VerilogElaborator():
             type=tokens[0]
             for net in tokens[3]:
                 name=net[0]
-                self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len , "type":type}
+                _array_range=""
+                _array_len=""
+                if len(net)>1:
+                    arrayDec=net[1]
+                    _array_range=self.vf.format(arrayDec)
+                    _array_len=self.__getArrayLenStr(arrayDec)
+
+                self.current_module["nets"][name]={"atributes":_atrs,
+                                                   "range":_range,
+                                                   "len":_len ,
+                                                   "type":type,
+                                                   "array_range":_array_range,
+                                                   "array_len":_array_len}
                 if _len!="1":
                     details="(range:%s len:%s)"%(_range,_len)
                 else:
@@ -540,13 +566,25 @@ class VerilogElaborator():
         self.libs[fname]=tokens
 
 
+
+
     def __getLenStr(self,toks):
             rangeLen="1"
             if len(toks)<2:
                 return rangeLen
+            #print toks
             left=toks[-2]
             right=toks[-1]
             rangeLen="%s - %s + 1"%(self.vf.format(left), self.vf.format(right))
+            try:
+                rangeInt=eval(rangeLen)
+                rangeLen="%d"%rangeInt
+            except:
+                pass
+            return rangeLen
+
+    def __getArrayLenStr(self,toks):
+            rangeLen="%s - %s + 1"%(self.vf.format(toks[3]), self.vf.format(toks[1]))
             try:
                 rangeInt=eval(rangeLen)
                 rangeLen="%d"%rangeInt
@@ -560,9 +598,10 @@ class VerilogElaborator():
         def printDict(d,dname=""):
             if len(d)==0: return
 
-            tab = PrettyTable([dname, "range", "tmr"])
+            tab = PrettyTable([dname,  "tmr", "range",  "array"])
             tab.min_width[dname]=50;
             tab.min_width["range"]=20;
+            tab.min_width["array"]=20;
             tab.min_width["tmr"]=10;
             tab.align[dname] = "l" # Left align city names
 
@@ -571,10 +610,11 @@ class VerilogElaborator():
                 item=d[k]
                 #print k,item
                 range=item["range"]
+                array_range=item["array_range"]
                 if "tmr" in item: tmr=item["tmr"]
                 else: tmr="-"
                 if "dnt" in item: tmr="DNT"
-                tab.add_row([k,range, tmr])
+                tab.add_row([k,tmr,range, array_range])
             tab.padding_width = 1 # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
                 self.logger.info(l)
