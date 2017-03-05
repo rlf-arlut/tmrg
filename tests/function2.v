@@ -9,10 +9,10 @@ module functionTest;
  endfunction
 
  reg clk,q;
- reg [3:0] d;
+ reg [3:0] data;
 
  always @(posedge clk)
   begin
-    q=myfunction(d[0],d[1],d[2],d[3]);
+    q=myfunction(data[0],data[1],data[2],data[3]);
   end
 endmodule
