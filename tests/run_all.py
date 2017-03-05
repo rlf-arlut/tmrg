@@ -43,7 +43,7 @@ def main():
                 logging.info("  | %s"%l)
 
         logging.info("Triplicating '%s'" % f)
-        cmd = "python-coverage run -a %s --no-header %s" % (tmrg,f)
+        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s --no-header %s" % (tmrg,f)
         err, outLog = commands.getstatusoutput(cmd)
         if err or len(outLog)>0:
             errCode += 1
@@ -90,7 +90,7 @@ def main():
     logging.info("Files checked : %d"%tests)
     if errCode:
         logging.error("Erorrs %d "%errCode)
-    cmd = "python-coverage report "
+    cmd = "python-coverage report -m "
     err,outLog = commands.getstatusoutput(cmd)
     logging.info("")
     logging.info("Coverage")
