@@ -135,11 +135,12 @@ class VerilogFormater:
         oStr=genvar+" "+expr+";\n"
         return oStr
 
-    def _format_genvar_decl_assignment(self,tokens,i=""):
-        oStr=""
-        for i in tokens:
-            oStr+=self.format(i)
-        return oStr
+#    does not exist anylonger
+#    def _format_genvar_decl_assignment(self,tokens,i=""):
+#        oStr=""
+#        for i in tokens:
+#            oStr+=self.format(i)
+#        return oStr
 
     def _format_namedPortConnection(self,tokens,i=""):
         #print tokens
