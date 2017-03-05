@@ -461,6 +461,7 @@ class TMR(VerilogElaborator):
         # in any other case, triplicate right hand side
         result = []
         if not tmr:
+            self._addVotersIfTmr(ids["right"],group="",addWires="output")
             return tokens
         self._addFanoutsIfTmr(ids["right"], addWires="output")
 
