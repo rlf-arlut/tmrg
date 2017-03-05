@@ -245,9 +245,11 @@ class VerilogFormater:
 
     def _format_delayStm(self,tokens,i=""):
         oStr=""
+       # print tokens
         delay=self.format(tokens[0])
         stm=self.format(tokens[1])
         oStr+="%s %s"%(delay,stm)
+       # print oStr
         return oStr
 
     def _format_task(self,tokens,i=""):
@@ -263,10 +265,11 @@ class VerilogFormater:
 
     def _format_EventCtrl(self,tokens,i=""):
         oStr=""
-#        print tokens
-        for el in tokens[0]:
+        #print tokens
+        for el in tokens:
 #            print el,self.format(el)
             oStr+=self.format(el)
+        #print oStr
         return oStr
 
     def _format_DelimitedList(self,tokens,i=""):
