@@ -22,9 +22,9 @@ module mtop(input [5:0] in,
   generate
   for (i=0; i<6;i=i+1)
   begin: loop
-    buf1 inst7(.i(int[0]),.o(out1[0]));
-    buf2 inst9(.i(int[1]),.o(out2[1]));
-    buf3 inst11(.i(),.o(out3[2]));
+    buf1 inst7(.i(in[i]),.o(out1[i]));
+    buf2 inst9(.i(in[i]),.o(out2[i]));
+    buf3 inst11(.i(),.o(out3[i]));
   end
   endgenerate
 endmodule
