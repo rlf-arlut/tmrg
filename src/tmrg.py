@@ -621,8 +621,8 @@ class TMR(VerilogElaborator):
                                     else :
                                         self._addFanout(sname,addWires="input")
                             else:
-                                self.logger.warning("Wire '%s' does not exist in the net database"%sname)
-                                self.logger.warning("The conection will not be changed.")
+                                self.logger.debug("Wire '%s' does not exist in the net database"%sname)
+                                self.logger.debug("The connection will not be changed.")
             else:
 #                self.logger.info("Module %s is known"%identifier)
                 identifierTMR=identifier+"TMR"

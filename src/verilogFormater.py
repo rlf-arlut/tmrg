@@ -135,11 +135,12 @@ class VerilogFormater:
         oStr=genvar+" "+expr+";\n"
         return oStr
 
-    def _format_genvar_decl_assignment(self,tokens,i=""):
-        oStr=""
-        for i in tokens:
-            oStr+=self.format(i)
-        return oStr
+#    does not exist anylonger
+#    def _format_genvar_decl_assignment(self,tokens,i=""):
+#        oStr=""
+#        for i in tokens:
+#            oStr+=self.format(i)
+#        return oStr
 
     def _format_namedPortConnection(self,tokens,i=""):
         #print tokens
@@ -245,9 +246,11 @@ class VerilogFormater:
 
     def _format_delayStm(self,tokens,i=""):
         oStr=""
+       # print tokens
         delay=self.format(tokens[0])
         stm=self.format(tokens[1])
         oStr+="%s %s"%(delay,stm)
+       # print oStr
         return oStr
 
     def _format_task(self,tokens,i=""):
@@ -263,10 +266,11 @@ class VerilogFormater:
 
     def _format_EventCtrl(self,tokens,i=""):
         oStr=""
-#        print tokens
-        for el in tokens[0]:
+        #print tokens
+        for el in tokens:
 #            print el,self.format(el)
             oStr+=self.format(el)
+        #print oStr
         return oStr
 
     def _format_DelimitedList(self,tokens,i=""):
@@ -428,7 +432,6 @@ class VerilogFormater:
         return ostr
 
     def _format_functionDecl(self,tokens,i=""):
-        print len(tokens)
         oStr="%s%s %s %s%s\n"%(i,tokens[0],self.format(tokens[1]), tokens[2],tokens[3])
         for item in tokens[4]:
             oStr += i + "\t" + self.format(item)
