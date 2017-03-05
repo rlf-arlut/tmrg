@@ -1,5 +1,6 @@
 module functionTest;
  // tmrg do_not_triplicate a b c d myfunction
+  
  function  myfunction;
    input a, b, c, d;
    begin
