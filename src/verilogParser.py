@@ -300,8 +300,8 @@ class VerilogParser:
 
         synopsys=Keyword("synopsys")
         self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
-        self.directive_synopsys_case   = Group( synopsys + ("full_case") + ("parallel_case") + Suppress(self.semi)).setResultsName("directive_synopsys_case")
-
+        self.directive_synopsys_case   = Group( synopsys + (Keyword("full_case") | Keyword("parallel_case")) + Suppress(self.semi)).setResultsName("directive_synopsys_case")
+        self.synopsys_directives = self.directive_synopsys |  self.directive_synopsys_case
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
         stmtOrNull = self.stmt | self.semi
@@ -314,7 +314,7 @@ class VerilogParser:
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
             Group( delayOrEventControl + stmtOrNull ).setResultsName("delayStm") |\
-            Group( case + Suppress("(") + Group(self.expr) + Suppress(")") + Group(OneOrMore( caseItem )) + endcase ).setResultsName("case") |\
+            Group( case + Suppress("(") + Group(self.expr) + Suppress(")") +  Group(OneOrMore( caseItem )) + endcase ).setResultsName("case") |\
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
@@ -633,6 +633,7 @@ class VerilogParser:
 #        self.moduleOrGenerateItem << ~Keyword("endmodule") + (
         self.moduleOrGenerateItem << (
             parameterDecl |
+            self.synopsys_directives |
             localParameterDecl |
             self.inputDecl |
             self.outputDecl |
@@ -665,7 +666,6 @@ class VerilogParser:
             self.comp_directive |
             self.directive_slicing |
             self.directive_translate |
-            self.directive_synopsys |
             self.directive_majority_voter_cell  |
             self.directive_fanout_cell  |
             # this should not be here, however it can be used in modert ga
@@ -840,11 +840,13 @@ class VerilogParser:
 
         self.tmrgDirective = (Suppress('//') + "tmrg" + restOfLine).setResultsName("directive")
         def tmrgDirectiveAction(toks):
+            toks=map(str.strip,toks)
             return " ".join(toks)+ ";"
         self.tmrgDirective.setParseAction(tmrgDirectiveAction)
 
         self.synopsysDirective = (Suppress('//') + "synopsys" + restOfLine).setResultsName("synopsysDirective")
         def synopsysDirectiveAction(toks):
+            toks=map(str.strip,toks)
             return " ".join(toks)+ ";"
         self.synopsysDirective.setParseAction(synopsysDirectiveAction)
 
@@ -886,8 +888,8 @@ class VerilogParser:
         preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
         preParsedStrng = self.compDirective.transformString(preParsedStrng) # do it twice in case there are defines in included files
-
         preParsedStrngNew=""
+        #print preParsedStrng
         translate=True
 #        self.directive_translate        = Group( tmrg + Suppress("translate")       + oneOf("on off")+ Suppress(self.semi)).setResultsName("directive_translate")
 
