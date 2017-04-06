@@ -774,7 +774,7 @@ class VerilogParser:
 
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
-                            Group(Optional( Suppress("#")+Suppress("(") +delimitedList( Suppress("parameter")+paramAssgnmt ) + Suppress(")") ))+
+                            Group(Optional( Suppress("#")+Suppress("(") +delimitedList( Optional(Suppress("parameter"))+paramAssgnmt ) + Suppress(")") ))+
                             Group(Optional( Suppress("(") +
                                              Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
                                             Suppress(")") )).setResultsName("ports") +
@@ -914,4 +914,3 @@ class VerilogParser:
 
 if __name__=="__main__":
     print "This module is not ment to be run!"
-
