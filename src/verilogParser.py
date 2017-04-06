@@ -213,6 +213,7 @@ class VerilogParser:
         edge       = Keyword("edge")
         posedge    = Keyword("posedge")
         negedge    = Keyword("negedge")
+        or_        = Keyword("or")
         specify    = Keyword("specify")
         endspecify = Keyword("endspecify")
         fork       = Keyword("fork")
@@ -234,11 +235,11 @@ class VerilogParser:
         assign     = Keyword("assign").setResultsName("keyword")
 
         eventExpr = Forward()
-        eventTerm = Group (( posedge + self.expr ) | ( negedge + self.expr ) | self.expr | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
+        eventTerm = Group ("*" | ( posedge + subscrIdentifier ) | ( negedge + subscrIdentifier ) | subscrIdentifier | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
-            Group( delimitedList( eventTerm, "," ).setResultsName("delimitedOrList") | delimitedList( eventTerm, "or" ).setResultsName("delimitedOrList"))
+            Group( (delimitedList( eventTerm , (or_|",") )).setResultsName("delimitedOrList") )
             )
-        eventControl = Group( "@" + ( ( "(" + eventExpr + ")" ) | identifier | "*" ) ).setName("eventCtrl").setResultsName("eventCtrl")
+        eventControl = Group( "@" + eventExpr ).setName("eventCtrl").setResultsName("eventCtrl")
 
         delayArg = ( number |
                      Word(alphanums+"$_") | #identifier |
@@ -309,7 +310,7 @@ class VerilogParser:
                    Group(self.directive_synopsys_case)
         condition=Group("(" + self.expr + ")").setResultsName("condition")
         blockName=Group(identifier).setResultsName("blockName")
-        self.stmt <<  ( Group( begin +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
+        self.stmt <<  ( Group( begin  +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
             Group( delayOrEventControl + stmtOrNull ).setResultsName("delayStm") |\
