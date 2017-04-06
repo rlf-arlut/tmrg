@@ -642,6 +642,8 @@ class TMR(VerilogElaborator):
                             #print dport,"------",sport
                             ids=self.getLeftRightHandSide(sport)
                             #print ids
+                            if not dport in self.modules[identifier]["nets"]:
+                               raise ErrorMessage("Module '%s' does not have port '%s'"%(identifier,dport))
                             dportTmr=self.modules[identifier]["nets"][dport]["tmr"]
                             #sportTmr=self.checkIfTmrNeeded(sport)
 
