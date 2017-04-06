@@ -236,7 +236,7 @@ class VerilogParser:
         eventExpr = Forward()
         eventTerm = Group (( posedge + self.expr ) | ( negedge + self.expr ) | self.expr | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
-            Group( delimitedList( eventTerm, "or" ).setResultsName("delimitedOrList") )
+            Group( delimitedList( eventTerm, "," ).setResultsName("delimitedOrList") | delimitedList( eventTerm, "or" ).setResultsName("delimitedOrList"))
             )
         eventControl = Group( "@" + ( ( "(" + eventExpr + ")" ) | identifier | "*" ) ).setName("eventCtrl").setResultsName("eventCtrl")
 
