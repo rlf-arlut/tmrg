@@ -1,14 +1,11 @@
 module al(input clk,input d, output reg q, input rst);
-always @(posedge clk or negedge rst)
+always @(posedge clk, d)
   q<=d;
 
-always @(clk or negedge d)
+always @(clk , posedge clk)
   q<=d;
 
-always @(clk)
-  q<=d;
-
-always @(clk or d)
+always @(posedge clk , negedge rst)
   q<=d;
 
 always @*
