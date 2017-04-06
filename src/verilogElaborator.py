@@ -282,7 +282,6 @@ class VerilogElaborator():
         _atrs = ""
         _range = self.vf.format(tokens[2])
         _len = self.__getLenStr(tokens[2])
-
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
@@ -291,7 +290,7 @@ class VerilogElaborator():
         for name in tokens[-1]:
             self.lastANSIPort = {}
             self.lastANSIPort["io"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "input"}
-            self.lastANSIPort["net"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire"}
+            self.lastANSIPort["net"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "wire", "array_len":"", "array_range":""}
 
             if not name in self.current_module["nets"]:
                 self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "inout"}
