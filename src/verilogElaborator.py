@@ -809,6 +809,9 @@ class VerilogElaborator():
         tops=0
         self.topFile=""
         self.topModule=""
+        if len(self.modules)==0:
+            raise ErrorMessage("No modules found. Please refer to the documentation using 'tmrg --help' or 'tmrg --doc'")
+
         for module in self.modules:
             if "lib" in self.modules[module]: continue
             if self.modules[module]["instantiated"]==0:

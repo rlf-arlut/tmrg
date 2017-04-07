@@ -1888,7 +1888,7 @@ def makeSureDirExists(path):
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
-    parser = OptionParser(version="TMRG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
+    parser = OptionParser(version="TMRG %s"%tmrg_version(), usage="%prog [options] fileName [fileName2 fileName3]", epilog=epilog)
 
     parser.add_option("-v",  "--verbose",          dest="verbose",      action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",  "--doc",               dest="doc",  action="store_true",   default=False, help="Open documentation in web browser")
@@ -1999,11 +1999,11 @@ def main():
     except ErrorMessage as e:
         logging.error(str(e))
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        logging.info("The exception was raised from:")
+        logging.debug("The exception was raised from:")
         for l in traceback.format_tb(exc_traceback):
             for ll in l.split("\n"):
-              logging.info(ll)
-        logging.info(ll)
+              logging.debug(ll)
+        logging.debug(ll)
 
 
 
