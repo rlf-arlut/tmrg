@@ -235,7 +235,7 @@ class VerilogParser:
         assign     = Keyword("assign").setResultsName("keyword")
 
         eventExpr = Forward()
-        eventTerm = Group ("*" | ( posedge + subscrIdentifier ) | ( negedge + subscrIdentifier ) | subscrIdentifier | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
+        eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
             Group( (delimitedList( eventTerm , (or_|",") )).setResultsName("delimitedOrList") )
             )
@@ -263,9 +263,9 @@ class VerilogParser:
         parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
         localParameterDecl = Group("localparam" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
-        self.inputDecl  = Group( "input"  + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
-        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
-        self.inoutDecl  = Group( "inout"  + Group(Optional(oneOf("wire reg"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
+        self.inputDecl  = Group( "input"  + Group(Optional(oneOf("wire reg signed"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("input")
+        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg signed"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("output")
+        self.inoutDecl  = Group( "inout"  + Group(Optional(oneOf("wire reg signed"))) + Group(Optional( self.range )).setResultsName("range") + Group(delimitedList( identifier )) + Suppress(self.semi) ).setResultsName("inout")
 
         regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
         self.regDecl = Group( "reg" +
@@ -300,7 +300,7 @@ class VerilogParser:
 
         synopsys=Keyword("synopsys")
         self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
-        self.directive_synopsys_case   = Group( synopsys + (Keyword("full_case") | Keyword("parallel_case")) + Suppress(self.semi)).setResultsName("directive_synopsys_case")
+        self.directive_synopsys_case   = Group( synopsys + OneOrMore( Keyword("full_case") | Keyword("parallel_case") )  + Suppress(self.semi)).setResultsName("directive_synopsys_case")
         self.synopsys_directives = self.directive_synopsys |  self.directive_synopsys_case
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
@@ -768,9 +768,9 @@ class VerilogParser:
         self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         inputOutput = oneOf("input output inout")
-        self.portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
-        self.portOut  = Group( Keyword("output") + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
-        self.portInOut= Group( Keyword("inout")  + Group(Optional(oneOf("wire reg"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
+        self.portIn   = Group( Keyword("input")  + Group(Optional(oneOf("wire reg signed"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inputHdr")
+        self.portOut  = Group( Keyword("output") + Group(Optional(oneOf("wire reg signed"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("outputHdr")
+        self.portInOut= Group( Keyword("inout")  + Group(Optional(oneOf("wire reg signed"))) +  Group(Optional( self.range )).setResultsName("range") + Group(identifier).setResultsName("names")).setResultsName("inoutHdr")
 
 
 
