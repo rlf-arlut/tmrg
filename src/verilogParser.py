@@ -235,7 +235,7 @@ class VerilogParser:
         assign     = Keyword("assign").setResultsName("keyword")
 
         eventExpr = Forward()
-        eventTerm = Group ("*" | ( posedge + subscrIdentifier ) | ( negedge + subscrIdentifier ) | subscrIdentifier | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
+        eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
             Group( (delimitedList( eventTerm , (or_|",") )).setResultsName("delimitedOrList") )
             )
@@ -300,7 +300,7 @@ class VerilogParser:
 
         synopsys=Keyword("synopsys")
         self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
-        self.directive_synopsys_case   = Group( synopsys + (Keyword("full_case") | Keyword("parallel_case")) + Suppress(self.semi)).setResultsName("directive_synopsys_case")
+        self.directive_synopsys_case   = Group( synopsys + OneOrMore( Keyword("full_case") | Keyword("parallel_case") )  + Suppress(self.semi)).setResultsName("directive_synopsys_case")
         self.synopsys_directives = self.directive_synopsys |  self.directive_synopsys_case
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")#.setDebug()
