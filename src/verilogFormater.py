@@ -96,13 +96,14 @@ class VerilogFormater:
     def _format_netDecl3(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
-        drives=self.format(tokens[1])
-        spec=self.format(tokens[2])
-        delay=self.format(tokens[3])
+        sign=self.format(tokens[1])
+        drives=self.format(tokens[2])
+        spec=self.format(tokens[3])
+        delay=self.format(tokens[4])
         if drives!="":drives+=" "
         if spec!="":spec+=" "
         if delay!="":delay+=" "
-        ports=tokens[4]
+        ports=tokens[5]
         for port in ports:
             port_str=self.format(port)
             oStr+="%s %s%s%s%s;\n"%(label,drives,spec,delay,port_str)
@@ -673,4 +674,3 @@ def prettyPrint(f,tokens, ident = 0):
                 ports=tokens[1];
             for port in ports:
                 f.write(IS*ident+"%s %s %s;\n"%(label,spec,port))
-

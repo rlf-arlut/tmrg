@@ -397,6 +397,7 @@ class VerilogParser:
         netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
 
         self.netDecl1 = Group(nettype +
+                              Group(Optional("signed")) +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
                               Group( delimitedList( netIdentifier ) ) +
@@ -405,6 +406,7 @@ class VerilogParser:
 
 
         self.netDecl2 = Group("trireg" +
+                              Group(Optional("signed")) +
                               Group(Optional( chargeStrength )) +
                               Group(Optional( expandRange )) +
                               Group(Optional( delay )) +
@@ -414,6 +416,7 @@ class VerilogParser:
 
 
         self.netDecl3 = Group(nettype +
+                              Group(Optional("signed")) +
                               Group(Optional( driveStrength )) +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
