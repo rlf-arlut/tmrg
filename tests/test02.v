@@ -8,4 +8,5 @@ module test02(i1,i2,o1,io1,io2);
   reg [211:1] r2;
   reg signed [3:2] r3;
   reg [2:1] r4,r5;
+  // tmrg do_not_triplicate io1 io2
 endmodule
