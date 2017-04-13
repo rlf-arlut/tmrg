@@ -60,7 +60,10 @@ class CmdConstrainParser:
                                 self.directive_do_not_touch
                                 )
     def parse(self,s):
-        return self.directiveItem.parseString(s)
+        try:
+            return self.directiveItem.parseString(s)
+        except:
+            raise ErrorMessage("Error during parsing command line provided constrains (%s)"%s)
 
 
 class TMR(VerilogElaborator):
@@ -744,7 +747,7 @@ class TMR(VerilogElaborator):
         wrapperWires=[]
         portsToAdd=[]
         portsToAddVoted=[]
-        
+
         if len(self.voting_nets):
             newModuleItems=ParseResults([],name=tokens[1].getName())
             for moduleItem in slice[1]:
