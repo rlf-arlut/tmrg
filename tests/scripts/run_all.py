@@ -118,7 +118,7 @@ def main():
     logging.info("Coverage")
     for l in outLog.split("\n"):
         logging.info("  | %s"%l)
-    if 1:
+    if 0:
       for i in range(10):
         logging.info("")
       logging.info("Not tested code:")
