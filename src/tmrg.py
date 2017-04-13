@@ -738,15 +738,13 @@ class TMR(VerilogElaborator):
         header=tokens[0]
         moduleName=header[1]
 
-
         # generate slice
         slice=tokens.deepcopy()
         slice[0][1]=str(moduleName)+"_slice"
         wrapperWires=[]
-
         portsToAdd=[]
         portsToAddVoted=[]
-
+        
         if len(self.voting_nets):
             newModuleItems=ParseResults([],name=tokens[1].getName())
             for moduleItem in slice[1]:
@@ -794,14 +792,14 @@ class TMR(VerilogElaborator):
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
                     majorityVoterCell="majorityVoter"
-                    if "majority_voter_cell" in self.modules[modName]["constraints"]:
-                        majorityVoterCell=self.modules[modName]["constraints"]["majority_voter_cell"]
+                    if "majority_voter_cell" in self.modules[moduleName]["constraints"]:
+                        majorityVoterCell=self.modules[moduleName]["constraints"]["majority_voter_cell"]
                     newModuleItems.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
                                                                             (width,inst,_a,_b,_c,_out) )[0]);
                     self.__voterPresent=True
             slice[1]=newModuleItems
             for port in portsToAdd + portsToAddVoted:
-                slice[0][2].append(self.vp.port.parseString(port)[0])
+                slice[0][3].append(self.vp.port.parseString(port)[0])
 
         # generate wrapper
         wrapper=tokens.deepcopy()
@@ -809,9 +807,12 @@ class TMR(VerilogElaborator):
         portList=[]
         #triplicate module header | add tmr signals
         if len(wrapper[0])>2:
-            ports=wrapper[0][2]
+            #print "w",wrapper
+            ports=wrapper[0][3]
+            #print ports
             newports=ParseResults([],name=ports.getName())
             for port in ports:
+                port= port[0]
                 if  port.getName()=="subscrIdentifier":
                     portName=port[0]
                     portList.append(portName)
@@ -860,7 +861,7 @@ class TMR(VerilogElaborator):
                     newport="tmrError%s"%group
                     newports.append( newport )
                     self.logger.debug("Port %s"%(newport))
-            wrapper[0][2]=newports
+            wrapper[0][3]=newports
 
         newModuleItems=ParseResults([],name=tokens[1].getName())
         for moduleItem in wrapper[1]:
