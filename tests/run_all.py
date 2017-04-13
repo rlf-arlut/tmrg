@@ -112,9 +112,11 @@ def main():
     logging.info("Coverage")
     for l in outLog.split("\n"):
         logging.info("  | %s"%l)
-    if 0:
+    if 1:
+      for i in range(10):
+        logging.info("")
+      logging.info("Not tested code:")
       for cov in outLog.split('\n')[2:-2]:
-        print cov
         cov=cov.replace(",","")
         covs=cov.split()
         fname=covs[0]+".py"
