@@ -256,7 +256,7 @@ class VerilogElaborator():
     def _elaborate_input(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=""
+         _atrs=self.vf.format(tokens[1])
          _range=self.vf.format(tokens[2])
          _len=self.__getLenStr(tokens[2])
 
@@ -279,7 +279,7 @@ class VerilogElaborator():
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
         # tokens=tokens[0]
         _dir = tokens[0]
-        _atrs = ""
+        _atrs = self.vf.format(tokens[1])
         _range = self.vf.format(tokens[2])
         _len = self.__getLenStr(tokens[2])
         if _len != "1":
@@ -324,7 +324,7 @@ class VerilogElaborator():
     def _elaborate_output(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=""
+         _atrs=self.vf.format(tokens[1])
          _range=self.vf.format(tokens[2])
          _len=self.__getLenStr(tokens[2])
 
@@ -356,7 +356,7 @@ class VerilogElaborator():
 
     def _elaborate_netdecl1(self,tokens):
 #            tokens=tokens[0]
-            _atrs=""
+            _atrs=self.vf.format(tokens[1])
             _range=self.vf.format(tokens[2])
             _len=self.__getLenStr(tokens[2])
             type=tokens[0]
@@ -409,7 +409,7 @@ class VerilogElaborator():
 
     def _elaborate_netdecl3(self,tokens):
 #             print tokens
-            _atrs=""
+            _atrs=self.vf.format(tokens[1])
             _range=self.vf.format(tokens[3])
             _len=self.__getLenStr(tokens[3])
 
@@ -599,10 +599,11 @@ class VerilogElaborator():
         def printDict(d,dname=""):
             if len(d)==0: return
 
-            tab = PrettyTable([dname,  "tmr", "range",  "array"])
+            tab = PrettyTable([dname,  "tmr", "range", "atributes", "array"])
             tab.min_width[dname]=50;
             tab.min_width["range"]=20;
             tab.min_width["array"]=20;
+            tab.min_width["atributes"]=20
             tab.min_width["tmr"]=10;
             tab.align[dname] = "l" # Left align city names
 
@@ -613,10 +614,12 @@ class VerilogElaborator():
                 range=item["range"]
                 if "array_range" in item : array_range=item["array_range"]
                 else : array_range=""
+                if "atributes" in item : atributes=item["atributes"]
+                else : atributes="dupa"
                 if "tmr" in item: tmr=item["tmr"]
                 else: tmr="-"
                 if "dnt" in item: tmr="DNT"
-                tab.add_row([k,tmr,range, array_range])
+                tab.add_row([k,tmr,range, atributes, array_range])
             tab.padding_width = 1 # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
                 self.logger.info(l)
