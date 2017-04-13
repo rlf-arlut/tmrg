@@ -171,7 +171,7 @@ class VerilogElaborator():
                     res["left"].add(left_id)
             elif name in ("netdecl1"):
                 #print t[3]
-                for tt in t[3]:
+                for tt in t[4]:
                     #print tt
                     left_id=tt[0]
                     res["left"].add(left_id)
