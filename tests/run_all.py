@@ -89,7 +89,8 @@ def main():
         tests+=1
 
     otherTests=[("--include --inc-dir %s/../ %s/../include.v"%(cwd,cwd),0),
-            ("--help",1),]
+                ("--help",1),
+                (" %s/../libtest.v  --lib=%s/../lib.v"%(cwd,cwd),0)]
 
     for test,verbose in otherTests:
         logging.info("Runnging '%s'" % test)
@@ -111,6 +112,30 @@ def main():
     logging.info("Coverage")
     for l in outLog.split("\n"):
         logging.info("  | %s"%l)
+    if 1:
+      for cov in outLog.split('\n')[2:-2]:
+        print cov
+        cov=cov.replace(",","")
+        covs=cov.split()
+        fname=covs[0]+".py"
+        lines=[]
+        for lino in covs[4:]:
+          if lino.find("-")>0:
+            _from=int(lino[:lino.find('-')])
+            _to=int(lino[lino.find('-')+1:])
+#            print lino,_from,_to
+            for i in range(_from,_to+1):
+               lines.append(i)
+          else:
+            lines.append(int(lino))
+#          print fname,lino,lines
+        f=open(fname)
+        for lno,l in enumerate(f.readlines()):
+          lineno=lno+1
+          if lineno in lines:
+            logging.info("%-30s %4d : ! %s"%(fname,lno,l.rstrip()))
+          if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
+            logging.info("%-30s %4d :   %s"%(fname,lno,l.rstrip()))
     os._exit(errCode)
 
 #os.system("rm -rf *TMR.v *.new")
