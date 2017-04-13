@@ -87,28 +87,28 @@ from verilogFormater import VerilogFormater
 packratOn = False
 psycoOn = False
 
-if usePackrat:
-    try:
-        ParserElement.enablePackrat()
-    except:
-        pass
-    else:
-        packratOn = True
+#if usePackrat:
+#    try:
+#        ParserElement.enablePackrat()
+#    except:
+#        pass
+#    else:
+#        packratOn = True
 
 # comment out this section to disable psyco function compilation
-if usePsyco:
-    try:
-        import psyco
-        psyco.full()
-    except:
-        print "failed to import psyco Python optimizer"
-    else:
-        psycoOn = True
+#if usePsyco:
+#    try:
+#        import psyco
+#        psyco.full()
+#    except:
+#        print "failed to import psyco Python optimizer"
+#    else:
+#        psycoOn = True
 
 
-def dumpTokens(s,l,t):
-    import pprint
-    pprint.pprint( t.asList() )
+#def dumpTokens(s,l,t):
+#    import pprint
+#    pprint.pprint( t.asList() )
 
 def delimitedList( expr, delim=",",name="" ):
     """Helper to define a delimited list of expressions - the delimiter defaults to ','.

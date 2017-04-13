@@ -206,7 +206,7 @@ class VerilogElaborator():
 
     def _elaborate_regdecl(self,tokens):
         #tokens=tokens[0] #self.registers
-        _atrs=""
+        _atrs=self.vf.format(tokens[1])
         _range=self.vf.format(tokens[2])
         _len=self.__getLenStr(tokens[2])
 
