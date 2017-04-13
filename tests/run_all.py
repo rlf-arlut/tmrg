@@ -9,6 +9,7 @@ from difflib import *
 
 from distutils.spawn import find_executable
 
+
 def main():
     FORMAT = '[%(levelname)-8s] %(message)s'
     logging.basicConfig(format=FORMAT)
@@ -31,6 +32,7 @@ def main():
     tmrg=find_executable("tmrg")[:-4]+"../src/tmrg.py"
     cmd = "python-coverage erase"
     err, outLog = commands.getstatusoutput(cmd)
+#    if 1 :
     for f in srcFiles:
 
         logging.info("Checking '%s'"%f)
@@ -86,7 +88,20 @@ def main():
                 errCode+=1
         tests+=1
 
+    otherTests=[("--include --inc-dir %s/../ %s/../include.v"%(cwd,cwd),0),
+            ("--help",1),]
 
+    for test,verbose in otherTests:
+        logging.info("Runnging '%s'" % test)
+        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s %s" % (tmrg,test)
+#        print cmd
+        err, outLog = commands.getstatusoutput(cmd)
+#        print outLog
+        if err or (not verbose and len(outLog)>0):
+            errCode += 1
+            logging.info("  | Error code %d" % err)
+            for l in outLog.split("\n"):
+                logging.info("  | %s" % l)
     logging.info("Files checked : %d"%tests)
     if errCode:
         logging.error("Erorrs %d "%errCode)
