@@ -171,7 +171,7 @@ class VerilogElaborator():
                     res["left"].add(left_id)
             elif name in ("netdecl1"):
                 #print t[3]
-                for tt in t[3]:
+                for tt in t[4]:
                     #print tt
                     left_id=tt[0]
                     res["left"].add(left_id)
@@ -357,10 +357,10 @@ class VerilogElaborator():
     def _elaborate_netdecl1(self,tokens):
 #            tokens=tokens[0]
             _atrs=""
-            _range=self.vf.format(tokens[1])
-            _len=self.__getLenStr(tokens[1])
+            _range=self.vf.format(tokens[2])
+            _len=self.__getLenStr(tokens[2])
             type=tokens[0]
-            for net in tokens[3]:
+            for net in tokens[4]:
                 name=net[0]
                 _array_range=""
                 _array_len=""
@@ -410,10 +410,10 @@ class VerilogElaborator():
     def _elaborate_netdecl3(self,tokens):
 #             print tokens
             _atrs=""
-            _range=self.vf.format(tokens[2])
-            _len=self.__getLenStr(tokens[2])
+            _range=self.vf.format(tokens[3])
+            _len=self.__getLenStr(tokens[3])
 
-            for assgmng in tokens[4]:
+            for assgmng in tokens[5]:
                 ids=self.getLeftRightHandSide(assgmng)
                 #print ids
                 name=assgmng[0][0]

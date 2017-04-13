@@ -96,27 +96,30 @@ class VerilogFormater:
     def _format_netDecl3(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
-        drives=self.format(tokens[1])
-        spec=self.format(tokens[2])
-        delay=self.format(tokens[3])
+        sign=self.format(tokens[1])
+        drives=self.format(tokens[2])
+        spec=self.format(tokens[3])
+        delay=self.format(tokens[4])
         if drives!="":drives+=" "
         if spec!="":spec+=" "
         if delay!="":delay+=" "
-        ports=tokens[4]
+        ports=tokens[5]
         for port in ports:
             port_str=self.format(port)
-            oStr+="%s %s%s%s%s;\n"%(label,drives,spec,delay,port_str)
+            oStr+="%s %s%s%s%s%s;\n"%(label,sign,drives,spec,delay,port_str)
         return oStr
 
     def _format_netDecl1(self,tokens,i=""):
         oStr=""
         #print ">",tokens
         nettype=str(tokens[0])
-        range=self.format(tokens[1])
-        delay=self.format(tokens[2])
+        sign=self.format(tokens[1])
+        range=self.format(tokens[2])
+        delay=self.format(tokens[3])
+        if sign!="":sign+=" "
         if range!="":range+=" "
         if delay!="":delay+=" "
-        ports=tokens[3]
+        ports=tokens[4]
         for port in ports:
             r=""
             #print "P]",port
@@ -125,7 +128,7 @@ class VerilogFormater:
             if len(port) > 1: r = " " +self.format(port[1:])
             port_str=self.format(port)
             #print nettype,range,delay,port_str
-            oStr+="%s %s%s%s%s;\n"%(nettype,range,delay,port_str,r)
+            oStr+="%s %s%s%s%s%s;\n"%(nettype,sign,range,delay,port_str,r)
         return oStr
 
     def _format_genVarDecl(self,tokens,i=""):
@@ -673,4 +676,3 @@ def prettyPrint(f,tokens, ident = 0):
                 ports=tokens[1];
             for port in ports:
                 f.write(IS*ident+"%s %s %s;\n"%(label,spec,port))
-
