@@ -90,7 +90,13 @@ def main():
 
     otherTests=[("--include --inc-dir %s/../ %s/../include.v"%(cwd,cwd),0),
                 ("--help",1),
-                (" %s/../libtest.v  --lib=%s/../lib.v"%(cwd,cwd),0)]
+                (" %s/../libtest.v  --lib=%s/../lib.v"%(cwd,cwd),0),
+                (" %s/comb04.v --constrain 'default do_not_triplicate comb04'"%(cwd),0),
+                (" %s/comb04.v --constrain 'triplicate comb04.out'"%(cwd),0),
+                (" %s/comb04.v --constrain 'do_not_touch comb04'"%(cwd),0),
+                #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
+                #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
+                ]
 
     for test,verbose in otherTests:
         logging.info("Runnging '%s'" % test)
@@ -151,4 +157,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-
