@@ -1,3 +1,20 @@
+
+module anotherModule2 (
+  input in1,
+  output result
+    );
+assign result = ~in1;
+endmodule
+
+
+module anotherModule (
+  input in1,
+  input [7:0] in2,
+  output result
+    );
+assign result = in1 | in2[2];
+endmodule
+
 module tmr2(in1, in2, out1, clk, rst);
   input in1,clk,rst;
   input [7:0] in2;
@@ -6,7 +23,7 @@ module tmr2(in1, in2, out1, clk, rst);
   reg [7:0] out1next; // do_not_triplicate out1next 
 
  
-  always 
+  always @*
     begin
       if (in1)
         out1next = in2 ^ result2;
@@ -22,7 +39,7 @@ module tmr2(in1, in2, out1, clk, rst);
       out1<= out1next;
   end
   
-  wire result1;
+  wire result1,result2;
   
   anotherModule moduleInst(
     .in1(in1),
@@ -31,7 +48,7 @@ module tmr2(in1, in2, out1, clk, rst);
     );
 
   anotherModule2 moduleInst2(
-    .input(result1),
+    .in1(result1),
     .result(result2)
     );
 
