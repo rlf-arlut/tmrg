@@ -6,7 +6,7 @@ module tmr2(in1, in2, out1, clk, rst);
   reg [7:0] out1next; // do_not_triplicate out1next 
 
  
-  always 
+  always @*
     begin
       if (in1)
         out1next = in2;
