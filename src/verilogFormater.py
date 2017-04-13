@@ -82,6 +82,8 @@ class VerilogFormater:
     def _format_RegDecl(self,tokens,i=""):
         oStr=""
         label=str(tokens[0])
+        atributes=self.format(tokens[1])
+
         spec=self.format(tokens[2])
        # print tokens
         if spec!="":spec+=" "
@@ -90,7 +92,7 @@ class VerilogFormater:
             if len(port)>1:
                 #r=" "+"".join(port[1:])
                 r=" "+self.format(port[1:])
-            oStr+="%s %s%s%s;\n"%(label,spec,port[0],r)
+            oStr+="%s %s %s%s%s;\n"%(label,atributes,spec,port[0],r)
         return oStr
 
     def _format_netDecl3(self,tokens,i=""):
