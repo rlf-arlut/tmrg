@@ -87,19 +87,21 @@ simpleTests=[
 #"verilog/include.v",
 
 #"verilog/libtest.v",
+top=os.getcwd()
+
+tmpDir=os.path.join(top,"tmp")
+logging.info("Creating temporary directory %s"%tmpDir)
+if not os.path.exists(tmpDir):
+    os.makedirs(tmpDir)
 
 def runSimpleTests():
-    cwd=os.getcwd()
-    logging.info("Current working directory %s" % cwd)
     srcFiles=[]
     tmrFiles=[]
     errors=0
     for fname in simpleTests:
-        ffname=os.path.join(cwd,fname)
+        ffname=os.path.join(top,fname)
         srcFiles.append(ffname)
-    tmpDir=tempfile.mkdtemp()
-    logging.info("Creating temporary directory %s"%tmpDir)
-    os.chdir(tmpDir)
+    #tmpDir=tempfile.mkdtemp()
     tests=0
     tmrg=find_executable("tmrg")[:-4]+"../src/tmrg.py"
 #    if 1 :
@@ -126,7 +128,7 @@ def runSimpleTests():
         core = os.path.basename(f)
         coreTMR = core.replace(".v", "TMR.v")
         outTmr = os.path.join(tmpDir, coreTMR)
-        absTMR = os.path.join(cwd, coreTMR)
+        absTMR = os.path.join(top, coreTMR)
 
         logging.info("        iverilog of triplicated file ('%s')"%outTmr)
         cmd = "iverilog %s"%outTmr
@@ -197,32 +199,161 @@ def coverageSummary():
           if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
             logging.info("%-30s %4d :   %s"%(fname,lno,l.rstrip()))
 
+configurationTests=(
+   {"name":"First test",
+    "verilog":""" module comb( input [7:0]  in, output [7:0] out );
+                 assign out=~in;
+                 endmodule
+              """,
+    "configurations":(
+        {"file":"[comb]\ndefault : triplicate",
+         "comment":"// tmrg default triplicate",
+         "cmdline":'-w "default triplicate"'},
 
+        {"file":"[comb]\ndefault : do_not_triplicate",
+         "comment":"// tmrg default do_not_triplicate",
+         "cmdline":'-w "default do_not_triplicate comb"'},
+
+        #{"file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
+        # "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
+        # "cmdline":'-w "default do_not_triplicate comb" -w "triplicate comb.in" '},
+
+        {"file":"[comb]\ndefault : triplicate\nin:do_not_triplicate",
+         "comment":"// tmrg default triplicate\n //tmrg do_not_triplicate in",
+         "cmdline":'-w "default triplicate comb" -w "do_not_triplicate comb.in" '},
+
+    )
+
+
+  },
+)
+
+def runConfigurationTests():
+    errors=0
+
+    tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
+    tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s --no-header  " % (tmrgexec)
+
+    logging.info("Creating temporary directory %s"%tmpDir)
+    for i,test in enumerate(configurationTests):
+        logging.info("[%d/%d] Test '%s'"%(i+1, len(configurationTests),test["name"]))
+        srcVerilog=configurationTests[i]["verilog"]
+        for j,conf in enumerate(configurationTests[i]["configurations"]):
+            logging.info("    [%d/%d] "%(j+1, len(configurationTests[i]["configurations"])))
+            coreName="m%03d_%03d"%(i,j)
+
+            fnameSrcFile="%s_file.v"%coreName
+            fnameCnfFile="%s_file.cnf"%coreName
+            logging.info("         File verilog : '%s' "%(fnameSrcFile))
+            fSrcFile=open(fnameSrcFile,"w")
+            fSrcFile.write(srcVerilog+"\n")
+            fSrcFile.close()
+            fCnf=open(fnameCnfFile,"w")
+            fCnf.write(configurationTests[i]["configurations"][j]["file"]+"\n")
+            fCnf.close()
+            logging.info("         File config : '%s' "%(fnameCnfFile))
+            cmd="%s %s --config=%s"%(tmrg,fnameSrcFile,fnameCnfFile)
+            logging.info("         cmd : '%s' "%(cmd))
+            err,outLog = commands.getstatusoutput(cmd)
+            if err:
+                errors+=1
+                logging.info("  | Error code %d"%err)
+                for l in outLog.split("\n"):
+                    logging.info("  | %s"%l)
+            logging.info("")
+
+
+
+            fnameComment="%s_comment.v"%coreName
+            logging.info("         Verilog with comments: '%s' "%(fnameComment))
+            fCommentSrc=open(fnameComment,"w")
+            ssrc=srcVerilog.split("\n")
+            fCommentSrc.write(ssrc[0]+"\n")
+            fCommentSrc.write(configurationTests[i]["configurations"][j]["comment"]+"\n")
+            fCommentSrc.write("\n".join(ssrc[1:]))
+            fCommentSrc.close()
+            cmd="%s %s "%(tmrg,fnameComment)
+            logging.info("         cmd : '%s' "%(cmd))
+            err,outLog = commands.getstatusoutput(cmd)
+            if err:
+                errors+=1
+                logging.info("  | Error code %d"%err)
+                for l in outLog.split("\n"):
+                    logging.info("  | %s"%l)
+            logging.info("")
+
+
+            fnameCmdline="%s_cmdline.v"%coreName
+            logging.info("         Cmd line verilog : '%s' "%(fnameCmdline))
+            fCmdFile=open(fnameCmdline,"w")
+            fCmdFile.write(srcVerilog)
+            fCmdFile.close()
+            cmd="%s %s %s"%(tmrg,fnameCmdline,configurationTests[i]["configurations"][j]["cmdline"])
+            logging.info("         cmd : '%s' "%(cmd))
+            err,outLog = commands.getstatusoutput(cmd)
+            if err:
+                errors+=1
+                logging.info("  | Error code %d"%err)
+                for l in outLog.split("\n"):
+                    logging.info("  | %s"%l)
+            logging.info("")
+
+
+
+            fnameSrcFileTMR="%s_fileTMR.v"%coreName
+            fnameCommentTMR="%s_commentTMR.v"%coreName
+            fnameCmdlineTMR="%s_cmdlineTMR.v"%coreName
+
+            def cmpFiles(fromfile,tofile):
+                diffs=0
+                for line in unified_diff(open(fromfile).read().split("\n"), open(tofile).read().split("\n"),
+                                         fromfile=fromfile, tofile=tofile):
+                    logging.info("  | %s"%line.rstrip())
+                    diffs+=1
+                if diffs:return 1
+                return 0
+
+            logging.info("         Comparing cnf file and comments ")
+            errors+=cmpFiles(fnameSrcFileTMR,fnameCommentTMR)
+
+            logging.info("         Comparing cnf file and cmd line ")
+            errors+=cmpFiles(fnameSrcFileTMR,fnameCmdlineTMR)
+
+            logging.info("         Comparing comments and cmd line ")
+            errors+=cmpFiles(fnameCommentTMR,fnameCmdlineTMR)
+
+    return errors
 
 def main():
     FORMAT = '[%(levelname)-8s] %(message)s'
     logging.basicConfig(format=FORMAT)
     logging.getLogger().setLevel(logging.INFO)
     errors=0
+    logging.info("Current working directory %s" % top)
+    os.chdir(tmpDir)
     coverageClean()
-    errors+=runSimpleTests()   
+    errors+=runSimpleTests()
+    errors+=runConfigurationTests()
+    errors+=runOthers()
+    if errors:
+        logging.error("Erorrs %d "%errors)
     coverageSummary()
     os._exit(errors)
 
-def others():
-    otherTests=[("--include --inc-dir %s/../ %s/../include.v"%(cwd,cwd),0),
+def runOthers():
+    otherTests=[("--include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0),
                 ("--help",1),
-                (" %s/../libtest.v  --lib=%s/../lib.v"%(cwd,cwd),0),
-                (" %s/comb04.v --constrain 'default do_not_triplicate comb04'"%(cwd),0),
-                (" %s/comb04.v --constrain 'triplicate comb04.out'"%(cwd),0),
-                (" %s/comb04.v --constrain 'do_not_touch comb04'"%(cwd),0),
+                (" %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
-
+    errors=0
     for test,verbose in otherTests:
         logging.info("Runnging '%s'" % test)
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s %s" % (tmrg,test)
+        tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
+        tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s --no-header  " % (tmrgexec)
+
+        cmd = "%s %s" % (tmrg,test)
 #        print cmd
         err, outLog = commands.getstatusoutput(cmd)
 #        print outLog
@@ -231,42 +362,7 @@ def others():
             logging.info("  | Error code %d" % err)
             for l in outLog.split("\n"):
                 logging.info("  | %s" % l)
-    logging.info("Files checked : %d"%tests)
-    if errors:
-        logging.error("Erorrs %d "%errors)
-    cmd = "python-coverage report -m "
-    err,outLog = commands.getstatusoutput(cmd)
-    logging.info("")
-    logging.info("Coverage")
-    for l in outLog.split("\n"):
-        logging.info("  | %s"%l)
-    if 0:
-      for i in range(10):
-        logging.info("")
-      logging.info("Not tested code:")
-      for cov in outLog.split('\n')[2:-2]:
-        cov=cov.replace(",","")
-        covs=cov.split()
-        fname=covs[0]+".py"
-        lines=[]
-        for lino in covs[4:]:
-          if lino.find("-")>0:
-            _from=int(lino[:lino.find('-')])
-            _to=int(lino[lino.find('-')+1:])
-#            print lino,_from,_to
-            for i in range(_from,_to+1):
-               lines.append(i)
-          else:
-            lines.append(int(lino))
-#          print fname,lino,lines
-        f=open(fname)
-        for lno,l in enumerate(f.readlines()):
-          lineno=lno+1
-          if lineno in lines:
-            logging.info("%-30s %4d : ! %s"%(fname,lno,l.rstrip()))
-          if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
-            logging.info("%-30s %4d :   %s"%(fname,lno,l.rstrip()))
-    os._exit(errors)
+    return errors
 
 #os.system("rm -rf *TMR.v *.new")
 #for prefix in ("comb","vote","fsm","mod"):
