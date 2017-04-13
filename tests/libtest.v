@@ -5,5 +5,6 @@ module complexLogic(input clk, input d, output q1, output q2);
   // tmrg do_not_triplicate ff2
   dff ff2(.clk(clk), .d(d), .q(q2));
 endmodule
-// tmrg  libtest.v  --lib=lib.v
+
+// _tmrg  libtest.v  --lib=lib.v
 

@@ -112,7 +112,7 @@ def main():
     logging.info("Coverage")
     for l in outLog.split("\n"):
         logging.info("  | %s"%l)
-    if 1:
+    if 0:
       for cov in outLog.split('\n')[2:-2]:
         print cov
         cov=cov.replace(",","")
