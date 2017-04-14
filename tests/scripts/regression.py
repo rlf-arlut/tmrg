@@ -349,7 +349,9 @@ def runOthers():
     otherTests=[("--include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0),
                 ("--help",1),
                 (" %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
-                ("--stats %s/verilog/fsm01.v"%(top),1)
+                ("--stats %s/verilog/fsm01.v"%(top),1),
+                ("--log fsm01.log -vv %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
+                ("--generate-report %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
