@@ -177,6 +177,7 @@ def coverageSummary():
         logging.info("  | %s"%l)
     f=open("covreport.txt","w")
     logging.info("Storing coverage report to 'covreport.txt'")
+    linesHist={}
     if 1:
       f.write("Not tested code:\n")
       for cov in outLog.split('\n')[2:-2]:
@@ -185,14 +186,18 @@ def coverageSummary():
         fname=covs[0]+".py"
         lines=[]
         for lino in covs[4:]:
+          lineRange=1
           if lino.find("-")>0:
             _from=int(lino[:lino.find('-')])
             _to=int(lino[lino.find('-')+1:])
 #            print lino,_from,_to
+            lineRange=_to - _from + 1
             for i in range(_from,_to+1):
                lines.append(i)
           else:
             lines.append(int(lino))
+          if not lineRange in linesHist: linesHist[lineRange]=0
+          linesHist[lineRange]+=1
 #          print fname,lino,lines
         fin=open(fname)
         for lno,l in enumerate(fin.readlines()):
@@ -202,8 +207,10 @@ def coverageSummary():
           if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
             f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
         fin.close()
+    f.write("\n\nHistogram:\n")
+    for k in sorted(linesHist):
+        f.write("%d %d\n"%(k,linesHist[k]))
     f.close()
-
 configurationTests=(
    {"name":"First test",
     "verilog":""" module comb( input [7:0]  in, output [7:0] out );
@@ -390,7 +397,7 @@ def runOthers():
             errors += 1
             for l in outLog.split("\n"):
                 logging.info("  | %s" % l)
-            
+
 
     logging.info("Errors : %d" % errors)
 
