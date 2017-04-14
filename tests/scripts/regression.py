@@ -160,6 +160,8 @@ def runSimpleTests():
                 logging.info("  | ")
                 errors+=1
         tests+=1
+    logging.info("Errors : %d" % errors)
+
     return errors
 def coverageClean():
     logging.info("Cleanning coverate reports")
@@ -324,7 +326,7 @@ def runConfigurationTests():
 
             logging.info("         Comparing comments and cmd line ")
             errors+=cmpFiles(fnameCommentTMR,fnameCmdlineTMR)
-
+    logging.info("Errors : %d" % errors)
     return errors
 
 def main():
@@ -366,6 +368,8 @@ def runOthers():
             logging.info("  | Error code %d" % err)
             for l in outLog.split("\n"):
                 logging.info("  | %s" % l)
+    logging.info("Errors : %d" % errors)
+
     return errors
 
 #os.system("rm -rf *TMR.v *.new")
