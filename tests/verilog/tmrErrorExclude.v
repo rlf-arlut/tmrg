@@ -13,6 +13,7 @@ assign o1=i1Voted;
 endmodule
 
 module top(input i1,output o1);
+// tmrg tmr_error_exclude a
 // tmrg tmr_error true
 wire o2,o3;
 ansi a(.i1(i1),.o1(o2));

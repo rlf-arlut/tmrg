@@ -80,7 +80,8 @@ simpleTests=[
 "../examples/inst01.v",
 "../examples/resetBlock01.v",
 "../examples/resetBlock04.v",
-"../examples/vote02.v"
+"../examples/vote02.v",
+"verilog/tmrErrorExclude.v"
 ]
 # "verilog/customVoterCell.v",
 
@@ -172,10 +173,10 @@ def coverageSummary():
     logging.info("Coverage")
     for l in outLog.split("\n"):
         logging.info("  | %s"%l)
-    if 0:
-      for i in range(10):
-        logging.info("")
-      logging.info("Not tested code:")
+    f=open("covreport.txt","w")
+    logging.info("Storing coverage report to 'covreport.txt'")
+    if 1:
+      f.write("Not tested code:\n")
       for cov in outLog.split('\n')[2:-2]:
         cov=cov.replace(",","")
         covs=cov.split()
@@ -191,13 +192,15 @@ def coverageSummary():
           else:
             lines.append(int(lino))
 #          print fname,lino,lines
-        f=open(fname)
-        for lno,l in enumerate(f.readlines()):
+        fin=open(fname)
+        for lno,l in enumerate(fin.readlines()):
           lineno=lno+1
           if lineno in lines:
-            logging.info("%-30s %4d : ! %s"%(fname,lno,l.rstrip()))
+            f.write("%-30s %4d : ! %s\n"%(fname,lno,l.rstrip()))
           if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
-            logging.info("%-30s %4d :   %s"%(fname,lno,l.rstrip()))
+            f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
+        fin.close()
+    f.close()
 
 configurationTests=(
    {"name":"First test",
@@ -344,6 +347,7 @@ def runOthers():
     otherTests=[("--include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0),
                 ("--help",1),
                 (" %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
+                ("--stats %s/verilog/fsm01.v"%(top),0)
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
@@ -351,7 +355,7 @@ def runOthers():
     for test,verbose in otherTests:
         logging.info("Runnging '%s'" % test)
         tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
-        tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s --no-header  " % (tmrgexec)
+        tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s  " % (tmrgexec)
 
         cmd = "%s %s" % (tmrg,test)
 #        print cmd
