@@ -1,2 +1,3 @@
 all:
 	@./scripts/regression.py
+
