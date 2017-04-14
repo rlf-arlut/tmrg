@@ -347,7 +347,7 @@ def runOthers():
     otherTests=[("--include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0),
                 ("--help",1),
                 (" %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
-                ("--stats %s/verilog/fsm01.v"%(top),0)
+                ("--stats %s/verilog/fsm01.v"%(top),1)
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
@@ -361,7 +361,7 @@ def runOthers():
 #        print cmd
         err, outLog = commands.getstatusoutput(cmd)
 #        print outLog
-        if err or (not verbose and len(outLog)>0):
+        if err or (not verbose and len(outLog)>0) or (verbose and len(outLog)==0):
             errors += 1
             logging.info("  | Error code %d" % err)
             for l in outLog.split("\n"):
