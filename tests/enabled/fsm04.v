@@ -1,1 +1,0 @@
-../../examples/fsm04.v
