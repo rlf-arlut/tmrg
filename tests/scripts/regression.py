@@ -352,6 +352,7 @@ def runOthers():
                 ("--stats %s/verilog/fsm01.v"%(top),1),
                 ("--log fsm01.log -vv %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 ("--generate-report %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
+                ("%s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),1), #TODO check it works after tmr
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
@@ -370,6 +371,27 @@ def runOthers():
             logging.info("  | Error code %d" % err)
             for l in outLog.split("\n"):
                 logging.info("  | %s" % l)
+
+    hastToFailTest=[("nofile.v"),
+                    ("--no-such-option"),
+                    ("%s/verilog/hier/top.v "%(top)),
+                   ]
+    errors=0
+    for test in hastToFailTest:
+        logging.info("Runnging '%s'" % test)
+        tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
+        tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*' %s  " % (tmrgexec)
+        cmd = "%s %s" % (tmrg,test)
+#        print cmd
+        err, outLog = commands.getstatusoutput(cmd)
+#        print outLog
+        logging.info("  | Test returned error code %d" % err)
+        if not err :
+            errors += 1
+            for l in outLog.split("\n"):
+                logging.info("  | %s" % l)
+            
+
     logging.info("Errors : %d" % errors)
 
     return errors
