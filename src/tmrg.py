@@ -1569,13 +1569,15 @@ class TMR(VerilogElaborator):
 
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
-        #for module in sorted(self.cmdLineConstrains):
-        #    if not module in self.modules:
-        #        self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
-        #                             "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
-        #                             "tmrErrNets":{}}
-        #    self.modules[module]["constraints"]["dnt"]=True
-
+        for module in sorted(self.cmdLineConstrains):
+#            if not module in self.modules:
+#                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
+#                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
+#                                     "tmrErrNets":{}}
+            if module in self.modules:
+                self.modules[module]["constraints"]["dnt"]=True
+            else:
+                self.logger.warning("Unable to apply DNT constrain for module '%s'"%module)
         #apply special constrains by name conventions
         self.logger.info("")
         self.logger.info("Applying constrains by name")
