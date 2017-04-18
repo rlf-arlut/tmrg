@@ -1,1 +1,0 @@
-../../examples/clockGating01.v

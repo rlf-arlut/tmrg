@@ -52,6 +52,8 @@ class VerilogElaborator():
         self.options=options
         self.args=args
         self.vp=VerilogParser()
+        self.statsLogs=[]
+        self.statsFilesParsed=0
         self.vp.include=options.include
         self.vp.inc_dir = options.inc_dir
 
@@ -256,9 +258,9 @@ class VerilogElaborator():
     def _elaborate_input(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=self.vf.format(tokens[1])
-         _range=self.vf.format(tokens[2])
-         _len=self.__getLenStr(tokens[2])
+         _atrs=self.vf.format(tokens[2])
+         _range=self.vf.format(tokens[3])
+         _len=self.__getLenStr(tokens[3])
 
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
@@ -279,9 +281,9 @@ class VerilogElaborator():
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
         # tokens=tokens[0]
         _dir = tokens[0]
-        _atrs = self.vf.format(tokens[1])
-        _range = self.vf.format(tokens[2])
-        _len = self.__getLenStr(tokens[2])
+        _atrs = self.vf.format(tokens[2])
+        _range = self.vf.format(tokens[3])
+        _len = self.__getLenStr(tokens[3])
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
@@ -324,10 +326,10 @@ class VerilogElaborator():
     def _elaborate_output(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=self.vf.format(tokens[1])
-         _range=self.vf.format(tokens[2])
-         _len=self.__getLenStr(tokens[2])
-
+         _atrs=self.vf.format(tokens[2])
+         _range=self.vf.format(tokens[3])
+         _len=self.__getLenStr(tokens[3])
+        # print _atrs
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
          else:
@@ -547,7 +549,8 @@ class VerilogElaborator():
         tokens=self.vp.parseFile(fname)
         if self.options.stats:
             lines=self.lineCount(fname)
-            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
+            self.statsFilesParsed+=1
             self.linesTotal += lines
 #        print tokens
         self.files[fname]=tokens
@@ -561,8 +564,9 @@ class VerilogElaborator():
         tokens=self.vp.parseFile(fname)
         if self.options.stats:
             lines=self.lineCount(fname)
-            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
             self.linesTotal += lines
+            self.statsFilesParsed+=1
 #        print tokens
         self.libs[fname]=tokens
 
@@ -678,8 +682,11 @@ class VerilogElaborator():
                     logging.error(l)
                 raise ErrorMessage("Error during parsing")
         if self.options.stats:
-            self.logger.info("Total number of lines parsed: %d",self.linesTotal)
-
+            for line in self.statsLogs:
+                print line
+            print "-"*80
+            print "Total number of files parsed: %d "%self.statsFilesParsed
+            print "Total number of lines parsed: %d "%self.linesTotal
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
