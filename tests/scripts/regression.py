@@ -88,6 +88,10 @@ simpleTests=[
 #"verilog/include.v",
 
 #"verilog/libtest.v",
+FORMAT = '[%(levelname)-8s] %(message)s'
+logging.basicConfig(format=FORMAT)
+logging.getLogger().setLevel(logging.INFO)
+
 top=os.getcwd()
 
 tmpDir=os.path.join(top,"tmp")
@@ -337,9 +341,6 @@ def runConfigurationTests():
     return errors
 
 def main():
-    FORMAT = '[%(levelname)-8s] %(message)s'
-    logging.basicConfig(format=FORMAT)
-    logging.getLogger().setLevel(logging.INFO)
     errors=0
     logging.info("Current working directory %s" % top)
     os.chdir(tmpDir)
