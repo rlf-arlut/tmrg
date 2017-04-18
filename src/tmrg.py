@@ -371,7 +371,6 @@ class TMR(VerilogElaborator):
                 else:
                        newtokens.append(element)
             return newtokens
-
         ids=self.getLeftRightHandSide(tokens)
         vote=False
         #left=tokens[0][4][0][0][0]
@@ -573,7 +572,7 @@ class TMR(VerilogElaborator):
                 if instance in self.current_module["constraints"]["dntinst"]:
                     self.logger.debug("Instance '%s' has property do_not_touch."%instance)
                     return tokens
-            if "dnt" in self.modules[identifier]["constraints"]:
+            if "dnt" in self.modules[identifier]["constraints"] and self.modules[identifier]["constraints"]["dnt"]:
                 self.logger.debug("      Module '%s' will not be touched (id:%s)"%(identifier,instance))
                 tmr=self.current_module["instances"][instance]["tmr"]
                 if tmr:
@@ -639,6 +638,7 @@ class TMR(VerilogElaborator):
                         newPorts=ParseResults([],name=instance2[1].getName())
 
                         for port in instance2[1]:
+                            #print port
                             dport=port[1] #skip dot
                             sport=port[3]
                             #print dport,"------",sport
@@ -754,7 +754,7 @@ class TMR(VerilogElaborator):
                 vote=False
                 if moduleItem.getName()=="moduleInstantiation":
                     modName=moduleItem[0]
-                    if not "dnt" in self.modules[modName]["constraints"]:
+                    if not "dnt" in self.modules[modName]["constraints"] and self.modules[modName]["constraints"]["dnt"]:
                         raise ErrorMessage("Error during slicing. Module '%s' should have directive 'do_not_touch'"%modName)
 
                 if moduleItem.getName()=="netDecl3":
@@ -896,7 +896,7 @@ class TMR(VerilogElaborator):
 
             moduleName=header[1]
             self.current_module=self.modules[moduleName]
-            if "dnt" in   self.modules[moduleName]["constraints"]:
+            if "dnt" in   self.modules[moduleName]["constraints"] and  self.modules[moduleName]["constraints"]["dnt"]:
                 self.logger.info("Module '%s' is not to be touched"%moduleName)
                 return tokens
             if "slicing" in   self.modules[moduleName]["constraints"]:
@@ -1462,6 +1462,10 @@ class TMR(VerilogElaborator):
 
             s="false"
             do_not_touch=False
+            if self.modules[module]["constraints"]["dnt"]:
+                do_not_touch = self.modules[module]["constraints"]["dnt"]
+                s += " -> srcModule:%s" % (str(do_not_touch))
+
             if self.config.has_section(module) and self.config.has_option(module, "do_not_touch"):
                 do_not_touch = self.config.getboolean(module, "do_not_touch")
                 s += " -> configModule:%s" % (str(do_not_touch))
