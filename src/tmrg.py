@@ -86,7 +86,7 @@ class TMR(VerilogElaborator):
                     self.logger.debug("Coping  command line specified config file from '%s' to '%s'"%(fname,fcopy))
                     shutil.copyfile(fname,fcopy)
             else:
-                self.logger.error("Command line specified config file does not exists at %s"%fname)
+                raise ErrorMessage ("Command line specified config file does not exists at %s"%fname)
         if "tmr_dir" in dir(self.options) and self.options.tmr_dir:
             self.logger.debug("Setting tmr_dir to %s"%self.options.tmr_dir)
             self.config.set("tmrg","tmr_dir",self.options.tmr_dir)
@@ -133,7 +133,7 @@ class TMR(VerilogElaborator):
                         self.logger.info("Command line constrain '%s' for net '%s' in module '%s'"%(name, net,module))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module]={}
-                        self.cmdLineConstrains[module][net]=True
+                        self.cmdLineConstrains[module][net]=tmrVal
                     else:
                         self.logger.info("Command line constrain '%s' for net '%s'"%(name,net))
                         net=_id
@@ -836,7 +836,7 @@ class TMR(VerilogElaborator):
                         newports.append(port)
                     self.logger.debug(portstr)
                 else:
-                    portName=port[3][0]
+                    portName=port[4][0]
                     portList.append(portName)
                     if not portName in self.current_module["nets"]:
                         self.logger.warning("Net '%s' unknown."%portName)
@@ -941,7 +941,7 @@ class TMR(VerilogElaborator):
                             portstr+=portName
                         self.logger.debug(portstr)
                     else:
-                        portName=port[3][0]
+                        portName=port[4][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
                             continue
@@ -1569,12 +1569,12 @@ class TMR(VerilogElaborator):
 
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
-        for module in sorted(self.cmdLineConstrains):
-            if not module in self.modules:
-                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
-                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
-                                     "tmrErrNets":{}}
-            self.modules[module]["constraints"]["dnt"]=True
+        #for module in sorted(self.cmdLineConstrains):
+        #    if not module in self.modules:
+        #        self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
+        #                             "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
+        #                             "tmrErrNets":{}}
+        #    self.modules[module]["constraints"]["dnt"]=True
 
         #apply special constrains by name conventions
         self.logger.info("")

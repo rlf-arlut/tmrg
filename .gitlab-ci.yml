@@ -12,6 +12,7 @@ before_script:
 test:
     script: 
         - tmrg --help
-        - cd tests/enabled
-        - ../run_all.py 
+        - cd tests/
+        - make
+ 
 # coverage regexp : ^\[INFO\s+\]\s+\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
