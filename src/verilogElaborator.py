@@ -816,6 +816,7 @@ class VerilogElaborator():
                     else:
                         self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
                         elaborationError=True
+                        
         tops=0
         self.topFile=""
         self.topModule=""

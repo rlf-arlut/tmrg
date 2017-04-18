@@ -126,7 +126,7 @@ class TMR(VerilogElaborator):
             name=tokens.getName()
             if name=="directive_triplicate" or name=="directive_do_not_triplicate":
                 tmrVal=False
-                if name=="triplicate":tmrVal=True
+                if name=="directive_triplicate":tmrVal=True
                 for _id in tokens:
                     if _id.find(".")>=0:
                         module,net=_id.split(".")
@@ -179,7 +179,6 @@ class TMR(VerilogElaborator):
 
             else:
                 self.logger.warning("Unknown constrain '%s'"%name)
-
         if len(self.args)==0:
             rtl_dir=self.config.get("tmrg","rtl_dir")
             self.logger.debug("No input arguments specified. All files from rtl_dir (%s) will be parsed."%rtl_dir)
@@ -1432,7 +1431,7 @@ class TMR(VerilogElaborator):
         """ Elaborate the design
         :return:
         """
-        allowMissingModules = True # FIXME shoudl not be here like that (added for wrappers)
+        #allowMissingModules = False # FIXME shoudl not be here like that (added for wrappers)
         VerilogElaborator.elaborate(self,allowMissingModules=allowMissingModules)
         #apply constrains
         self.logger.info("")
@@ -1461,12 +1460,17 @@ class TMR(VerilogElaborator):
             if tmrErrOut:
                 self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
 
-
+            s="false"
+            do_not_touch=False
             if self.config.has_section(module) and self.config.has_option(module, "do_not_touch"):
                 do_not_touch = self.config.getboolean(module, "do_not_touch")
-                if do_not_touch:
-                    self.modules[module]["constraints"]["dnt"]=True
-                    s += " -> do_not_touch:%s" % (str(self.modules[module]["constraints"]["dnt"]))
+                s += " -> configModule:%s" % (str(do_not_touch))
+            if module in self.cmdLineConstrains and "constraints" in  self.cmdLineConstrains[module] and  "dnt" in self.cmdLineConstrains[module]["constraints"]:
+                do_not_touch = True
+                s+=" -> cmdModule:%s"%(str(do_not_touch))
+            self.modules[module]["constraints"]["dnt"]=do_not_touch
+            self.logger.info(" | do_not_touch : %s (%s)"%(str(tmrErrOut),s))
+
 
             for net in self.modules[module]["nets"]:
                 tmr=False
@@ -1519,9 +1523,10 @@ class TMR(VerilogElaborator):
 
 
 
-                if "dnt" in self.modules[module]["constraints"]:
+                if "dnt" in self.modules[module]["constraints"] and self.modules[module]["constraints"]["dnt"]:
                     tmr=False
                     s+=" -> do_not_touch:%s"%(str(tmr))
+
 
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
@@ -1569,15 +1574,15 @@ class TMR(VerilogElaborator):
 
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
-        for module in sorted(self.cmdLineConstrains):
+        #for module in sorted(self.cmdLineConstrains):
 #            if not module in self.modules:
 #                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
 #                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
 #                                     "tmrErrNets":{}}
-            if module in self.modules:
-                self.modules[module]["constraints"]["dnt"]=True
-            else:
-                self.logger.warning("Unable to apply DNT constrain for module '%s'"%module)
+            #if module in self.modules:
+            #    self.modules[module]["constraints"]["dnt"]=True
+            #else:
+            #    self.logger.warning("Unable to apply DNT constrain for module '%s'"%module)
         #apply special constrains by name conventions
         self.logger.info("")
         self.logger.info("Applying constrains by name")
@@ -1590,8 +1595,8 @@ class TMR(VerilogElaborator):
                         self.voting_nets.append((net1,net2))
                         self.logger.info("Full voting detected for nets %s -> %s"%(net1,net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or  not self.modules[module]["nets"][net2]["tmr"]:
-                            self.logger.warning("Nets for full voting should be triplicated!")
-
+                            self.logger.warning("Nets for full voting should be triplicated! (%s:%s, %s:%s)"%(net1, self.modules[module]["nets"][net1]["tmr"],net2, self.modules[module]["nets"][net2]["tmr"]))
+                            #print self.modules[module]
         if len(self.voting_nets):
             self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 
