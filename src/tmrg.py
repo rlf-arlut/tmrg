@@ -126,7 +126,7 @@ class TMR(VerilogElaborator):
             name=tokens.getName()
             if name=="directive_triplicate" or name=="directive_do_not_triplicate":
                 tmrVal=False
-                if name=="triplicate":tmrVal=True
+                if name=="directive_triplicate":tmrVal=True
                 for _id in tokens:
                     if _id.find(".")>=0:
                         module,net=_id.split(".")
@@ -179,7 +179,6 @@ class TMR(VerilogElaborator):
 
             else:
                 self.logger.warning("Unknown constrain '%s'"%name)
-
         if len(self.args)==0:
             rtl_dir=self.config.get("tmrg","rtl_dir")
             self.logger.debug("No input arguments specified. All files from rtl_dir (%s) will be parsed."%rtl_dir)
@@ -372,7 +371,6 @@ class TMR(VerilogElaborator):
                 else:
                        newtokens.append(element)
             return newtokens
-
         ids=self.getLeftRightHandSide(tokens)
         vote=False
         #left=tokens[0][4][0][0][0]
@@ -574,7 +572,7 @@ class TMR(VerilogElaborator):
                 if instance in self.current_module["constraints"]["dntinst"]:
                     self.logger.debug("Instance '%s' has property do_not_touch."%instance)
                     return tokens
-            if "dnt" in self.modules[identifier]["constraints"]:
+            if "dnt" in self.modules[identifier]["constraints"] and self.modules[identifier]["constraints"]["dnt"]:
                 self.logger.debug("      Module '%s' will not be touched (id:%s)"%(identifier,instance))
                 tmr=self.current_module["instances"][instance]["tmr"]
                 if tmr:
@@ -640,6 +638,7 @@ class TMR(VerilogElaborator):
                         newPorts=ParseResults([],name=instance2[1].getName())
 
                         for port in instance2[1]:
+                            #print port
                             dport=port[1] #skip dot
                             sport=port[3]
                             #print dport,"------",sport
@@ -755,7 +754,7 @@ class TMR(VerilogElaborator):
                 vote=False
                 if moduleItem.getName()=="moduleInstantiation":
                     modName=moduleItem[0]
-                    if not "dnt" in self.modules[modName]["constraints"]:
+                    if not "dnt" in self.modules[modName]["constraints"] and self.modules[modName]["constraints"]["dnt"]:
                         raise ErrorMessage("Error during slicing. Module '%s' should have directive 'do_not_touch'"%modName)
 
                 if moduleItem.getName()=="netDecl3":
@@ -897,7 +896,7 @@ class TMR(VerilogElaborator):
 
             moduleName=header[1]
             self.current_module=self.modules[moduleName]
-            if "dnt" in   self.modules[moduleName]["constraints"]:
+            if "dnt" in   self.modules[moduleName]["constraints"] and  self.modules[moduleName]["constraints"]["dnt"]:
                 self.logger.info("Module '%s' is not to be touched"%moduleName)
                 return tokens
             if "slicing" in   self.modules[moduleName]["constraints"]:
@@ -1432,7 +1431,7 @@ class TMR(VerilogElaborator):
         """ Elaborate the design
         :return:
         """
-        allowMissingModules = True # FIXME shoudl not be here like that (added for wrappers)
+        #allowMissingModules = False # FIXME shoudl not be here like that (added for wrappers)
         VerilogElaborator.elaborate(self,allowMissingModules=allowMissingModules)
         #apply constrains
         self.logger.info("")
@@ -1461,12 +1460,21 @@ class TMR(VerilogElaborator):
             if tmrErrOut:
                 self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
 
+            s="false"
+            do_not_touch=False
+            if self.modules[module]["constraints"]["dnt"]:
+                do_not_touch = self.modules[module]["constraints"]["dnt"]
+                s += " -> srcModule:%s" % (str(do_not_touch))
 
             if self.config.has_section(module) and self.config.has_option(module, "do_not_touch"):
                 do_not_touch = self.config.getboolean(module, "do_not_touch")
-                if do_not_touch:
-                    self.modules[module]["constraints"]["dnt"]=True
-                    s += " -> do_not_touch:%s" % (str(self.modules[module]["constraints"]["dnt"]))
+                s += " -> configModule:%s" % (str(do_not_touch))
+            if module in self.cmdLineConstrains and "constraints" in  self.cmdLineConstrains[module] and  "dnt" in self.cmdLineConstrains[module]["constraints"]:
+                do_not_touch = True
+                s+=" -> cmdModule:%s"%(str(do_not_touch))
+            self.modules[module]["constraints"]["dnt"]=do_not_touch
+            self.logger.info(" | do_not_touch : %s (%s)"%(str(tmrErrOut),s))
+
 
             for net in self.modules[module]["nets"]:
                 tmr=False
@@ -1519,9 +1527,10 @@ class TMR(VerilogElaborator):
 
 
 
-                if "dnt" in self.modules[module]["constraints"]:
+                if "dnt" in self.modules[module]["constraints"] and self.modules[module]["constraints"]["dnt"]:
                     tmr=False
                     s+=" -> do_not_touch:%s"%(str(tmr))
+
 
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
@@ -1570,12 +1579,14 @@ class TMR(VerilogElaborator):
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
         #for module in sorted(self.cmdLineConstrains):
-        #    if not module in self.modules:
-        #        self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
-        #                             "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
-        #                             "tmrErrNets":{}}
-        #    self.modules[module]["constraints"]["dnt"]=True
-
+#            if not module in self.modules:
+#                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
+#                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
+#                                     "tmrErrNets":{}}
+            #if module in self.modules:
+            #    self.modules[module]["constraints"]["dnt"]=True
+            #else:
+            #    self.logger.warning("Unable to apply DNT constrain for module '%s'"%module)
         #apply special constrains by name conventions
         self.logger.info("")
         self.logger.info("Applying constrains by name")
@@ -1588,8 +1599,8 @@ class TMR(VerilogElaborator):
                         self.voting_nets.append((net1,net2))
                         self.logger.info("Full voting detected for nets %s -> %s"%(net1,net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or  not self.modules[module]["nets"][net2]["tmr"]:
-                            self.logger.warning("Nets for full voting should be triplicated!")
-
+                            self.logger.warning("Nets for full voting should be triplicated! (%s:%s, %s:%s)"%(net1, self.modules[module]["nets"][net1]["tmr"],net2, self.modules[module]["nets"][net2]["tmr"]))
+                            #print self.modules[module]
         if len(self.voting_nets):
             self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 

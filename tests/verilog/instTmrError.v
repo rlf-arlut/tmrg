@@ -1,4 +1,4 @@
-module mlogic (I,ZN);
+module mlogic (I,I2,ZN);
   // tmrg default triplicate
   // tmrg tmr_error true
   input  I,I2;

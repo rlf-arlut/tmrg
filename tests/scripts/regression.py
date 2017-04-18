@@ -88,6 +88,10 @@ simpleTests=[
 #"verilog/include.v",
 
 #"verilog/libtest.v",
+FORMAT = '[%(levelname)-8s] %(message)s'
+logging.basicConfig(format=FORMAT)
+logging.getLogger().setLevel(logging.INFO)
+
 top=os.getcwd()
 
 tmpDir=os.path.join(top,"tmp")
@@ -226,13 +230,17 @@ configurationTests=(
          "comment":"// tmrg default do_not_triplicate",
          "cmdline":'-w "default do_not_triplicate comb"'},
 
-        #{"file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
-        # "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
-        # "cmdline":'-w "default do_not_triplicate comb" -w "triplicate comb.in" '},
+        {"file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
+         "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
+         "cmdline":'-w "default do_not_triplicate comb" -w "triplicate comb.in" '},
 
         {"file":"[comb]\ndefault : triplicate\nin:do_not_triplicate",
          "comment":"// tmrg default triplicate\n //tmrg do_not_triplicate in",
          "cmdline":'-w "default triplicate comb" -w "do_not_triplicate comb.in" '},
+
+        {"file":"[comb]\ndo_not_touch : true",
+         "comment":"// tmrg do_not_touch",
+         "cmdline":'-w "do_not_touch comb" '},
 
     )
 
@@ -337,9 +345,6 @@ def runConfigurationTests():
     return errors
 
 def main():
-    FORMAT = '[%(levelname)-8s] %(message)s'
-    logging.basicConfig(format=FORMAT)
-    logging.getLogger().setLevel(logging.INFO)
     errors=0
     logging.info("Current working directory %s" % top)
     os.chdir(tmpDir)

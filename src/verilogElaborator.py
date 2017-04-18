@@ -628,6 +628,8 @@ class VerilogElaborator():
             for l in str(tab).split("\n"):
                 self.logger.info(l)
 
+        self.logger.info("")
+        self.logger.info("Module:%s (dnt:%s)"%(module["name"],module["constraints"]["dnt"]))
         printDict(module["nets"],    "Nets")
 #        printDict(module["io"],      "IO")
         printDict(module["instances"], "Instantiations")
@@ -710,7 +712,7 @@ class VerilogElaborator():
                 self.logger.debug("= "*50)
                 self.logger.info("Module %s (%s)"%(moduleName,fname))
                 self.logger.debug("= "*50)
-                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{},
+                self.current_module={"instances":{},"nets":{},"name":moduleName,"io":{},"constraints":{"dnt":False},
                                      "instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
                                      "tmrErrNets":{}}
                 for param in moduleParams:
@@ -816,6 +818,7 @@ class VerilogElaborator():
                     else:
                         self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'."%(module,instName,instance))
                         elaborationError=True
+
         tops=0
         self.topFile=""
         self.topModule=""
@@ -853,8 +856,6 @@ class VerilogElaborator():
 
     def showSummary(self):
         for module in sorted(self.modules):
-            self.logger.info("")
-            self.logger.info("Module:%s"%module)
             self.moduleSummary(self.modules[module])
 
     def getAllInsttances(self,module,prefix=""):
