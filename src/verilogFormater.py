@@ -614,6 +614,9 @@ class VerilogFormater:
     def _format_default(self,tokens,i=""):
         return ""
 
+    def _format_directive_default(self,tokens,i=""):
+        return ""
+
     def _format_directive_do_not_touch(self,tokens,i=""):
         return ""
 

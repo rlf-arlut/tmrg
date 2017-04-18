@@ -52,6 +52,8 @@ class VerilogElaborator():
         self.options=options
         self.args=args
         self.vp=VerilogParser()
+        self.statsLogs=[]
+        self.statsFilesParsed=0
         self.vp.include=options.include
         self.vp.inc_dir = options.inc_dir
 
@@ -547,7 +549,8 @@ class VerilogElaborator():
         tokens=self.vp.parseFile(fname)
         if self.options.stats:
             lines=self.lineCount(fname)
-            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
+            self.statsFilesParsed+=1
             self.linesTotal += lines
 #        print tokens
         self.files[fname]=tokens
@@ -561,8 +564,9 @@ class VerilogElaborator():
         tokens=self.vp.parseFile(fname)
         if self.options.stats:
             lines=self.lineCount(fname)
-            self.logger.info("File '%s' has %d lines "%(fname,lines))
+            self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
             self.linesTotal += lines
+            self.statsFilesParsed+=1
 #        print tokens
         self.libs[fname]=tokens
 
@@ -678,8 +682,11 @@ class VerilogElaborator():
                     logging.error(l)
                 raise ErrorMessage("Error during parsing")
         if self.options.stats:
-            self.logger.info("Total number of lines parsed: %d",self.linesTotal)
-
+            for line in self.statsLogs:
+                print line
+            print "-"*80
+            print "Total number of files parsed: %d "%self.statsFilesParsed
+            print "Total number of lines parsed: %d "%self.linesTotal
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
