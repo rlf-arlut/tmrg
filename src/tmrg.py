@@ -836,7 +836,7 @@ class TMR(VerilogElaborator):
                         newports.append(port)
                     self.logger.debug(portstr)
                 else:
-                    portName=port[3][0]
+                    portName=port[4][0]
                     portList.append(portName)
                     if not portName in self.current_module["nets"]:
                         self.logger.warning("Net '%s' unknown."%portName)
@@ -941,7 +941,7 @@ class TMR(VerilogElaborator):
                             portstr+=portName
                         self.logger.debug(portstr)
                     else:
-                        portName=port[3][0]
+                        portName=port[4][0]
                         if not portName in self.current_module["nets"]:
                             self.logger.warning("Net '%s' unknown."%portName)
                             continue

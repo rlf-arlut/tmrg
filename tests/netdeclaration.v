@@ -1,8 +1,9 @@
 
-module msigned #(parameter BITS=8, CHANNELS=2) ( x,y,z,y2,tv,k);
+module msigned #(parameter BITS=8, CHANNELS=2) ( x,y,z,y2,y3, tv,k);
   input signed x,z;
   output signed y;
   output signed y2; 
+  output reg signed y3; 
   wire signed  [BITS:0] threshold;
   wire signed  [BITS:0] chn_values [ CHANNELS-1 : 0 ] ;
   wire signed [BITS:0] thresholdVoted= threshold;
@@ -12,6 +13,9 @@ module msigned #(parameter BITS=8, CHANNELS=2) ( x,y,z,y2,tv,k);
   // tmrg do_not_triplicate k
   input signed [BITS:0] k;
   wire signed kk=k;
+  // tmrg do_not_triplicate y3
+  always @(x)
+    y3 = x;
 endmodule   
 
 module mtop #(parameter BITS=8, CHANNELS=2) ( input signed x, output signed y,

@@ -61,7 +61,8 @@ class VerilogFormater:
         label=str(tokens[0])
         spec=self.format(tokens[1])
         spec+=self.format(tokens[2])
-        ports=tokens[3]
+        spec+=self.format(tokens[3])
+        ports=tokens[4]
         for port in ports:
             oStr+="%s %s %s"%(label,spec,port)
         return oStr
@@ -449,6 +450,7 @@ class VerilogFormater:
     def _format_Module(self,tokens,i=""):
         header=tokens[0]
         modname=header[1]
+        print "\n\n",tokens
         oStr="module %s"%modname
         if len(header[2])>0:
             oStr+=" #(\n  "
@@ -648,7 +650,7 @@ class VerilogFormater:
         self.trace=False
 
     def format(self,tokens,i=""):
-        self.trace=0
+        self.trace=1
         outStr=""
         #print type(tokens),tokens
         if tokens==None:

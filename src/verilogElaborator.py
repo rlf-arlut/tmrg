@@ -256,9 +256,9 @@ class VerilogElaborator():
     def _elaborate_input(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=self.vf.format(tokens[1])
-         _range=self.vf.format(tokens[2])
-         _len=self.__getLenStr(tokens[2])
+         _atrs=self.vf.format(tokens[2])
+         _range=self.vf.format(tokens[3])
+         _len=self.__getLenStr(tokens[3])
 
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
@@ -279,9 +279,9 @@ class VerilogElaborator():
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
         # tokens=tokens[0]
         _dir = tokens[0]
-        _atrs = self.vf.format(tokens[1])
-        _range = self.vf.format(tokens[2])
-        _len = self.__getLenStr(tokens[2])
+        _atrs = self.vf.format(tokens[2])
+        _range = self.vf.format(tokens[3])
+        _len = self.__getLenStr(tokens[3])
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
@@ -324,10 +324,10 @@ class VerilogElaborator():
     def _elaborate_output(self,tokens):
          #tokens=tokens[0]
          _dir=tokens[0]
-         _atrs=self.vf.format(tokens[1])
-         _range=self.vf.format(tokens[2])
-         _len=self.__getLenStr(tokens[2])
-
+         _atrs=self.vf.format(tokens[2])
+         _range=self.vf.format(tokens[3])
+         _len=self.__getLenStr(tokens[3])
+         print _atrs
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
          else:
