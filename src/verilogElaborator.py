@@ -329,7 +329,7 @@ class VerilogElaborator():
          _atrs=self.vf.format(tokens[2])
          _range=self.vf.format(tokens[3])
          _len=self.__getLenStr(tokens[3])
-         print _atrs
+        # print _atrs
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
          else:
