@@ -21,7 +21,7 @@ module pseudo_counter #(parameter WIDTH=10) (
 			assign feed_back_0 = xorornot^value[3]^value[5]^value[2];
 		end else if ( WIDTH==6 ) begin: cnt6
 			assign feed_back_0 = xorornot^value[4];
-		end else begin: cntX
+		end  else begin: cntX
 			assign feed_back_0 = 1'bx;
 		end
 	endgenerate

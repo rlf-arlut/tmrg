@@ -633,6 +633,20 @@ class VerilogParser:
                                             Group(Optional(":" + identifier))
                                             ).setResultsName("generate_module_named_block")
 
+        #generate_if_statement =
+
+
+        generate_module_loop_statement = Group( Suppress(for_) +
+                                                  Suppress("(")  +
+                                                    Group(self.assgnmt) +
+                                                  Suppress(self.semi) +
+                                                    Group(self.expr) +
+                                                  Suppress(self.semi) +
+                                                    Group(self.assgnmt) +
+                                                  Suppress(")") +
+                                                  generate_module_named_block
+                                               ).setResultsName("generate_module_loop_statement")
+
 #        self.moduleOrGenerateItem << ~Keyword("endmodule") + (
         self.moduleOrGenerateItem << (
             parameterDecl |
@@ -672,20 +686,13 @@ class VerilogParser:
             self.directive_majority_voter_cell  |
             self.directive_fanout_cell  |
             # this should not be here, however it can be used in modert ga
+            Group(if_ + condition + stmtOrNull + else_ + stmtOrNull).setName("if").setResultsName("ifelse") |
             Group(if_ + condition + stmtOrNull).setName("if").setResultsName("if") |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation |
-            Group(Suppress(for_) +
-                  Suppress("(") +
-                  Group(self.assgnmt) +
-                  Suppress(self.semi) +
-                  Group(self.expr) +
-                  Suppress(self.semi) +
-                  Group(self.assgnmt) +
-                  Suppress(")") +
-                  generate_module_named_block
-                  ).setResultsName("generate_module_loop_statement")
-            | "dupa"
+            generate_module_loop_statement 
+            #Group( if_ + condition + self.moduleOrGenerateItem   +  else_ + self.moduleOrGenerateItem   ).setName("genifelse").setResultsName("genifelse") | \
+#            Group( if_ + condition + self.moduleOrGenerateItem    ).setName("genif").setResultsName("genif")
         )
 
 
@@ -707,16 +714,7 @@ class VerilogParser:
 #            self.semi) + Group(self.assgnmt) + Suppress(")") + self.stmt).setResultsName("forstmt") |
 #        \
 # \
-        generate_module_loop_statement = Group( Suppress(for_) +
-                                                  Suppress("(")  +
-                                                    Group(self.assgnmt) +
-                                                  Suppress(self.semi) +
-                                                    Group(self.expr) +
-                                                  Suppress(self.semi) +
-                                                    Group(self.assgnmt) +
-                                                  Suppress(")") +
-                                                  generate_module_named_block
-                                               ).setResultsName("generate_module_loop_statement")
+
 
 #genvar_assignment ::=
 #genvar_identifier assignment_operator constant_expression
@@ -730,7 +728,7 @@ class VerilogParser:
 #generate_module_block ::=
 #begin [ : generate_block_identifier ] { generate_module_item } end [ : generate_block_identifier ]
 
-        generate_body =  self.moduleOrGenerateItem# |generate_module_loop_statement
+        generate_body =  OneOrMore(self.moduleOrGenerateItem)# |generate_module_loop_statement
 
 #                                |	generate_module_case_statement\
 
@@ -739,7 +737,8 @@ class VerilogParser:
         self.generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
 
 
-        self.moduleItem= self.generate | self.moduleOrGenerateItem | generate_module_loop_statement
+        self.moduleItem= self.generate | self.moduleOrGenerateItem
+        # | generate_module_loop_statement
         #self.moduleItem =  self.moduleOrGenerateItem
 
 #            udpInstantiation
