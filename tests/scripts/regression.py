@@ -24,6 +24,7 @@ simpleTests=[
 "verilog/initial01.v",
 "verilog/logic.v",
 "verilog/params4.v",
+"verilog/params5.v",
 "verilog/testsRadu.v",
 "verilog/var.v",
 "verilog/ansiPorts.v",
