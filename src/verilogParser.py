@@ -164,7 +164,7 @@ class VerilogParser:
 
         concat = Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
-        funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( self.expr )) )) + ")").setResultsName("funcCall")
+        funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( Group(self.expr) )) )) + ")").setResultsName("funcCall")
 
         subscrRef =      ( Suppress("[") +
                             (delimitedList( Group(self.expr), ":" ) )  +
