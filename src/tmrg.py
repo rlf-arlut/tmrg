@@ -1130,7 +1130,12 @@ class TMR(VerilogElaborator):
             paramPos=0
             for i,item in enumerate(moduleBody):
                 if item.getName()=="paramDecl":
-                     self.logger.debug("Moving declaration to front '%s'"%(str(item)))
+                     self.logger.debug("Moving declaration to the front '%s'"%(str(item)))
+                     moduleBody.insert(paramPos,item)
+                     paramPos+=1
+                     del moduleBody[i+1]
+                if item.getName()=="localparamDecl":
+                     self.logger.debug("Moving declaration to the front '%s'"%(str(item)))
                      moduleBody.insert(paramPos,item)
                      paramPos+=1
                      del moduleBody[i+1]
