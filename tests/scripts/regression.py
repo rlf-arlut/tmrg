@@ -31,6 +31,7 @@ simpleTests=[
 "verilog/comb00.v",
 "verilog/defines.v",
 "verilog/hier01.v",
+"verilog/sysCall.v",
 "verilog/inlineif01.v",
 "verilog/mux.v",
 "verilog/params.v",
