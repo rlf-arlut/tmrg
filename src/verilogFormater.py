@@ -175,7 +175,7 @@ class VerilogFormater:
     def _format_generate(self,tokens,i=""):
         oStr=""
         oStr="\n"+i
-        oStr+="generate\n"+ self.format(tokens[0],i+"\t") +"endgenerate\n"
+        oStr+="generate\n"+ self.format(tokens[0],i+"\t") +"\n"+i+"endgenerate\n"
         return oStr
 
 

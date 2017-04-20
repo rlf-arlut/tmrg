@@ -21,6 +21,7 @@ simpleTests=[
 "verilog/case02.v",
 "verilog/generate01.v",
 "verilog/generate02.v",
+"verilog/generate04.v",
 "verilog/initial01.v",
 "verilog/logic.v",
 "verilog/params4.v",
