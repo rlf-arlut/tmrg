@@ -455,6 +455,8 @@ class TMR(VerilogElaborator):
                                  len=self.current_module["nets"][right]["len"],
                                  array_range=self.current_module["nets"][right]["array_range"],
                                  array_len=self.current_module["nets"][right]["array_len"],
+                                 array_to=self.current_module["nets"][right]["array_to"],
+                                 array_from=self.current_module["nets"][right]["array_from"],
                                  group=ext,
                                  addWires="output")
               tokens=newtokens
@@ -988,6 +990,8 @@ class TMR(VerilogElaborator):
                         _range=voter["range"]
                         _array_range=voter["array_range"]
                         _array_len=voter["array_len"]
+                        _array_from=voter["array_from"]
+                        _array_to=voter["array_to"]
                         _len=voter["len"]
                         _out=voter["out"]
                         _err=voter["err"]
@@ -1032,12 +1036,17 @@ class TMR(VerilogElaborator):
                             moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
                             voterStr=majorityVoterCell + " %s%s (.inA(%s[%s]), .inB(%s[%s]), .inC(%s[%s]), .out(%s[%s]), .tmrErr(%s));" % \
                                            (width, inst, _a, varname, _b, varname, _c, varname, _out, varname, _err)
+                            #_array_len_name="%s_len"%(varname)
+                            _array_start="""((%s>%s) ? %s : %s )"""%(_array_from,_array_to,_array_to,_array_from)
+                            _array_stop="""((%s>%s) ? %s : %s )"""%(_array_from,_array_to,_array_from,_array_to)
+                            #print array_len_def
+                            #moduleBody.append(self.vp.integerDeclAssgn.parseString(array_len_def)[0]);
                             genstr="""generate
-                                      for(%s=0;%s<%s;%s=%s+1)
+                                      for(%s=%s;%s<%s;%s=%s+1)
                                         begin : %s_fanout
                                           %s
                                         end
-                                      endgenerate"""%(varname,varname,_array_len,varname,varname,varname,voterStr)
+                                      endgenerate"""%(varname,_array_start,varname,_array_stop,varname,varname,varname,voterStr)
                             moduleBody.append( self.vp.generate.parseString(genstr)[0])
                         else : # normal voter
                             moduleBody.append(self.vp.moduleInstantiation.parseString(
@@ -1080,6 +1089,8 @@ class TMR(VerilogElaborator):
                     _range=fanout["range"]
                     _array_range=fanout["array_range"]
                     _array_len=fanout["array_len"]
+                    _array_from=fanout["array_from"]
+                    _array_to=fanout["array_to"]
                     _len=fanout["len"]
                     _in=fanout["in"]
                     _a=fanout["outA"]
@@ -1116,12 +1127,15 @@ class TMR(VerilogElaborator):
                         moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
                         fanoutStr=fanoutCell+" %s%s (.in(%s[%s]), .outA(%s[%s]), .outB(%s[%s]), .outC(%s[%s]));"% \
                                                                        (width,inst,_in,varname,_a,varname,_b,varname,_c,varname)
+                        _array_start="""((%s>%s) ? %s : %s )"""%(_array_from,_array_to,_array_to,_array_from)
+                        _array_stop="""((%s>%s) ? %s : %s )"""%(_array_from,_array_to,_array_from,_array_to)
+
                         genstr="""generate
-                                  for(%s=0;%s<%s;%s=%s+1)
+                                  for(%s=%s;%s<%s;%s=%s+1)
                                     begin : %s_fanout
                                       %s
                                     end
-                                  endgenerate"""%(varname,varname,_array_len,varname,varname,varname,fanoutStr)
+                                  endgenerate"""%(varname,_array_start,varname,_array_stop,varname,varname,varname,fanoutStr)
                         moduleBody.append( self.vp.generate.parseString(genstr)[0])
                     else : # normal fanout
                         moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));"%
@@ -1275,7 +1289,7 @@ class TMR(VerilogElaborator):
                 break
         return toTMR
 
-    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,array_range,array_len,atributes,addWires=""):
+    def _addVoterExtended(self,voterInstName,inA,inB,inC,out,tmrError,range,len,group,array_range,array_len,atributes,array_from,array_to,addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -1292,12 +1306,15 @@ class TMR(VerilogElaborator):
                                  "range":range,
                                  "len":len,
                                  "array_range":array_range,
+                                 "array_from":array_from,
+                                 "array_to":array_to,
                                  "array_len":array_len,
                                  "group":group,
                                "addWires":addWires}
             self.__voterPresent=True
 
     def _addVoter(self,netID,group="",addWires=""):
+
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
@@ -1317,6 +1334,8 @@ class TMR(VerilogElaborator):
             len=self.current_module["nets"][netID]["len"]
             array_range=self.current_module["nets"][netID]["array_range"]
             array_len=self.current_module["nets"][netID]["array_len"]
+            array_from=self.current_module["nets"][netID]["array_from"]
+            array_to=self.current_module["nets"][netID]["array_to"]
             atributes=self.current_module["nets"][netID]["atributes"]
             self.current_module["voters"][group][voterInstName]={
                                "inA"  :inA,
@@ -1328,6 +1347,8 @@ class TMR(VerilogElaborator):
                                "atributes":atributes,
                                "array_range":array_range,
                                "array_len":array_len,
+                               "array_from":array_from,
+                               "array_to":array_to,
                                "len"  :len,
                                "group":group,
                                "addWires":addWires}
@@ -1358,6 +1379,8 @@ class TMR(VerilogElaborator):
             range=self.current_module["nets"][netID]["range"]
             array_range=self.current_module["nets"][netID]["array_range"]
             array_len=self.current_module["nets"][netID]["array_len"]
+            array_from=self.current_module["nets"][netID]["array_from"]
+            array_to=self.current_module["nets"][netID]["array_to"]
             len=self.current_module["nets"][netID]["len"]
             atributes=self.current_module["nets"][netID]["atributes"]
             self.logger.debug("Adding fanout %s"%inst)
@@ -1370,6 +1393,8 @@ class TMR(VerilogElaborator):
                                "atributes":atributes,
                                "array_range":array_range,
                                "array_len":array_len,
+                               "array_from":array_from,
+                               "array_to":array_to,
                                "len":len,
                                "addWires":addWires}
             self.__fanoutPresent=True
