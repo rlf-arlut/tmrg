@@ -40,6 +40,7 @@ simpleTests=[
 "verilog/wire.v",
 "verilog/arrays.v",
 "verilog/comb02.v",
+"verilog/forLoop.v",
 "verilog/for.v",
 "verilog/hier02.v",
 "verilog/instantiation.v",
