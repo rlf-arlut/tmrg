@@ -554,6 +554,14 @@ class VerilogFormater:
             oStr+="%s %s;\n"%(label,self.format(var))
         return oStr
 
+    def _format_integerDeclAssgn(self,tokens,i=""):
+        oStr=""
+        for assigment in tokens[1]:
+            label=tokens[0]
+            oStr+="%s %s = %s;\n"%(label,self.format(assigment[0]),self.format(assigment[-1]))
+        return oStr
+
+
     def _format_assgnmtStm(self,tokens,i=""):
         oStr=self.format(tokens[0])+";"
         return oStr

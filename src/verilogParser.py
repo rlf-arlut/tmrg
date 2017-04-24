@@ -277,7 +277,7 @@ class VerilogParser:
 
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
         integerDecl = Group( "integer" + Group(delimitedList( regIdentifier )) + Suppress(self.semi) ).setResultsName("integerDecl")
-
+        self.integerDeclAssgn = Group( "integer" + Group( delimitedList( Group(self.assgnmt) ) ) + Suppress(self.semi) ).setResultsName("integerDeclAssgn")
         strength0 = oneOf("supply0  strong0  pull0  weak0  highz0")
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
@@ -293,6 +293,7 @@ class VerilogParser:
             localParameterDecl |
             self.regDecl |
             integerDecl |
+            self.integerDeclAssgn |
             realDecl |
             timeDecl |
             eventDecl
@@ -662,6 +663,7 @@ class VerilogParser:
             self.genVarDecl |
             timeDecl |
             integerDecl |
+            self.integerDeclAssgn |
             realDecl |
             eventDecl |
             gateDecl |
@@ -690,7 +692,7 @@ class VerilogParser:
             Group(if_ + condition + stmtOrNull).setName("if").setResultsName("if") |
             # these have to be at the end - they start with identifiers
             self.moduleInstantiation |
-            generate_module_loop_statement 
+            generate_module_loop_statement
             #Group( if_ + condition + self.moduleOrGenerateItem   +  else_ + self.moduleOrGenerateItem   ).setName("genifelse").setResultsName("genifelse") | \
 #            Group( if_ + condition + self.moduleOrGenerateItem    ).setName("genif").setResultsName("genif")
         )
