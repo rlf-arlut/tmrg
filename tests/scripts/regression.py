@@ -85,6 +85,7 @@ simpleTests=[
 "../examples/resetBlock01.v",
 "../examples/resetBlock04.v",
 "../examples/vote02.v",
+"../examples/pipelineWithSeuCoutner.v",
 "verilog/tmrErrorExclude.v"
 ]
 # "verilog/customVoterCell.v",
