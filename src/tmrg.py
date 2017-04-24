@@ -1314,6 +1314,7 @@ class TMR(VerilogElaborator):
             self.__voterPresent=True
 
     def _addVoter(self,netID,group="",addWires=""):
+
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group]={}
             self.logger.info("Creating TMR error group %s"%group)
