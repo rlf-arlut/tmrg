@@ -952,9 +952,10 @@ class VerilogElaborator():
                 self.topModule=module
                 self.topFile=self.modules[module]["file"]
                 tops+=1
+
         if tops!=1:
-            elaborationError=True
-            self.logger.error("The design has multiple top cells! Output may not be correct!")
+#            elaborationError=True
+            self.logger.warning("The design has multiple top cells! Output may not be correct!")
 
         if not allowMissingModules and elaborationError:
             raise ErrorMessage("Serious error during elaboration.")
