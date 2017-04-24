@@ -87,7 +87,8 @@ simpleTests=[
 "../examples/vote02.v",
 "../examples/pipelineWithSeuCoutner.v",
 "verilog/tmrErrorExclude.v",
-"verilog/vectorRange.v"
+"verilog/vectorRange.v",
+"verilog/generate05.v"
 ]
 # "verilog/customVoterCell.v",
 
