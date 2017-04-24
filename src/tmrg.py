@@ -8,6 +8,7 @@ import glob
 import logging
 import filecmp
 import copy
+import time
 import ConfigParser
 from verilogElaborator import *
 from toolset import *
@@ -18,6 +19,7 @@ import time
 import datetime
 import hashlib
 import zipfile
+
 def tmr_reg_list(tokens):
     newtokens=ParseResults([],name=tokens.getName())
     for element in tokens:
@@ -1238,7 +1240,7 @@ class TMR(VerilogElaborator):
             if net in self.current_module["nets"]:
                 if self.current_module["nets"][net]["tmr"]:
                     leftTMR=True
-                if not self.current_module["nets"][net]["tmr"]:
+                if not self.current_module["nets"][net]["tmr"] :
                     leftNoTMR=True
             else:
                 if len(net) and net[0]=='`':
@@ -1793,6 +1795,9 @@ class TMR(VerilogElaborator):
 
         self.logger.debug("")
         self.logger.info("Triplciation starts here")
+        tmr_start_time=time.clock()
+        self.tmrLinesTotal=0
+        self.statsLogs=[]
         for fname in sorted(self.files):
             file,ext=os.path.splitext(os.path.basename(fname))
             self.logger.info("")
@@ -1818,6 +1823,12 @@ class TMR(VerilogElaborator):
                 f.write(header)
             f.write(self.vf.format(tmrTokens).replace("\t"," "*self.config.getint("tmrg","spaces")))
             f.close()
+
+            if self.options.stats:
+                lines=self.lineCount(foutnew)
+                self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
+                self.tmrLinesTotal += lines
+
 
         topFile,ext=os.path.splitext(os.path.basename(self.topFile))
         ftop=os.path.join(self.config.get("tmrg","tmr_dir"), topFile+tmrSuffix+ext+'.new')
@@ -1853,6 +1864,13 @@ class TMR(VerilogElaborator):
                     self.logger.debug("Rename %s to %s"%(foutnew,fout))
                     os.rename(foutnew,fout)
         self.genSDC()
+        if self.options.stats:
+            tmr_time=time.clock()-tmr_start_time
+            for line in self.statsLogs:
+                print line
+            print "Total number of triplicated lines: %d "%self.linesTotal
+            print "Triplication time : %.3f s "%tmr_time
+            print "-"*80
 
     def genSDC(self):
         tmrSuffix="TMR"
