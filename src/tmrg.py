@@ -1826,7 +1826,7 @@ class TMR(VerilogElaborator):
 
             if self.options.stats:
                 lines=self.lineCount(foutnew)
-                self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
+                self.statsLogs.append("File '%s' has %d lines "%(foutnew,lines))
                 self.tmrLinesTotal += lines
 
 
@@ -1868,7 +1868,7 @@ class TMR(VerilogElaborator):
             tmr_time=time.clock()-tmr_start_time
             for line in self.statsLogs:
                 print line
-            print "Total number of triplicated lines: %d "%self.linesTotal
+            print "Total number of triplicated lines: %d "%self.tmrLinesTotal
             print "Triplication time : %.3f s "%tmr_time
             print "-"*80
 
