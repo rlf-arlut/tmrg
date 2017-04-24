@@ -14,6 +14,7 @@ from verilogFormater import VerilogFormater
 import shutil
 import zipfile
 import mmap
+import time
 
 class ErrorMessage(BaseException):
     def __init__(self,s):
@@ -767,7 +768,7 @@ class VerilogElaborator():
                     self.logger.error("File or directory does not exists '%s'"%name)
 
             return files
-
+        parse_start_time=time.clock()
         for fname in args2files(self.args):
             try:
                 logging.info("Loading file '%s'"%fname)
@@ -797,15 +798,21 @@ class VerilogElaborator():
                     logging.error(l)
                 raise ErrorMessage("Error during parsing")
         if self.options.stats:
+            parse_time=time.clock()-parse_start_time
+            print "-"*80
             for line in self.statsLogs:
                 print line
             print "-"*80
             print "Total number of files parsed: %d "%self.statsFilesParsed
             print "Total number of lines parsed: %d "%self.linesTotal
+            print "Total parse time: %.3f s "%parse_time
+            print "-"*80
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
         """
+        elaborate_start_time=time.clock()
+
         self.modules={}
         # elaborate all modules
         for fname in sorted(self.files):
@@ -951,6 +958,11 @@ class VerilogElaborator():
 
         if not allowMissingModules and elaborationError:
             raise ErrorMessage("Serious error during elaboration.")
+
+        if self.options.stats:
+            elaborate_time=time.clock()-elaborate_start_time
+            print "Elaboration time : %.3f s "%elaborate_time
+            print "-"*80
 
 
     def _printHierary(self,topModule):
