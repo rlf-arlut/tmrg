@@ -836,8 +836,8 @@ class VerilogElaborator():
                                      "instantiated":0,'file':fname,"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
                                      "tmrErrNets":{}}
                 for param in moduleParams:
-                    pname=param[0]
-                    pval=self.vf.format(param[1])
+                    pname=param[1][0]
+                    pval=self.vf.format(param[1][1])
                     self.logger.debug("Parameter %s = %s"%(pname,pval))
                     self.current_module["params"][pname]={"value":pval,"range":"","len":"","type":"param"}
 
