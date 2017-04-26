@@ -1,6 +1,6 @@
 
 
-module paramtestOrder #(parameter f=3, k=3, parameter x=f) (input clk,input [f:k]d , output [f:k] q);
+module paramtestOrder #(parameter [2:0] f=3, k=3, parameter x=f) (input clk,input [f:k]d , output [f:k] q);
   parameter p1=1;
   parameter [2:0] p2=1;
   localparam l1=p1+p2;
