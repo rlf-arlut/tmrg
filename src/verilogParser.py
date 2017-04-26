@@ -257,7 +257,7 @@ class VerilogParser:
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
 
-        paramAssgnmt = Group( identifier + Suppress("=") + self.expr ).setResultsName("paramAssgnmt")
+        paramAssgnmt = Group(  identifier + Suppress("=") + self.expr ).setResultsName("paramAssgnmt")
 
 
         parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
@@ -779,7 +779,7 @@ class VerilogParser:
 
 
         moduleHdr = Group ( oneOf("module macromodule") + identifier.setResultsName("moduleName") +
-                            Group(Optional( Suppress("#")+Suppress("(") +delimitedList( Optional(Suppress("parameter"))+paramAssgnmt ) + Suppress(")") ))+
+                            Group(Optional( Suppress("#")+Suppress("(") +delimitedList( Group(Optional(Suppress("parameter"))+ Group(Optional( self.range )) + paramAssgnmt) ) + Suppress(")") ))+
                             Group(Optional( Suppress("(") +
                                              Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
                                             Suppress(")") )).setResultsName("ports") +
