@@ -664,7 +664,7 @@ class VerilogElaborator():
                 return "%d"%(onlyIntEval+1)
             except:
                 pass
-            rangeLen="(%s > %s) ? (%s - %s + 1) : (%s - %s + 1) "%(left,right, left, right, right, left)
+            rangeLen="((%s) > (%s)) ? ((%s) - (%s) + 1) : ((%s) - (%s) + 1) "%(left,right, left, right, right, left)
             try:
                 rangeInt=eval(rangeLen)
                 rangeLen="%d"%rangeInt
