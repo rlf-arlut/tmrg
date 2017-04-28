@@ -34,7 +34,7 @@ test_centos6:
 #        - make
 
 test_slc6:
-    image:cern/slc6-base
+    image: cern:slc6-base
     script: 
         - yum -y install  python-coverage
 #        - apt-get install iverilog python-coverage -y
