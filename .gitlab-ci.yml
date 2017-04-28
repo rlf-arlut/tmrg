@@ -1,16 +1,20 @@
-image: python:2.7
+#image: python:2.7
 
-before_script:
-  - uname -r
-  - which python
-  - python --version
-  - apt-get update -y
-  - apt-get install iverilog python-coverage -y
-  - source etc/tmrg.sh
+#before_script:
+#  - uname -r
+#  - which python
+#  - python --version
+#  - apt-get update -y
+#  - apt-get install iverilog python-coverage -y
+#  - source etc/tmrg.sh
 
 
-test:
-    script: 
+test_ubuntu:
+   image: ubuntu:latest
+   script: 
+        - apt-get update -y
+        - apt-get install iverilog python-coverage -y
+        - source etc/tmrg.sh
         - tmrg --help
         - cd tests/
         - make
