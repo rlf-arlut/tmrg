@@ -20,5 +20,17 @@ test_ubuntu:
         - cd tests/
         - ./scripts/regression.py
 #        - make
- 
+
+test_centos6:
+   image: centos:6
+   script: 
+        - sudo yum -y install  python-coverage
+#        - apt-get install iverilog python-coverage -y
+#        - apt-get install build-essential -y
+        - source etc/tmrg.sh
+        - tmrg --help
+        - cd tests/
+        - ./scripts/regression.py
+#        - make
+
 # coverage regexp : ^\[INFO\s+\]\s+\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
