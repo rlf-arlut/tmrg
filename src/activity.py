@@ -23,6 +23,7 @@ m2int={
 }
 month=0
 year=0
+events=0
 for l in f.readlines():
     if l.find("commit")>=0:
         pass
@@ -35,6 +36,7 @@ for l in f.readlines():
         if not month in history[year]:
             history[year][month]={"events":0,"lines":0,"files":0}
         history[year][month]["events"]+=1
+        events+=1
     elif l.find("files changed")>=0:
         try:
             ll=l.split()
@@ -50,12 +52,29 @@ for l in f.readlines():
             history[year][month]["files"]+=files
             history[year][month]["lines"]+=lines
 f.close()
-
+print "Total number of events: %d"%events
 f=open("history.dat","w")
 for year in sorted(history):
     for month in range(1,13):
         v="0 0 0"
         if month in  history[year]:
             v="%d %d %d"%(history[year][month]["events"],history[year][month]["files"],history[year][month]["lines"])
-        f.write("%4d %2d %s\n"%(year, month, v))
+            f.write("%4d-%d %s\n"%(year, month, v))
 f.close()
+
+f=open("history.gnu","w")
+f.write("set terminal png\n")
+f.write("set output 'history.png'\n")
+f.write("set timefmt '%Y-%m'\n")
+f.write("set xdata time\n")
+#f.write("set xlabel 'Time'\n")
+f.write("set bmar 5\n")
+f.write("set xr ['2015-1':'2017-5']\n")
+f.write("set grid\n")
+#offset 0,-4
+f.write("set ylabel 'Activity Index'\n")
+f.write("set xtics rotate by 45 offset 0,-3\n")
+f.write("set format x '%b %y'\n")
+f.write("plot 'history.dat' u 1:2 w lp pt 5 lw 2 t ''\n")
+f.close()
+os.system("gnuplot history.gnu")
