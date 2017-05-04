@@ -10,15 +10,19 @@
 
 
 regression_ubuntu:
-   image: ubuntu:latest
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+#   image: ubuntu:latest
    script: 
-        - apt-get update -y
-        - apt-get install iverilog python-coverage -y
+#        - apt-get update -y
+#        - apt-get install iverilog python-coverage -y
 #        - apt-get install build-essential -y
         - source etc/tmrg.sh
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
+   artifacts:
+     paths:
+       - doc/build/latex/tmrg.pdf
 #        - make
 
 doc_build_ubuntu:
