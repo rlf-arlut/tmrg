@@ -22,13 +22,14 @@ regression_ubuntu:
 #        - make
 
 doc_build_ubuntu:
-   image: ubuntu:latest
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
-        - apt-get update -y
-        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
         - cd doc
         - make html
         - make latexpdf
+
+#        - apt-get update -y
+#        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
 #test_centos6:
 #   image: centos:6
