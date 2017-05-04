@@ -1251,7 +1251,7 @@ class TMR(VerilogElaborator):
                 else:
                     self.logger.warning("Unknown net '%s' (TMR may malfunction)"%net)
         if leftTMR and leftNoTMR:
-            self.logger.error("Block contains both type of elements (should and should not be triplicated!). ")
+            self.logger.error("Block contains both type of elements (should and should not be triplicated!) in one expresion. ")
             self.logger.error("This request will not be properly processed!")
             self.logger.error("Elements: %s"%(" ".join(sorted(res["left"]))))
             return False
@@ -1801,6 +1801,9 @@ class TMR(VerilogElaborator):
         tmr_start_time=time.clock()
         self.tmrLinesTotal=0
         self.statsLogs=[]
+        if not os.path.isdir(self.config.get("tmrg","tmr_dir")):
+            raise ErrorMessage("Specified output directory does not exists (%s)"%self.config.get("tmrg","tmr_dir"))
+
         for fname in sorted(self.files):
             file,ext=os.path.splitext(os.path.basename(fname))
             self.logger.info("")
