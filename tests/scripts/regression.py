@@ -55,6 +55,7 @@ simpleTests=[
 "verilog/instTmrError.v",
 "verilog/notxor.v",
 "verilog/slice01.v",
+"../examples/slice.v",
 "verilog/tmr3.v",
 "verilog/begin.v",
 "verilog/complexInst.v",

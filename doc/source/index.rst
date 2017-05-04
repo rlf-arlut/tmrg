@@ -35,7 +35,10 @@ Content:
    implementation
    verification
    license
-   downloads
+
+Quick links:
+  * gitlab page: https://gitlab.cern.ch/skulis/tmrg
+  * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
 
 ..   general_assumptions
 ..   synthesis_tests
