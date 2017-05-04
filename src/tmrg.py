@@ -596,6 +596,8 @@ class TMR(VerilogElaborator):
 
                     for port in tokens[2][0][1]:
                         dname=port[1]
+                        if not dname in self.modules[identifier]["io"]:
+                           raise ErrorMessage("Module '%s' does not have port '%s'"%(identifier,dname))
                         dtype=self.modules[identifier]["io"][dname]['type']
                         sname=port[3]
                         ids=self.getLeftRightHandSide(sname)
@@ -1457,7 +1459,6 @@ class TMR(VerilogElaborator):
             except:
                 pass
             return rangeLen
-
 
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
