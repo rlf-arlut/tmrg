@@ -776,12 +776,20 @@ class VerilogElaborator():
                 logging.info("Loading file '%s'"%fname)
                 self.addFile(fname)
             except ParseException, err:
-                logging.error("")
-                logging.error(err.line)
-                logging.error( " "*(err.column-1) + "^")
-                logging.error( err)
+#                logging.error("")
+                logging.error("Error in file '%s' around line '%d'."%(fname,err.lineno))
+                if err.line.find("tmrg ")==0:
+                    logging.error("")
+                    logging.error("  Wrong tmrg directive")
+                    logging.error("  //%s"%err.line[:-1])
+                    logging.error("")
+                else:                           
+                    logging.error("")
+                    logging.error(err.line)
+                    logging.error( " "*(err.column-1) + "^")
+                    logging.error( err)
                 for l in traceback.format_exc().split("\n"):
-                    logging.error(l)
+                    logging.debug(l)
                 raise ErrorMessage("Error during parsing")
 
         for fname in self.options.libs:

@@ -9,17 +9,35 @@
 #  - source etc/tmrg.sh
 
 
-test_ubuntu:
-   image: ubuntu:latest
+regression_ubuntu:
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+#   image: ubuntu:latest
    script: 
-        - apt-get update -y
-        - apt-get install iverilog python-coverage -y
+#        - apt-get update -y
+#        - apt-get install iverilog python-coverage -y
 #        - apt-get install build-essential -y
         - source etc/tmrg.sh
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
 #        - make
+
+doc_build_ubuntu:
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   script: 
+        - cd doc
+        - make html
+        - make latexpdf
+        - cd build
+        - mv html tmrg
+        - zip -r tmrg_doc_html.zip tmrg
+   artifacts:
+     paths:
+       - doc/build/latex/tmrg.pdf
+       - doc/build/tmrg_doc_html.zip
+
+#        - apt-get update -y
+#        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
 #test_centos6:
 #   image: centos:6
