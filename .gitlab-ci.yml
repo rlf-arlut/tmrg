@@ -20,9 +20,6 @@ regression_ubuntu:
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
-   artifacts:
-     paths:
-       - doc/build/latex/tmrg.pdf
 #        - make
 
 doc_build_ubuntu:
@@ -31,6 +28,13 @@ doc_build_ubuntu:
         - cd doc
         - make html
         - make latexpdf
+        - cd build
+        - mv html tmrg
+        - zip -r tmrg_doc_html.zip tmrg
+   artifacts:
+     paths:
+       - doc/build/latex/tmrg.pdf
+       - doc/build/tmrg_doc_html.zip
 
 #        - apt-get update -y
 #        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
