@@ -35,7 +35,8 @@ doc_build_ubuntu:
      paths:
        - doc/build/latex/tmrg.pdf
        - doc/build/tmrg_doc_html.zip
-
+   only:
+     - master
 #        - apt-get update -y
 #        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 
