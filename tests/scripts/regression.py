@@ -370,6 +370,7 @@ def runOthers():
                 ("--help",1),
                 (" %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
                 ("--stats %s/verilog/fsm01.v"%(top),1),
+                ("%s/verilog/leftSideConcatenation.v"%(top),1), # should print error message
                 ("--log fsm01.log -vv %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 ("--generate-report %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 ("%s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),1), #TODO check it works after tmr
