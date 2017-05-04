@@ -9,7 +9,7 @@
 #  - source etc/tmrg.sh
 
 
-test_ubuntu:
+regression_ubuntu:
    image: ubuntu:latest
    script: 
         - apt-get update -y
@@ -20,6 +20,15 @@ test_ubuntu:
         - cd tests/
         - ./scripts/regression.py
 #        - make
+
+doc_build_ubuntu:
+   image: ubuntu:latest
+   script: 
+        - apt-get update -y
+        - apt-get install sphinx-common
+        - cd doc
+        - make html
+        - make latexpdf
 
 #test_centos6:
 #   image: centos:6
