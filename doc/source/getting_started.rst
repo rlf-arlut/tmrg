@@ -10,11 +10,17 @@ It is sufficient to download it, extract it, and set a system PATH to point to t
 Getting source code from the SVN repository
 -------------------------------------------
 
-The TMRG project source is stored in CERN SVN. To fetch the source code from the SVN repository one has to use the command:
+The TMRG project source is stored in CERN GIT repository. To fetch the source code from the repository one has to use the command:
 
 .. code-block:: bash
 
-    $ svn checkout svn+ssh://USER@svn.cern.ch/reps/tmrg/trunk tmrg
+    $ git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git
+
+    $ git clone https://skulis@gitlab.cern.ch/skulis/tmrg.git
+
+    $ git clone ssh://git@gitlab.cern.ch:7999/skulis/tmrg.git
+
+for ``kerberos``, ``https``, or ``ssh`` authorization method respectively.
 
 To start using the TMRG it is enough to source the environment file:
 
@@ -25,26 +31,18 @@ To start using the TMRG it is enough to source the environment file:
 MIC cluster
 -----------
 
-If you are using mic cluster @CERN, you can use an installation from  ``/homedir/skulis/tmrg/trunk``.
+If you are using mic cluster @CERN, you can use an installation from  ``/homedir/skulis/tmrg/``.
 Bash users should source:
 
 .. code-block:: bash
 
-    $ source /homedir/skulis/tmrg/stable/etc/tmrg.sh
+    $ source /homedir/skulis/tmrg/etc/tmrg.sh
 
 while, tcsh users should source:
 
 .. code-block:: bash
 
-    $ source /homedir/skulis/tmrg/stable/etc/tmrg.csh
-
-As the development is very active (many people complain about bugs), if something does not work for you, you might try running the most recent development version to see if that helps.
-To do this, you just source:
-
-.. code-block:: bash
-
-    $ source /homedir/skulis/tmrg/trunk/etc/tmrg.[c]sh
-
+    $ source /homedir/skulis/tmrg/etc/tmrg.csh
 
 Getting help
 =============
