@@ -596,17 +596,20 @@ class TMR(VerilogElaborator):
 
                     for port in tokens[2][0][1]:
                         dname=port[1]
+                        if not dname in self.modules[identifier]["io"]:
+                           raise ErrorMessage("Module '%s' does not have port '%s'"%(identifier,dname))
                         dtype=self.modules[identifier]["io"][dname]['type']
                         sname=port[3]
                         ids=self.getLeftRightHandSide(sname)
+                        #print dname,dtype, ids
                         for sname in ids["right"]:
                             stmr=self.current_module["nets"][sname]["tmr"]
                             self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
                             if not stmr:
                                 if dtype=="input":
-                                    self._addVoter(sname,addWires="output")
+                                    self._addFanout(sname,addWires="output")
                                 else :
-                                    self._addFanout(sname,addWires="input")
+                                    self._addVoter(sname,addWires="input")
 
                     return ret
                 else:
@@ -1458,7 +1461,6 @@ class TMR(VerilogElaborator):
                 pass
             return rangeLen
 
-
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
@@ -1640,6 +1642,7 @@ class TMR(VerilogElaborator):
     def _addCommonModules(self,fname,voter=False,fanout=False):
         if not  self.__fanoutPresent and not self.__voterPresent : return
         if not self.config.getboolean("tmrg","add_common_definitions"): return
+        if self.options.no_common_definitions: return
         self.logger.info("Declarations of voters and fanouts are being added to %s"%fname)
         f=open(fname,"a")
 
@@ -1967,18 +1970,17 @@ def main():
     actionGroup.add_option("", "--log",                 dest="log",     default="",             help="Store detailed log to file")
     parser.add_option_group(actionGroup)
     dirGroup = OptionGroup(parser, "Directories" )
-    dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="")
-    dirGroup.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Include directories")
-
-
-    dirGroup.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="")
-    dirGroup.add_option("-l",  "--lib",            dest="libs",       action="append",   default=[], help="Library")
+    dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="",  help="All files from this directory are taken as input files (only if no input files are specified as arguments)")
+    dirGroup.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Directory where to look for include files (use option --include to actualy include the files during preprocessing)")
+    dirGroup.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="",  help="Directory for output files (where all the *TMR.v files are placed)")
+    dirGroup.add_option("-l",  "--lib",            dest="libs",       action="append",    default=[], help="Verilog file to be included as a library (modules from this file are not triplicated)")
     parser.add_option_group(dirGroup)
     tmrGroup = OptionGroup(parser, "Triplication" )
-    tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
+    #tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
 #    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     tmrGroup.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
+    tmrGroup.add_option(""  , "--no-common-definitions", dest="no_common_definitions", action="store_true",   default=False, help="Do not add definitions of common modules (majorityVoter and fanout)")
     tmrGroup.add_option("",  "--no-header",          dest="header",       action="store_false",   default=True, help="Do not append  information headder to triplicated file.")
     tmrGroup.add_option("",  "--sdc-generate",       dest="sdc_generate",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
     tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")

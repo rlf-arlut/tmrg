@@ -165,7 +165,7 @@ class VerilogElaborator():
                     #print _extractID(t[0][1])
                     res["right"].update(_extractID(t[0][1]))
                 else:
-                    logging.error("Unsupported syntax (%s)"%str(t))
+                    logging.error("Unsupported syntax (%s)"%str(self.vf.format(t)))
                 #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
             elif name in ("regdecl"):
@@ -182,13 +182,14 @@ class VerilogElaborator():
             elif name == "subscridentifier":
                 if t[0] in self.current_module["nets"]:
                     res["right"].add( t[0] )
+                    #print "DUPA",t[0]
                     res=self.getLeftRightHandSide(t[1],res=res)
                 else:
                     pass
                     #self.logger.warning("Unknown net %s"%t[0])
             else:
                 for i in range(len(t)):
-                    #print "#(%d)>"%i,t[i]
+                    #print "---#(%d)>"%i,t[i]
                     res=self.getLeftRightHandSide(t[i],res=res)
 
         return res

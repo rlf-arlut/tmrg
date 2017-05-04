@@ -205,7 +205,7 @@ class VerilogParser:
                 )
 
         self.expr=self.expr.setResultsName("expr")
-        lvalue = subscrIdentifier | Group(concat)
+        lvalue = subscrIdentifier | concat
 
         # keywords
         if_        = Keyword("if")
