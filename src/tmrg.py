@@ -601,14 +601,15 @@ class TMR(VerilogElaborator):
                         dtype=self.modules[identifier]["io"][dname]['type']
                         sname=port[3]
                         ids=self.getLeftRightHandSide(sname)
+                        #print dname,dtype, ids
                         for sname in ids["right"]:
                             stmr=self.current_module["nets"][sname]["tmr"]
                             self.logger.debug("      %s (%s) -> %s (tmr:%s)"%(dname,dtype,sname,str(stmr)))
                             if not stmr:
                                 if dtype=="input":
-                                    self._addVoter(sname,addWires="output")
+                                    self._addFanout(sname,addWires="output")
                                 else :
-                                    self._addFanout(sname,addWires="input")
+                                    self._addVoter(sname,addWires="input")
 
                     return ret
                 else:

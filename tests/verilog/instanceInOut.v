@@ -1,8 +1,8 @@
 module pll(input clkin,
-           input cfg,
+           input [7:0] cfg,
            output clkout);
   // tmrg do_not_touch
-  assign clkout = clkin &cfg;
+  assign clkout = clkin & cfg[0];
 endmodule
 
 module cfgReg (input rst, output reg  [7:0] cfg);
@@ -13,8 +13,10 @@ module cfgReg (input rst, output reg  [7:0] cfg);
 endmodule
 
 module top (input clkin,output clkout, input rst);
-  // tmrg default triplicate
-  // tmrg do_not_triplicate rst
+  // tmrg default do_not_triplicate
+  // tmrg triplicate pllinst
+  // tmrg triplicate clkin
+
   wire [7:0] cfg;
   cfgReg cr(.rst(rst),.cfg(cfg));
   pll pllinst(.clkin(clkin), .clkout(clkout), .cfg(cfg));
