@@ -191,11 +191,26 @@ saying what they are. An example implementation of voter can be found in the fil
    :language: verilog
    :linenos:
 
+
 While an example implementation of fanout can be found in the file ``common/fanout.v``:
 
 .. literalinclude:: ../../common/fanout.v
    :language: verilog
    :linenos:
+
+
+To change the voter cell please use:
+
+.. code-block:: verilog
+
+   // tmrg majority_voter_cell identifier
+
+
+To change the fanout cell please use:
+
+.. code-block:: verilog
+
+   // tmrg fanout_cell identifier
 
 
 Voting
@@ -551,9 +566,37 @@ Another good use of this feature may be to implement a mechanism for counting
 number of detected single-event upsets.
 
 
+One can use ``tmr_error_exclude`` directive to exlude some error outputs. 
+
+.. code-block:: verilog
+
+   // tmrg tmr_error_exclude identifier
+
+
+Slicing
+################################################################################
+
+One can use ``slicing`` directive to slice the module. 
+
+.. code-block:: verilog
+
+   // tmrg slicing
+
+
+Input:
+
+.. literalinclude:: ../../examples/slice.v
+   :language: verilog
+   :linenos:
+
+Output:
+
+.. literalinclude:: ../../examples/doc/sliceTMR.v
+   :language: verilog
+   :linenos:
 
 Available constrains 
-###################################################
+################################################################################
 
 If you do not like the idea of putting constraints in your source code directly, 
 you do not have to. You can put your constrains in a configuration file
@@ -685,6 +728,27 @@ in the context of this chapter is shown below:
 You can check in the last table whether the constraints are applied as intended.
 If not, you can follow the step by step process of applying constraints to understand
 at which point something went wrong.
+
+Miscellaneous constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To disable parsing of some part of verilog code plase use:
+
+.. code-block:: verilog
+
+   module translate;
+     valid verilog
+     // tmrg translate off
+     not to be parsed
+     // tmrg translate on
+   endmodule
+
+For SEU injection:
+
+.. code-block:: verilog
+
+   // tmrg seu_set identifier
+   // tmrg seu_reset identifier
 
 Limitations
 ############
