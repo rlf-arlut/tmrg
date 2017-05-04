@@ -2013,7 +2013,7 @@ def main():
 
         if options.log!="":
             logging.debug("Creating log file '%s'"%options.log)
-            fileHandler = logging.FileHandler(options.log)
+            fileHandler = logging.FileHandler(options.log, mode='w')
             fileHandler.setFormatter(logFormatter)
             fileHandler.setLevel(logging.DEBUG)
             rootLogger.addHandler(fileHandler)
