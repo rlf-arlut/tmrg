@@ -165,7 +165,8 @@ class VerilogElaborator():
                     #print _extractID(t[0][1])
                     res["right"].update(_extractID(t[0][1]))
                 else:
-                    logging.error("Unsupported syntax (%s)"%str(self.vf.format(t)))
+                    logging.error("Unsupported syntax : concatenation on left hand side of the assignment (%s). "%str(self.vf.format(t)))
+                    logging.error("Output may be incorrect.")
                 #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
             elif name in ("regdecl"):
