@@ -28,6 +28,7 @@ simpleTests=[
 "verilog/params5.v",
 "verilog/testsRadu.v",
 "verilog/var.v",
+"verilog/instanceInOut.v",
 "verilog/ansiPorts.v",
 "verilog/comb00.v",
 "verilog/defines.v",
