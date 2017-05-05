@@ -257,7 +257,7 @@ class VerilogParser:
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
 
-        paramAssgnmt = Group(  identifier + Suppress("=") + self.expr ).setResultsName("paramAssgnmt")
+        paramAssgnmt = Group(  identifier + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
 
         parameterDecl      = Group( "parameter" + Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
