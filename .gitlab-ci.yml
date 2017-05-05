@@ -9,13 +9,12 @@
 #  - source etc/tmrg.sh
 
 stages:
-  - regression_ubuntu
-  - doc_build
-  - doc_deploy
+  - build
+  - deploy
 
 
 regression_ubuntu:
-   stage: regression_ubuntu
+   stage: build
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
 #   image: ubuntu:latest
    script: 
@@ -29,7 +28,7 @@ regression_ubuntu:
 #        - make
 
 doc_build_ubuntu:
-   stage: doc_build
+   stage: build
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
         - cd doc
