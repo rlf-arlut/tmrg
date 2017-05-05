@@ -30,6 +30,16 @@ regression_ubuntu:
    only:
      - master
 
+doc_build_not_master:
+   stage: build
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   script: 
+        - cd doc
+        - make html
+        - make latexpdf
+   except:
+        - master
+
 #doc_build_not_master:
 #   stage: build
 #   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
@@ -57,7 +67,7 @@ doc_build:
         - cd doc
         - make latexpdf
         - make html
-        - mv -rf web ../public
+        - mv web ../public
    artifacts:
      paths:
        - public
