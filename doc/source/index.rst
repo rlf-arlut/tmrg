@@ -34,6 +34,7 @@ Content:
    triplication
    implementation
    verification
+   faq
    license
 
 Quick links:
