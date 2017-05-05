@@ -1,13 +1,15 @@
 Getting started
 ###############
 
+.. _installation:
+
 Installation
 ============
 
 The TMRG toolset does not really require installation. It is a set of python scripts.
 It is sufficient to download it, extract it, and set a system PATH to point to the bin directory.
 
-Getting source code from the SVN repository
+Getting source code from the GIT repository
 -------------------------------------------
 
 The TMRG project source is stored in CERN GIT repository. To fetch the source code from the repository one has to use the command:
