@@ -13,7 +13,7 @@ stages:
   - build
   - deploy
 
-
+#regression testing
 regression_ubuntu:
    stage: test
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
@@ -26,12 +26,10 @@ regression_ubuntu:
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
-#        - make
-   only:
-     - master
 
+#this is only to check if the documentation can be build
 doc_build_not_master:
-   stage: build
+   stage: test
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
         - cd doc
@@ -60,7 +58,7 @@ doc_build_not_master:
 #  e:
 #    - master
 
-doc_build:
+doc_build_master:
    stage: build
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
@@ -76,12 +74,8 @@ doc_build:
        - public
      # Make it vanish in 1 hour
      expire_in: 1 hour
-#  only:
-#    - master
-
-
-#   only:
-#     - master
+   only:
+     - master
 
 
 # Deploy to an EOS folder the contents generated
@@ -89,8 +83,8 @@ deployment:
   # Executed during the deploy stage
   stage: deploy
   # Only when the master branch is pushed
-#  only:
-#    - master
+  only:
+    - master
   # Custom docker image providing the needed tools to deploy in EOS
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   script:
