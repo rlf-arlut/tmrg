@@ -33,9 +33,21 @@ def startDocumentation():
     docInx = os.path.abspath( docDir+"/index.html")
     webbrowser.open_new(docInx)
 
+def runCommand(cmd,cwd):
+    try:
+        p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
+        out, err = p.communicate()
+    except OSError as err:
+        self.logger.info("Error running command '%s'"%cmd)
+        self.logger.info(str(err))
+        out,err="",str(err)
+
+    return out,err
+
 def tmrg_version():
     if tmrg_version.str=="":
         d=os.path.dirname(__file__)
-        tmrg_version.str=subprocess.check_output(['git', 'rev-parse', 'HEAD'],cwd=d).rstrip()
+        tmrg_version.str,errors=runCommand('git rev-parse HEAD',cwd=d)
+        tmrg_version.str=tmrg_version.str.rstrip()
     return tmrg_version.str
 tmrg_version.str="" # static variable
