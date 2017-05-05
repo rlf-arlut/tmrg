@@ -27,8 +27,8 @@ regression_ubuntu:
         - cd tests/
         - ./scripts/regression.py
 #        - make
-  only:
-    - master
+   only:
+     - master
 
 #doc_build_not_master:
 #   stage: build
