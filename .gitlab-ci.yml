@@ -45,6 +45,7 @@ doc_build_ubuntu:
        - doc/build/latex/tmrg.pdf
        - doc/build/tmrg_doc_html.zip
        - public
+
 #   only:
 #     - master
 
