@@ -52,6 +52,36 @@ put options in the section ``tmrg`` in the configuration file, as shown below:
     # should headers of SDC file be added ? [true/false]
     sdc_headers = true
 
+RTL Compiler / Genus trick & tips
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It happens that one wants to instantiate some cells in the verilog netlist manualy, f.e.:
+
+.. code-block:: verilog
+
+    [..]
+    INVD1 instName(.I(myInput), .ZN(myOutput));
+    [..]
+
+To prevent RC from 'optimizing' it, one can use SDC constrain (usualy in ``syn/sdc/constraint.sdc`` in HEP flow), preventing
+the tool from touching any INVD1 cells:
+
+.. code-block:: tcl
+
+   set_dont_touch INVD1
+
+The problem can be also tackled from another perspective. In the RC script (usualy ``syn/scripts/init.tcl``) 
+one can set ``preserve`` atribute for given instance:
+
+
+.. code-block:: tcl
+
+    [..]
+    set_attribute preserve true /path/instName
+    [..]
+
+
+
 
 Place & Route
 -------------

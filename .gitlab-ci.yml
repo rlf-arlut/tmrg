@@ -8,8 +8,14 @@
 #  - apt-get install iverilog python-coverage -y
 #  - source etc/tmrg.sh
 
+stages:
+  - test
+  - build
+  - deploy
 
+#regression testing
 regression_ubuntu:
+   stage: test
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
 #   image: ubuntu:latest
    script: 
@@ -20,23 +26,75 @@ regression_ubuntu:
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
-#        - make
 
-doc_build_ubuntu:
+#this is only to check if the documentation can be build
+doc_build_not_master:
+   stage: test
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
         - cd doc
-        - make html
         - make latexpdf
-        - cd build
-        - mv html tmrg
-        - zip -r tmrg_doc_html.zip tmrg
+        - make html
+   except:
+        - master
+
+#doc_build_not_master:
+#   stage: build
+#   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+#   script: 
+#        - cd doc
+#        - make html
+#        - make latexpdf
+#        - cp -rf web ../public
+#        - cd build
+#        - mv html tmrg
+#        - zip -r tmrg_doc_html.zip tmrg
+#        
+#   artifacts:
+#     paths:
+#       - doc/build/latex/tmrg.pdf
+#       - doc/build/tmrg_doc_html.zip
+#       - public
+#  e:
+#    - master
+
+doc_build_master:
+   stage: build
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   script: 
+        - cd doc
+        - make latexpdf
+        - make html
+        - cp -r build/html/ web/
+        - mv build/latex/tmrg.pdf web/html/
+        - mv web/htaccess web/html/.htaccess
+        - mv web ../public
    artifacts:
      paths:
-       - doc/build/latex/tmrg.pdf
-       - doc/build/tmrg_doc_html.zip
+       - public
+     # Make it vanish in 1 hour
+     expire_in: 1 hour
    only:
      - master
+
+
+# Deploy to an EOS folder the contents generated
+deployment:
+  # Executed during the deploy stage
+  stage: deploy
+  # Only when the master branch is pushed
+  only:
+    - master
+  # Custom docker image providing the needed tools to deploy in EOS
+  image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
+  script:
+  # Script that performs the deploy to EOS. Makes use of the variables defined in the project
+  # It will copy the generated content to the folder in EOS
+  - deploy-eos
+  # do not run any globally defined before_script or after_script for this step
+  before_script: []
+  after_script: []
+
 #        - apt-get update -y
 #        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
 

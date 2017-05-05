@@ -19,12 +19,7 @@ redundancy.
    By downloading the code, you become **RESPONSIBLE** for protecting it.
    For more details please refer :ref:`licesing`.
 
-.. note:: 
-   `TMRG introduction presentation <http://cern.ch/tmrg/html/tmrg_introduction.pdf>`_ [PDF] Presented on 12 June 2015.
-
-
-Content:
-
+**Content**:
 
 .. toctree::
    :maxdepth: 2
@@ -34,11 +29,21 @@ Content:
    triplication
    implementation
    verification
+   faq
    license
 
-Quick links:
+
+**Other resources**:
+
+  * `Single Event Upsets mitigation techniques [PDF] <https://indico.cern.ch/event/465343/>`_, EPE-ESE seminar Tuesday 12 Apr 2016
+  * `Single Event Effects mitigation with TMRG tool <http://iopscience.iop.org/article/10.1088/1748-0221/12/01/C01082/meta>`_, Journal of Instrumentation, Volume 12, January 2017 
+
+
+**Quick links**:
+
   * gitlab page: https://gitlab.cern.ch/skulis/tmrg
   * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
+  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
 
 ..   general_assumptions
 ..   synthesis_tests

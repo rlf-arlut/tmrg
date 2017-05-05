@@ -156,9 +156,5 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 	      
-copy_www:
-	echo "Get uASIC credentials" &&\
-	kinit tpxwafer@CERN.CH &&\
-	aklog -c cern.ch -k CERN.CH &&\
-	cp -r build/html/* /afs/cern.ch/user/t/tpxwafer/www
+
 
