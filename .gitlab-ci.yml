@@ -35,8 +35,8 @@ doc_build_not_master:
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
    script: 
         - cd doc
-        - make html
         - make latexpdf
+        - make html
    except:
         - master
 
@@ -67,6 +67,9 @@ doc_build:
         - cd doc
         - make latexpdf
         - make html
+        - cp -r build/html/ web/
+        - mv build/latex/tmrg.pdf web/html/
+        - mv web/htaccess web/html/.htaccess
         - mv web ../public
    artifacts:
      paths:
