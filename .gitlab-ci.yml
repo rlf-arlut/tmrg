@@ -51,7 +51,7 @@ doc_build_ubuntu:
 # Deploy to an EOS folder the contents generated
 deployment:
   # Executed during the deploy stage
-  stage: doc_deploy
+  stage: deploy
   # Only when the master branch is pushed
 #  only:
 #    - master
