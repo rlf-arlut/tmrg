@@ -81,6 +81,38 @@ Is System verilog supported?
 Short answer is **NO**, and there is no short feature plan to add it. 
 However, some of the language features are recognized and processed properly. 
 
+
+I'm writing a paper, how can I refer to the TMRG tool ?
+################################################################################
+
+In papers and reports, please refer to TMRG as follows: 
+
+.. code-block:: tex
+
+   @article{TMRG,
+     author={S. Kulis},
+     title={Single Event Effects mitigation with TMRG tool},
+     journal={Journal of Instrumentation},
+     volume={12},
+     number={01},
+     pages={C01082},
+     url={http://stacks.iop.org/1748-0221/12/i=01/a=C01082},
+     year={2017},
+     abstract={Single Event Effects (SEE) are a major concern for integrated
+       circuits exposed to radiation. There have been several techniques
+       proposed to protect circuits against radiation-induced upsets. Among the
+       others, the Triple Modular Redundancy (TMR) technique is one of the most
+       popular. The purpose of the Triple Modular Redundancy Generator (TMRG)
+       tool is to automatize the process of triplicating digital circuits
+       freeing the designer from introducing the TMR code manually at the
+       implementation stage. It helps to ensure that triplicated logic is
+       maintained through the design process. Finally, the tool streamlines the
+       process of introducing SEE in gate level simulations for final
+       verification.}
+   }
+
+
+
 How do I input multiple files to tmrg?
 ################################################################################
 
