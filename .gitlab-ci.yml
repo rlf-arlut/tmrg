@@ -8,6 +8,11 @@
 #  - apt-get install iverilog python-coverage -y
 #  - source etc/tmrg.sh
 
+stages:
+  - regression_ubuntu
+  - doc_build
+  - doc_deploy
+
 
 regression_ubuntu:
    image: gitlab-registry.cern.ch/skulis/tmrg:latest 
@@ -42,9 +47,6 @@ doc_build_ubuntu:
    only:
      - master
 
-stages:
-  - doc_build
-  - doc_deploy
 
 # Deploy to an EOS folder the contents generated
 deployment:
