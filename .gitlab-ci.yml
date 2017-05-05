@@ -35,9 +35,9 @@ doc_build_ubuntu:
         - cd doc
         - make html
         - make latexpdf
+        - cp -rf web ../public
         - cd build
         - mv html tmrg
-        - cp -rf html ../../public
         - zip -r tmrg_doc_html.zip tmrg
         
    artifacts:

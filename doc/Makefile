@@ -49,6 +49,7 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+	cp -r build/html/ web/
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
@@ -156,9 +157,5 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 	      
-copy_www:
-	echo "Get uASIC credentials" &&\
-	kinit tpxwafer@CERN.CH &&\
-	aklog -c cern.ch -k CERN.CH &&\
-	cp -r build/html/* /afs/cern.ch/user/t/tpxwafer/www
+
 
