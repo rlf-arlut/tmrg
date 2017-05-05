@@ -85,4 +85,8 @@ module vectorRange
       b4t=b4[4];
     end
 
+  // tmrg triplicate tmptri
+  // tmrg do_not_triplicate tmp
+  reg [0: 15-1] tmp;
+  wire [0: 15-1] tmptri=tmp;
 endmodule

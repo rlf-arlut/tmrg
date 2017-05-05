@@ -660,7 +660,7 @@ class VerilogElaborator():
             #print toks
             left=self.vf.format(toks[-2])
             right=self.vf.format(toks[-1])
-            onlyInt="%s - %s"%(left,right)
+            onlyInt="abs((%s) - (%s))"%(left,right)
             try:
                 onlyIntEval=eval(onlyInt)
                 return "%d"%(onlyIntEval+1)
@@ -783,7 +783,7 @@ class VerilogElaborator():
                     logging.error("  Wrong tmrg directive")
                     logging.error("  //%s"%err.line[:-1])
                     logging.error("")
-                else:                           
+                else:
                     logging.error("")
                     logging.error(err.line)
                     logging.error( " "*(err.column-1) + "^")
