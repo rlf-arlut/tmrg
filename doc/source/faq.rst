@@ -30,7 +30,7 @@ Using command line arguments you can use:
 .. code-block:: bash
    :linenos:
 
-   # tmrg [files] --tmr-dir "output"
+   # tmrg --tmr-dir "output" [other options]
 
 If you are using configuration file (an example can be found in ``tmrg/etc/tmrg.cfg``), 
 you should define your output directory using the variable ``tmr_dir`` in section ``tmrg``:
@@ -51,7 +51,7 @@ Please use ``-v`` option (or multiplicity of it):
 .. code-block:: bash
    :linenos:
 
-   # tmrg [files] -v
-   # tmrg [files] -vv
-   # tmrg [files] -vvv
+   # tmrg -v [other options]
+   # tmrg -vv [other options]
+   # tmrg -vvv [other options]
 
