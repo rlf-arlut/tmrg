@@ -43,6 +43,7 @@ redundancy.
 
   * gitlab page: https://gitlab.cern.ch/skulis/tmrg
   * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
+  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
 
 ..   general_assumptions
 ..   synthesis_tests
