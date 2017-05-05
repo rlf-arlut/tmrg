@@ -696,10 +696,10 @@ class TMR(VerilogElaborator):
                                         else:
                                             self._addFanout(sport,addWires="output")
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
-                        if "tmrError" in self.modules[identifier]["nets"]:
-                            #print iname
+                        if self.modules[identifier]["constraints"]["tmrErrorOut"]: #"tmrError" in self.modules[identifier]["nets"]:
                             for post in self.EXT:
                                 netName="%stmrError%s"%(iname,post)
+                                self.logger.debug("Adding net '%s' for module '%s'"%(netName,identifier))
                                 tmrErrOut=self.vp.namedPortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
                                 self._addTmrErrorWire(post,netName)
                                 newPorts.append(tmrErrOut)
@@ -969,7 +969,8 @@ class TMR(VerilogElaborator):
 
                         self.logger.debug(portstr)
 
-                if "tmrError" in self.current_module["nets"]:
+                if self.current_module["constraints"]["tmrErrorOut"]:
+                    #["nets"]:
                     groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                     for group in sorted(groups):
                         newport="tmrError%s"%group
@@ -1061,7 +1062,7 @@ class TMR(VerilogElaborator):
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
-                    if self.current_module["portMode"]=="non-ANSI":
+                    if self.current_module["constraints"]["tmrErrorOut"] and self.current_module["portMode"]=="non-ANSI":
                         moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                         moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     if group in self.current_module["tmrErrNets"]:
@@ -1381,6 +1382,7 @@ class TMR(VerilogElaborator):
             outA=netID+self.EXT[0]
             outB=netID+self.EXT[1]
             outC=netID+self.EXT[2]
+            #print netID
             range=self.current_module["nets"][netID]["range"]
             array_range=self.current_module["nets"][netID]["array_range"]
             array_len=self.current_module["nets"][netID]["array_len"]
@@ -1492,7 +1494,11 @@ class TMR(VerilogElaborator):
                 s+=" -> cmdModule:%s"%(str(tmrErrOut))
             self.logger.info(" | tmrErrOut : %s (%s)"%(str(tmrErrOut),s))
             if tmrErrOut:
-                self.modules[module]["nets"]["tmrError"]={"range":"",len:"1","tmr":True}
+                self.modules[module]["nets"]["tmrError"]={"range":"","len":"1","tmr":True,
+                                                          "from":"", "to":"","atributes":"",
+                                                          "array_range":"","array_len":"",
+                                                          "array_from":"", "array_to":""}
+            self.modules[module]["constraints"]["tmrErrorOut"]=tmrErrOut
 
             s="false"
             do_not_touch=False

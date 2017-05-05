@@ -125,6 +125,23 @@ Or just use the latest one:
 
 This docker is used for the continues integration testing.
 
+How long does it take to triplicate full chip?
+################################################################################
+
+Below you can see several examples how long does it take to triplicate the 
+Verilog code with the TMRG tool. The RTL lines count is give only to indicate
+the chip size and complexity level. 
+
+======== ================= ============ =============== ==================== ====================
+Chip      Die size [mm^2]   RTL Lines    TMR RTL Lines   TMRG run time [s]    Synthesis time [s]
+======== ================= ============ =============== ==================== ====================
+lpGBT       4.5x4.5         36368        55776           173.3                T.B.D.
+MPA         12x25           8937         21617           42.1                 9000
+SSA         11x4.5          3708         9081            20                   6945
+SALT        4x11            11612        20447           61.6                 T.B.D.
+======== ================= ============ =============== ==================== ====================
+
+As one can see, the triplication time is less than 1% synthesis time. 
 
 How do I input multiple files to tmrg?
 ################################################################################
