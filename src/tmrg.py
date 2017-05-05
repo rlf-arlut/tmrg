@@ -696,10 +696,10 @@ class TMR(VerilogElaborator):
                                         else:
                                             self._addFanout(sport,addWires="output")
                             ### TODO ADD TMR ERROR !!!!!!!!!!!!
-                        if self.current_module["constraints"]["tmrErrorOut"]: #"tmrError" in self.modules[identifier]["nets"]:
-                            #print iname
+                        if self.modules[identifier]["constraints"]["tmrErrorOut"]: #"tmrError" in self.modules[identifier]["nets"]:
                             for post in self.EXT:
                                 netName="%stmrError%s"%(iname,post)
+                                self.logger.debug("Adding net '%s' for module '%s'"%(netName,identifier))
                                 tmrErrOut=self.vp.namedPortConnection.parseString(".tmrError%s(%s)"%(post,netName))[0]
                                 self._addTmrErrorWire(post,netName)
                                 newPorts.append(tmrErrOut)
