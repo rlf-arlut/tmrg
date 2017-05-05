@@ -112,6 +112,19 @@ In papers and reports, please refer to TMRG as follows:
    }
 
 
+Do you have a docker for the TMRG?
+################################################################################
+
+Yes, we do. Please check: https://gitlab.cern.ch/skulis/tmrg/container_registry.
+Or just use the latest one:
+
+.. code-block:: bash
+   :linenos:
+
+   # docker pull gitlab-registry.cern.ch/skulis/tmrg:latest
+
+This docker is used for the continues integration testing.
+
 
 How do I input multiple files to tmrg?
 ################################################################################
