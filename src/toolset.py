@@ -3,6 +3,7 @@
 import webbrowser
 from string import Template
 import os
+import subprocess
 
 epilog="""
 TMRG toolset:
@@ -33,4 +34,8 @@ def startDocumentation():
     webbrowser.open_new(docInx)
 
 def tmrg_version():
-    return "trunk"
+    if tmrg_version.str=="":
+        d=os.path.dirname(__file__)
+        tmrg_version.str=subprocess.check_output(['git', 'rev-parse', 'HEAD'],cwd=d).rstrip()
+    return tmrg_version.str
+tmrg_version.str="" # static variable
