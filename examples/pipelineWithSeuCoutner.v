@@ -12,7 +12,7 @@ module pipelineWithSeuCoutner #(parameter SEUCNTWIDTH=8, N=512) (input clk, inpu
   assign q=pipeline[N];
 
   // seu counter logic
-  wire tmrError;
+  wire tmrError=0;
   reg [SEUCNTWIDTH-1:0] seuCountNext;
   wire [SEUCNTWIDTH-1:0] seuCountNextVoted=seuCountNext;
 
