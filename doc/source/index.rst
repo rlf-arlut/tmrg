@@ -44,6 +44,7 @@ redundancy.
   * gitlab page: https://gitlab.cern.ch/skulis/tmrg
   * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
   * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
+  * `TMRG toolset  <https://tmrg.web.cern.ch/tmrg/html/tmrg.tgz>`_ (soruce, doc, examples)
 
 ..   general_assumptions
 ..   synthesis_tests
