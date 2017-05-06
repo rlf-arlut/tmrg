@@ -1,38 +1,6 @@
 #!/usr/bin/env python
-import pysvn
 import logging
-
-
-
-
-def svnStatusGood(client):
-    changes = client.status('.')
-
-    res=1
-    toBeAdded = [f.path for f in changes if f.text_status == pysvn.wc_status_kind.added]
-    if len(toBeAdded):
-        logging.error( 'Files to be added: '+" ".join(toBeAdded))
-        res=0
-
-    toBeRemoved = [f.path for f in changes if f.text_status == pysvn.wc_status_kind.deleted]
-    if len(toBeRemoved):
-        logging.error( 'Files to be removed: '+" ".join(toBeRemoved))
-        res=0
-
-    modified = [f.path for f in changes if f.text_status == pysvn.wc_status_kind.modified]
-    if len(modified):
-        logging.error( 'Files that have changed: '+" ".join(modified))
-        res=0
-
-    conflicts = [f.path for f in changes if f.text_status == pysvn.wc_status_kind.conflicted]
-    if len(conflicts):
-        logging.error( 'Files with merge conflicts: '+" ".join(conflicts))
-        res=0
-    unversioned =  [f.path for f in changes if f.text_status == pysvn.wc_status_kind.unversioned]
-    if len(unversioned):
-      logging.warning( 'unversioned files: '+" ".join(unversioned))
-    return res
-
+from toolset import tmrg_version
 import os
 
 def replaceStrInFile(fname,fromStr,toStr):
@@ -49,61 +17,34 @@ def replaceStrInFile(fname,fromStr,toStr):
     f.close()
 
 def main():
-    tag="0.1.1"
-    client = pysvn.Client()
-
+    version=tmrg_version()
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
-    logging.info("TAG : %s"%tag)
-    logging.info("SVN: check status")
-    if not svnStatusGood(client):
-        print "exit"
-        return
-    log_message = "[tag] Tag %s created"%(tag)
-    def get_log_message():
-       return True, log_message
-    client.callback_get_log_message = get_log_message
-
-    _from='svn+ssh://skulis@svn.cern.ch/reps/tmrg/trunk'
-    _to='svn+ssh://skulis@svn.cern.ch/reps/tmrg/tags/%s' % tag
-    logging.info("SVN: copy %s %s"%(_from,_to))
-    client.copy( _from, _to )
-
-    logging.info("SVN: update ../tags")
-    client.update('../tags')
-
-    for dir in ("img","tests"):
-        client.remove('../tags/%s/%s'%(tag,dir))
+    logging.info("Version : %s"%version)
+    fname="tmrg.tgz"#%version
 
     logging.info("Replace")
-    replaceStrInFile("../tags/%s/doc/source/conf.py"%tag,"[trunk]","[%s]"%tag)
-    replaceStrInFile("../tags/%s/src/toolset.py"%tag,'return "trunk"','return "%s"'%tag)
-    logging.info("SVN: commit ./tags")
-    client.checkin(["../tags/%s"%tag], '[tag] tuning for tag %s'%tag)
-
-    _from='../tags/%s'%tag
-    _to='../rel/tmrg-%s'%tag
-    logging.info("SVN: export %s %s"%(_from,_to))
-    client.export(_from, _to)
+    #replaceStrInFile("../tags/%s/doc/source/conf.py"%tag,"[trunk]","[%s]"%tag)
+    replaceStrInFile("./src/toolset.py",'tmrg_version.str=""','tmrg_version.str="%s"'%version)
 
     logging.info("make html")
-    os.system("cd ../tags/%s/doc ; make html"%tag)
+    os.system("cd doc ; make html")
+    logging.info("make pdf")
+    os.system("cd doc ; make latexpdf")
     logging.info("copy html")
-    os.system("cp -r ../tags/%s/doc/build/html ../rel/tmrg-%s/doc/build"%(tag,tag))
+    os.system("mv doc/build/html doc/")
+    os.system("mkdir doc/pdf")
+    os.system("mv doc/build/latex/tmrg.pdf doc/pdf")
     logging.info("tar")
-    os.system("cd ../rel/ ; tar -cvzf tmrg-%s.tgz tmrg-%s"%(tag,tag))
+    cmd="""cd .. ; tar --exclude='activity.py' --exclude='fastLefParser.py' --exclude='top.py' --exclude='*.pyc' --exclude='*~' \
+          --exclude='reportPrints.py' --exclude='scanExamples.py'  --exclude='sdf.py' --exclude='spliter.py' --exclude="rc" \
+          --exclude="examples/doc"  --exclude="examples/*.py" --exclude="examples/*.cnf" \
+          -cvzf  %s tmrg/doc/html tmrg/doc/pdf tmrg/src tmrg/etc tmrg/bin tmrg/examples  tmrg/README.md tmrg/LICENSE tmrg/CHANGELOG && mv %s tmrg"""%(fname,fname)
+#    print cmd
+    os.system(cmd)
+    logging.info("File %s"%(fname))
+    logging.info("File size :%.1f kB"%(float(os.path.getsize(fname))/(1024)))
+    return
 
-    logging.info("File tmrg-%s.tgz"%(tag))
-    logging.info("File size :%.1f"%(float(os.path.getsize('../rel/tmrg-%s.tgz'%(tag)))/(1024*1024)))
-    f=open("tmrg.pass","r")
-    sshpassword=f.read()
-    f.close()
-
-    os.system("sshpass -p '%s' ssh tmrg@lxplus mkdir ./www/releases/%s"%(sshpassword,tag))
-    os.system("sshpass -p '%s' scp -r ../rel/tmrg-%s/doc/build/html/* tmrg@lxplus:./www/releases/%s"%(sshpassword,tag,tag))
-    os.system("sshpass -p '%s' scp -r ~/work/tmrg/rel/tmrg-%s.tgz tmrg@lxplus:./www/releases/"%(sshpassword,tag))
 
 if __name__=="__main__":
     main()
-
-
-

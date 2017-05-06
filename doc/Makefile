@@ -8,7 +8,7 @@ PAPER         =
 BUILDDIR      = build
 
 current_dir   := $(shell pwd)
-export PYTHONPATH = ../:../tmp/:../tests/
+export PYTHONPATH = ../:../tmp/:../tests/:../src
 
 
 # Internal variables.

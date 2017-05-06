@@ -69,6 +69,8 @@ doc_build_master:
         - mv build/latex/tmrg.pdf web/html/
         - mv web/htaccess web/html/.htaccess
         - mv web ../public
+        - ./src/release.py
+        - mv tmrg.tgz public/html/
    artifacts:
      paths:
        - public
@@ -76,6 +78,18 @@ doc_build_master:
      expire_in: 1 hour
    only:
      - master
+
+#build_tarbal:
+#   stage: build
+#   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+#   script: 
+#   artifacts:
+#     paths:
+#       - tmrg.tgz
+#     # Make it vanish in 1 hour
+#     expire_in: 1 hour
+#   only:
+#     - master
 
 
 # Deploy to an EOS folder the contents generated
