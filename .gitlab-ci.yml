@@ -84,7 +84,7 @@ build_tarbal:
         - ./src/release.py
    artifacts:
      paths:
-       - ../tmrg.tgz
+       - tmrg.tgz
      # Make it vanish in 1 hour
      expire_in: 1 hour
 #   only:
