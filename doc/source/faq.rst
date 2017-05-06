@@ -143,6 +143,17 @@ SALT        4x11            11612        20447           61.6                 T.
 
 As one can see, the triplication time is less than 1% synthesis time. 
 
+Which names are reserved in the TMRG tool?
+################################################################################
+
+Signals (reg, wire, input, output) containing strings:
+ * **Voted**
+ * **A**,  **B**, **C**
+ * **tmrError**
+may be modified (or even deleted) by the TMRG tool. 
+For more details about possible behaviors please refer to :ref:`constraining_the_design`.
+
+
 How do I input multiple files to tmrg?
 ################################################################################
 
