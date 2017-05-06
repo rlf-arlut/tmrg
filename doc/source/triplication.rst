@@ -89,8 +89,12 @@ The resulting module will look like:
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb02.png
    :align: center
+
+|
 
 You should note that input, output, and logic was triplicated. 
 
@@ -112,10 +116,12 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb03.png
    :align: center
 
-
+|
 
 As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, the logic itself, modeled by ``wire combLogic`` is also triplicated. 
 At this point, one should be aware that the output module would be exactly the same if one applies constraints as shown below:
@@ -139,9 +145,12 @@ Lets us consider the opposite situation, where the output is left non triplicate
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb04.png
    :align: center
 
+|
 
 As you can see, in order to generate non triplicated output a majority voter is added.
 
@@ -159,9 +168,12 @@ Nothing prevents you from triplicating only logic.
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb05.png
    :align: center
 
+|
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,10 +188,12 @@ You can also triplicate everything except logic.
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb06.png
    :align: center
 
-
+|
 
 majorityVoter and fanout modules
 ################################
@@ -243,17 +257,22 @@ A simple pass through is shown below:
    :language: verilog
    :linenos:
 
+|
+
 .. image:: vote01.png
    :align: center
 
-
+|
 
 vote02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+|
 
 .. image:: vote02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/vote02.v
    :language: verilog
@@ -275,9 +294,12 @@ fsm01 - triplication without voting
 
 Simple case. Everything is triplicated but the errors are not fixed.
 
+|
 
 .. image:: fsm01.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm01.v
    :language: verilog
@@ -296,8 +318,12 @@ fsm02 - triplication and voting
 All elements are protected. 
 This type of configuration gives maximum protection.
 
+|
+
 .. image:: fsm02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm02.v
    :language: verilog
@@ -314,8 +340,12 @@ fsm03 - triplicating only the register
 Only memory elements are protected. 
 A single event transient appearing in the voting element of the combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
 
+|
+
 .. image:: fsm03.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm03.v
    :language: verilog
@@ -328,9 +358,12 @@ A single event transient appearing in the voting element of the combinatorial bl
 fsm04 - triplicating the register and clock skew
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+|
 
 .. image:: fsm04.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm04.v
    :language: verilog
@@ -372,9 +405,12 @@ In this example we have a cell ``mlogic`` (which presumably comes from the libra
 and we do not want to touch the internal of the cell. That is why the
 ``do_not_touch`` directive is added in the module declaration. 
 
+|
 
 .. image:: inst01.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst01.v
    :language: verilog
@@ -391,9 +427,12 @@ If you do not want to triplicate a cell which has ``do_not_touch`` property, you
 have to apply ``do_not_triplicate`` directive specifying **INSTANCE** (not module), as was the case for signals.
 Voters and fanouts will be added if necessary. 
 
+|
 
 .. image:: inst02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst02.v
    :language: verilog
@@ -411,8 +450,12 @@ When the module being instantiated is a subject of triplication as well, only co
 are modified, and voters and fanouts are added if necessary. The example below shows a
 situation where two modules (parent and child) are to be fully triplicated.
 
+|
+
 .. image:: inst03.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst03.v
    :language: verilog
