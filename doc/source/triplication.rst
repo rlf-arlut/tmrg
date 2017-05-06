@@ -288,6 +288,7 @@ Simple case. Everything is triplicated but the errors are not fixed.
    :linenos:
 
 
+.. _fsm02:
 
 fsm02 - triplication and voting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -582,10 +583,22 @@ One can use ``slicing`` directive to slice the module.
 
    // tmrg slicing
 
+
+From the functional point of view, it is equivalent to  triplication  with full voting (please check :ref:`fsm02`).
+The differentiating factor is that a sub-module (slice) containing all voters is created as depicted below:
+
+|
+
 .. image:: slice.png
    :align: center
 
+|
 
+This feature cab be useful for implementation of timing critical circuits. A slice can 
+be implemented (synthesis + P&R) and then instantiated 3 times in the final circuit
+implementation. 
+
+ 
 Input:
 
 .. literalinclude:: ../../examples/slice.v
