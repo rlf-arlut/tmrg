@@ -582,6 +582,9 @@ One can use ``slicing`` directive to slice the module.
 
    // tmrg slicing
 
+.. image:: slice.png
+   :align: center
+
 
 Input:
 
