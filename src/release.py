@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pysvn
 import logging
-
+from toolset import tmrg_version
 
 
 
@@ -49,36 +49,13 @@ def replaceStrInFile(fname,fromStr,toStr):
     f.close()
 
 def main():
-    tag="0.1.1"
-    client = pysvn.Client()
-
+    version=tmrg_version()
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
-    logging.info("TAG : %s"%tag)
-    logging.info("SVN: check status")
-    if not svnStatusGood(client):
-        print "exit"
-        return
-    log_message = "[tag] Tag %s created"%(tag)
-    def get_log_message():
-       return True, log_message
-    client.callback_get_log_message = get_log_message
-
-    _from='svn+ssh://skulis@svn.cern.ch/reps/tmrg/trunk'
-    _to='svn+ssh://skulis@svn.cern.ch/reps/tmrg/tags/%s' % tag
-    logging.info("SVN: copy %s %s"%(_from,_to))
-    client.copy( _from, _to )
-
-    logging.info("SVN: update ../tags")
-    client.update('../tags')
-
-    for dir in ("img","tests"):
-        client.remove('../tags/%s/%s'%(tag,dir))
+    logging.info("Version : %s"%version)
 
     logging.info("Replace")
-    replaceStrInFile("../tags/%s/doc/source/conf.py"%tag,"[trunk]","[%s]"%tag)
-    replaceStrInFile("../tags/%s/src/toolset.py"%tag,'return "trunk"','return "%s"'%tag)
-    logging.info("SVN: commit ./tags")
-    client.checkin(["../tags/%s"%tag], '[tag] tuning for tag %s'%tag)
+    #replaceStrInFile("../tags/%s/doc/source/conf.py"%tag,"[trunk]","[%s]"%tag)
+    replaceStrInFile("../tags/%s/src/toolset.py"%tag,'tmrg_version.str=""','return "%s"'%version)
 
     _from='../tags/%s'%tag
     _to='../rel/tmrg-%s'%tag
@@ -86,7 +63,10 @@ def main():
     client.export(_from, _to)
 
     logging.info("make html")
-    os.system("cd ../tags/%s/doc ; make html"%tag)
+    os.system("cd doc ; make html")
+    logging.info("make html")
+    os.system("cd doc ; make latexpdf")
+    return
     logging.info("copy html")
     os.system("cp -r ../tags/%s/doc/build/html ../rel/tmrg-%s/doc/build"%(tag,tag))
     logging.info("tar")
@@ -104,6 +84,3 @@ def main():
 
 if __name__=="__main__":
     main()
-
-
-
