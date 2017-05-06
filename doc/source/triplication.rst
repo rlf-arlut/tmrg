@@ -644,7 +644,7 @@ Output of the TMRG tool will be:
 .. all instances instantiated in the module.
 
 One can use ``tmr_error_exclude`` directive to exclude some error outputs 
-from being excluded from the global ``tmrError``. 
+from being included from the global ``tmrError``. 
 
 .. code-block:: verilog
 
