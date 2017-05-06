@@ -19,6 +19,16 @@ redundancy.
    By downloading the code, you become **RESPONSIBLE** for protecting it.
    For more details please refer :ref:`licesing`.
 
+**Quick links**:
+
+  * Gitlab page: https://gitlab.cern.ch/skulis/tmrg
+  * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
+
+**Downloads**:
+
+  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
+  * Latest version of the `TMRG toolse <https://tmrg.web.cern.ch/tmrg/html/tmrg.tgz>`_ (source, doc, examples)
+
 **Content**:
 
 .. toctree::
@@ -39,12 +49,6 @@ redundancy.
   * `Single Event Effects mitigation with TMRG tool <http://iopscience.iop.org/article/10.1088/1748-0221/12/01/C01082/meta>`_, Journal of Instrumentation, Volume 12, January 2017 
 
 
-**Quick links**:
-
-  * gitlab page: https://gitlab.cern.ch/skulis/tmrg
-  * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
-  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
-  * `TMRG toolset  <https://tmrg.web.cern.ch/tmrg/html/tmrg.tgz>`_ (soruce, doc, examples)
 
 ..   general_assumptions
 ..   synthesis_tests
