@@ -38,8 +38,8 @@ def main():
     cmd="""cd .. ; tar --exclude='activity.py' --exclude='fastLefParser.py' --exclude='top.py' --exclude='*.pyc' --exclude='*~' \
           --exclude='reportPrints.py' --exclude='scanExamples.py'  --exclude='sdf.py' --exclude='spliter.py' --exclude="rc" \
           --exclude="examples/doc"  --exclude="examples/*.py" --exclude="examples/*.cnf" \
-          -cvzf  %s tmrg/doc/html tmrg/doc/pdf tmrg/src tmrg/etc tmrg/bin tmrg/examples"""%(fname)
-    print cmd
+          -cvzf  %s tmrg/doc/html tmrg/doc/pdf tmrg/src tmrg/etc tmrg/bin tmrg/examples  tmrg/README.md tmrg/LICENSE tmrg/CHANGELOG && mv %s tmrg"""%(fname,fname)
+#    print cmd
     os.system(cmd)
     logging.info("File %s"%(fname))
     logging.info("File size :%.1f kB"%(float(os.path.getsize(fname))/(1024)))
