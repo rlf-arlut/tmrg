@@ -77,6 +77,19 @@ doc_build_master:
    only:
      - master
 
+build_tarbal:
+   stage: build
+   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   script: 
+        - ./src/release.py
+   artifacts:
+     paths:
+       - ../tmrg.tgz
+     # Make it vanish in 1 hour
+     expire_in: 1 hour
+#   only:
+#     - master
+
 
 # Deploy to an EOS folder the contents generated
 deployment:
