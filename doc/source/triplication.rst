@@ -589,34 +589,38 @@ to fix the error to restore the proper state in all memory cells.
 One can then consider using the information from the majority voter cell to re-enable the
 clock for a short period of time (one clock cycle) until the error is fixed.
 
-To do this with the TMRG tool, one has to use a dedicated directive ``tmr_error
-true`` as well as instantiate a net with a specific name ``tmrError``. 
-The example below illustrates how this can be done:
-
-.. literalinclude:: ../../examples/tmrOut01.v
-   :language: verilog
-   :linenos:
-
-.. literalinclude:: ../../examples/doc/tmrOut01TMR.v
-   :language: verilog
-   :linenos:
-
-As one can see, in non-triplicated code tmrError wire has to be set to zero. In
-that way the non triplicated circuit is not affected and can be simulated. The
-triplicated tmrError signal is an OR of all signals from the current module and
-all instances instantiated in the module.
-
-Another good use of this feature may be to implement a mechanism for counting
-number of detected single-event upsets.
-
-
-One can use ``tmr_error_exclude`` directive to exlude some error outputs. 
+The TMRG tool always generates ``tmrError`` output associated with each voter. For
+a signal ``mem`` the voter can look like:
 
 .. code-block:: verilog
+   :linenos:
 
-   // tmrg tmr_error_exclude identifier
+   majorityVoter memVoter (
+       .inA(memA),
+       .inB(memB),
+       .inC(memC),
+       .out(mem),
+       .tmrErr(memTmrError)
+       );
 
-tmrError ff example:
+
+Moreover, the TMRG tool generates also a global ``tmrError`` signal which is a
+combination of all error signals inside given module. To make use of the signal
+(particular or global) it is enough to make a declaration like:
+
+.. code-block:: verilog
+   :linenos:
+
+   wire memTmrError=1'b0;
+   wire tmrError=1'b0;
+
+This definition will be removed by the TMRG tool and the wire will be connected
+directly to the error output of the voter. By declaring ``tmrError`` the
+designer gains access to the signal and can implement the required
+functionality. Moreover, assigning zero value ensures that the non triplicated
+circuit is not affected and can be simulated.
+
+Lets analyze an example of a simple flip flop with clock gating:
 
 |
 
@@ -625,15 +629,52 @@ tmrError ff example:
 
 |
 
-Input:
-
 .. literalinclude:: ../../examples/tmrError.v
    :language: verilog
    :linenos:
 
-Output: 
+Output of the TMRG tool will be:
 
 .. literalinclude:: ../../examples/doc/tmrErrorTMR.v
+   :language: verilog
+   :linenos:
+
+.. As one can see, in non-triplicated code tmrError wire has to be set to zero. The
+.. triplicated tmrError signal is an OR of all signals from the current module and
+.. all instances instantiated in the module.
+
+One can use ``tmr_error_exclude`` directive to exclude some error outputs 
+from being excluded from the global ``tmrError``. 
+
+.. code-block:: verilog
+
+   // tmrg tmr_error_exclude identifier
+
+
+To expose ``tmrError`` output to higher hierarchical level, 
+one may use a dedicated directive ``tmr_error true``. 
+The example below illustrates how this can be done:
+
+.. literalinclude:: ../../examples/tmrOut01.v
+   :language: verilog
+   :linenos:
+
+And the corresponding output from the TMRG tool will be:
+
+.. literalinclude:: ../../examples/doc/tmrOut01TMR.v
+   :language: verilog
+   :linenos:
+
+Another good use of this feature may be to implement a mechanism for counting
+number of detected single-event upsets:
+
+.. literalinclude:: ../../examples/pipelineWithSeuCoutner.v
+   :language: verilog
+   :linenos:
+
+And the corresponding output from the TMRG tool will be:
+
+.. literalinclude:: ../../examples/doc/pipelineWithSeuCoutnerTMR.v
    :language: verilog
    :linenos:
 
