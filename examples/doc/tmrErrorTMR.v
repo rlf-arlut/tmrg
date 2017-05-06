@@ -1,18 +1,15 @@
 module ffTMR(
   input  clk,
-  input  d,
-  output  q,
+  input  in,
+  output  out,
   input  load
 );
 wire loadIntC;
 wire loadIntB;
 wire loadIntA;
-wire dC;
-wire dB;
-wire dA;
-wire qC;
-wire qB;
-wire qA;
+wire memNextC;
+wire memNextB;
+wire memNextA;
 wire clkC;
 wire clkB;
 wire clkA;
@@ -23,25 +20,20 @@ reg  memA;
 reg  memB;
 reg  memC;
 wire loadInt =  load|tmrError;
+wire memNext =  (load) ? in : out;
+assign out =  mem;
 
 always @( posedge clkA )
   if (loadIntA)
-    memA <= dA;
-  else
-    memA <= qA;
+    memA <= memNextA;
 
 always @( posedge clkB )
   if (loadIntB)
-    memB <= dB;
-  else
-    memB <= qB;
+    memB <= memNextB;
 
 always @( posedge clkC )
   if (loadIntC)
-    memC <= dC;
-  else
-    memC <= qC;
-assign q =  mem;
+    memC <= memNextC;
 
 majorityVoter memVoter (
     .inA(memA),
@@ -59,18 +51,11 @@ fanout clkFanout (
     .outC(clkC)
     );
 
-fanout qFanout (
-    .in(q),
-    .outA(qA),
-    .outB(qB),
-    .outC(qC)
-    );
-
-fanout dFanout (
-    .in(d),
-    .outA(dA),
-    .outB(dB),
-    .outC(dC)
+fanout memNextFanout (
+    .in(memNext),
+    .outA(memNextA),
+    .outB(memNextB),
+    .outC(memNextC)
     );
 
 fanout loadIntFanout (

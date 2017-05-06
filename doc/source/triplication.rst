@@ -616,6 +616,27 @@ One can use ``tmr_error_exclude`` directive to exlude some error outputs.
 
    // tmrg tmr_error_exclude identifier
 
+tmrError ff example:
+
+|
+
+.. image:: tmrError.png
+   :align: center
+
+|
+
+Input:
+
+.. literalinclude:: ../../examples/tmrError.v
+   :language: verilog
+   :linenos:
+
+Output: 
+
+.. literalinclude:: ../../examples/doc/tmrErrorTMR.v
+   :language: verilog
+   :linenos:
+
 
 Slicing
 ################################################################################
