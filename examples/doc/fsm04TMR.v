@@ -1,4 +1,4 @@
-module fsm03TMR(
+module fsm04TMR(
   in,
   out,
   clkA,
