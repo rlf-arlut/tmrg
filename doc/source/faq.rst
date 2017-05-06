@@ -40,7 +40,7 @@ but after last update something broke. What should I do ?
   2) go to your old triplicated file, in the header you shold find an information 
      about version of TMRG which was used at the time:
 
-     .. code-block:: C
+     .. code-block:: c
         :linenos:
 
         /****************************************************************************************************
@@ -153,9 +153,11 @@ Which names are reserved in the TMRG tool?
 ################################################################################
 
 Signals (reg, wire, input, output) containing strings:
+
  * **Voted**
  * **A**,  **B**, **C**
  * **tmrError**
+
 may be modified (or even deleted) by the TMRG tool. 
 For more details about possible behaviors please refer to :ref:`constraining_the_design`.
 
