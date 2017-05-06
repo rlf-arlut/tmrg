@@ -1,4 +1,4 @@
-module slice_slice(
+module fsm05_slice(
   clkIn,
   clkOut,
   divNext,
@@ -28,7 +28,7 @@ always @( posedge clkIn )
 assign clkOut =  div[1] ;
 endmodule
 
-module slice(
+module fsm05(
   clkInA,
   clkInB,
   clkInC,
@@ -46,7 +46,7 @@ wire [1:0] divNextC;
 wire [1:0] divNextB;
 wire [1:0] divNextA;
 
-slice_slice sliceA (
+fsm05_slice fsm05A (
     .clkIn(clkInA),
     .clkOut(clkOutA),
     .divNext(divNextA),
@@ -55,7 +55,7 @@ slice_slice sliceA (
     .divNextC(divNextC)
     );
 
-slice_slice sliceB (
+fsm05_slice fsm05B (
     .clkIn(clkInB),
     .clkOut(clkOutB),
     .divNext(divNextB),
@@ -64,7 +64,7 @@ slice_slice sliceB (
     .divNextC(divNextC)
     );
 
-slice_slice sliceC (
+fsm05_slice fsm05C (
     .clkIn(clkInC),
     .clkOut(clkOutC),
     .divNext(divNextC),
@@ -73,4 +73,3 @@ slice_slice sliceC (
     .divNextC(divNextC)
     );
 endmodule
-

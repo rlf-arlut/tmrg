@@ -1,4 +1,10 @@
-module pipelineWithSeuCoutner #(parameter SEUCNTWIDTH=8, N=512) (input clk, input d, output q, input seuCountRst, output reg [SEUCNTWIDTH-1:0] seuCount);
+module pipelineWithSeuCoutner #(parameter SEUCNTWIDTH=8, N=512) (
+  input clk, 
+  input d,
+  output q,
+  input seuCountRst,
+  output reg [SEUCNTWIDTH-1:0] seuCount
+);
   // pipeline logic
   reg [N-1:0] pipeline;
   wire [N-1:0] pipelineNext;
@@ -7,7 +13,7 @@ module pipelineWithSeuCoutner #(parameter SEUCNTWIDTH=8, N=512) (input clk, inpu
   assign pipelineNext={pipeline[N-1],d};
 
   always @(posedge clk)
-    pipeline=pipelineNext;
+    pipeline=pipelineNextVoted;
 
   assign q=pipeline[N];
 
@@ -16,8 +22,12 @@ module pipelineWithSeuCoutner #(parameter SEUCNTWIDTH=8, N=512) (input clk, inpu
   reg [SEUCNTWIDTH-1:0] seuCountNext;
   wire [SEUCNTWIDTH-1:0] seuCountNextVoted=seuCountNext;
 
-  always @(tmrError)
-    seuCountNext=seuCount+1;
+  always @(seuCount or tmrError)
+    begin
+      seuCountNext=seuCount;
+      if (tmrError)
+        seuCountNext=seuCount+1;
+    end
 
   always @(posedge clk or seuCountRst)
     if (seuCountRst)

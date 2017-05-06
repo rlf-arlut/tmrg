@@ -89,8 +89,12 @@ The resulting module will look like:
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb02.png
    :align: center
+
+|
 
 You should note that input, output, and logic was triplicated. 
 
@@ -112,10 +116,12 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb03.png
    :align: center
 
-
+|
 
 As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, the logic itself, modeled by ``wire combLogic`` is also triplicated. 
 At this point, one should be aware that the output module would be exactly the same if one applies constraints as shown below:
@@ -139,9 +145,12 @@ Lets us consider the opposite situation, where the output is left non triplicate
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb04.png
    :align: center
 
+|
 
 As you can see, in order to generate non triplicated output a majority voter is added.
 
@@ -159,9 +168,12 @@ Nothing prevents you from triplicating only logic.
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb05.png
    :align: center
 
+|
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,10 +188,12 @@ You can also triplicate everything except logic.
    :language: verilog
    :linenos:
 
+|
+
 .. image:: comb06.png
    :align: center
 
-
+|
 
 majorityVoter and fanout modules
 ################################
@@ -243,17 +257,22 @@ A simple pass through is shown below:
    :language: verilog
    :linenos:
 
+|
+
 .. image:: vote01.png
    :align: center
 
-
+|
 
 vote02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+|
 
 .. image:: vote02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/vote02.v
    :language: verilog
@@ -275,9 +294,12 @@ fsm01 - triplication without voting
 
 Simple case. Everything is triplicated but the errors are not fixed.
 
+|
 
 .. image:: fsm01.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm01.v
    :language: verilog
@@ -288,6 +310,7 @@ Simple case. Everything is triplicated but the errors are not fixed.
    :linenos:
 
 
+.. _fsm02:
 
 fsm02 - triplication and voting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -295,8 +318,12 @@ fsm02 - triplication and voting
 All elements are protected. 
 This type of configuration gives maximum protection.
 
+|
+
 .. image:: fsm02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm02.v
    :language: verilog
@@ -313,8 +340,12 @@ fsm03 - triplicating only the register
 Only memory elements are protected. 
 A single event transient appearing in the voting element of the combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
 
+|
+
 .. image:: fsm03.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm03.v
    :language: verilog
@@ -327,9 +358,12 @@ A single event transient appearing in the voting element of the combinatorial bl
 fsm04 - triplicating the register and clock skew
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+|
 
 .. image:: fsm04.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/fsm04.v
    :language: verilog
@@ -371,9 +405,12 @@ In this example we have a cell ``mlogic`` (which presumably comes from the libra
 and we do not want to touch the internal of the cell. That is why the
 ``do_not_touch`` directive is added in the module declaration. 
 
+|
 
 .. image:: inst01.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst01.v
    :language: verilog
@@ -390,9 +427,12 @@ If you do not want to triplicate a cell which has ``do_not_touch`` property, you
 have to apply ``do_not_triplicate`` directive specifying **INSTANCE** (not module), as was the case for signals.
 Voters and fanouts will be added if necessary. 
 
+|
 
 .. image:: inst02.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst02.v
    :language: verilog
@@ -410,8 +450,12 @@ When the module being instantiated is a subject of triplication as well, only co
 are modified, and voters and fanouts are added if necessary. The example below shows a
 situation where two modules (parent and child) are to be fully triplicated.
 
+|
+
 .. image:: inst03.png
    :align: center
+
+|
 
 .. literalinclude:: ../../examples/inst03.v
    :language: verilog
@@ -545,32 +589,94 @@ to fix the error to restore the proper state in all memory cells.
 One can then consider using the information from the majority voter cell to re-enable the
 clock for a short period of time (one clock cycle) until the error is fixed.
 
-To do this with the TMRG tool, one has to use a dedicated directive ``tmr_error
-true`` as well as instantiate a net with a specific name ``tmrError``. 
+The TMRG tool always generates ``tmrError`` output associated with each voter. For
+a signal ``mem`` the voter can look like:
+
+.. code-block:: verilog
+   :linenos:
+
+   majorityVoter memVoter (
+       .inA(memA),
+       .inB(memB),
+       .inC(memC),
+       .out(mem),
+       .tmrErr(memTmrError)
+       );
+
+
+Moreover, the TMRG tool generates also a global ``tmrError`` signal which is a
+combination of all error signals inside given module. To make use of the signal
+(particular or global) it is enough to make a declaration like:
+
+.. code-block:: verilog
+   :linenos:
+
+   wire memTmrError=1'b0;
+   wire tmrError=1'b0;
+
+This definition will be removed by the TMRG tool and the wire will be connected
+directly to the error output of the voter. By declaring ``tmrError`` the
+designer gains access to the signal and can implement the required
+functionality. Moreover, assigning zero value ensures that the non triplicated
+circuit is not affected and can be simulated.
+
+Lets analyze an example of a simple flip flop with clock gating:
+
+|
+
+.. image:: tmrError.png
+   :align: center
+
+|
+
+.. literalinclude:: ../../examples/tmrError.v
+   :language: verilog
+   :linenos:
+
+Output of the TMRG tool will be:
+
+.. literalinclude:: ../../examples/doc/tmrErrorTMR.v
+   :language: verilog
+   :linenos:
+
+.. As one can see, in non-triplicated code tmrError wire has to be set to zero. The
+.. triplicated tmrError signal is an OR of all signals from the current module and
+.. all instances instantiated in the module.
+
+One can use ``tmr_error_exclude`` directive to exclude some error outputs 
+from being included from the global ``tmrError``. 
+
+.. code-block:: verilog
+
+   // tmrg tmr_error_exclude identifier
+
+
+To expose ``tmrError`` output to higher hierarchical level, 
+one may use a dedicated directive ``tmr_error true``. 
 The example below illustrates how this can be done:
 
 .. literalinclude:: ../../examples/tmrOut01.v
    :language: verilog
    :linenos:
 
+And the corresponding output from the TMRG tool will be:
+
 .. literalinclude:: ../../examples/doc/tmrOut01TMR.v
    :language: verilog
    :linenos:
 
-As one can see, in non-triplicated code tmrError wire has to be set to zero. In
-that way the non triplicated circuit is not affected and can be simulated. The
-triplicated tmrError signal is an OR of all signals from the current module and
-all instances instantiated in the module.
-
 Another good use of this feature may be to implement a mechanism for counting
-number of detected single-event upsets.
+number of detected single-event upsets:
 
+.. literalinclude:: ../../examples/pipelineWithSeuCoutner.v
+   :language: verilog
+   :linenos:
 
-One can use ``tmr_error_exclude`` directive to exlude some error outputs. 
+And the corresponding output from the TMRG tool will be:
 
-.. code-block:: verilog
-
-   // tmrg tmr_error_exclude identifier
+.. literalinclude:: ../../examples/doc/pipelineWithSeuCoutnerTMR.v
+   :language: verilog
+   :linenos:
 
 
 Slicing
@@ -583,6 +689,21 @@ One can use ``slicing`` directive to slice the module.
    // tmrg slicing
 
 
+From the functional point of view, it is equivalent to  triplication  with full voting (please check :ref:`fsm02`).
+The differentiating factor is that a sub-module (slice) containing all voters is created as depicted below:
+
+|
+
+.. image:: slice.png
+   :align: center
+
+|
+
+This feature cab be useful for implementation of timing critical circuits. A slice can 
+be implemented (synthesis + P&R) and then instantiated 3 times in the final circuit
+implementation. 
+
+ 
 Input:
 
 .. literalinclude:: ../../examples/slice.v
