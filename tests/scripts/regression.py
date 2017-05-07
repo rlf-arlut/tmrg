@@ -142,6 +142,9 @@ def check():
 otherTests=(
   ("tmrg"," --include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0, check),
   ("tmrg","--help",1,None),
+  ("plag","--help",1,None),
+  ("seeg","--help",1,None),
+  ("tbg", "--help",1,None),
   ("tmrg","%s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0,None),
   ("tmrg","--stats %s/verilog/fsm01.v"%(top),1,None),
   ("tmrg","%s/verilog/leftSideConcatenation.v"%(top),1,None), # should print error message
@@ -156,15 +159,28 @@ otherTests=(
 )
 
 mustFailTests=(
+  ("tmrg","",1,None),
+  ("seeg","",1,None),
+  ("plag","",1,None),
+  ("tbg", "",1,None),
+
   ("tmrg","nofile.v",1,None),
+  ("seeg","nofile.v",1,None),
+  ("plag","nofile.v",1,None),
+  ("tbg", "nofile.v",1,None),
+
   ("tmrg","--no-such-option",1,None),
+  ("seeg","--no-such-option",1,None),
+  ("plag","--no-such-option",1,None),
+  ("tbg", "--no-such-option",1,None),
+
+  ("tmrg", "verilog/verilogError.v" ,1,None),
+  ("seeg", "verilog/verilogError.v" ,1,None),
+  ("plag", "verilog/verilogError.v" ,1,None),
+  ("tbg",  "verilog/verilogError.v" ,1,None),
+
   ("tmrg","%s/verilog/hier/top.v "%(top),1,None),
-  ("seeg","-v",1,None),
-  ("tmrg", "--generate-report verilog/verilogError.v" ,1,None),
-  ("seeg", "--generate-report verilog/verilogError.v" ,1,None),
-  ("plag", "--generate-report verilog/verilogError.v" ,1,None),
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c do_not_exists "%(top,top),1,None),
-  ("tbg", "verilog/verilogError.v" ,1,None),
  )
 
 
