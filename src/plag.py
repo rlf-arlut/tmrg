@@ -16,6 +16,12 @@ from verilogElaborator import *
 from string import Template
 from toolset import *
 from tmrg import makeSureDirExists
+import getpass
+import socket
+import time
+import datetime
+import hashlib
+import zipfile
 
 class PLA(VerilogElaborator):
     def __init__(self,options, args):
@@ -136,8 +142,16 @@ def main():
     parser.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
     parser.add_option("",  "--include",            dest="include",    action="store_true", default="false",   help="Include include files")
     parser.add_option("", "--inc-dir", dest="inc_dir", action="append", default=[], help="Include directories")
+    parser.add_option("", "--log",                 dest="log",     default="",             help="Store detailed log to file")
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+#    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
 
     try:
         (options, args) = parser.parse_args()

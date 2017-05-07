@@ -16,6 +16,12 @@ from toolset import *
 import getpass
 import socket
 from tmrg import makeSureDirExists
+import getpass
+import socket
+import time
+import datetime
+import hashlib
+import zipfile
 
 class SEE(VerilogElaborator):
     def __init__(self,options, args):
