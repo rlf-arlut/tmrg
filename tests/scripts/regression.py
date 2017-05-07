@@ -151,6 +151,8 @@ otherTests=(
   ("seeg","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0,None),
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt --cells=\"DFCNQD1\""%(top,top,top),0,None), 
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c %s/cnf/plag.cfg "%(top,top,top),0,None), 
+  ("tbg","%s/../examples/fsm01.v -o fsm01_test.v "%(top),0,None), 
+  
 )
 
 mustFailTests=(
@@ -162,6 +164,7 @@ mustFailTests=(
   ("seeg", "--generate-report verilog/verilogError.v" ,1,None),
   ("plag", "--generate-report verilog/verilogError.v" ,1,None),
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c do_not_exists "%(top,top),1,None),
+  ("tbg", "verilog/verilogError.v" ,1,None),
  )
 
 
@@ -387,7 +390,7 @@ def runOthers(tests,mustFail=False):
     errors=0
     for appName,testArgs,verbose,checker in tests:
         logging.info("Runnging '%s %s'" % (appName,testArgs))
-        appExec=find_executable(appName)[:-4]+"../src/%s.py "%appName
+        appExec=find_executable(appName)[:-4]+"/../src/%s.py "%appName
         cmd = "%s %s %s" % (runCov, appExec,testArgs)
         err, outLog = commands.getstatusoutput(cmd)
         if mustFail:
