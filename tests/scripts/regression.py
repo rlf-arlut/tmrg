@@ -140,17 +140,29 @@ def check():
   return ""
 
 otherTests=(
-  ("tmrg"," --include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0, check),
   ("tmrg","--help",1,None),
   ("plag","--help",1,None),
   ("seeg","--help",1,None),
   ("tbg", "--help",1,None),
+
+  ("tmrg","-h",1,None),
+  ("plag","-h",1,None),
+  ("seeg","-h",1,None),
+  ("tbg", "-h",1,None),
+
+  ("tmrg","--version",1,None),
+  ("plag","--version",1,None),
+  ("seeg","--version",1,None),
+  ("tbg", "--version",1,None),
+
+  ("tmrg"," --include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0, check),
   ("tmrg","%s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0,None),
   ("tmrg","--stats %s/verilog/fsm01.v"%(top),1,None),
   ("tmrg","%s/verilog/leftSideConcatenation.v"%(top),1,None), # should print error message
   ("tmrg","--log fsm01.log -vv %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
   ("tmrg","--generate-report %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
   ("tmrg","%s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),0,None), #TODO check it works after tmr
+
   ("seeg","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0,None),
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt --cells=\"DFCNQD1\""%(top,top,top),0,None), 
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c %s/cnf/plag.cfg "%(top,top,top),0,None), 
