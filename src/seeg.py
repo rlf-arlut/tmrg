@@ -200,6 +200,9 @@ def main():
     parser.add_option("-o", "--output-file",   dest="ofile" ,    default="see.v", help="Output file name")
     parser.add_option("",   "--inputs-set",    dest="inputsSet", action="store_true",   default=False, help="Generete SET also on inputs of the module")
     parser.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
+    parser.add_option("",  "--include",            dest="include",    action="store_true", default=False,   help="Include include files")
+    parser.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Directory where to look for include files (use option --include to actualy include the files during preprocessing)")
+    parser.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
