@@ -149,7 +149,8 @@ otherTests=(
   ("tmrg","--generate-report %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
   ("tmrg","%s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),0,None), #TODO check it works after tmr
   ("seeg","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0,None),
-  ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --cells=\"DFCNQD1\""%(top,top),0,None), 
+  ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt --cells=\"DFCNQD1\""%(top,top,top),0,None), 
+  ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c %s/cnf/plag.cfg "%(top,top,top),0,None), 
 )
 
 mustFailTests=(
@@ -160,6 +161,7 @@ mustFailTests=(
   ("tmrg", "--generate-report verilog/verilogError.v" ,1,None),
   ("seeg", "--generate-report verilog/verilogError.v" ,1,None),
   ("plag", "--generate-report verilog/verilogError.v" ,1,None),
+  ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c do_not_exists "%(top,top),1,None),
  )
 
 
