@@ -37,7 +37,7 @@ class PLA(VerilogElaborator):
                     self.logger.debug("Coping  command line specified config file from '%s' to '%s'"%(fname,fcopy))
                     shutil.copyfile(fname,fcopy)
             else:
-                self.logger.error("Command line specified config file does not exists at %s"%fname)
+                raise ErrorMessage("Command line specified config file does not exists at %s"%fname)
 
     def generate(self):
         logging.debug("")
