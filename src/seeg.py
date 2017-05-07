@@ -249,11 +249,13 @@ def main():
             logging.error( err)
             for l in traceback.format_exc().split("\n"):
                 logging.error(l)
-
+            os._exit(1)
     except ErrorMessage as er:
         logging.error(er)
+        os._exit(2)
     except OptParseError as er:
         logging.error(er)
+        os._exit(3)
 
 if __name__=="__main__":
     main()
