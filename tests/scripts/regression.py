@@ -8,7 +8,17 @@ import commands
 from difflib import *
 from distutils.spawn import find_executable
 
-simpleTests=[
+FORMAT = '[%(levelname)-8s] %(message)s'
+logging.basicConfig(format=FORMAT)
+logging.getLogger().setLevel(logging.INFO)
+top=os.getcwd()
+tmpDir=os.path.join(top,"tmp")
+logging.info("Creating temporary directory %s"%tmpDir)
+if not os.path.exists(tmpDir):
+    os.makedirs(tmpDir)
+
+
+simpleTests=(
   "verilog/alwaysComma.v",
   "verilog/case01.v",
   "verilog/function.v",
@@ -91,22 +101,69 @@ simpleTests=[
   "verilog/tmrErrorExclude.v",
   "verilog/vectorRange.v",
   "verilog/generate05.v"
-]
-# "verilog/customVoterCell.v",
+)
 
-#"verilog/include.v",
 
-#"verilog/libtest.v",
-FORMAT = '[%(levelname)-8s] %(message)s'
-logging.basicConfig(format=FORMAT)
-logging.getLogger().setLevel(logging.INFO)
+configurationTests=(
+   {"name":"First test",
+    "verilog":""" module comb( input [7:0]  in, output [7:0] out );
+                 assign out=~in;
+                 endmodule
+              """,
+    "configurations":(
+        {"file":"[comb]\ndefault : triplicate",
+         "comment":"// tmrg default triplicate",
+         "cmdline":'-w "default triplicate"'},
 
-top=os.getcwd()
+        {"file":"[comb]\ndefault : do_not_triplicate",
+         "comment":"// tmrg default do_not_triplicate",
+         "cmdline":'-w "default do_not_triplicate comb"'},
 
-tmpDir=os.path.join(top,"tmp")
-logging.info("Creating temporary directory %s"%tmpDir)
-if not os.path.exists(tmpDir):
-    os.makedirs(tmpDir)
+        {"file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
+         "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
+         "cmdline":'-w "default do_not_triplicate comb" -w "triplicate comb.in" '},
+
+        {"file":"[comb]\ndefault : triplicate\nin:do_not_triplicate",
+         "comment":"// tmrg default triplicate\n //tmrg do_not_triplicate in",
+         "cmdline":'-w "default triplicate comb" -w "do_not_triplicate comb.in" '},
+
+        {"file":"[comb]\ndo_not_touch : true",
+         "comment":"// tmrg do_not_touch",
+         "cmdline":'-w "do_not_touch comb" '},
+    )
+  },
+)
+
+
+
+def check():
+  return ""
+
+otherTests=(
+  ("tmrg"," --include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0, check),
+  ("tmrg","--help",1,None),
+  ("tmrg","%s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0,None),
+  ("tmrg","--stats %s/verilog/fsm01.v"%(top),1,None),
+  ("tmrg","%s/verilog/leftSideConcatenation.v"%(top),1,None), # should print error message
+  ("tmrg","--log fsm01.log -vv %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
+  ("tmrg","--generate-report %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
+  ("tmrg","%s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),0,None), #TODO check it works after tmr
+  ("seeg","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0,None),
+  ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --cells=\"DFCNQD1\""%(top,top),0,None), 
+)
+
+mustFailTests=(
+  ("tmrg","nofile.v",1,None),
+  ("tmrg","--no-such-option",1,None),
+  ("tmrg","%s/verilog/hier/top.v "%(top),1,None),
+  ("seeg","-v",1,None),
+  ("tmrg", "--generate-report verilog/verilogError.v" ,1,None),
+  ("seeg", "--generate-report verilog/verilogError.v" ,1,None),
+  ("plag", "--generate-report verilog/verilogError.v" ,1,None),
+ )
+
+
+runCov = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag*' "
 
 def runSimpleTests():
     srcFiles=[]
@@ -131,7 +188,7 @@ def runSimpleTests():
                 logging.info("  | %s"%l)
 
         logging.info("        Triplicating '%s'" % f)
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*' %s --no-header %s" % (tmrg,f)
+        cmd = "%s %s --no-header %s" % (runCov, tmrg,f)
         err, outLog = commands.getstatusoutput(cmd)
         if err or len(outLog)>0:
             errors += 1
@@ -224,44 +281,12 @@ def coverageSummary():
     for k in sorted(linesHist):
         f.write("%d %d\n"%(k,linesHist[k]))
     f.close()
-configurationTests=(
-   {"name":"First test",
-    "verilog":""" module comb( input [7:0]  in, output [7:0] out );
-                 assign out=~in;
-                 endmodule
-              """,
-    "configurations":(
-        {"file":"[comb]\ndefault : triplicate",
-         "comment":"// tmrg default triplicate",
-         "cmdline":'-w "default triplicate"'},
-
-        {"file":"[comb]\ndefault : do_not_triplicate",
-         "comment":"// tmrg default do_not_triplicate",
-         "cmdline":'-w "default do_not_triplicate comb"'},
-
-        {"file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
-         "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
-         "cmdline":'-w "default do_not_triplicate comb" -w "triplicate comb.in" '},
-
-        {"file":"[comb]\ndefault : triplicate\nin:do_not_triplicate",
-         "comment":"// tmrg default triplicate\n //tmrg do_not_triplicate in",
-         "cmdline":'-w "default triplicate comb" -w "do_not_triplicate comb.in" '},
-
-        {"file":"[comb]\ndo_not_touch : true",
-         "comment":"// tmrg do_not_touch",
-         "cmdline":'-w "do_not_touch comb" '},
-
-    )
-
-
-  },
-)
 
 def runConfigurationTests():
     errors=0
 
     tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
-    tmrg = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*' %s --no-header  " % (tmrgexec)
+    tmrg = "%s %s --no-header  " % (runCov, tmrgexec)
 
     logging.info("Creating temporary directory %s"%tmpDir)
     for i,test in enumerate(configurationTests):
@@ -286,9 +311,9 @@ def runConfigurationTests():
             err,outLog = commands.getstatusoutput(cmd)
             if err:
                 errors+=1
-                logging.info("  | Error code %d"%err)
+                logging.error("  | Error code %d"%err)
                 for l in outLog.split("\n"):
-                    logging.info("  | %s"%l)
+                    logging.error("  | %s"%l)
             logging.info("")
 
 
@@ -306,9 +331,9 @@ def runConfigurationTests():
             err,outLog = commands.getstatusoutput(cmd)
             if err:
                 errors+=1
-                logging.info("  | Error code %d"%err)
+                logging.error("  | Error code %d"%err)
                 for l in outLog.split("\n"):
-                    logging.info("  | %s"%l)
+                    logging.error("  | %s"%l)
             logging.info("")
 
 
@@ -353,90 +378,72 @@ def runConfigurationTests():
     logging.info("Errors : %d" % errors)
     return errors
 
-def main():
-    errors=0
-    logging.info("Current working directory %s" % top)
-    os.chdir(tmpDir)
-    coverageClean()
-    errors+=runSimpleTests()
-    errors+=runConfigurationTests()
-    errors+=runOthers()
-    logging.info("")
-    logging.info("")
-    if errors:
-        logging.error("#"*20)
-        logging.error("# Erorrs %d "%errors)
-        logging.error("#"*20)
-    else:
-        logging.info("# Erorrs %d "%errors)
-    coverageSummary()
-    os._exit(errors)
 
-def runOthers():
-    otherTests=[("tmrg --include --inc-dir %s/verilog/ %s/verilog/include.v"%(top,top),0),
-                ("tmrg --help",1),
-                ("tmrg %s/verilog/libtest.v  --lib=%s/verilog/lib.v"%(top,top),0),
-                ("tmrg --stats %s/verilog/fsm01.v"%(top),1),
-                ("tmrg %s/verilog/leftSideConcatenation.v"%(top),1), # should print error message
-                ("tmrg --log fsm01.log -vv %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
-                ("tmrg --generate-report %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
-                ("tmrg %s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),0), #TODO check it works after tmr
-                ("seeg  %s/netlist/accTMR.v -l %s/../libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0),
-                ("plag  %s/netlist/accTMR.v -l %s/../libs/tcbn65lp.v --cells=\"DFCNQD1\""%(top,top),0), 
-                #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
-                #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
-                ]
+
+def runOthers(tests,mustFail=False):
+
     errors=0
-    for test,verbose in otherTests:
-        appName=test.split()[0]
-        logging.info("Runnging '%s'" % test)
+    for appName,testArgs,verbose,checker in tests:
+        logging.info("Runnging '%s %s'" % (appName,testArgs))
         appExec=find_executable(appName)[:-4]+"../src/%s.py "%appName
-        testArgs=" ".join(test.split()[1:])
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag*' %s %s" % (appExec,testArgs)
-#        print cmd
+        cmd = "%s %s %s" % (runCov, appExec,testArgs)
         err, outLog = commands.getstatusoutput(cmd)
-#        print err,outLog
-        if err or (not verbose and len(outLog)>0) or (verbose and len(outLog)==0):
+        if mustFail:
+          if err==0:
+            logging.error("  | Test returned %d while it supose to fail!   " % err)
+            errors += 1
+          if (verbose and len(outLog)==0):
+            logging.error("  | Test should be verbose but printed nothing!" )
+            errors += 1
+          if (not verbose and len(outLog)>0):
+            logging.error("  | Test should be quite but printed:" )
+            for l in outLog.split("\n"):
+              logging.error("  |   %s" % l)
+            errors += 1
+        else:
+          if err or (not verbose and len(outLog)>0) or (verbose and len(outLog)==0):
             errors += 1
             logging.error("  | Error code %d" % err)
             for l in outLog.split("\n"):
                 logging.error("  | %s" % l)
 
-    hastToFailTest=[("tmrg nofile.v"),
-                    ("tmrg --no-such-option"),
-                    ("tmrg %s/verilog/hier/top.v "%(top)),
-                    ("seeg  -v"), #TODO check if file exists
-                
-                   ]
-    errors=0
-    for test in hastToFailTest:
-        appName=test.split()[0]
-        logging.info("Runnging '%s'" % test)
-        appExec=find_executable(appName)[:-4]+"../src/%s.py "%appName
-        testArgs=" ".join(test.split()[1:])
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag' %s %s" % (appExec,testArgs)
-
-        err, outLog = commands.getstatusoutput(cmd)
-#        print outLog
-        logging.info("  | Test returned error code %d" % err)
-        if not err :
+        if checker!=None:
+          err=checker()
+          if err!="":
             errors += 1
-            for l in outLog.split("\n"):
-                logging.info("  | %s" % l)
-
-
+            logging.error("  | Checker error: %s" % err)
     logging.info("Errors : %d" % errors)
 
     return errors
 
-#os.system("rm -rf *TMR.v *.new")
-#for prefix in ("comb","vote","fsm","mod"):
-#  for fn in glob.glob("%s0*.v"%prefix):
-#    print "#"*80
-#    cmd="tmrg.py --tmr-dir=. -t %s "%fn
-#    print "#",cmd
-#    print "#"*80
-#    os.system(cmd)
+def main():
+    errors=0
+    logging.info("Current working directory %s" % top)
+    os.chdir(tmpDir)
+    coverageClean()
+    logging.info("~"*80)
+    errors+=runSimpleTests()
+    logging.info("~"*80)
+    errors+=runConfigurationTests()
+    logging.info("~"*80)
+    errors+=runOthers(otherTests)
+    logging.info("~"*80)
+    errors+=runOthers(mustFailTests,mustFail=True)
+    logging.info("~"*80)
+    logging.info("")
+    logging.info("")
+    if errors:
+        logging.error("#"*80)
+        logging.error("# Total Erorrs %d "%errors)
+        logging.error("#"*80)
+    else:
+        logging.info("~"*80)
+        logging.info("~ Total Erorrs %d "%errors)
+        logging.info("~"*80)
+    logging.info("")
+    logging.info("")
+    coverageSummary()
+    os._exit(errors)
 
 if __name__ == "__main__":
   main()
