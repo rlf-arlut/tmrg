@@ -59,11 +59,11 @@ for year in sorted(history):
         v="0 0 0"
         if month in  history[year]:
             v="%d %d %d"%(history[year][month]["events"],history[year][month]["files"],history[year][month]["lines"])
-            f.write("%4d-%d %s\n"%(year, month, v))
+        f.write("%4d-%d %s\n"%(year, month, v))
 f.close()
 
 f=open("history.gnu","w")
-f.write("set terminal png\n")
+f.write("set terminal png font 'Arial,16pt'\n")
 f.write("set output 'history.png'\n")
 f.write("set timefmt '%Y-%m'\n")
 f.write("set xdata time\n")
@@ -73,8 +73,11 @@ f.write("set xr ['2015-1':'2017-5']\n")
 f.write("set grid\n")
 #offset 0,-4
 f.write("set ylabel 'Activity Index'\n")
-f.write("set xtics rotate by 45 offset 0,-3\n")
+#f.write("set y2tics\n")
+f.write("set yr [0:140]\n")
+#f.write("set y2r [0:40000]\n")
+f.write("set xtics  rotate by 45 offset 0,-3\n")
 f.write("set format x '%b %y'\n")
-f.write("plot 'history.dat' u 1:2 w lp pt 5 lw 2 t ''\n")
+f.write("plot 'history.dat' u 1:(0):2 w filledcu  lt rgb \"#aaffaa\" t '', ''u 1:2 w l  lt rgb \"#008800\"  lw 2 t ''#, '' u 1:4 w lp axes x1y2 t 'lines'\n")
 f.close()
 os.system("gnuplot history.gnu")

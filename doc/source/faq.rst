@@ -40,7 +40,7 @@ but after last update something broke. What should I do ?
   2) go to your old triplicated file, in the header you shold find an information 
      about version of TMRG which was used at the time:
 
-     .. code-block:: C
+     .. code-block:: c
         :linenos:
 
         /****************************************************************************************************
@@ -128,8 +128,14 @@ This docker is used for the continues integration testing.
 How long does it take to triplicate full chip?
 ################################################################################
 
-Below you can see several examples how long does it take to triplicate the 
-Verilog code with the TMRG tool. The RTL lines count is give only to indicate
+For short Verilog files (or small designs), the TMRG tool should be usually very fast. 
+As the TMRG does not invoke complex runtime environment, the total 
+execution time should be well below 1s.
+
+One should keep in mind, that TMRG tool is suited for triplicating large
+chips in one go. Below one can see several examples how long does it take to triplicate the 
+Verilog code with the TMRG tool for some representative chips from HEP community. 
+The RTL lines count and die size are given only to indicate
 the chip size and complexity level. 
 
 ======== ================= ============ =============== ==================== ====================
@@ -141,7 +147,20 @@ SSA         11x4.5          3708         9081            20                   69
 SALT        4x11            11612        20447           61.6                 T.B.D.
 ======== ================= ============ =============== ==================== ====================
 
-As one can see, the triplication time is less than 1% synthesis time. 
+As one can see, the triplication time is almost negligible when compared to the synthesis time (less than 1%). 
+
+Which names are reserved in the TMRG tool?
+################################################################################
+
+Signals (reg, wire, input, output) containing strings:
+
+ * **Voted**
+ * **A**,  **B**, **C**
+ * **tmrError**
+
+may be modified (or even deleted) by the TMRG tool. 
+For more details about possible behaviors please refer to :ref:`constraining_the_design`.
+
 
 How do I input multiple files to tmrg?
 ################################################################################

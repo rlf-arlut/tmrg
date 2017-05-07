@@ -1,4 +1,4 @@
-module slice(
+module fsm05(
    clkIn,
    clkOut
 );

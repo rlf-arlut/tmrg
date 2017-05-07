@@ -1,4 +1,4 @@
-module fsm03 (in,out,clk);
+module fsm04 (in,out,clk);
   // tmrg default do_not_triplicate
   // tmrg triplicate state 
   // tmrg triplicate clk
