@@ -266,23 +266,16 @@ def main():
         if len(args)!=1:
             raise OptParseError("You have to specify verilog file name. ")
 
-        try:
-            tbg=TBG(options, args)
-            tbg.parse()
-            tbg.elaborate(allowMissingModules=True)
-            tbg.generate()
-        except ParseException, err:
-            logging.error("")
-            logging.error(err.line)
-            logging.error( " "*(err.column-1) + "^")
-            logging.error( err)
-            for l in traceback.format_exc().split("\n"):
-                logging.error(l)
-
+        tbg=TBG(options, args)
+        tbg.parse()
+        tbg.elaborate(allowMissingModules=True)
+        tbg.generate()
     except ErrorMessage as er:
         logging.error(er)
+        os._exit(1)
     except OptParseError as er:
         logging.error(er)
+        os._exit(2)
 
 if __name__=="__main__":
     main()
