@@ -358,8 +358,8 @@ def main():
     logging.info("Current working directory %s" % top)
     os.chdir(tmpDir)
     coverageClean()
-#    errors+=runSimpleTests()
-#    errors+=runConfigurationTests()
+    errors+=runSimpleTests()
+    errors+=runConfigurationTests()
     errors+=runOthers()
     logging.info("")
     logging.info("")
@@ -381,7 +381,8 @@ def runOthers():
                 ("tmrg --log fsm01.log -vv %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 ("tmrg --generate-report %s/verilog/fsm01.v"%(top),1), #TODO check if file exists
                 ("tmrg %s/verilog/hier/m1.v %s/verilog/hier/m2.v %s/verilog/hier/m3.v %s/verilog/hier/m4.v %s/verilog/hier/m5.v %s/verilog/hier/top.v "%(top,top,top,top,top,top),0), #TODO check it works after tmr
-                ("seeg  %s/netlist/accTMR.v -l %s/../libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0), #TODO check if file exists
+                ("seeg  %s/netlist/accTMR.v -l %s/../libs/tcbn65lp.v --exclude %s/cnf/exclude.txt"%(top,top,top),0),
+                ("plag  %s/netlist/accTMR.v -l %s/../libs/tcbn65lp.v --cells=\"DFCNQD1\""%(top,top),0), 
                 #(" %s/comb04.v --constrain 'dupa  comb04.out'"%(cwd),0),
                 #(" %s/../comb04.v --constrain 'tmr_error true comb04'"%(cwd,cwd),0),
                 ]
@@ -391,7 +392,7 @@ def runOthers():
         logging.info("Runnging '%s'" % test)
         appExec=find_executable(appName)[:-4]+"../src/%s.py "%appName
         testArgs=" ".join(test.split()[1:])
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*' %s %s" % (appExec,testArgs)
+        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag*' %s %s" % (appExec,testArgs)
 #        print cmd
         err, outLog = commands.getstatusoutput(cmd)
 #        print err,outLog
@@ -413,7 +414,7 @@ def runOthers():
         logging.info("Runnging '%s'" % test)
         appExec=find_executable(appName)[:-4]+"../src/%s.py "%appName
         testArgs=" ".join(test.split()[1:])
-        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*' %s %s" % (appExec,testArgs)
+        cmd = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag' %s %s" % (appExec,testArgs)
 
         err, outLog = commands.getstatusoutput(cmd)
 #        print outLog
