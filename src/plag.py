@@ -16,6 +16,12 @@ from verilogElaborator import *
 from string import Template
 from toolset import *
 from tmrg import makeSureDirExists
+import getpass
+import socket
+import time
+import datetime
+import hashlib
+import zipfile
 
 class PLA(VerilogElaborator):
     def __init__(self,options, args):
@@ -31,7 +37,7 @@ class PLA(VerilogElaborator):
                     self.logger.debug("Coping  command line specified config file from '%s' to '%s'"%(fname,fcopy))
                     shutil.copyfile(fname,fcopy)
             else:
-                self.logger.error("Command line specified config file does not exists at %s"%fname)
+                raise ErrorMessage("Command line specified config file does not exists at %s"%fname)
 
     def generate(self):
         logging.debug("")
@@ -136,8 +142,16 @@ def main():
     parser.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
     parser.add_option("",  "--include",            dest="include",    action="store_true", default="false",   help="Include include files")
     parser.add_option("", "--inc-dir", dest="inc_dir", action="append", default=[], help="Include directories")
+    parser.add_option("", "--log",                 dest="log",     default="",             help="Store detailed log to file")
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+#    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
 
     try:
         (options, args) = parser.parse_args()
@@ -173,23 +187,17 @@ def main():
             raise OptParseError("You have to specify output file name.")
 
 
-        try:
-            plag=PLA(options, args)
-            plag.parse()
-            plag.elaborate()
-            plag.generate()
-        except ParseException, err:
-            logging.error("")
-            logging.error(err.line)
-            logging.error( " "*(err.column-1) + "^")
-            logging.error( err)
-            for l in traceback.format_exc().split("\n"):
-                logging.error(l)
+        plag=PLA(options, args)
+        plag.parse()
+        plag.elaborate()
+        plag.generate()
 
     except ErrorMessage as er:
         logging.error(er)
+        os._exit(1)
     except OptParseError as er:
         logging.error(er)
+        os._exit(2)
 
 if __name__=="__main__":
     main()

@@ -16,6 +16,12 @@ from toolset import *
 import getpass
 import socket
 from tmrg import makeSureDirExists
+import getpass
+import socket
+import time
+import datetime
+import hashlib
+import zipfile
 
 class SEE(VerilogElaborator):
     def __init__(self,options, args):
@@ -237,25 +243,16 @@ def main():
         if not options.ofile:
             raise OptParseError("You have to specify output file name.")
 
-        try:
-            seeg=SEE(options, args)
-            seeg.parse()
-            seeg.elaborate()
-            seeg.generate()
-        except ParseException, err:
-            logging.error("")
-            logging.error(err.line)
-            logging.error( " "*(err.column-1) + "^")
-            logging.error( err)
-            for l in traceback.format_exc().split("\n"):
-                logging.error(l)
-            os._exit(1)
+        seeg=SEE(options, args)
+        seeg.parse()
+        seeg.elaborate()
+        seeg.generate()
     except ErrorMessage as er:
         logging.error(er)
-        os._exit(2)
+        os._exit(1)
     except OptParseError as er:
         logging.error(er)
-        os._exit(3)
+        os._exit(2)
 
 if __name__=="__main__":
     main()
