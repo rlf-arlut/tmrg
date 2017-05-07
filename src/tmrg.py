@@ -1982,7 +1982,7 @@ def main():
     dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="",  help="All files from this directory are taken as input files (only if no input files are specified as arguments)")
     dirGroup.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Directory where to look for include files (use option --include to actualy include the files during preprocessing)")
     dirGroup.add_option("",   "--tmr-dir",           dest="tmr_dir",      action="store", default="",  help="Directory for output files (where all the *TMR.v files are placed)")
-    dirGroup.add_option("-l",  "--lib",            dest="libs",       action="append",    default=[], help="Verilog file to be included as a library (modules from this file are not triplicated)")
+    dirGroup.add_option("-l",  "--lib",              dest="libs",       action="append",    default=[], help="Verilog file to be included as a library (modules from this file are not triplicated)")
     parser.add_option_group(dirGroup)
     tmrGroup = OptionGroup(parser, "Triplication" )
     #tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
