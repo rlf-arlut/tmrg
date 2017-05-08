@@ -63,12 +63,12 @@ for year in sorted(history):
 f.close()
 
 f=open("history.gnu","w")
-f.write("set terminal png font 'Arial,16pt'\n")
+f.write("set terminal png  size 1024, 400 font 'Arial,16pt' \n")
 f.write("set output 'history.png'\n")
 f.write("set timefmt '%Y-%m'\n")
 f.write("set xdata time\n")
 #f.write("set xlabel 'Time'\n")
-f.write("set bmar 5\n")
+f.write("set bmar 4\n")
 f.write("set xr ['2015-1':'2017-5']\n")
 f.write("set grid\n")
 #offset 0,-4
