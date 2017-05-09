@@ -284,7 +284,8 @@ class VerilogParser:
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
         nettype = oneOf("wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
         expandRange = Group(Optional( oneOf("scalared vectored") )) + self.range
-        realDecl = Group( "real" + delimitedList( identifier ) + self.semi )
+        realID = Group(identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
+        realDecl = Group( "real" + delimitedList( realID ) + Suppress(self.semi) ).setResultsName("realDecl")
 
         eventDecl = Group( "event" + delimitedList( identifier ) + self.semi )
 

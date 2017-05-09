@@ -67,6 +67,7 @@ simpleTests=(
   "verilog/slice01.v",
   "../examples/slice.v",
   "verilog/tmr3.v",
+  "verilog/ifdef.v",
   "verilog/begin.v",
   "verilog/complexInst.v",
   "verilog/function2.v",
@@ -171,7 +172,7 @@ otherTests=(
 )
 
 mustFailTests=(
-  ("tmrg","",1,None),
+#  ("tmrg","",1,None),
   ("seeg","",1,None),
   ("plag","",1,None),
   ("tbg", "",1,None),

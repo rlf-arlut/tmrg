@@ -114,6 +114,19 @@ class VerilogFormater:
             oStr+="%s %s%s%s%s%s;\n"%(label,sign,drives,spec,delay,port_str)
         return oStr
 
+    def _format_realDecl(self,tokens,i=""):
+        #print tokens
+        oStr=""
+        real=str(tokens[0])
+        ports=tokens[1:]
+        #print ports
+        for port in ports:
+            #print port
+            port_name=port[0]
+            port_str=self.format(port[1:])
+            if port_str!="":port_str=" "+port_str
+            oStr+="%s %s%s;\n"%(real,port_name,port_str)
+        return oStr
     def _format_netDecl1(self,tokens,i=""):
         oStr=""
         #print ">",tokens
