@@ -74,6 +74,8 @@ simpleTests=(
   "verilog/params2.v",
   "verilog/test02.v",
   "verilog/tmrError01.v",
+  "verilog/tmrError04.v",
+  "verilog/tmrError05.v",
   "../examples/clockGating01.v",
   "../examples/comb02.v",
   "../examples/comb05.v",
