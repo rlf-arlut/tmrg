@@ -422,10 +422,16 @@ class TMR(VerilogElaborator):
 
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-
         if left.lower().find("tmrerror")>=0 :# commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
-            self.logger.info("Removing declaration of %s"%(left))
-            return []
+            if left=="tmrError":
+                self.logger.info("Removing declaration of %s"%(left))
+                return []
+            for net in self.current_module["nets"]:
+                netTmrErr=net+"TmrError"
+                if left==netTmrErr:
+                    self.logger.info("Removing declaration of %s"%(left))
+                    return []
+
 
         #if left.find("TmrError")>=0 or left[-1]=="A" or left[-1]=="B" or left[-1]=="C":
         #    self.logger.info("Removing declaration of %s"%(left))
