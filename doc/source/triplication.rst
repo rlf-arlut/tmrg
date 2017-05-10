@@ -76,7 +76,7 @@ code.
 comb02 - full triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Lets start our examples from appling ``default`` directive
+Lets start our examples from applying ``default`` directive
 
 
 .. literalinclude:: ../../examples/comb02.v
@@ -91,7 +91,7 @@ The resulting module will look like:
 
 |
 
-.. image:: comb02.png
+.. image:: img/comb02.*
    :align: center
 
 |
