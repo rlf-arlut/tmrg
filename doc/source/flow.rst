@@ -40,6 +40,7 @@ Typical digital flow is shown in a Figure below:
 
 .. figure:: img/flow.png
    :align: center
+   :width: 100%
 
 
 The designer starts with system specification.
@@ -59,6 +60,7 @@ overview of the new flow is shown in Figure below:
 
 .. figure:: img/flowTMR.png
    :align: center
+   :width: 100%
 
 As one can see, there are two new steps with respect to the normal flow and
 some other steps are affected. The main idea is that a user writes normal (non
