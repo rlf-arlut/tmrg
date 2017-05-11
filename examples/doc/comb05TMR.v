@@ -2,15 +2,11 @@ module comb05TMR(
   in,
   out
 );
-wire inC;
-wire inB;
-wire inA;
+wire inA, inB, inC;
 wire combLogic;
 input in;
 output out;
-wire combLogicA;
-wire combLogicB;
-wire combLogicC;
+wire combLogicA, combLogicB, combLogicC;
 assign combLogicA =  ~inA;
 assign combLogicB =  ~inB;
 assign combLogicC =  ~inC;

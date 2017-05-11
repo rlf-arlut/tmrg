@@ -1,29 +1,13 @@
 module fsm01TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC,
-  clkA,
-  clkB,
-  clkC
+  inA,  inB,  inC,
+  outA, outB, outC,
+  clkA, clkB, clkC
 );
-input inA;
-input inB;
-input inC;
-input clkA;
-input clkB;
-input clkC;
-output outA;
-output outB;
-output outC;
-reg stateA;
-reg stateB;
-reg stateC;
-reg stateNextA;
-reg stateNextB;
-reg stateNextC;
+input inA, inB, inC;
+input clkA, clkB, clkC;
+output outA, outB, outC;
+reg stateA, stateB, stateC;
+reg stateNextA, stateNextB, stateNextC;
 assign outA =  stateA;
 assign outB =  stateB;
 assign outC =  stateC;

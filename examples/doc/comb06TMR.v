@@ -1,21 +1,11 @@
 module comb06TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC
+  inA,  inB,  inC,
+  outA, outB, outC
 );
-wire combLogicC;
-wire combLogicB;
-wire combLogicA;
+wire combLogicA, combLogicB, combLogicC;
 wire in;
-input inA;
-input inB;
-input inC;
-output outA;
-output outB;
-output outC;
+input inA, inB, inC;
+output outA, outB, outC;
 wire combLogic;
 assign combLogic =  ~in;
 assign outA =  combLogicA;

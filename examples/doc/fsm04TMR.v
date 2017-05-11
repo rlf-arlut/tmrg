@@ -1,23 +1,16 @@
 module fsm04TMR(
   in,
   out,
-  clkA,
-  clkB,
-  clkC
+  clkA, clkB, clkC
 );
-wire stateNextC;
-wire stateNextB;
-wire stateNextA;
+wire stateNextC, stateNextB, stateNextA;
 wire state;
 input in;
-input clkA;
-input clkB;
-input clkC;
+input clkA, clkB, clkC;
 output out;
-reg stateA;
-reg stateB;
-reg stateC;
+reg stateA, stateB, stateC;
 reg stateNext;
+
 assign out =  state;
 
 always @(posedge clkA)

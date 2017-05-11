@@ -1,19 +1,11 @@
 module comb03TMR(
   in,
-  outA,
-  outB,
-  outC
+  outA,  outB,  outC
 );
-wire [7:0] inC;
-wire [7:0] inB;
-wire [7:0] inA;
+wire [7:0] inA, inB, inC;
 input [7:0] in;
-output outA;
-output outB;
-output outC;
-reg combLogicA;
-reg combLogicB;
-reg combLogicC;
+output outA, outB, outC;
+reg combLogicA, combLogicB, combLogicC;
 
 always @(inA)
   if (inA)

@@ -3,19 +3,13 @@ module fsm03TMR(
   out,
   clk
 );
-wire stateNextC;
-wire stateNextB;
-wire stateNextA;
-wire clkC;
-wire clkB;
-wire clkA;
+wire stateNextC, stateNextB, stateNextA;
+wire clkC, clkB, clkA;
 wire state;
 input in;
 input clk;
 output out;
-reg stateA;
-reg stateB;
-reg stateC;
+reg stateA, stateB, stateC;
 reg stateNext;
 assign out =  state;
 

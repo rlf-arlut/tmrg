@@ -38,8 +38,9 @@ Typical design flow
 
 Typical digital flow is shown in a Figure below:
 
-.. figure:: flow.png
+.. figure:: img/flow.*
    :align: center
+   :width: 100%
 
 
 The designer starts with system specification.
@@ -57,8 +58,9 @@ Design flow for triplicated design
 The TMRG tool-chain interferes with the design flow in several places. The
 overview of the new flow is shown in Figure below:
 
-.. figure:: flowTMR.png
+.. figure:: img/flowTMR.*
    :align: center
+   :width: 100%
 
 As one can see, there are two new steps with respect to the normal flow and
 some other steps are affected. The main idea is that a user writes normal (non

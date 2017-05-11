@@ -76,7 +76,7 @@ code.
 comb02 - full triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Lets start our examples from appling ``default`` directive
+Lets start our examples from applying ``default`` directive
 
 
 .. literalinclude:: ../../examples/comb02.v
@@ -89,12 +89,11 @@ The resulting module will look like:
    :language: verilog
    :linenos:
 
-|
 
-.. image:: comb02.png
+.. image:: img/comb02.*
    :align: center
+   :width: 100%
 
-|
 
 You should note that input, output, and logic was triplicated. 
 
@@ -116,12 +115,11 @@ Imagine that you want to connect ``in`` signal directly to an input pad (or a si
    :language: verilog
    :linenos:
 
-|
 
-.. image:: comb03.png
+.. image:: img/comb03.*
    :align: center
+   :width: 100%
 
-|
 
 As you can see, the module connections are  different now. Port ``in`` is not triplicated, while ``out`` is  triplicated. There is also a fanout module added. Moreover, the logic itself, modeled by ``wire combLogic`` is also triplicated. 
 At this point, one should be aware that the output module would be exactly the same if one applies constraints as shown below:
@@ -145,12 +143,11 @@ Lets us consider the opposite situation, where the output is left non triplicate
    :language: verilog
    :linenos:
 
-|
 
-.. image:: comb04.png
+.. image:: img/comb04.*
    :align: center
+   :width: 100%
 
-|
 
 As you can see, in order to generate non triplicated output a majority voter is added.
 
@@ -168,12 +165,11 @@ Nothing prevents you from triplicating only logic.
    :language: verilog
    :linenos:
 
-|
 
-.. image:: comb05.png
+.. image:: img/comb05.*
    :align: center
+   :width: 100%
 
-|
 
 comb06- input and output triplication
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -188,12 +184,11 @@ You can also triplicate everything except logic.
    :language: verilog
    :linenos:
 
-|
 
-.. image:: comb06.png
+.. image:: img/comb06.*
    :align: center
+   :width: 100%
 
-|
 
 majorityVoter and fanout modules
 ################################
@@ -257,22 +252,20 @@ A simple pass through is shown below:
    :language: verilog
    :linenos:
 
-|
 
-.. image:: vote01.png
+.. image:: img/vote01.*
    :align: center
+   :width: 100%
 
-|
 
 vote02
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-|
 
-.. image:: vote02.png
+.. image:: img/vote02.*
    :align: center
+   :width: 100%
 
-|
 
 .. literalinclude:: ../../examples/vote02.v
    :language: verilog
@@ -294,12 +287,11 @@ fsm01 - triplication without voting
 
 Simple case. Everything is triplicated but the errors are not fixed.
 
-|
 
-.. image:: fsm01.png
+.. image:: img/fsm01.*
    :align: center
+   :width: 100%
 
-|
 
 .. literalinclude:: ../../examples/fsm01.v
    :language: verilog
@@ -318,12 +310,11 @@ fsm02 - triplication and voting
 All elements are protected. 
 This type of configuration gives maximum protection.
 
-|
 
-.. image:: fsm02.png
+.. image:: img/fsm02.*
    :align: center
+   :width: 100%
 
-|
 
 .. literalinclude:: ../../examples/fsm02.v
    :language: verilog
@@ -340,12 +331,11 @@ fsm03 - triplicating only the register
 Only memory elements are protected. 
 A single event transient appearing in the voting element of the combinatorial block close to the clock edge can break the system (all memory cells are corrupted at the same time).
 
-|
 
-.. image:: fsm03.png
+.. image:: img/fsm03.*
    :align: center
+   :width: 100%
 
-|
 
 .. literalinclude:: ../../examples/fsm03.v
    :language: verilog
@@ -360,8 +350,9 @@ fsm04 - triplicating the register and clock skew
 
 |
 
-.. image:: fsm04.png
+.. image:: img/fsm04.*
    :align: center
+   :width: 100%
 
 |
 
@@ -407,8 +398,9 @@ and we do not want to touch the internal of the cell. That is why the
 
 |
 
-.. image:: inst01.png
+.. image:: img/inst01.*
    :align: center
+   :width: 100%
 
 |
 
@@ -429,8 +421,10 @@ Voters and fanouts will be added if necessary.
 
 |
 
-.. image:: inst02.png
+.. image:: img/inst02.*
    :align: center
+   :width: 100%
+
 
 |
 
@@ -452,8 +446,10 @@ situation where two modules (parent and child) are to be fully triplicated.
 
 |
 
-.. image:: inst03.png
+.. image:: img/inst03.*
    :align: center
+   :width: 100%
+
 
 |
 
@@ -624,8 +620,10 @@ Lets analyze an example of a simple flip flop with clock gating:
 
 |
 
-.. image:: tmrError.png
+.. image:: img/tmrError.*
    :align: center
+   :width: 100%
+
 
 |
 
@@ -692,12 +690,11 @@ One can use ``slicing`` directive to slice the module.
 From the functional point of view, it is equivalent to  triplication  with full voting (please check :ref:`fsm02`).
 The differentiating factor is that a sub-module (slice) containing all voters is created as depicted below:
 
-|
 
-.. image:: slice.png
+.. image:: img/slice.*
    :align: center
+   :width: 100%
 
-|
 
 This feature cab be useful for implementation of timing critical circuits. A slice can 
 be implemented (synthesis + P&R) and then instantiated 3 times in the final circuit
