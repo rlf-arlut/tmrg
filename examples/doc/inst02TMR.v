@@ -7,21 +7,13 @@ output ZN;
 assign ZN =  ~I;
 endmodule
 module inst02TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC
+  inA,  inB,  inC,
+  outA, outB, outC
 );
 wire out;
 wire in;
-input inA;
-input inB;
-input inC;
-output outA;
-output outB;
-output outC;
+input inA, inB, inC;
+output outA, outB, outC;
 
 mlogic logic01 (
   .I(in),

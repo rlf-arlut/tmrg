@@ -6,20 +6,13 @@ input I;
 output ZN;
 assign ZN =  ~I;
 endmodule
+
 module inst01TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC
+  inA,  inB,  inC,
+  outA, outB, outC
 );
-input inA;
-input inB;
-input inC;
-output outA;
-output outB;
-output outC;
+input inA, inB, inC;
+output outA, outB, outC;
 
 mlogic logic01A (
   .I(inA),
