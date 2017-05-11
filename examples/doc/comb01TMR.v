@@ -1,20 +1,10 @@
 module comb01TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC
+  inA,  inB,  inC,
+  outA, outB, outC
 );
-input inA;
-input inB;
-input inC;
-output outA;
-output outB;
-output outC;
-wire combLogicA;
-wire combLogicB;
-wire combLogicC;
+input inA, inB, inC;
+output outA, outB, outC;
+wire combLogicA, combLogicB, combLogicC;
 assign combLogicA =  ~inA;
 assign combLogicB =  ~inB;
 assign combLogicC =  ~inC;
