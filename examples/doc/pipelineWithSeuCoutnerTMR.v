@@ -2,43 +2,21 @@ module pipelineWithSeuCoutnerTMR #(
   parameter SEUCNTWIDTH=8,
   parameter N=512
 )(
-  input  clkA,
-  input  clkB,
-  input  clkC,
-  input  dA,
-  input  dB,
-  input  dC,
-  output  qA,
-  output  qB,
-  output  qC,
-  input  seuCountRstA,
-  input  seuCountRstB,
-  input  seuCountRstC,
+  input  clkA,  input  clkB,  input  clkC,
+  input  dA,  input  dB,  input  dC,
+  output  qA,  output  qB,  output  qC,
+  input  seuCountRstA,  input  seuCountRstB,  input  seuCountRstC,
   output reg [SEUCNTWIDTH-1:0] seuCountA,
   output reg [SEUCNTWIDTH-1:0] seuCountB,
   output reg [SEUCNTWIDTH-1:0] seuCountC
 );
-wire tmrErrorC;
-wor seuCountNextTmrErrorC;
-wire [SEUCNTWIDTH-1:0] seuCountNextVotedC;
-wor pipelineNextTmrErrorC;
-wire [N-1:0] pipelineNextVotedC;
-wire tmrErrorB;
-wor seuCountNextTmrErrorB;
-wire [SEUCNTWIDTH-1:0] seuCountNextVotedB;
-wor pipelineNextTmrErrorB;
-wire [N-1:0] pipelineNextVotedB;
-wire tmrErrorA;
-wor seuCountNextTmrErrorA;
-wire [SEUCNTWIDTH-1:0] seuCountNextVotedA;
-wor pipelineNextTmrErrorA;
-wire [N-1:0] pipelineNextVotedA;
-reg  [N-1:0] pipelineA;
-reg  [N-1:0] pipelineB;
-reg  [N-1:0] pipelineC;
-wire [N-1:0] pipelineNextA;
-wire [N-1:0] pipelineNextB;
-wire [N-1:0] pipelineNextC;
+wire tmrErrorA, tmrErrorB, tmrErrorC;
+wor seuCountNextTmrErrorA, seuCountNextTmrErrorB, seuCountNextTmrErrorC;
+wor pipelineNextTmrErrorA, pipelineNextTmrErrorB, pipelineNextTmrErrorC;
+wire [SEUCNTWIDTH-1:0] seuCountNextVotedA, seuCountNextVotedB, seuCountNextVotedC;
+wire [N-1:0] pipelineNextVotedA,pipelineNextVotedB,pipelineNextVotedC;
+reg  [N-1:0] pipelineA, pipelineB, pipelineC;
+wire [N-1:0] pipelineNextA, pipelineNextB, pipelineNextC;
 assign pipelineNextA =  {pipelineA[N-1] ,dA};
 assign pipelineNextB =  {pipelineB[N-1] ,dB};
 assign pipelineNextC =  {pipelineC[N-1] ,dC};

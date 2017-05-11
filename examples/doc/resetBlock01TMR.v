@@ -3,22 +3,15 @@ module powerOnReset(
 );
 output z;
 endmodule
+
 module resetBlock01TMR(
-  rstn,
-  rstA,
-  rstB,
-  rstC
+  rstn,  rstA,  rstB,  rstC
 );
-wire rstnC;
-wire rstnB;
-wire rstnA;
+wire rstnC, rstnB, rstnA;
 input rstn;
-output rstA;
-output rstB;
-output rstC;
-wire porRstA;
-wire porRstB;
-wire porRstC;
+output rstA, rstB, rstC;
+wire porRstA, porRstB, porRstC;
+
 assign rstA =  !rstnA|porRstA;
 assign rstB =  !rstnB|porRstB;
 assign rstC =  !rstnC|porRstC;

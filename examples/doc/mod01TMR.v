@@ -1,35 +1,20 @@
 module inverterTMR(
-  IA,
-  IB,
-  IC,
-  ZA,
-  ZB,
-  ZC
+  IA,  IB,  IC,
+  ZA,  ZB,  ZC
 );
-input IA;
-input IB;
-input IC;
-output ZA;
-output ZB;
-output ZC;
+input IA, IB, IC;
+output ZA, ZB, ZC;
 assign ZA =  ~IA;
 assign ZB =  ~IB;
 assign ZC =  ~IC;
 endmodule
+
 module mod01TMR(
-  inA,
-  inB,
-  inC,
-  outA,
-  outB,
-  outC
+  inA,  inB,  inC,
+  outA, outB, outC
 );
-input inA;
-input inB;
-input inC;
-output outA;
-output outB;
-output outC;
+input  inA, inB, inC;
+output outA, outB, outC;
 
 inverterTMR inv01 (
   .IA(inA),
