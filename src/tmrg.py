@@ -1054,7 +1054,7 @@ class TMR(VerilogElaborator):
                             #print array_len_def
                             #moduleBody.append(self.vp.integerDeclAssgn.parseString(array_len_def)[0]);
                             genstr="""generate
-                                      for(%s=%s;%s<%s;%s=%s+1)
+                                      for(%s=%s;%s<=%s;%s=%s+1)
                                         begin : %s_fanout
                                           %s
                                         end
@@ -1143,7 +1143,7 @@ class TMR(VerilogElaborator):
                         _array_stop="""((%s>%s) ? %s : %s )"""%(_array_from,_array_to,_array_from,_array_to)
 
                         genstr="""generate
-                                  for(%s=%s;%s<%s;%s=%s+1)
+                                  for(%s=%s;%s<=%s;%s=%s+1)
                                     begin : %s_fanout
                                       %s
                                     end
