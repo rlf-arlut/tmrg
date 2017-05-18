@@ -5,7 +5,7 @@ Frequently Asked Questions (FAQ)
 How to report bugs and request support?
 ################################################################################
 
-It is recomended to report issues using GITLAB issue tracking system which can be found here: https://gitlab.cern.ch/skulis/tmrg/issues.
+It is recomended to report issues using GITLAB issue tracking system which can be found here: https://gitlab.cern.ch/tmrg/tmrg/issues.
 
 A good bug report contains a minimal, complete, and verifiable code example that demonstrates the problem you are running into. Complete means not just a code snippet, but an entire top verilog module that can be synthesized. Also include all the parameters and/or configuration files. It should be possible to reproduce the problem you are seeing within seconds using the information you provided! Every file of line of code someone trying to reproduce your problem has to write themselves will increase the effort someone has to put into reproducing your problem and at the same time will decrease the chances of your problem being reproduced correctly!
 
@@ -115,13 +115,13 @@ In papers and reports, please refer to TMRG as follows:
 Do you have a docker for the TMRG?
 ################################################################################
 
-Yes, we do. Please check: https://gitlab.cern.ch/skulis/tmrg/container_registry.
+Yes, we do. Please check: https://gitlab.cern.ch/tmrg/tmrg/container_registry.
 Or just use the latest one:
 
 .. code-block:: bash
    :linenos:
 
-   # docker pull gitlab-registry.cern.ch/skulis/tmrg:latest
+   # docker pull gitlab-registry.cern.ch/tmrg/tmrg:latest
 
 This docker is used for the continues integration testing.
 
