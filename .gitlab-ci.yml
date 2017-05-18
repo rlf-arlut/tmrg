@@ -16,7 +16,7 @@ stages:
 #regression testing
 regression_ubuntu:
    stage: test
-   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
 #   image: ubuntu:latest
    script: 
 #        - apt-get update -y
@@ -30,7 +30,7 @@ regression_ubuntu:
 #this is only to check if the documentation can be build
 doc_build_not_master:
    stage: test
-   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
    script: 
         - cd doc
         - make latexpdf
@@ -60,7 +60,7 @@ doc_build_not_master:
 
 doc_build_master:
    stage: build
-   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
+   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
    script: 
         - cd doc
         - make latexpdf
