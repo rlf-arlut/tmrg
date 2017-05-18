@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build --no-cache -t gitlab-registry.cern.ch/skulis/tmrg -f Dockerfile . && docker push gitlab-registry.cern.ch/skulis/tmrg
+docker build --no-cache -t gitlab-registry.cern.ch/tmrg/tmrg -f Dockerfile . && docker push gitlab-registry.cern.ch/tmrg/tmrg

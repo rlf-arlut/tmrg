@@ -16,11 +16,11 @@ The TMRG project source is stored in CERN GIT repository. To fetch the source co
 
 .. code-block:: bash
 
-    $ git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git
+    $ git clone https://:@gitlab.cern.ch:8443/tmrg/tmrg.git
 
-    $ git clone https://skulis@gitlab.cern.ch/skulis/tmrg.git
+    $ git clone https://USER@gitlab.cern.ch/tmrg/tmrg.git
 
-    $ git clone ssh://git@gitlab.cern.ch:7999/skulis/tmrg.git
+    $ git clone ssh://git@gitlab.cern.ch:7999/tmrg/tmrg.git
 
 for ``kerberos``, ``https``, or ``ssh`` authorization method respectively.
 

@@ -21,8 +21,8 @@ redundancy.
 
 **Quick links**:
 
-  * Gitlab page: https://gitlab.cern.ch/skulis/tmrg
-  * ``git clone https://:@gitlab.cern.ch:8443/skulis/tmrg.git``
+  * Gitlab page: https://gitlab.cern.ch/tmrg/tmrg
+  * ``git clone https://:@gitlab.cern.ch:8443/tmrg/tmrg.git``
 
 **Downloads**:
 
