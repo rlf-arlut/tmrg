@@ -14,7 +14,7 @@ module paramtest3 #(parameter f=3, parameter k= (f>2) ? 3 : 1) (input clk,input 
 endmodule
 
 module paramtestTop (input clk,input d, output q);
-  parameter p1=1;
+  parameter signed p1=1;
   parameter p2=1;
   paramtest1 #(.f(3)) x1 (.clk(clk),.d(d),.q(q));
   paramtest2 #(.f(3)) x2 (.clk(clk),.d(d),.q(q));

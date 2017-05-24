@@ -538,13 +538,14 @@ class VerilogFormater:
     def _format_paramdecl(self,tokens,i=""):
 #        print tokens
         oStr=""
-        range=self.format(tokens[1])
+        signed=self.format(tokens[1])
+        range=self.format(tokens[2])
         if len(range)>=0: range=" "+range
         #print tokens[2]
-        for p in tokens[2]:
+        for p in tokens[3]:
             pname=p[0][0]
             #print "pname", pname
-            oStr+=tokens[0]+"%s %s="%(range,pname)
+            oStr+=tokens[0]+" %s %s %s="%(signed,range,pname)
 #            print "p:",p
             oStr+=self.format(p[0][1:])+";\n"
 #        print oStr
