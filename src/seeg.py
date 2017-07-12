@@ -55,6 +55,7 @@ class SEE(VerilogElaborator):
                 for instId in self.modules[module]["instances"]:
                     inst=self.modules[module]["instances"][instId]['instance']
                     if "[" in  instId: instId="\\"+instId+" "
+                    if "-" in  instId: instId="\\"+instId+" "
                     if inst in self.modules:
                         res+=outputSetNets(inst,prefix=prefix+instId+".")
             return res
@@ -71,6 +72,7 @@ class SEE(VerilogElaborator):
                 for instId in self.modules[module]["instances"]:
                     inst=self.modules[module]["instances"][instId]['instance']
                     if "[" in  instId: instId="\\"+instId+" "
+                    if "-" in  instId: instId="\\"+instId+" "
                     if inst in self.modules:
                         res+=outputSeuNets(inst,prefix=prefix+instId+".")
             return res
