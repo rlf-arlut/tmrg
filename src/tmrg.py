@@ -426,8 +426,15 @@ class TMR(VerilogElaborator):
             if left=="tmrError":
                 self.logger.info("Removing declaration of %s"%(left))
                 return []
+
             for net in self.current_module["nets"]:
                 netTmrErr=net+"TmrError"
+                if left==netTmrErr:
+                    self.logger.info("Removing declaration of %s"%(left))
+                    return []
+
+            for net in self.current_module["instances"]:
+                netTmrErr=net+"tmrError"
                 if left==netTmrErr:
                     self.logger.info("Removing declaration of %s"%(left))
                     return []
@@ -1744,9 +1751,9 @@ class TMR(VerilogElaborator):
             return True, oStr
 
         def getRevInfo(fname):
-            sos,soslog=getSosInfo(fname)
-            if sos:
-                return "File under SOS control.\n"+soslog
+#            sos,soslog=getSosInfo(fname)
+#            if sos:
+#                return "File under SOS control.\n"+soslog
             svn,svnlog=getSvnInfo(fname)
             if svn:
                 return "File under SVN control.\n"+svnlog
