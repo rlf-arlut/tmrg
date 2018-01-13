@@ -663,6 +663,36 @@ And the corresponding output from the TMRG tool will be:
    :language: verilog
    :linenos:
 
+Config cell with auto fixing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The technique presented in the previous section works well if the clock is
+present all the time. In systems with a clock gating, the tmrError signal can be used to
+generate an asynchronous clock pulse to fix the memory state. An example
+implementation is shown below.
+
+.. literalinclude:: ../../examples/configcell.v
+   :language: verilog
+   :linenos:
+
+
+One should bear in mind that this circuit has one potential problem: when the
+clock is active (high), the load signal is not present and SEU happens, the
+error will not be fixed. That is why, when using this circuit one should provide
+the clock together with the load signal. 
+
+As with all asynchronous signals, a detailed simulation with the timing back
+annotated should be done in order to ensure that the circuit behaves as expected 
+
+Output of the TMRG tool will be:
+
+.. literalinclude:: ../../examples/doc/configcellTMR.v
+   :language: verilog
+   :linenos:
+
+SEU counter
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Another good use of this feature may be to implement a mechanism for counting
 number of detected single-event upsets:
 

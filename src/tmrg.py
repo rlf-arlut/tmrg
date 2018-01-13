@@ -426,8 +426,15 @@ class TMR(VerilogElaborator):
             if left=="tmrError":
                 self.logger.info("Removing declaration of %s"%(left))
                 return []
+
             for net in self.current_module["nets"]:
                 netTmrErr=net+"TmrError"
+                if left==netTmrErr:
+                    self.logger.info("Removing declaration of %s"%(left))
+                    return []
+
+            for net in self.current_module["instances"]:
+                netTmrErr=net+"tmrError"
                 if left==netTmrErr:
                     self.logger.info("Removing declaration of %s"%(left))
                     return []
@@ -1744,9 +1751,9 @@ class TMR(VerilogElaborator):
             return True, oStr
 
         def getRevInfo(fname):
-            sos,soslog=getSosInfo(fname)
-            if sos:
-                return "File under SOS control.\n"+soslog
+#            sos,soslog=getSosInfo(fname)
+#            if sos:
+#                return "File under SOS control.\n"+soslog
             svn,svnlog=getSvnInfo(fname)
             if svn:
                 return "File under SVN control.\n"+svnlog
@@ -1897,26 +1904,26 @@ class TMR(VerilogElaborator):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout=self.modules[module]["fanouts"][fanoutInst]
                 postfix=""
-                if fanout["len"]!="1":
-                    postfix="[*]"
-                ret.append(i+"nets/"+fanout["outA"]+postfix)
-                ret.append(i+"nets/"+fanout["outB"]+postfix)
-                ret.append(i+"nets/"+fanout["outC"]+postfix)
-                ret.append(i+"nets/"+fanout["in"]+postfix)
+#                if fanout["len"]!="1":
+                postfix="[*]"
+                ret.append(i+fanout["outA"]+postfix)
+                ret.append(i+fanout["outB"]+postfix)
+                ret.append(i+fanout["outC"]+postfix)
+                ret.append(i+fanout["in"]+postfix)
 
             for group in self.modules[module]["voters"]:
                 for voterInst in self.modules[module]["voters"][group]:
                     voter=self.modules[module]["voters"][group][voterInst]
                     postfix=""
-                    if voter["len"]!="1":
-                        postfix="[*]"
-                    ret.append(i+"nets/"+voter["inA"]+postfix)
-                    ret.append(i+"nets/"+voter["inB"]+postfix)
-                    ret.append(i+"nets/"+voter["inC"]+postfix)
-                    ret.append(i+"nets/"+voter["out"]+postfix)
+#                    if voter["len"]!="1":
+                    postfix="[*]"
+                    ret.append(i+voter["inA"]+postfix)
+                    ret.append(i+voter["inB"]+postfix)
+                    ret.append(i+voter["inC"]+postfix)
+                    ret.append(i+voter["out"]+postfix)
 
             for instName in self.modules[module]["instances"]:
-                ni=i+"instances_hier/%s/"%instName
+                ni=i+"%s/"%instName
                 inst=self.modules[module]["instances"][instName]["instance"]
                 if inst in self.modules:
 #                    self.logger.info(i+"- "+instName+":"+inst)
@@ -1940,9 +1947,27 @@ class TMR(VerilogElaborator):
             if self.config.getboolean("tmrg","sdc_headers") or self.options.sdc_headers:
                header="set sdc_version 1.3\n"
             # generate sdf file
-            ret= _findVotersAndFanouts(self.topModule,i="/designs/%s/"%(self.topModule+tmrSuffix))
+            ret= _findVotersAndFanouts(self.topModule,i="/")
             f=open(fsdc,"w")
             f.write(header)
+            f.write("""
+set tmrgSucces 0
+set tmrgFailed 0
+proc constrainNet netName {
+  global tmrgSucces
+  global tmrgFailed
+  # find nets matching netName pattern
+  set nets [dc::get_net $netName]
+  if {[llength $nets] != 0} {
+    set_dont_touch $nets
+    incr tmrgSucces
+  } else {
+    puts "\[TMRG\] Warning! Net(s) '$netName' not found"
+    incr tmrgFailed
+  }
+}
+
+""")
             if self.__voterPresent:
 #                f.write("set_dont_touch majorityVoter\n")
                 pass
@@ -1951,7 +1976,10 @@ class TMR(VerilogElaborator):
                 pass
             retset = set(ret) # we can have some duplicates because of voters
             for l in sorted(retset):
-                f.write("set_dont_touch %s\n"%l)
+                f.write("constrainNet %s\n"%l)
+
+            f.write('\n\n    puts "TMRG successful  $tmrgSucces failed $tmrgFailed"\n')
+
             f.close()
 
             if self.options.generateBugReport:

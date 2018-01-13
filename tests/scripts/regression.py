@@ -85,6 +85,8 @@ simpleTests=(
   "../examples/resetBlock02.v",
   "../examples/tmrOut01.v",
   "../examples/clockGating02.v",
+  "../examples/clockGating02.v",
+  "../examples/configcell.v",
   "../examples/comb03.v",
   "../examples/comb06.v",
   "../examples/fsm01.v",
