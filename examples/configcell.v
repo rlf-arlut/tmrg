@@ -13,7 +13,7 @@ module configCell(
 
   wire clkInt=clk|tmrError;
 
-  always @(load or d or q)
+  always @(load or din or q)
     if (load)
       memNext=din;
     else

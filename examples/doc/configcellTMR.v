@@ -31,19 +31,19 @@ wire clkIntA =  clkA|tmrErrorA;
 wire clkIntB =  clkB|tmrErrorB;
 wire clkIntC =  clkC|tmrErrorC;
 
-always @( loadA or d or qA )
+always @( loadA or dinA or qA )
   if (loadA)
     memNextA =  dinA;
   else
     memNextA =  memA;
 
-always @( loadB or d or qB )
+always @( loadB or dinB or qB )
   if (loadB)
     memNextB =  dinB;
   else
     memNextB =  memB;
 
-always @( loadC or d or qC )
+always @( loadC or dinC or qC )
   if (loadC)
     memNextC =  dinC;
   else
