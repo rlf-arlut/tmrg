@@ -1904,8 +1904,8 @@ class TMR(VerilogElaborator):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout=self.modules[module]["fanouts"][fanoutInst]
                 postfix=""
-#                if fanout["len"]!="1":
-                postfix="[*]"
+                if fanout["len"]!="1":
+                  postfix="[*]"
                 ret.append(i+fanout["outA"]+postfix)
                 ret.append(i+fanout["outB"]+postfix)
                 ret.append(i+fanout["outC"]+postfix)
@@ -1915,8 +1915,8 @@ class TMR(VerilogElaborator):
                 for voterInst in self.modules[module]["voters"][group]:
                     voter=self.modules[module]["voters"][group][voterInst]
                     postfix=""
-#                    if voter["len"]!="1":
-                    postfix="[*]"
+                    if voter["len"]!="1":
+                      postfix="[*]"
                     ret.append(i+voter["inA"]+postfix)
                     ret.append(i+voter["inB"]+postfix)
                     ret.append(i+voter["inC"]+postfix)
