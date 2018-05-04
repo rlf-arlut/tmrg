@@ -813,7 +813,7 @@ class TMR(VerilogElaborator):
                     width=""
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
-                    majorityVoterCell="majorityVoter"
+                    majorityVoterCell="majorityVoter"+self.options.common_cells_postfix
                     if "majority_voter_cell" in self.modules[moduleName]["constraints"]:
                         majorityVoterCell=self.modules[moduleName]["constraints"]["majority_voter_cell"]
                     newModuleItems.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
@@ -1037,7 +1037,7 @@ class TMR(VerilogElaborator):
                         if _len!="1":
                             width+="#(.WIDTH(%s)) "%_len
 
-                        majorityVoterCell="majorityVoter"
+                        majorityVoterCell="majorityVoter"+self.options.common_cells_postfix
                         if "majority_voter_cell" in self.current_module["constraints"]:
                             majorityVoterCell=self.current_module["constraints"]["majority_voter_cell"]
 
@@ -1136,7 +1136,7 @@ class TMR(VerilogElaborator):
                     if _len!="1":
                         width+="#(.WIDTH(%s)) "%_len
 
-                    fanoutCell="fanout"
+                    fanoutCell="fanout"+self.options.common_cells_postfix
                     if "fanout_cell" in self.current_module["constraints"]:
                         fanoutCell=self.current_module["constraints"]["fanout_cell"]
 
@@ -1669,13 +1669,17 @@ class TMR(VerilogElaborator):
             vfile=os.path.join( self.scriptDir,  self.config.get("tmrg","voter_definition"))
             self.logger.info("Taking voter declaration from %s"%vfile)
             f.write("\n\n// %s\n"%vfile)
-            f.write(readFile(vfile))
+            fileContent=readFile(vfile)
+            fileContent=fileContent.replace("majorityVoter","majorityVoter"+self.options.common_cells_postfix)
+            f.write(fileContent)
 
         if self.__fanoutPresent:
             ffile=os.path.join( self.scriptDir,  self.config.get("tmrg","fanout_definition"))
             self.logger.info("Taking fanout declaration from %s"%ffile)
             f.write("\n\n// %s\n"%ffile)
-            f.write(readFile(ffile))
+            fileContent=readFile(ffile)
+            fileContent=fileContent.replace("fanout","fanout"+self.options.common_cells_postfix)
+            f.write(fileContent)
         f.close()
 
     def getHeader(self,fname,fout):
@@ -1904,8 +1908,8 @@ class TMR(VerilogElaborator):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout=self.modules[module]["fanouts"][fanoutInst]
                 postfix=""
-#                if fanout["len"]!="1":
-                postfix="[*]"
+                if fanout["len"]!="1":
+                  postfix="[*]"
                 ret.append(i+fanout["outA"]+postfix)
                 ret.append(i+fanout["outB"]+postfix)
                 ret.append(i+fanout["outC"]+postfix)
@@ -1915,8 +1919,8 @@ class TMR(VerilogElaborator):
                 for voterInst in self.modules[module]["voters"][group]:
                     voter=self.modules[module]["voters"][group][voterInst]
                     postfix=""
-#                    if voter["len"]!="1":
-                    postfix="[*]"
+                    if voter["len"]!="1":
+                      postfix="[*]"
                     ret.append(i+voter["inA"]+postfix)
                     ret.append(i+voter["inB"]+postfix)
                     ret.append(i+voter["inC"]+postfix)
@@ -2024,6 +2028,7 @@ def main():
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     tmrGroup.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
     tmrGroup.add_option(""  , "--no-common-definitions", dest="no_common_definitions", action="store_true",   default=False, help="Do not add definitions of common modules (majorityVoter and fanout)")
+    tmrGroup.add_option(""  , "--common-cells-postfix",  dest="common_cells_postfix",  action="store",        default="",    help="String to be appended to common cell names")
     tmrGroup.add_option("",  "--no-header",          dest="header",       action="store_false",   default=True, help="Do not append  information headder to triplicated file.")
     tmrGroup.add_option("",  "--sdc-generate",       dest="sdc_generate",   action="store_true",   default=False, help="Generate SDC file for Design Compiler")
     tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",    action="store_true",   default=False, help="Append SDC headers")
