@@ -1097,6 +1097,10 @@ class TMR(VerilogElaborator):
                     if self.current_module["constraints"]["tmrErrorOut"] and self.current_module["portMode"]=="non-ANSI":
                         moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
 
+                    if self.current_module["constraints"]["tmrErrorOut"] and self.current_module["portMode"]=="non-ANSI":
+                        moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
+#                    else:
+#                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
                     if group in self.current_module["tmrErrNets"]:
                         #print group
                         errSignals=errSignals | self.current_module["tmrErrNets"][group]
