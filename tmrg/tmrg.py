@@ -9,8 +9,8 @@ import logging
 import filecmp
 import copy
 import time
-from verilogElaborator import *
-from toolset import *
+from .verilogElaborator import *
+from .toolset import *
 import subprocess
 import getpass
 import socket

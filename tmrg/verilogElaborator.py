@@ -9,9 +9,13 @@ import glob
 import logging
 import filecmp
 import copy
-import ConfigParser
-from verilogParser import *
-from verilogFormater import VerilogFormater
+try:
+  import ConfigParser as cp
+except:
+  import configparser as cp
+
+from .verilogParser import *
+from .verilogFormater import VerilogFormater
 import shutil
 import zipfile
 import mmap
@@ -76,7 +80,7 @@ class VerilogElaborator():
 
         self.trace=True
 
-        self.config = ConfigParser.ConfigParser()
+        self.config = cp.ConfigParser()
         self.scriptDir = os.path.abspath(os.path.dirname(__file__))
         self.logger.debug("Script path : %s"%self.scriptDir)
 
@@ -776,7 +780,7 @@ class VerilogElaborator():
             try:
                 logging.info("Loading file '%s'"%fname)
                 self.addFile(fname)
-            except ParseException, err:
+            except ParseException as err:
 #                logging.error("")
                 logging.error("Error in file '%s' around line '%d'."%(fname,err.lineno))
                 if err.line.find("tmrg ")==0:
@@ -800,7 +804,7 @@ class VerilogElaborator():
             try:
                 logging.info("Loading lib file '%s'"%fname)
                 self.addLibFile(fname)
-            except ParseException, err:
+            except ParseException as err:
                 logging.error("")
                 logging.error(err.line)
                 logging.error( " "*(err.column-1) + "^")
@@ -810,14 +814,14 @@ class VerilogElaborator():
                 raise ErrorMessage("Error during parsing")
         if self.options.stats:
             parse_time=time.clock()-parse_start_time
-            print "-"*80
+            print("-"*80)
             for line in self.statsLogs:
-                print line
-            print "-"*80
-            print "Total number of files parsed: %d "%self.statsFilesParsed
-            print "Total number of lines parsed: %d "%self.linesTotal
-            print "Total parse time: %.3f s "%parse_time
-            print "-"*80
+                print(line)
+            print("-"*80)
+            print("Total number of files parsed: %d "%self.statsFilesParsed)
+            print("Total number of lines parsed: %d "%self.linesTotal)
+            print("Total parse time: %.3f s "%parse_time)
+            print("-"*80)
     def elaborate(self,allowMissingModules=False):
         """ Elaborate the design
         :return:
@@ -973,8 +977,8 @@ class VerilogElaborator():
 
         if self.options.stats:
             elaborate_time=time.clock()-elaborate_start_time
-            print "Elaboration time : %.3f s "%elaborate_time
-            print "-"*80
+            print("Elaboration time : %.3f s "%elaborate_time)
+            print("-"*80)
 
 
     def _printHierary(self,topModule):
