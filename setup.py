@@ -11,6 +11,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': ['tmrg = tmrg.tmrg:main',
                             'seeg = tmrg.seeg:main',
+                            'tbg = tmrg.tbg:main',
                             'plag = tmrg.plag:main',
                             'wrg = tmrg.wrg:main']
     }
