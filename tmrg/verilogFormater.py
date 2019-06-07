@@ -1,4 +1,4 @@
-from pyparsing import *
+from .pyparsing import *
 class VerilogFormater:
     formater={}
     def setTrace(self,t):

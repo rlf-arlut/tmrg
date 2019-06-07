@@ -958,7 +958,7 @@ class ParserElement(object):
                     loc,tokens = self.parseImpl( instring, preloc, doActions )
                 except IndexError:
                     raise ParseException( instring, len(instring), self.errmsg, self )
-            except ParseBaseException, err:
+            except ParseBaseException as err:
                 #~ print ("Exception raised:", err)
                 if self.debugActions[2]:
                     self.debugActions[2]( instring, tokensStart, self, err )
@@ -993,7 +993,7 @@ class ParserElement(object):
                                                       self.resultsName,
                                                       asList=self.saveAsList and isinstance(tokens,(ParseResults,list)),
                                                       modal=self.modalResults )
-                except ParseBaseException, err:
+                except ParseBaseException as err:
                     #~ print "Exception raised in user parse action:", err
                     if (self.debugActions[2] ):
                         self.debugActions[2]( instring, tokensStart, self, err )
@@ -1033,7 +1033,7 @@ class ParserElement(object):
                 value = self._parseNoCache( instring, loc, doActions, callPreParse )
                 ParserElement._exprArgCache[ lookup ] = (value[0],value[1].copy())
                 return value
-            except ParseBaseException, pe:
+            except ParseBaseException as pe:
                 ParserElement._exprArgCache[ lookup ] = pe
                 raise
 
@@ -1102,7 +1102,7 @@ class ParserElement(object):
             if parseAll:
                 loc = self.preParse( instring, loc )
                 StringEnd()._parse( instring, loc )
-        except ParseBaseException, exc:
+        except ParseBaseException as exc:
             # catch and re-raise exception from here, clears out pyparsing internal stack trace
             raise exc
         else:
@@ -1140,7 +1140,7 @@ class ParserElement(object):
                     matches += 1
                     yield tokens, preloc, nextLoc
                     loc = nextLoc
-        except ParseBaseException, pe:
+        except ParseBaseException as pe:
             raise pe
 
     def transformString( self, instring ):
@@ -1168,7 +1168,7 @@ class ParserElement(object):
                 lastE = e
             out.append(instring[lastE:])
             return "".join(map(_ustr,out))
-        except ParseBaseException, pe:
+        except ParseBaseException as pe:
             raise pe
 
     def searchString( self, instring, maxMatches=_MAX_INT ):
@@ -1178,7 +1178,7 @@ class ParserElement(object):
         """
         try:
             return ParseResults([ t for t,s,e in self.scanString( instring, maxMatches ) ])
-        except ParseBaseException, pe:
+        except ParseBaseException as pe:
             raise pe
 
     def __add__(self, other ):
@@ -1434,7 +1434,7 @@ class ParserElement(object):
             f.close()
         try:
             return self.parseString(file_contents, parseAll)
-        except ParseBaseException, exc:
+        except ParseBaseException as exc:
             # catch and re-raise exception from here, clears out pyparsing internal stack trace
             raise exc
 
@@ -2375,9 +2375,9 @@ class And(ParseExpression):
                     loc, exprtokens = e._parse( instring, loc, doActions )
                 except ParseSyntaxException:
                     raise
-                except ParseBaseException, pe:
+                except ParseBaseException as pe:
                     raise ParseSyntaxException(pe)
-                except IndexError, ie:
+                except IndexError as ie:
                     raise ParseSyntaxException( ParseException(instring, len(instring), self.errmsg, self) )
             else:
                 loc, exprtokens = e._parse( instring, loc, doActions )
@@ -2427,7 +2427,7 @@ class Or(ParseExpression):
         for e in self.exprs:
             try:
                 loc2 = e.tryParse( instring, loc )
-            except ParseException, err:
+            except ParseException as err:
                 if err.loc > maxExcLoc:
                     maxException = err
                     maxExcLoc = err.loc
@@ -2491,7 +2491,7 @@ class MatchFirst(ParseExpression):
             try:
                 ret = e._parse( instring, loc, doActions )
                 return ret
-            except ParseException, err:
+            except ParseException as err:
                 if err.loc > maxExcLoc:
                     maxException = err
                     maxExcLoc = err.loc
@@ -2892,7 +2892,7 @@ class SkipTo(ParseElementEnhance):
                     while 1:
                         try:
                             loc = self.ignoreExpr.tryParse(instring,loc)
-                            print "found ignoreExpr, advance to", loc
+                            #print "found ignoreExpr, advance to", loc
                         except ParseBaseException:
                             break
                 expr._parse( instring, loc, doActions=False, callPreParse=False )
@@ -3118,7 +3118,7 @@ def traceParseAction(f):
         sys.stderr.write( ">>entering %s(line: '%s', %d, %s)\n" % (thisFunc,line(l,s),l,t) )
         try:
             ret = f(*paArgs)
-        except Exception, exc:
+        except Exception as exc:
             sys.stderr.write( "<<leaving %s (exception: %s)\n" % (thisFunc,exc) )
             raise
         sys.stderr.write( "<<leaving %s (ret: %s)\n" % (thisFunc,ret) )
@@ -3705,7 +3705,7 @@ if __name__ == "__main__":
             print ("tokens.columns = " + str(tokens.columns))
             print ("tokens.tables = "  + str(tokens.tables))
             print (tokens.asXML("SQL",True))
-        except ParseBaseException,err:
+        except ParseBaseException as err:
             print (teststring + "->")
             print (err.line)
             print (" "*(err.column-1) + "^")

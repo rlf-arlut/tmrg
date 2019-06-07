@@ -7,7 +7,7 @@
 #
 # Copyright (c) 2004, 2006 Paul McGuire
 #
-from pyparsing import Word, alphas, alphanums, Literal, restOfLine, OneOrMore, \
+from .pyparsing import Word, alphas, alphanums, Literal, restOfLine, OneOrMore, \
     empty, Suppress, replaceWith
 
 # simulate some C++ code
@@ -68,7 +68,7 @@ print ident.transformString( testData )
 print "Example of a stripper"
 print "----------------------"
 
-from pyparsing import dblQuotedString, LineStart
+from .pyparsing import dblQuotedString, LineStart
 
 # remove all string macro definitions (after extracting to a string resource table?)
 stringMacroDef = Literal("#define") + ident + "=" + dblQuotedString + LineStart()
@@ -77,7 +77,7 @@ stringMacroDef.setParseAction( replaceWith("") )
 print stringMacroDef.transformString( testData )
 
 
-from pyparsing import *
+from .pyparsing import *
 
 wikiInput = """
 Here is a simple Wiki input:

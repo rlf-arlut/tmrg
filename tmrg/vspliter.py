@@ -6,8 +6,8 @@ import time
 import pprint
 import sys
 import functools
-from pyparsing import *
-import pyparsing
+from .pyparsing import *
+from . import pyparsing
 
 
 def main():

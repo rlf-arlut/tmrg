@@ -72,8 +72,8 @@ import functools
 import logging
 import textwrap
 import os
-from pyparsing import *
-import pyparsing
+from .pyparsing import *
+from . import pyparsing
 
 usePackrat = True
 usePsyco = False
