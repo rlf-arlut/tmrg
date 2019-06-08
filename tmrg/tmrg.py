@@ -1,4 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+from .verilogElaborator import *
+from .toolset import *
 import logging
 from optparse import *
 import traceback
@@ -9,8 +11,6 @@ import logging
 import filecmp
 import copy
 import time
-from .verilogElaborator import *
-from .toolset import *
 import subprocess
 import getpass
 import socket

@@ -1,18 +1,17 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
+
+from .tmrg import VerilogFormater,readFile,resultLine,TMR
+from .verilogElaborator import *
+from .toolset import *
 import logging
-from optparse import *
-#import tempita
-#import pygraphviz as pgv
 import traceback
 import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
-from verilogElaborator import *
-from toolset import *
+from optparse import *
 
 class TBG(TMR):
     def __init__(self,options, args):
@@ -227,7 +226,7 @@ class TBG(TMR):
             f.write(oStr)
             f.close()
         else:
-            print oStr
+            print(oStr)
 
         #generateFromTemplate(fname,tfile, values)
 
