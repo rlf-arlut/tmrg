@@ -41,7 +41,7 @@ redundancy.
    verification
    faq
    license
-
+   contributors
 
 **Other resources**:
 
