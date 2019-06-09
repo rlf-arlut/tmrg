@@ -5,6 +5,7 @@ import sys
 import tempfile
 import logging
 import subprocess
+import shlex
 from difflib import *
 from distutils.spawn import find_executable
 
@@ -18,9 +19,10 @@ if not os.path.exists(tmpDir):
     os.makedirs(tmpDir)
 
 def getstatusoutput(cmd):
-    p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print(cmd)
+    p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, stderr = p.communicate()
-    return int(p.returncode), str(stdout)
+    return int(p.returncode), stdout.decode('utf8')
 
 simpleTests=(
   "verilog/alwaysComma.v",
@@ -205,7 +207,7 @@ mustFailTests=(
  )
 
 
-runCov = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag*' "
+runCov = "python-coverage run -a --include '*verilog*,*tmrg*,*seeg*,*plag*' "
 
 def runSimpleTests():
     srcFiles=[]
@@ -312,14 +314,15 @@ def coverageSummary():
           if not lineRange in linesHist: linesHist[lineRange]=0
           linesHist[lineRange]+=1
 #          print fname,lino,lines
-        fin=open(fname)
-        for lno,l in enumerate(fin.readlines()):
-          lineno=lno+1
-          if lineno in lines:
-            f.write("%-30s %4d : ! %s\n"%(fname,lno,l.rstrip()))
-          if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
-            f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
-        fin.close()
+        if os.path.isfile(fname):
+          fin=open(fname)
+          for lno,l in enumerate(fin.readlines()):
+            lineno=lno+1
+            if lineno in lines:
+              f.write("%-30s %4d : ! %s\n"%(fname,lno,l.rstrip()))
+            if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
+              f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
+          fin.close()
     f.write("\n\nHistogram:\n")
     for k in sorted(linesHist):
         f.write("%d %d\n"%(k,linesHist[k]))
@@ -328,7 +331,7 @@ def coverageSummary():
 def runConfigurationTests():
     errors=0
 
-    tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
+    tmrgexec=find_executable("tmrg")#[:-4]+"../src/tmrg.py "
     tmrg = "%s %s --no-header  " % (runCov, tmrgexec)
 
     logging.info("Creating temporary directory %s"%tmpDir)
@@ -391,6 +394,7 @@ def runConfigurationTests():
             if err:
                 errors+=1
                 logging.info("  | Error code %d"%err)
+#                print(">>",outLog)
                 for l in outLog.split("\n"):
                     logging.info("  | %s"%l)
             logging.info("")
@@ -428,7 +432,7 @@ def runOthers(tests,mustFail=False):
     errors=0
     for appName,testArgs,verbose,checker in tests:
         logging.info("Runnging '%s %s'" % (appName,testArgs))
-        appExec=find_executable(appName)[:-4]+"/../src/%s.py "%appName
+        appExec=find_executable(appName)#[:-4]+"/../src/%s.py "%appName
         cmd = "%s %s %s" % (runCov, appExec,testArgs)
         err, outLog = getstatusoutput(cmd)
         if mustFail:
@@ -465,7 +469,7 @@ def main():
     os.chdir(tmpDir)
     coverageClean()
     logging.info("~"*80)
-    errors+=runSimpleTests()
+#    errors+=runSimpleTests()
     logging.info("~"*80)
     errors+=runConfigurationTests()
     logging.info("~"*80)
