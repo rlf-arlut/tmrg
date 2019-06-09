@@ -1,27 +1,24 @@
 #!/usr/bin/env python2
+
+from .verilogElaborator import *
+from .toolset import *
+from .tmrg import VerilogFormater,readFile,resultLine,TMR,makeSureDirExists
 import logging
-from optparse import *
-#import tempita
-#import pygraphviz as pgv
-#from vp import *
 import traceback
 import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
-from verilogElaborator import *
 from string import Template
-from toolset import *
-from tmrg import makeSureDirExists
 import getpass
 import socket
 import time
 import datetime
 import hashlib
 import zipfile
+from optparse import *
 
 class PLA(VerilogElaborator):
     def __init__(self,options, args):
