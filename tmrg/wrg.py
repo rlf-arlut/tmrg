@@ -1,17 +1,19 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-import logging
-from optparse import *
-import traceback
-import pprint
-import os
 import glob
 import logging
-from tmrg import VerilogFormater,readFile,resultLine,TMR
+import os
+import pprint
+import traceback
 import random
 import re
-from verilogElaborator import *
-from toolset import *
+
+from optparse import *
+
+from .verilogElaborator import *
+from .top import readFile
+from .tmrg import TMR
+from .toolset import tmrg_version, epilog
 
 class TBG(TMR):
     def __init__(self,options, args):
@@ -104,7 +106,7 @@ class TBG(TMR):
             oStr+="\n  );\n"
             oStr+="`else\n"
             #dut instantiation
-            oStr+="  %s%s %s (\n"%(module,parameters, module)
+            oStr+="  %s%s DUT (\n"%(module,parameters)
             sep="    "
             #initial declaration
             for ioName in sorted(self.modules[module]["io"]):
@@ -116,7 +118,7 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
             oStr+="""`ifdef SDF
   initial
-    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log", "MAXIMUM");
+    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log");
 `endif
 """
 
@@ -137,7 +139,7 @@ class TBG(TMR):
             f.write(oStr)
             f.close()
         else:
-            print oStr
+            print(oStr)
 
         #generateFromTemplate(fname,tfile, values)
 

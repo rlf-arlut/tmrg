@@ -121,7 +121,7 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
             oStr+="""`ifdef SDF
   initial
-    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log", "MAXIMUM");
+    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log");
 `endif
 """
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from optparse import *
-from vp import *
+from .verilogParser import *
 import glob
 import os
 
@@ -92,7 +92,7 @@ class VerilogParserInstance(VerilogParser):
         indentStr2 = indentChr * (indentLen+2)
         outStr=outStr.replace(indentStr+".",indentStr2+".")
         outStr=outStr.replace(indentStr+"//",indentStr2+"//")
-        print outStr
+        print(outStr)
 def insensitive_glob(pattern):
     def either(c):
         return '[%s%s]'%(c.lower(),c.upper()) if c.isalpha() else c
@@ -124,7 +124,7 @@ def main():
            fn=(os.path.join(root, filename))
            m=fgrep(fn,module)
            if m:
-               print "// %s"%fn
+               print("// %s"%fn)
                vp=VerilogParserInstance()
                vp.parseString(readFile(fn))
                vp.instance(sort=options.sort, group=options.group, tmr=options.tmr, show_parameters=options.parameters)
