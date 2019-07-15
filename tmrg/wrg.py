@@ -118,9 +118,13 @@ class TBG(TMR):
             oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
             oStr+="""`ifdef SDF
   initial
-    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log");
+`ifdef TMR
+    $sdf_annotate("%sTMR.sdf", DUT, ,"sdf.log");
+`else
+    $sdf_annotate("%s.sdf", DUT, ,"sdf.log");
 `endif
-"""
+`endif
+""" % (module, module)
 
             oStr+="\n// - - - - - - - - - - - - - - - VDD section - - - - - - - - - - - - - - - - - \n"
             oStr+="""
