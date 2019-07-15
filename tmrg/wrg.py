@@ -116,7 +116,7 @@ class TBG(TMR):
             oStr+="`endif\n"
 
             oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
-            oStr+="""`ifdef SDF
+            oStr+="""`ifdef NETLIST
   initial
 `ifdef TMR
     $sdf_annotate("%sTMR.sdf", DUT, ,"sdf.log");
