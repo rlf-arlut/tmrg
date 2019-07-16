@@ -6,13 +6,13 @@ import time
 import pprint
 import sys
 import functools
-from pyparsing import *
-import pyparsing
+from .pyparsing import *
+from . import pyparsing
 
 
 def main():
     if len(sys.argv)<2:
-        print './prog filename'
+        print('./prog filename')
         return
     f=open(sys.argv[1])
     mod=0

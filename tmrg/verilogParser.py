@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # verilogParse.py
 #
@@ -72,8 +72,8 @@ import functools
 import logging
 import textwrap
 import os
-from pyparsing import *
-import pyparsing
+from .pyparsing import *
+from . import pyparsing
 
 usePackrat = True
 usePsyco = False
@@ -81,8 +81,8 @@ usePsyco = False
 import glob
 import copy
 
-from prettytable import PrettyTable
-from verilogFormater import VerilogFormater
+from .prettytable import PrettyTable
+from .verilogFormater import VerilogFormater
 
 packratOn = False
 psycoOn = False
@@ -101,7 +101,7 @@ if usePsyco:
         import psyco
         psyco.full()
     except:
-        print "failed to import psyco Python optimizer"
+        print("failed to import psyco Python optimizer")
     else:
         psycoOn = True
 
@@ -921,4 +921,4 @@ class VerilogParser:
         return self.tokens
 
 if __name__=="__main__":
-    print "This module is not ment to be run!"
+    print("This module is not ment to be run!")

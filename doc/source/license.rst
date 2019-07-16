@@ -6,7 +6,7 @@ Licensing and distribution
 License
 =======
 
-Copyright 2015-2017 by Szymon Kulis, CERN. All rights reserved.
+Copyright 2015-2019 by Szymon Kulis, CERN. All rights reserved.
 
 This program is distributed in the hope that it will be useful,
 but **WITHOUT ANY WARRANTY**; without even the implied warranty of

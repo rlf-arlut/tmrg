@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+from .verilogElaborator import *
+from .toolset import *
 import logging
 from optparse import *
 import traceback
@@ -9,9 +11,6 @@ import logging
 import filecmp
 import copy
 import time
-import ConfigParser
-from verilogElaborator import *
-from toolset import *
 import subprocess
 import getpass
 import socket
@@ -212,18 +211,18 @@ class TMR(VerilogElaborator):
 
     def __triplicate(self,tokens,i=""):
         debug=0
-        if debug:print i,"_(1 in )_ >",tokens.getName(),str(tokens)[:100]
+        if debug:print(i,"_(1 in )_ >",tokens.getName(),str(tokens)[:100])
         i+="    "
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if len(tokens)==0: return tokens
             if name in self.triplicator:
-                if debug:print i,"_(2 tmr)_>",str(tokens)[:100]
+                if debug:print(i,"_(2 tmr)_>",str(tokens)[:100])
                 tokens=self.triplicator[name](tokens)
             else:
                 self.logger.debug("No triplicator for %s"%name)
                 newTokens=ParseResults([],name=tokens.getName())
-                if debug:print i,"_(3 lis)_ >",str(tokens)[:100]
+                if debug:print(i,"_(3 lis)_ >",str(tokens)[:100])
                 i+="    "
                 for j in range(len(tokens)):
                     if isinstance(tokens[j], ParseResults):
@@ -231,20 +230,20 @@ class TMR(VerilogElaborator):
                         if isinstance(tmrToks,list):
                             for otokens in tmrToks:
                                 newTokens.append(otokens)
-                                if debug:print i,"_(4 out)_>",str(otokens)[:100]
+                                if debug:print(i,"_(4 out)_>",str(otokens)[:100])
                         else:
                             newTokens.append(tmrToks)
-                            if debug:print i,"_(4 out)_>",str(tmrToks)[:100]
+                            if debug:print(i,"_(4 out)_>",str(tmrToks)[:100])
                     else:
                         newTokens.append(tokens[j])
-                        if debug:print i,"_(4 out)_>",str(tokens[j])[:100]
-                if debug:print i,"_(new)_>",newTokens.getName(),str(newTokens)[:100]
+                        if debug:print(i,"_(4 out)_>",str(tokens[j])[:100])
+                if debug:print(i,"_(new)_>",newTokens.getName(),str(newTokens)[:100])
                 return newTokens
         else:
             #we have a string!
-            if debug:print i,"_(str2)_>",str(tokens[j])[:100]
+            if debug:print(i,"_(str2)_>",str(tokens[j])[:100])
             pass
-        if debug:print i,"_(ret)_>",str(tokens)[:100]
+        if debug:print(i,"_(ret)_>",str(tokens)[:100])
         return tokens
 
 
@@ -1896,10 +1895,10 @@ class TMR(VerilogElaborator):
         if self.options.stats:
             tmr_time=time.clock()-tmr_start_time
             for line in self.statsLogs:
-                print line
-            print "Total number of triplicated lines: %d "%self.tmrLinesTotal
-            print "Triplication time : %.3f s "%tmr_time
-            print "-"*80
+                print(line)
+            print("Total number of triplicated lines: %d "%self.tmrLinesTotal)
+            print("Triplication time : %.3f s "%tmr_time)
+            print("-"*80)
 
     def genSDC(self):
         tmrSuffix="TMR"

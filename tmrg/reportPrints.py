@@ -7,7 +7,7 @@ def main():
         for l in f.readlines():
             if l.find(" print ")>=0:
                 if l.find("#")>=0 and (l.find("#")<l.find("print")): continue
-                print fname,l.rstrip()
+                print(fname,l.rstrip())
         f.close()
 if __name__=="__main__":
     main()

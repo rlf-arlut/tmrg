@@ -1,4 +1,4 @@
-from pyparsing import *
+from .pyparsing import *
 class VerilogFormater:
     formater={}
     def setTrace(self,t):
@@ -686,7 +686,7 @@ class VerilogFormater:
             return ""
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
-            if self.trace: print "[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80])
+            if self.trace: print("[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
             if len(tokens)==0: return ""
             if name in self.formater:
                 outStr=self.formater[name](tokens,i)

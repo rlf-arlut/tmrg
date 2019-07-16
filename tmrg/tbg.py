@@ -1,17 +1,17 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
+from .tmrg import VerilogFormater,readFile,resultLine,TMR
+from .verilogElaborator import *
+from .toolset import *
 import logging
-from optparse import *
 import traceback
 import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
-from verilogElaborator import *
-from toolset import *
+from optparse import *
 
 class TBG(TMR):
     def __init__(self,options, args):
@@ -24,13 +24,13 @@ class TBG(TMR):
 
     def generate(self):
         logging.debug("")
-        oStr=""
+        oStr="`timescale 1 ps / 1 ps\n"
+        voterCell="majorityVoterTB"
+        oStr+=self.loadVoterDefinition(voterCell)+"\n"
         for module in self.modules:
             clocks=[]
             resets=[]
-            voterName=module+"Voter"
-            oStr+="`ifdef TMR\n"+self.loadVoterDefinition(voterName=voterName)+"`endif\n\n"
-            oStr+="module %sWrapper;\n"%module
+            oStr+="module %s_test;\n"%module
 
             oStr+="\n// - - - - - - - - - - - - - - Parameters section  - - - - - - - - - - - - - - \n"
 
@@ -49,9 +49,13 @@ class TBG(TMR):
             for ioName in sorted(self.modules[module]["io"]):
                 io=self.modules[module]["io"][ioName]
                 if io["type"]=="input":
-                    oStr+="  input %s %s;\n"%(io["range"], ioName)
+                    oStr+="  reg %s %s;\n"%(io["range"], ioName)
+                    if ioName.lower().find("clk")>=0 or ioName.lower().find("clock")>=0:
+                        clocks.append(ioName)
+                    if ioName.lower().find("rst")>=0 or ioName.lower().find("reset")>=0:
+                        resets.append(ioName)
                 elif io["type"]=="output":
-                    oStr+="  output %s %s;\n"%(io["range"], ioName)
+                    oStr+="  wire %s %s;\n"%(io["range"], ioName)
                 else:
                     self.logger.warning("Unsuported IO type: %s"%io["type"])
 
@@ -77,7 +81,7 @@ class TBG(TMR):
                         if _len!="1":
                             width+="#(.WIDTH(%s)) "%_len
 
-                        oStr+="  %s %s%s (\n"%(voterName,width,ioName+"Voter")
+                        oStr+="  %s %s%s (\n"%(voterCell,width,ioName+"Voter")
                         oStr+="    .inA(%sA),\n"%(ioName)
                         oStr+="    .inB(%sB),\n"%(ioName)
                         oStr+="    .inC(%sC),\n"%(ioName)
@@ -104,7 +108,7 @@ class TBG(TMR):
             oStr+="\n  );\n"
             oStr+="`else\n"
             #dut instantiation
-            oStr+="  %s%s %s (\n"%(module,parameters, module)
+            oStr+="  %s%s DUT (\n"%(module,parameters)
             sep="    "
             #initial declaration
             for ioName in sorted(self.modules[module]["io"]):
@@ -113,22 +117,107 @@ class TBG(TMR):
             oStr+="\n  );\n"
             oStr+="`endif\n"
 
+
             oStr+="\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
             oStr+="""`ifdef SDF
   initial
-    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log", "MAXIMUM");
+    $sdf_annotate("r2g.sdf", DUT, ,"sdf.log");
 `endif
 """
 
-            oStr+="\n// - - - - - - - - - - - - - - - VDD section - - - - - - - - - - - - - - - - - \n"
-            oStr+="""
-`ifdef VCD
-  initial begin
-     $dumpfile("%s.vcd");
-     $dumpvars(0, %s);
-  end
+            oStr+="\n// - - - - - - - - - - - - Single Event Effect section - - - - - - - - - - - -\n"
+            oStr+="""`ifdef SEE
+
+  reg     SEEEnable=0;          // enables SEE generator
+  reg     SEEActive=0;          // high during any SEE event
+  integer SEEnextTime=0;        // time until the next SEE event
+  integer SEEduration=0;        // duration of the next SEE event
+  integer SEEwireId=0;          // wire to be affected by the next SEE event
+  integer SEEmaxWireId=0;       // number of wires in the design which can be affected by SEE event
+  integer SEEmaxUpaseTime=1000; // 1 ns  (change if you are using different timescale)
+  integer SEEDel=100_000;       // 100 ns (change if you are using different timescale)
+  integer SEECounter=0;         // number of simulated SEE events
+
+  `include "see.v"
+
+  // get number of wires which can be affected by see
+  initial
+    see_max_net (SEEmaxWireId);
+
+
+  always
+    begin
+      if (SEEEnable)
+        begin
+          // randomize time, duration, and wire of the next SEE
+          SEEnextTime = #(SEEDel/2) {$random} % SEEDel;
+          SEEduration = {$random} % (SEEmaxUpaseTime-1) + 1;  // SEE time is from 1 - MAX_UPSET_TIME ns
+          SEEwireId   = {$random} % SEEmaxWireId;
+
+          // wait for SEE
+          #(SEEnextTime);
+
+          // SEE happens here! Toggle the selected wire.
+          SEECounter=SEECounter+1;
+          SEEActive=1;
+          see_force_net(SEEwireId);
+          see_display_net(SEEwireId); // probably you want to comment this line ?
+          #(SEEduration);
+          see_release_net(SEEwireId);
+          SEEActive=0;
+        end
+      else
+        #10;
+    end
+
 `endif
-"""%(module,module)
+"""
+
+            #initial
+            oStr+="\n// - - - - - - - - - - - - - Actual testbench section  - - - - - - - - - - - -\n"
+            oStr+="  initial\n"
+            oStr+="    begin\n"
+            resetsRelease=""
+            for ioName in sorted(self.modules[module]["io"]):
+                io=self.modules[module]["io"][ioName]
+                if io["type"]=="input":
+                    if ioName in resets:
+                        if ioName.find("n")>=0 or ioName.find("b")>=0:
+                            oStr+="      %s=0;\n"%(ioName)
+                            resetsRelease="      %s=1;\n"%(ioName)
+                        else:
+                            oStr+="      %s=1;\n"%(ioName)
+                            resetsRelease="      %s=0;\n"%(ioName)
+                    else:
+                        oStr+="      %s=0;\n"%(ioName)
+            if len(resetsRelease):
+                oStr+="      #10_000\n"+resetsRelease
+            oStr+="`ifdef SEE\n"
+            oStr+="      // enable SEE after 1ms\n"
+            oStr+="      #1000_000 SEEEnable=1;\n"
+            oStr+="      $display(\"Enabling SEE generation\");\n"
+            oStr+="`endif\n"
+            oStr+="      // finish simulation after 1ms\n"
+            oStr+="      #1000_000 $finish;\n"
+            oStr+="    end\n"
+
+            oStr+="\n"
+            for clock in clocks:
+                def guessClkFreq(clkName):
+                    try:
+                        return int(1e6/float(re.search(r'\d+', clock).group()))
+                    except:
+                        return 1e5
+                oStr+="  localparam %s_PERIOD = %d;\n"%(clock.upper(),guessClkFreq(clock))
+                oStr+="  initial\n"
+                oStr+="    begin\n"
+                oStr+="      #1000;\n"
+                oStr+="      forever\n"
+                oStr+="        begin\n"
+                oStr+="          %s = !%s;\n"%(clock,clock)
+                oStr+="          #(%s_PERIOD/2);\n"%(clock.upper())
+                oStr+="        end\n"
+                oStr+="    end\n"
 
             oStr+="endmodule\n"
         if self.options.outputFname!="":
@@ -137,14 +226,14 @@ class TBG(TMR):
             f.write(oStr)
             f.close()
         else:
-            print oStr
+            print(oStr)
 
         #generateFromTemplate(fname,tfile, values)
 
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
-    parser = OptionParser(version="WRG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
+    parser = OptionParser(version="TBG %s"%tmrg_version(), usage="%prog [options] fileName", epilog=epilog)
     parser.add_option("-v", "--verbose",       dest="verbose",   action="count",   default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",   "--doc",           dest="doc",       action="store_true",   default=False, help="Open documentation in web browser")
     parser.add_option("-l", "--lib",           dest="libs",      action="append",   default=[], help="Library")

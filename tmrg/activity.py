@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os
 import sys
 os.system("git log --all --stat > /tmp/log.txt")
@@ -52,7 +52,7 @@ for l in f.readlines():
             history[year][month]["files"]+=files
             history[year][month]["lines"]+=lines
 f.close()
-print "Total number of events: %d"%events
+print("Total number of events: %d"%events)
 f=open("history.dat","w")
 for year in sorted(history):
     for month in range(1,13):

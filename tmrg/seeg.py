@@ -1,27 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
+from .tmrg import VerilogFormater,readFile,resultLine,TMR,makeSureDirExists
+from .verilogElaborator import *
+from .toolset import *
 import logging
-from optparse import *
-#import tempita
-#import pygraphviz as pgv
 import traceback
 import pprint
 import os
 import glob
 import logging
-from tmrg import VerilogFormater,readFile,resultLine,TMR
 import random
 import re
-from verilogElaborator import *
-from toolset import *
 import getpass
 import socket
-from tmrg import makeSureDirExists
 import getpass
 import socket
 import time
 import datetime
 import hashlib
 import zipfile
+from optparse import *
 
 class SEE(VerilogElaborator):
     def __init__(self,options, args):

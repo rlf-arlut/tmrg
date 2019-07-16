@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Triple Modular Redundancy Generator'
-copyright = u'2015, Szymon KULIS'
+copyright = u'2015-2019, CERN'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -191,7 +191,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'tmrg.tex', u'Triple Modular Redundancy Generator',
-   u'Szymon KULIS', 'manual'),
+   u'CERN', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -221,7 +221,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'timepix3waferprobing', u'Timepix3 Wafer Probing Documentation',
-     [u'Szymon KULIS'], 1)
+     [u'CERN'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -233,11 +233,11 @@ man_pages = [
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
-  ('index', 'Timepix3WaferProbing', u'Timepix3 Wafer Probing Documentation',
-   u'Szymon KULIS', 'Timepix3WaferProbing', 'One line description of project.',
-   'Miscellaneous'),
-]
+#texinfo_documents = [
+#  ('index', 'Timepix3WaferProbing', u'Timepix3 Wafer Probing Documentation',
+#   u'Szymon KULIS', 'Timepix3WaferProbing', 'One line description of project.',
+#   'Miscellaneous'),
+#]
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []

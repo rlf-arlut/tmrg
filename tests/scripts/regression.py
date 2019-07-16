@@ -1,10 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import glob
 import os
 import sys
 import tempfile
 import logging
-import commands
+import subprocess
+import shlex
 from difflib import *
 from distutils.spawn import find_executable
 
@@ -17,6 +18,11 @@ logging.info("Creating temporary directory %s"%tmpDir)
 if not os.path.exists(tmpDir):
     os.makedirs(tmpDir)
 
+def getstatusoutput(cmd):
+    print(cmd)
+    p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = p.communicate()
+    return int(p.returncode), stdout.decode('utf8')
 
 simpleTests=(
   "verilog/alwaysComma.v",
@@ -201,7 +207,7 @@ mustFailTests=(
  )
 
 
-runCov = "python-coverage run -a --include '*verilog*,*src/tmrg*,*src/seeg*,*src/plag*' "
+runCov = "python-coverage run -a --include '*verilog*,*tmrg*,*seeg*,*plag*' "
 
 def runSimpleTests():
     srcFiles=[]
@@ -212,13 +218,13 @@ def runSimpleTests():
         srcFiles.append(ffname)
     #tmpDir=tempfile.mkdtemp()
     tests=0
-    tmrg=find_executable("tmrg")[:-4]+"../src/tmrg.py"
+    tmrg=find_executable("tmrg")#[:-4]+"../src/tmrg.py"
 #    if 1 :
     for i,f in enumerate(srcFiles):
         logging.info("[%02d/%02d] Simple test for '%s'"%(i+1,len(srcFiles),f))
         logging.info("        iverilog for the source ('%s')"%f)
         cmd = "iverilog %s"%f
-        err,outLog = commands.getstatusoutput(cmd)
+        err,outLog = getstatusoutput(cmd)
         if err:
             errors+=1
             logging.info("  | Error code %d"%err)
@@ -227,7 +233,7 @@ def runSimpleTests():
 
         logging.info("        Triplicating '%s'" % f)
         cmd = "%s %s --no-header %s" % (runCov, tmrg,f)
-        err, outLog = commands.getstatusoutput(cmd)
+        err, outLog = getstatusoutput(cmd)
         if err or len(outLog)>0:
             errors += 1
             logging.info("  | Error code %d" % err)
@@ -241,7 +247,7 @@ def runSimpleTests():
 
         logging.info("        iverilog of triplicated file ('%s')"%outTmr)
         cmd = "iverilog %s"%outTmr
-        err,outLog = commands.getstatusoutput(cmd)
+        err,outLog = getstatusoutput(cmd)
         if err:
             errors+=1
             logging.info("  | Error code %d"%err)
@@ -274,11 +280,12 @@ def runSimpleTests():
 def coverageClean():
     logging.info("Cleanning coverate reports")
     cmd = "python-coverage erase"
-    err, outLog = commands.getstatusoutput(cmd)
+    cmd = "echo x"
+    err, outLog = getstatusoutput(cmd)
 
 def coverageSummary():
     cmd = "python-coverage report -m "
-    err,outLog = commands.getstatusoutput(cmd)
+    err,outLog = getstatusoutput(cmd)
     logging.info("")
     logging.info("Coverage")
     for l in outLog.split("\n"):
@@ -307,14 +314,15 @@ def coverageSummary():
           if not lineRange in linesHist: linesHist[lineRange]=0
           linesHist[lineRange]+=1
 #          print fname,lino,lines
-        fin=open(fname)
-        for lno,l in enumerate(fin.readlines()):
-          lineno=lno+1
-          if lineno in lines:
-            f.write("%-30s %4d : ! %s\n"%(fname,lno,l.rstrip()))
-          if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
-            f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
-        fin.close()
+        if os.path.isfile(fname):
+          fin=open(fname)
+          for lno,l in enumerate(fin.readlines()):
+            lineno=lno+1
+            if lineno in lines:
+              f.write("%-30s %4d : ! %s\n"%(fname,lno,l.rstrip()))
+            if  (not lineno in lines ) and ((lineno+1 in lines) or (lineno-1 in lines)):
+              f.write("%-30s %4d :   %s\n"%(fname,lno,l.rstrip()))
+          fin.close()
     f.write("\n\nHistogram:\n")
     for k in sorted(linesHist):
         f.write("%d %d\n"%(k,linesHist[k]))
@@ -323,7 +331,7 @@ def coverageSummary():
 def runConfigurationTests():
     errors=0
 
-    tmrgexec=find_executable("tmrg")[:-4]+"../src/tmrg.py "
+    tmrgexec=find_executable("tmrg")#[:-4]+"../src/tmrg.py "
     tmrg = "%s %s --no-header  " % (runCov, tmrgexec)
 
     logging.info("Creating temporary directory %s"%tmpDir)
@@ -346,7 +354,7 @@ def runConfigurationTests():
             logging.info("         File config : '%s' "%(fnameCnfFile))
             cmd="%s %s --config=%s"%(tmrg,fnameSrcFile,fnameCnfFile)
             logging.info("         cmd : '%s' "%(cmd))
-            err,outLog = commands.getstatusoutput(cmd)
+            err,outLog = getstatusoutput(cmd)
             if err:
                 errors+=1
                 logging.error("  | Error code %d"%err)
@@ -366,7 +374,7 @@ def runConfigurationTests():
             fCommentSrc.close()
             cmd="%s %s "%(tmrg,fnameComment)
             logging.info("         cmd : '%s' "%(cmd))
-            err,outLog = commands.getstatusoutput(cmd)
+            err,outLog = getstatusoutput(cmd)
             if err:
                 errors+=1
                 logging.error("  | Error code %d"%err)
@@ -382,10 +390,11 @@ def runConfigurationTests():
             fCmdFile.close()
             cmd="%s %s %s"%(tmrg,fnameCmdline,configurationTests[i]["configurations"][j]["cmdline"])
             logging.info("         cmd : '%s' "%(cmd))
-            err,outLog = commands.getstatusoutput(cmd)
+            err,outLog = getstatusoutput(cmd)
             if err:
                 errors+=1
                 logging.info("  | Error code %d"%err)
+#                print(">>",outLog)
                 for l in outLog.split("\n"):
                     logging.info("  | %s"%l)
             logging.info("")
@@ -423,9 +432,9 @@ def runOthers(tests,mustFail=False):
     errors=0
     for appName,testArgs,verbose,checker in tests:
         logging.info("Runnging '%s %s'" % (appName,testArgs))
-        appExec=find_executable(appName)[:-4]+"/../src/%s.py "%appName
+        appExec=find_executable(appName)#[:-4]+"/../src/%s.py "%appName
         cmd = "%s %s %s" % (runCov, appExec,testArgs)
-        err, outLog = commands.getstatusoutput(cmd)
+        err, outLog = getstatusoutput(cmd)
         if mustFail:
           if err==0:
             logging.error("  | Test returned %d while it supose to fail!   " % err)
@@ -460,7 +469,7 @@ def main():
     os.chdir(tmpDir)
     coverageClean()
     logging.info("~"*80)
-    errors+=runSimpleTests()
+#    errors+=runSimpleTests()
     logging.info("~"*80)
     errors+=runConfigurationTests()
     logging.info("~"*80)
