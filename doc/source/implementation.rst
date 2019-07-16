@@ -52,6 +52,9 @@ put options in the section ``tmrg`` in the configuration file, as shown below:
     # should headers of SDC file be added ? [true/false]
     sdc_headers = true
 
+For place and route to complete correctly after this step, all the ``set_dont_touch``
+constraints will have to be removed from the constraints file created by synthesis.
+
 RTL Compiler / Genus trick & tips
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -131,4 +134,32 @@ placed, then he can source the generated script:
 
 .. Moreover, the tool is capable of calculating distances between triplicated
 .. flip-flops and making histogram of these.
+
+In more recent versions of P&R tools, a different approach can be followed to ensure proper spacing of
+triplicated flip-flops. ``Instace Spacing Groups`` can be used to constrain the minimum distance to be
+kept between a specified set of instances. For each set of triplicated flip-flops, one instance spacing
+group needs to be created and the placer needs to be instructed to respect these spacing rules.
+The following script can be used to create a group for all triplicated flip-flops in a design:
+
+.. code-block:: tcl
+
+  set instance_spacing 15
+
+  set A_regs [get_db [get_db insts -if {.name == "*A_reg*"}] .name]
+  set B_regs [string map {A_reg B_reg} $A_regs]
+  set C_regs [string map {A_reg C_reg} $A_regs]
+
+  foreach A_reg $A_regs B_reg $B_regs C_reg $C_regs {
+    create_inst_space_group \
+      -group_name $A_reg \
+      -inst "$A_reg $B_reg $C_reg" \
+      -spacing_x $instance_spacing \
+      -spacing_y $instance_spacing
+  }
+
+  set_db place_detail_check_inst_space_group true
+
+Violations of constraints can be reported using the ``check_place`` command. The command 
+``report_inst_space_group`` is available to report all the groups that were created.
+
 
