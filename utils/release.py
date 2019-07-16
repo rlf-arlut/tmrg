@@ -24,7 +24,7 @@ def main():
 
     logging.info("Replace")
     #replaceStrInFile("../tags/%s/doc/source/conf.py"%tag,"[trunk]","[%s]"%tag)
-    replaceStrInFile("./src/toolset.py",'tmrg_version.str=""','tmrg_version.str="%s"'%version)
+    replaceStrInFile("./tmake/toolset.py",'tmrg_version.str=""','tmrg_version.str="%s"'%version)
 
     logging.info("make html")
     os.system("cd doc ; make html")
