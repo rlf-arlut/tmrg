@@ -38,7 +38,7 @@ def main():
     cmd="""cd .. ; tar --exclude='activity.py' --exclude='fastLefParser.py' --exclude='top.py' --exclude='*.pyc' --exclude='*~' \
           --exclude='reportPrints.py' --exclude='scanExamples.py'  --exclude='sdf.py' --exclude='spliter.py' --exclude="rc" \
           --exclude="examples/doc"  --exclude="examples/*.py" --exclude="examples/*.cnf" \
-          -cvzf  %s tmrg/doc/html tmrg/doc/pdf tmrg/src tmrg/etc tmrg/common tmrg/bin tmrg/examples  tmrg/README.md tmrg/LICENSE && mv %s tmrg"""%(fname,fname)
+          -cvzf  %s tmrg/doc/html tmrg/doc/pdf tmrg/tmrg tmrg/etc tmrg/common tmrg/bin tmrg/examples  tmrg/README.md tmrg/LICENSE && mv %s tmrg"""%(fname,fname)
 #    print cmd
     os.system(cmd)
     logging.info("File %s"%(fname))
