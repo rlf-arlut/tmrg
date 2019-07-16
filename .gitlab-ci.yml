@@ -70,7 +70,7 @@ doc_build_master:
         - mv web/htaccess web/html/.htaccess
         - mv web ../public
         - cd ../
-        - ./src/release.py
+        - ./utils/release.py
         - mv tmrg.tgz public/html/
    artifacts:
      paths:
