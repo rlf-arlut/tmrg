@@ -6806,22 +6806,6 @@ pyparsing_unicode.Japanese._ranges = (pyparsing_unicode.Japanese.Kanji._ranges
                                       + pyparsing_unicode.Japanese.Hiragana._ranges
                                       + pyparsing_unicode.Japanese.Katakana._ranges)
 
-# define ranges in language character sets
-if PY_3:
-    setattr(pyparsing_unicode, u"العربية", pyparsing_unicode.Arabic)
-    setattr(pyparsing_unicode, u"中文", pyparsing_unicode.Chinese)
-    setattr(pyparsing_unicode, u"кириллица", pyparsing_unicode.Cyrillic)
-    setattr(pyparsing_unicode, u"Ελληνικά", pyparsing_unicode.Greek)
-    setattr(pyparsing_unicode, u"עִברִית", pyparsing_unicode.Hebrew)
-    setattr(pyparsing_unicode, u"日本語", pyparsing_unicode.Japanese)
-    setattr(pyparsing_unicode.Japanese, u"漢字", pyparsing_unicode.Japanese.Kanji)
-    setattr(pyparsing_unicode.Japanese, u"カタカナ", pyparsing_unicode.Japanese.Katakana)
-    setattr(pyparsing_unicode.Japanese, u"ひらがな", pyparsing_unicode.Japanese.Hiragana)
-    setattr(pyparsing_unicode, u"한국어", pyparsing_unicode.Korean)
-    setattr(pyparsing_unicode, u"ไทย", pyparsing_unicode.Thai)
-    setattr(pyparsing_unicode, u"देवनागरी", pyparsing_unicode.Devanagari)
-
-
 if __name__ == "__main__":
 
     selectToken    = CaselessLiteral("select")
