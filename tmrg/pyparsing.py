@@ -180,7 +180,7 @@ Diagnostic configuration
        calls to ParserElement.setName() (default=False)
 """
 __diag__.warn_multiple_tokens_in_named_alternation = True
-__diag__.warn_ungrouped_named_tokens_in_collection = True
+__diag__.warn_ungrouped_named_tokens_in_collection = False
 __diag__.warn_name_set_on_empty_Forward = False
 __diag__.warn_on_multiple_string_args_to_oneof = True
 __diag__.enable_debug_on_named_expressions = False
