@@ -968,8 +968,17 @@ class VerilogElaborator():
                 self.topFile=self.modules[module]["file"]
                 tops+=1
 
-        if tops!=1:
-#            elaborationError=True
+        top_module = self.config.get("global","top_module")
+        if self.options.top_module:
+            top_module = self.options.top_module
+        if top_module:
+            if not top_module in self.modules:
+                self.logger.error("Specified top module (%s) not found.", self.options.top_module)
+                elaborationError=True
+            else:
+                self.topModule = top_module
+                self.logger.warning("Top module found ()!", self.topModule)
+        elif tops!=1:
             self.logger.warning("The design has multiple top cells! Output may not be correct!")
 
         if not allowMissingModules and elaborationError:

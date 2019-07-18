@@ -162,6 +162,7 @@ def main():
     parser.add_option("", "--include", dest="include", action="store_true", default="false",
                       help="Include include files")
     parser.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Include directories")
+    parser.add_option("",   "--top-module",        dest="top_module",    action="store", default="",  help="Specify top module name")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
