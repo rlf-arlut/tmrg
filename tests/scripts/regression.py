@@ -19,7 +19,6 @@ if not os.path.exists(tmpDir):
     os.makedirs(tmpDir)
 
 def getstatusoutput(cmd):
-    print(cmd)
     p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, stderr = p.communicate()
     return int(p.returncode), stdout.decode('utf8')
@@ -219,7 +218,6 @@ def runSimpleTests():
     #tmpDir=tempfile.mkdtemp()
     tests=0
     tmrg=find_executable("tmrg")#[:-4]+"../src/tmrg.py"
-#    if 1 :
     for i,f in enumerate(srcFiles):
         logging.info("[%02d/%02d] Simple test for '%s'"%(i+1,len(srcFiles),f))
         logging.info("        iverilog for the source ('%s')"%f)
@@ -305,7 +303,6 @@ def coverageSummary():
           if lino.find("-")>0:
             _from=int(lino[:lino.find('-')])
             _to=int(lino[lino.find('-')+1:])
-#            print lino,_from,_to
             lineRange=_to - _from + 1
             for i in range(_from,_to+1):
                lines.append(i)
@@ -313,7 +310,6 @@ def coverageSummary():
             lines.append(int(lino))
           if not lineRange in linesHist: linesHist[lineRange]=0
           linesHist[lineRange]+=1
-#          print fname,lino,lines
         if os.path.isfile(fname):
           fin=open(fname)
           for lno,l in enumerate(fin.readlines()):
@@ -394,7 +390,6 @@ def runConfigurationTests():
             if err:
                 errors+=1
                 logging.info("  | Error code %d"%err)
-#                print(">>",outLog)
                 for l in outLog.split("\n"):
                     logging.info("  | %s"%l)
             logging.info("")
@@ -469,7 +464,7 @@ def main():
     os.chdir(tmpDir)
     coverageClean()
     logging.info("~"*80)
-#    errors+=runSimpleTests()
+    errors+=runSimpleTests()
     logging.info("~"*80)
     errors+=runConfigurationTests()
     logging.info("~"*80)
