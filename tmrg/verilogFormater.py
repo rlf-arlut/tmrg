@@ -2,7 +2,7 @@ import sys
 if sys.version_info[0] >= 3:
     from .pyparsing241 import *
 else:
-    from .pyparsing151 import *
+    from .pyparsing152 import *
 
 class VerilogFormater:
     formater={}
