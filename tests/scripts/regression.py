@@ -179,7 +179,9 @@ otherTests=(
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v --exclude %s/cnf/exclude.txt --cells=\"DFCNQD1\""%(top,top,top),0,None), 
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c %s/cnf/plag.cfg "%(top,top,top),0,None), 
   ("tbg","%s/../examples/fsm01.v -o fsm01_test.v "%(top),0,None), 
-  
+
+  ("tmrg","%s/verilog/topModule.v"%top,1,None),
+
 )
 
 mustFailTests=(
@@ -205,6 +207,7 @@ mustFailTests=(
 
   ("tmrg","%s/verilog/hier/top.v "%(top),1,None),
   ("plag","%s/netlist/accTMR.v -l %s/libs/tcbn65lp.v -c do_not_exists "%(top,top),1,None),
+
  )
 
 
