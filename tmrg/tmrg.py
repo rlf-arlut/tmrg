@@ -582,7 +582,7 @@ class TMR(VerilogElaborator):
             # if we know the instance
             if not identifier in self.modules:
                 self.logger.error("")
-                self.logger.info("      Module %s is unknown"%identifier)
+                self.logger.error("      Module %s is unknown"%identifier)
                 raise ErrorMessage("      Module %s is unknown"%identifier)
             if "dntinst" in self.current_module["constraints"]:
                 if instance in self.current_module["constraints"]["dntinst"]:
@@ -1070,7 +1070,7 @@ class TMR(VerilogElaborator):
                             moduleBody.append(self.vp.moduleInstantiation.parseString(
                                 majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
                                 (width, inst, _a, _b, _c, _out, _err))[0]);
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
+#                        moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
 
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
@@ -1088,7 +1088,7 @@ class TMR(VerilogElaborator):
                             if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
                                 self.logger.debug("Removing signal '%s' from tmrError",signal)
                                 continue
-#                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%signal)[0])
                             asgnStr+=sep+signal
                             sep="|"
                     else:
@@ -1445,8 +1445,6 @@ class TMR(VerilogElaborator):
         if not post in self.current_module["tmrErrNets"]:
             self.current_module["tmrErrNets"][post]=set()
         self.current_module["tmrErrNets"][post].add(netName)
-
-
 
     def exc(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
