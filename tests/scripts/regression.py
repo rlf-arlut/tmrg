@@ -110,7 +110,8 @@ simpleTests=(
   "../examples/pipelineWithSeuCoutner.v",
   "verilog/tmrErrorExclude.v",
   "verilog/vectorRange.v",
-  "verilog/generate05.v"
+  "verilog/generate05.v",
+  "verilog/wor01.v",
 )
 
 
