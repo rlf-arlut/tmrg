@@ -977,7 +977,7 @@ class VerilogElaborator():
                 elaborationError=True
             else:
                 self.topModule = top_module
-                self.logger.warning("Top module found ()!", self.topModule)
+                self.logger.info("Top module found (%s)!", self.topModule)
         elif tops!=1:
             self.logger.warning("The design has multiple top cells! Output may not be correct!")
 
