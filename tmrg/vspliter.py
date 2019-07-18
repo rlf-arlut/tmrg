@@ -6,8 +6,13 @@ import time
 import pprint
 import sys
 import functools
-from .pyparsing import *
-from . import pyparsing
+
+if sys.version_info[0] >= 3:
+    from .pyparsing241 import *
+    from . import pyparsing241 as pyparsing
+else:
+    from .pyparsing151 import *
+    from . import pyparsing151 as pyparsing
 
 
 def main():
