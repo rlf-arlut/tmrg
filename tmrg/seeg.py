@@ -206,6 +206,7 @@ def main():
     parser.add_option("",  "--include",            dest="include",    action="store_true", default=False,   help="Include include files")
     parser.add_option("",   "--inc-dir",           dest="inc_dir",      action="append", default=[], help="Directory where to look for include files (use option --include to actualy include the files during preprocessing)")
     parser.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
+    parser.add_option("",   "--top-module",        dest="top_module",    action="store", default="",  help="Specify top module name")
 
     logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 

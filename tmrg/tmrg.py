@@ -2033,6 +2033,7 @@ def main():
     tmrGroup.add_option("",  "--generate-report",    dest="generateBugReport", action="store_true",   default=False, help="Generate bug report")
     tmrGroup.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
     tmrGroup.add_option("",  "--include",            dest="include",    action="store_true", default=False,   help="Include include files")
+    dirGroup.add_option("",   "--top-module",        dest="top_module",    action="store", default="",  help="Specify top module name")
 
 
     parser.add_option_group(tmrGroup)
