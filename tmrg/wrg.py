@@ -131,10 +131,10 @@ class TBG(TMR):
 `ifdef VCD
   initial begin
      $dumpfile("%s.vcd");
-     $dumpvars(0, %s);
+     $dumpvars(0, DUT);
   end
 `endif
-"""%(module,module)
+"""%(module)
 
             oStr+="endmodule\n"
         if self.options.outputFname!="":
