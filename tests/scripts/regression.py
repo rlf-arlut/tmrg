@@ -114,6 +114,9 @@ simpleTests=(
   "verilog/generate05.v",
   "verilog/wor01.v",
   "verilog/wor02.v",
+  "reg_initial_value1.v",
+  "reg_initial_value2.v",
+  "reg_initial_value3.v",
 )
 
 
