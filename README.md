@@ -52,8 +52,8 @@ This software is distributed under the terms of the GPL Version 2 license. A cop
 
 ## Contributors
 
-  * Szymon Kulis, EP/ESE/ME CERN
-  * Stefan Biereigel, EP/ESE/ME CERN
+  * Szymon Kulis, EP/ESE/ME CERN (@skulis)
+  * Stefan Biereigel, EP/ESE/ME CERN (@sbiereig)
 
 ## Contributing
 
