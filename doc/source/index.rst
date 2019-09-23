@@ -15,10 +15,6 @@ redundancy.
    names. It will also simplify the physical implementation and verification
    process by providing some routines. 
 
-.. note:: The TMRG tool is open source, however, it **CAN NOT**  be made publicly available. 
-   By downloading the code, you become **RESPONSIBLE** for protecting it.
-   For more details please refer :ref:`licesing`.
-
 **Quick links**:
 
   * Gitlab page: https://gitlab.cern.ch/tmrg/tmrg
@@ -48,10 +44,4 @@ redundancy.
   * `Single Event Upsets mitigation techniques [PDF] <https://indico.cern.ch/event/465343/>`_, EPE-ESE seminar Tuesday 12 Apr 2016
   * `Single Event Effects mitigation with TMRG tool <http://iopscience.iop.org/article/10.1088/1748-0221/12/01/C01082/meta>`_, Journal of Instrumentation, Volume 12, January 2017 
   * `Digital synthesis for rad-hard components <https://tmrg.web.cern.ch/tmrg/tmrg_kulis_in2p3.pdf>`_, Ecole de Microélectronique IN2P3, 14 - 19 May 2017, Bénodet
-
-
-
-..   general_assumptions
-..   synthesis_tests
-..   examples
 
