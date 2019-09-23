@@ -22,9 +22,7 @@ Master branch build status: [![build status](https://gitlab.cern.ch/tmrg/tmrg/ba
 
 In papers and reports, please refer to TMRG as follows: 
 
-.. code-block:: tex
-
-   @article{TMRG,
+```     @article{TMRG,
      author={S. Kulis},
      title={Single Event Effects mitigation with TMRG tool},
      journal={Journal of Instrumentation},
@@ -45,6 +43,7 @@ In papers and reports, please refer to TMRG as follows:
        process of introducing SEE in gate level simulations for final
        verification.}
    }
+```
 
 
 ## Licenses
