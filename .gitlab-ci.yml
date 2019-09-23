@@ -64,14 +64,12 @@ doc_build_master:
    script: 
         - cd doc
         - make latexpdf
-        - make html
-        - cp -r build/html/ web/
-        - mv build/latex/tmrg.pdf web/html/
-        - mv web/htaccess web/html/.htaccess
-        - mv web ../public
+        - make html 
+        - cp build/html/* ../public
+        - mv build/latex/tmrg.pdf ../public
         - cd ../
         - ./tmrg/release.py
-        - mv tmrg.tgz public/html/
+        - mv tmrg.tgz public/
    artifacts:
      paths:
        - public
