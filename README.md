@@ -4,15 +4,15 @@ The TMRG toolset assists in the process of creating digital designs immune to si
 
 ## Documentation
 
-Documentation is avaliable at https://cern.ch/tmrg ([PDF](https://cern.ch/tmrg/html/tmrg.pdf) , [HTML](https://cern.ch/tmrg/html)).
+Documentation is avaliable at https://cern.ch/tmrg ([PDF](https://cern.ch/tmrg/tmrg.pdf) , [HTML](https://cern.ch/tmrg/)).
 
 ## Installation
 
-Information about how to install the TMRG toolset are avaliable at https://tmrg.web.cern.ch/tmrg/html/getting_started.html.
+Information about how to install the TMRG toolset are avaliable at https://tmrg.web.cern.ch/tmrg/getting_started.html.
 
 ## Frequently Asked Questions (FAQ)
 
-Frequently Asked Questions can be found at https://tmrg.web.cern.ch/tmrg/html/faq.html.
+Frequently Asked Questions can be found at https://tmrg.web.cern.ch/tmrg/faq.html.
 
 ## Build status
 
