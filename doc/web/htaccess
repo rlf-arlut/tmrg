@@ -1,9 +1,0 @@
-SSLRequireSSL # The modules only work using HTTPS
-AuthType shibboleth
-ShibRequireSession On
-ShibRequireAll On
-ShibExportAssertion Off
-
-ErrorDocument 401 /tmrg/401.html
-ErrorDocument 404 /tmrg/401.html
-
