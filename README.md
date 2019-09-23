@@ -45,7 +45,6 @@ In papers and reports, please refer to TMRG as follows:
   }
 ```
 
-
 ## Licenses
 
 This software is distributed under the terms of the GPL Version 2 license. A copy of this license can be found in [LICENSE.md](LICENSE.md).
