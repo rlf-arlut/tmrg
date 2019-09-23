@@ -22,8 +22,8 @@ redundancy.
 
 **Downloads**:
 
-  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/html/tmrg.pdf>`_
-  * Latest version of the `TMRG toolset <https://tmrg.web.cern.ch/tmrg/html/tmrg.tgz>`_ (source, doc, examples)
+  * `PDF version of this document  <https://tmrg.web.cern.ch/tmrg/tmrg.pdf>`_
+  * Latest version of the `TMRG toolset <https://tmrg.web.cern.ch/tmrg/tmrg.tgz>`_ (source, doc, examples)
 
 **Content**:
 
