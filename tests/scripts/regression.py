@@ -70,6 +70,7 @@ simpleTests=(
   "verilog/instTmrError.v",
   "verilog/notxor.v",
   "verilog/slice01.v",
+  "verilog/noports.v",
   "../examples/slice.v",
   "verilog/tmr3.v",
   "verilog/ifdef.v",
