@@ -692,7 +692,7 @@ class VerilogFormater:
         if isinstance(tokens, ParseResults):
             name=str(tokens.getName()).lower()
             if self.trace: print("[%-20s] len:%2d  str:'%s' >"%(name,len(tokens),str(tokens)[:80]))
-            if len(tokens)==0: return ""
+            if name != "moduleargs" and len(tokens)==0: return ""
             if name in self.formater:
                 outStr=self.formater[name](tokens,i)
             else:

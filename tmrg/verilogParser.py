@@ -470,7 +470,7 @@ class VerilogParser:
         #(delimitedList(self.modulePortConnection) | delimitedList(namedPortConnection)) +
         moduleArgs = Group( Suppress("(") +
                         #    Group(delimitedList( namedPortConnection )) +
-                              delimitedList(self.namedPortConnection | Group(self.expr)) +
+                              Optional(delimitedList(self.namedPortConnection | Group(self.expr))) +
                             Suppress(")")
                           ).setResultsName("moduleArgs")#.setDebug()
 
