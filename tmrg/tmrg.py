@@ -1062,7 +1062,9 @@ class TMR(VerilogElaborator):
 #                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));"%
 #                                                                               (width,inst,_a,_b,_c,_out,_err) )[0]);
                             errSignals.add(_err)
-#                        else:
+                        else:
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wor %s;"%_err)[0])
+
 #                            moduleBody.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));"%
 #                                                                               (width,inst,_a,_b,_c,_out) )[0]);
                         if _array_range!="":
@@ -1095,13 +1097,7 @@ class TMR(VerilogElaborator):
                     if not self.current_module["constraints"]["tmrErrorOut"]:
                         moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
 
-                    if self.current_module["constraints"]["tmrErrorOut"] and self.current_module["portMode"]=="non-ANSI":
-                        moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
-
-                    if self.current_module["constraints"]["tmrErrorOut"] and self.current_module["portMode"]=="non-ANSI":
-                        moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
-
-                    if self.current_module["constraints"]["tmrErrorOut"] 
+                    if self.current_module["constraints"]["tmrErrorOut"]:
                         if self.current_module["portMode"]=="non-ANSI":
                             moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     else:
