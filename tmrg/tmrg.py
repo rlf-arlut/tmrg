@@ -440,7 +440,7 @@ class TMR(VerilogElaborator):
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
         if left.lower().find("tmrerror")>=0 :# commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
             if left=="tmrError":
-                self.logger.info("Removing declaration of %s"%(left))
+                self.logger.info("Removing declaration of '%s' (%s)"%(left, str(tokens)))
                 return []
 
             for net in self.current_module["nets"]:
@@ -1094,15 +1094,13 @@ class TMR(VerilogElaborator):
                 #after all voters are added, we can create or them all
                 if "tmrError" in self.current_module["nets"]:
 
-                    if not self.current_module["constraints"]["tmrErrorOut"]:
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
-
                     if self.current_module["constraints"]["tmrErrorOut"]:
                         if self.current_module["portMode"]=="non-ANSI":
                             moduleBody.insert(0,self.vp.outputDecl.parseString("output tmrError%s;"%group)[0])
                     else:
-                        moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
-                        print "Adding", "wire tmrError%s;"%group
+                        if not self.current_module["constraints"]["tmrErrorOut"]:
+                            moduleBody.insert(0,self.vp.netDecl1.parseString("wire tmrError%s;"%group)[0])
+                            self.logger.debug("Adding wire tmrError%s;"%group)
 
                     if group in self.current_module["tmrErrNets"]:
                         #print group
@@ -1121,7 +1119,7 @@ class TMR(VerilogElaborator):
                     else:
                         asgnStr+="1'b0"
                     asgnStr+=";"
-                    print len(errSignals),asgnStr
+#                    print len(errSignals),asgnStr
                     moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
 
 
