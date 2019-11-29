@@ -151,8 +151,9 @@ An example usage of the tool for the netlist generated for the example ``fsm02``
 
 .. code-block:: bash
 
-   plag --lib libs/tcbn65lp.v fsm02_r2g.v 
+   plag --lib libs/simplified_std_cell_lib.v fsm02_r2g.v 
 
+Please refer to :ref:`verification` section for information how to generate `simplified_std_cell_lib.v` file.
 Alternatively the cell list can be specified as a command line parameter (``--cells``).
 As a result a tcl script ``tmrPlace.tcl`` is generated. In this example the file will
 look like:
