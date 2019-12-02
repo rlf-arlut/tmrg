@@ -791,7 +791,7 @@ class VerilogElaborator():
                     self.logger.error("File or directory does not exists '%s'"%name)
 
             return files
-        parse_start_time=time.clock()
+        parse_start_time=time.process_time()
         for fname in args2files(self.args):
             try:
                 logging.info("Loading file '%s'"%fname)
@@ -829,7 +829,7 @@ class VerilogElaborator():
                     logging.error(l)
                 raise ErrorMessage("Error during parsing")
         if self.options.stats:
-            parse_time=time.clock()-parse_start_time
+            parse_time=time.process_time()-parse_start_time
             print("-"*80)
             for line in self.statsLogs:
                 print(line)
@@ -842,7 +842,7 @@ class VerilogElaborator():
         """ Elaborate the design
         :return:
         """
-        elaborate_start_time=time.clock()
+        elaborate_start_time=time.process_time()
 
         self.modules={}
         # elaborate all modules
@@ -1001,7 +1001,7 @@ class VerilogElaborator():
             raise ErrorMessage("Serious error during elaboration.")
 
         if self.options.stats:
-            elaborate_time=time.clock()-elaborate_start_time
+            elaborate_time=time.process_time()-elaborate_start_time
             print("Elaboration time : %.3f s "%elaborate_time)
             print("-"*80)
 
