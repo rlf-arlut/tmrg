@@ -112,6 +112,7 @@ simpleTests=(
   "verilog/tmrErrorExclude.v",
   "verilog/vectorRange.v",
   "verilog/generate05.v",
+  "verilog/generate06.v",
   "verilog/wor01.v",
   "verilog/wor02.v",
 )
