@@ -193,7 +193,11 @@ class VerilogFormater:
     def _format_generate(self,tokens,i=""):
         oStr=""
         oStr="\n"+i
-        oStr+="generate\n"+ self.format(tokens[0],i+"\t") +"\n"+i+"endgenerate\n"
+
+        oStr += "generate\n"
+        for sub_tokens in tokens:
+            oStr += self.format(sub_tokens,i+"\t")+"\n"
+        oStr += i+"endgenerate\n"
         return oStr
 
 
@@ -613,7 +617,7 @@ class VerilogFormater:
         return oStr
 
     def _format_continuousAssign(self,tokens,i=""):
-        oStr=""
+        oStr=i
         driveStrength = self.format(tokens[0])
         if driveStrength:driveStrength+=" "
         delay = self.format(tokens[1])
