@@ -1843,7 +1843,7 @@ class TMR(VerilogElaborator):
 
         self.logger.debug("")
         self.logger.info("Triplciation starts here")
-        tmr_start_time=time.clock()
+        tmr_start_time=time.time()
         self.tmrLinesTotal=0
         self.statsLogs=[]
         if not os.path.isdir(self.config.get("tmrg","tmr_dir")):
@@ -1916,7 +1916,7 @@ class TMR(VerilogElaborator):
                     os.rename(foutnew,fout)
         self.genSDC()
         if self.options.stats:
-            tmr_time=time.clock()-tmr_start_time
+            tmr_time=time.time()-tmr_start_time
             for line in self.statsLogs:
                 print(line)
             print("Total number of triplicated lines: %d "%self.tmrLinesTotal)
