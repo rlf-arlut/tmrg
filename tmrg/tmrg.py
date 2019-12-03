@@ -1299,13 +1299,10 @@ class TMR(VerilogElaborator):
 
     def tmrNbAssgnmt(self,t):
         # cpy=t.deepcopy()
-        # #print cpy
-        # #cpy[3]="dupa";
         # for v in self.toTMR:
         # #if self.checkIfContains(cpy,"rst"):
         #     print "shot!"
         #     self.replace(cpy,v,v+"A")
-        #print t
         return t
 
     def _tmr_list(self,tokens):
@@ -1447,7 +1444,6 @@ class TMR(VerilogElaborator):
         for netId in idList:
             self._addFanout(netId,addWires=addWires)
 
-    #  list of IDs
     def _addFanoutsIfTmr(self,idList,addWires=""):
             for netId in idList:
                 if not self.current_module["nets"][netId]["tmr"]:
@@ -1456,7 +1452,6 @@ class TMR(VerilogElaborator):
     def _appendToAllIds(self,t,post):
         if isinstance(t, ParseResults):
             name=str(t.getName()).lower()
-            #print name, len(t), t
             if len(t)==0: return
             elif name == "subscridentifier":
                 t[0]=t[0]+post
@@ -1475,14 +1470,11 @@ class TMR(VerilogElaborator):
         exc_type, exc_value, exc_traceback = sys.exc_info()
         self.logger.error("")
         self.logger.error("TMR exception:")
-        #for l in traceback.format_tb(exc_traceback):
         for l in traceback.format_exception(exc_type, exc_value,
                                           exc_traceback):
             for ll in l.split("\n"):
               self.logger.error(ll)
         self.logger.error(ll)
-
-                #traceback.format_exception_only(type(an_error), an_error)
 
     def __getLenStr(self,toks):
             rangeLen="1"
@@ -1507,11 +1499,10 @@ class TMR(VerilogElaborator):
         #apply constrains
         self.logger.info("")
         self.logger.info("Applying constrains")
-      #  print self.cmdLineConstrains[module]
         for module in sorted(self.modules):
             self.logger.info("Module %s"%module)
 
-            #tmr error output
+            # tmr error output
             # global settings
             tmrErrOut=self.config.getboolean("global","tmr_error")
             s="configGlobal:%s"%(str(tmrErrOut))
@@ -1600,12 +1591,9 @@ class TMR(VerilogElaborator):
                     tmr=True
                     s+=" -> slicing:%s"%(str(tmr))
 
-
-
                 if "dnt" in self.modules[module]["constraints"] and self.modules[module]["constraints"]["dnt"]:
                     tmr=False
                     s+=" -> do_not_touch:%s"%(str(tmr))
-
 
                 self.logger.info(" | net %s : %s (%s)"%(net,str(tmr),s))
                 self.modules[module]["nets"][net]["tmr"]=tmr
@@ -1653,15 +1641,7 @@ class TMR(VerilogElaborator):
 
                 self.logger.info(" | inst %s : %s (%s)"%(inst,str(tmr),s))
                 self.modules[module]["instances"][inst]["tmr"]=tmr
-        #for module in sorted(self.cmdLineConstrains):
-#            if not module in self.modules:
-#                self.modules[module] ={"instances":{},"nets":{},"name":module,"io":{},"constraints":{},
-#                                     "instantiated":0,'file':'-',"fanouts":{}, "voters":{},"params":{},"portMode":"non-ANSI",
-#                                     "tmrErrNets":{}}
-            #if module in self.modules:
-            #    self.modules[module]["constraints"]["dnt"]=True
-            #else:
-            #    self.logger.warning("Unable to apply DNT constrain for module '%s'"%module)
+
         #apply special constrains by name conventions
         self.logger.info("")
         self.logger.info("Applying constrains by name")
@@ -1675,7 +1655,6 @@ class TMR(VerilogElaborator):
                         self.logger.info("Full voting detected for nets %s -> %s"%(net1,net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or  not self.modules[module]["nets"][net2]["tmr"]:
                             self.logger.warning("Nets for full voting should be triplicated! (%s:%s, %s:%s)"%(net1, self.modules[module]["nets"][net1]["tmr"],net2, self.modules[module]["nets"][net2]["tmr"]))
-                            #print self.modules[module]
         if len(self.voting_nets):
             self.logger.info("Voting present (%d nets)"%(len(self.voting_nets)))
 
@@ -1777,9 +1756,6 @@ class TMR(VerilogElaborator):
             return True, oStr
 
         def getRevInfo(fname):
-#            sos,soslog=getSosInfo(fname)
-#            if sos:
-#                return "File under SOS control.\n"+soslog
             svn,svnlog=getSvnInfo(fname)
             if svn:
                 return "File under SVN control.\n"+svnlog
