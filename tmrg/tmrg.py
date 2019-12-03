@@ -1839,7 +1839,6 @@ class TMR(VerilogElaborator):
         """
         tmrSuffix="TMR"
         spaces=self.config.getint("tmrg","spaces")
-        showdiff=True
 
         self.logger.debug("")
         self.logger.info("Triplciation starts here")
@@ -1908,8 +1907,6 @@ class TMR(VerilogElaborator):
                             os.rename(foutnew,fout)
                         else:
                             self.logger.warning("File '%s' exists. Saving output to '%s'"%(fout,foutnew))
-                            if showdiff:
-                                diffFiles(fout,foutnew)
             else:
                     self.logger.info("Saving output to '%s'"%(fout))
                     self.logger.debug("Rename %s to %s"%(foutnew,fout))
@@ -2046,7 +2043,6 @@ def main():
     parser.add_option_group(dirGroup)
     tmrGroup = OptionGroup(parser, "Triplication" )
     #tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
-#    parser.add_option("",    "--diff",             dest="showdiff",     action="store_true",  default=False, help="Show diff")
     tmrGroup.add_option("-c",  "--config",           dest="config",       action="append",   default=[], help="Load config file")
     tmrGroup.add_option("-w",  "--constrain",        dest="constrain",    action="append",   default=[], help="Load config file")
     tmrGroup.add_option(""  , "--no-common-definitions", dest="no_common_definitions", action="store_true",   default=False, help="Do not add definitions of common modules (majorityVoter and fanout)")
