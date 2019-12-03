@@ -61,13 +61,6 @@ def resultLine(tokens,sep=""):
         s+=tokens
     return s
 
-def diffFiles(fname1,fname2):
-    path=os.path.realpath(__file__)
-    dir=os.path.dirname(path)+"/../bin/"
-    icdiff=os.path.join(dir,'icdiff')
-    os.system("%s %s %s"%(icdiff,fname1,fname2))
-
-
 
 class VerilogElaborator():
     def __init__(self,options, args,cnfgName):
