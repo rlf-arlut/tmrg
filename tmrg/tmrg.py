@@ -1885,18 +1885,6 @@ proc constrainNet netName {
                 shutil.copyfile(fsdc, fcopy)
 
 
-def version():
-    verstr = "$Id$"
-    return verstr
-
-
-def makeSureDirExists(path):
-    try:
-        os.makedirs(path)
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
-
 
 def main():
     OptionParser.format_epilog = lambda self, formatter: self.epilog
@@ -1907,6 +1895,7 @@ def main():
                       default=0, help="More verbose output (use: -v, -vv, -vvv..)")
     parser.add_option("",  "--doc",               dest="doc",  action="store_true",
                       default=False, help="Open documentation in web browser")
+
     actionGroup = OptionGroup(parser, "Actions")
     actionGroup.add_option("-p", "--parse-only",        action="store_true",
                            dest="parse",     default=False, help="Parse")
@@ -1915,6 +1904,7 @@ def main():
     actionGroup.add_option("", "--log",                 dest="log",
                            default="",             help="Store detailed log to file")
     parser.add_option_group(actionGroup)
+
     dirGroup = OptionGroup(parser, "Directories")
     dirGroup.add_option("",   "--rtl-dir",           dest="rtl_dir",      action="store", default="",
                         help="All files from this directory are taken as input files (only if no input files are specified as arguments)")
@@ -1925,6 +1915,7 @@ def main():
     dirGroup.add_option("-l",  "--lib",              dest="libs",       action="append",    default=[],
                         help="Verilog file to be included as a library (modules from this file are not triplicated)")
     parser.add_option_group(dirGroup)
+
     tmrGroup = OptionGroup(parser, "Triplication")
     tmrGroup.add_option("",    "--tmr-suffix",       dest="tmr_suffix",   action="store", default="")
     tmrGroup.add_option("-c",  "--config",           dest="config",
@@ -1949,7 +1940,6 @@ def main():
                         default=False,   help="Include include files")
     dirGroup.add_option("",   "--top-module",        dest="top_module",
                         action="store", default="",  help="Specify top module name")
-
     parser.add_option_group(tmrGroup)
 
     try:

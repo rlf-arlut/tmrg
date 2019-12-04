@@ -53,8 +53,9 @@ def tmrg_version():
 tmrg_version.str="" # static variable
 
 def version():
-  verstr="$Id$"
-  return verstr
+    verstr = "$Id$"
+    return verstr
+
 
 def makeSureDirExists(path):
     try:
