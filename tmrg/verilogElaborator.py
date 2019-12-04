@@ -121,7 +121,7 @@ class VerilogElaborator():
         self.linesTotal=0
 
     def __init_elaborate_callbacks(self):
-        #scan class looking for elaborator functions
+        # scan class looking for elaborator functions
         self.elaborator={}
         for member in dir(self):
             if member.find("_elaborate_")==0:
@@ -131,87 +131,59 @@ class VerilogElaborator():
 
 
     def getLeftRightHandSide(self,t,res=None):
-        #print "\ngetLeftRightHandSide"
-        #print "   res", res
-        #print "   tok", t
         if res==None: res={"left":set(),"right":set()}
 
         def _extractID(t,res=None):
-            #print "extractID",t
             if res==None: res=set()
             if isinstance(t, ParseResults):
                name=str(t.getName()).lower()
-               #print ">",name
                if name=="subscridentifier":
                        if not t[0] in self.current_module["nets"]:
                            if not t[0] in self.current_module["params"] and  t[0][0]!='`':
-                              #self.logger.warning("1Unknown net '%s'"%t[0])
                               pass
                            return res
                        if not "dnt" in self.current_module["nets"][t[0]]:
                            res.add(t[0])
-                       #print len(t[1]),t[1],type(t[1])
                        _extractID(t[1],res=res)
 
                else:
-##               if 1:
                    for i in range(len(t)):
-#                       print i, t[i], type(t[i])
                        res=_extractID(t[i],res=res)
-#            else:
-#                       if not t in self.current_module["nets"]:
-#                           if not t in self.current_module["params"]:
-#                              self.logger.warning("Unknown net '%s'"%t)
-#                           return res
-#                       if not "dnt" in self.current_module["nets"][t]:
-#                           res.add(t)
-            #print "  res:",res
             return res
-#        print "#",type(t),t
+
         if isinstance(t, ParseResults):
             name=str(t.getName()).lower()
-            #print name, len(t), t
             if len(t)==0: return res
             if name in ("assgnmt", "nbassgnmt"):
                 if t[0].getName()=="subscrIdentifier":
                     left_id=t[0][0]
                     res["left"].add(left_id)
-                    #print _extractID(t[0][1])
                     res["right"].update(_extractID(t[0][1]))
                 else:
                     logging.error("Unsupported syntax : concatenation on left hand side of the assignment (%s). "%str(self.vf.format(t)))
                     logging.error("Output may be incorrect.")
-                #print   _extractID(t[2])
                 res["right"].update( _extractID(t[2]))
             elif name in ("regdecl"):
                 for tt in t[3]:
                     left_id=tt[0]
                     res["left"].add(left_id)
             elif name in ("netdecl1"):
-                #print t[3]
                 for tt in t[4]:
-                    #print tt
                     left_id=tt[0]
                     res["left"].add(left_id)
-
             elif name == "subscridentifier":
                 if t[0] in self.current_module["nets"]:
                     res["right"].add( t[0] )
-                    #print "DUPA",t[0]
                     res=self.getLeftRightHandSide(t[1],res=res)
                 else:
                     pass
-                    #self.logger.warning("Unknown net %s"%t[0])
             else:
                 for i in range(len(t)):
-                    #print "---#(%d)>"%i,t[i]
                     res=self.getLeftRightHandSide(t[i],res=res)
 
         return res
 
     def _elaborate_integerDecl(self,tokens):
-#        print tokens
-        #tokens=tokens[0] #self.registers
         _atrs=""
         _range=""
         _len="1"
@@ -224,7 +196,6 @@ class VerilogElaborator():
                  self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,  "type":"int" }
 
     def _elaborate_regdecl(self,tokens):
-        #tokens=tokens[0] #self.registers
         _atrs=self.vf.format(tokens[1])
         _range=self.vf.format(tokens[2])
         _len=self.__getLenStr(tokens[2])
@@ -248,12 +219,6 @@ class VerilogElaborator():
                  _array_len=self.__getArrayLenStr(arrayDec)
                  _array_from=self.__getArrayFrom(arrayDec)
                  _array_to=self.__getArrayTo(arrayDec)
-                 #print _array_range
-                 #print _array_len
-            # print len(arrayDec)
-             #self.registers[name]=
-             #print  {"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
-             #self.debugInModule("gotReg: %s %s" % (name,details), type="regs")
              if not name in  self.current_module["nets"]:
                  self.current_module["nets"][name]={"atributes":_atrs,
                                                     "range":_range,
@@ -268,23 +233,16 @@ class VerilogElaborator():
                                                     }
 
     def _elaborate_moduleinstantiation(self,tokens):
-        #toks=toks[0]
         identifier=tokens[0]
         instance = tokens[2][0][0][0]
         _range=""
         _len="1"
-        #self.debugInModule("'%s' (type:%s)"%(instance,identifier),type="instance")
-#            print "+",instname, module
-        #self.instances[instance]={"atributes":identifier,"tmr":True}
-        #print instance
         self.current_module["instances"][instance]={ "instance":identifier,"range":_range, "len":_len}
-        #self.current_module["instantiated"]=0
 
     def _elaborate_always(self,tokens):
         self._elaborate(tokens[1])
 
     def _elaborate_input(self,tokens):
-         #tokens=tokens[0]
          _dir=tokens[0]
          _atrs=self.vf.format(tokens[2])
          _range=self.vf.format(tokens[3])
@@ -378,16 +336,12 @@ class VerilogElaborator():
             if not name in  self.current_module["nets"]:
                  self.current_module["nets"][name]=copy.deepcopy(self.lastANSIPort["net"])
 
-        #self._elaborate_input(tokens)
-
 
     def _elaborate_output(self,tokens):
-         #tokens=tokens[0]
          _dir=tokens[0]
          _atrs=self.vf.format(tokens[2])
          _range=self.vf.format(tokens[3])
          _len=self.__getLenStr(tokens[3])
-        # print _atrs
          if _len!="1":
              details="(range:%s len:%s)"%(_range,_len)
          else:
@@ -419,7 +373,6 @@ class VerilogElaborator():
              #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
     def _elaborate_outputhdr(self,tokens):
-         #tokens=tokens[0]
         if self.current_module["portMode"]=="non-ANSI":
             self.current_module["portMode"]="ANSI"
             self.logger.info("Port mode : ANSI")
@@ -428,7 +381,6 @@ class VerilogElaborator():
 
 
     def _elaborate_netdecl1(self,tokens):
-#            tokens=tokens[0]
             _atrs=self.vf.format(tokens[1])
             _range=self.vf.format(tokens[2])
             _len=self.__getLenStr(tokens[2])
@@ -461,9 +413,6 @@ class VerilogElaborator():
                     details="(range:%s len:%s)"%(_range,_len)
                 else:
                     details=""
-#                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
-#                if not name in  self.current_module["nets"]:
-#                     self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len}
 
     def _elaborate_localparamdecl(self,tokens):
         _range=self.vf.format(tokens[1])
@@ -472,8 +421,6 @@ class VerilogElaborator():
         _to=self.__getToStr(tokens[1])
 
         for param in tokens[2]:
-            #pname=param[0]
-            #pval=self.vf.format(param[1])
             pname=param[0][0]
             pval=self.vf.format(param[0][1:])
 
@@ -484,7 +431,6 @@ class VerilogElaborator():
         _range=self.vf.format(tokens[1])
         _len=self.__getLenStr(tokens[1])
         for param in tokens[2]:
-            #print param
             pname=param[0][0]
             pval=self.vf.format(param[0][1:])
             self.logger.debug("Parameter %s = %s"%(pname,pval))
@@ -493,7 +439,6 @@ class VerilogElaborator():
 
 
     def _elaborate_netdecl3(self,tokens):
-#             print tokens
             _atrs=self.vf.format(tokens[1])
             _range=self.vf.format(tokens[3])
             _len=self.__getLenStr(tokens[3])
@@ -502,21 +447,12 @@ class VerilogElaborator():
 
             for assgmng in tokens[5]:
                 ids=self.getLeftRightHandSide(assgmng)
-                #print ids
                 name=assgmng[0][0]
-#                right=assgmng[2]
                 dnt=False
                 if len(ids["right"])!=0:
                     idRight=ids["right"].pop()
                     for ex in self.EXT:
                         if name==idRight+ex: dnt=True
-#                print idRight,dnt
- #               self.nets[name]={"atributes":_atrs,"range":_range, "len":_len ,"tmr":True}
-#                if _len!="1":
-#                    details="(range:%s len:%s)"%(_range,_len)
-#                else:
-#                    details=""
-#                self.debugInModule("gotNet: %s %s" % (name,details), type="nets")
                 if not name in  self.current_module["nets"]:
                     self.current_module["nets"][name]={"atributes":_atrs,
                                                        "range":_range,
@@ -611,15 +547,11 @@ class VerilogElaborator():
         exc_type, exc_value, exc_traceback = sys.exc_info()
         self.logger.error("")
         self.logger.error("TMR exception:")
-        #for l in traceback.format_tb(exc_traceback):
         for l in traceback.format_exception(exc_type, exc_value,
                                           exc_traceback):
             for ll in l.split("\n"):
               self.logger.error(ll)
         self.logger.error(ll)
-
-                #traceback.format_exception_only(type(an_error), an_error)
-
 
 
     def lineCount(self,fname):
@@ -646,7 +578,6 @@ class VerilogElaborator():
             self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
             self.statsFilesParsed+=1
             self.linesTotal += lines
-#        print tokens
         self.files[fname]=tokens
 
     def addLibFile(self,fname):
@@ -661,17 +592,13 @@ class VerilogElaborator():
             self.statsLogs.append("File '%s' has %d lines "%(fname,lines))
             self.linesTotal += lines
             self.statsFilesParsed+=1
-#        print tokens
         self.libs[fname]=tokens
-
-
 
 
     def __getLenStr(self,toks):
             rangeLen="1"
             if len(toks)<2:
                 return rangeLen
-            #print toks
             left=self.vf.format(toks[-2])
             right=self.vf.format(toks[-1])
             onlyInt="abs((%s) - (%s))"%(left,right)
@@ -741,10 +668,8 @@ class VerilogElaborator():
             tab.min_width["tmr"]=10;
             tab.align[dname] = "l" # Left align city names
 
-            #print "%-12s:"%dname
             for k in d:
                 item=d[k]
-                #print k,item
                 range=item["range"]
                 if "array_range" in item : array_range=item["array_range"]
                 else : array_range=""
@@ -761,7 +686,6 @@ class VerilogElaborator():
         self.logger.info("")
         self.logger.info("Module:%s (dnt:%s)"%(module["name"],module["constraints"]["dnt"]))
         printDict(module["nets"],    "Nets")
-#        printDict(module["io"],      "IO")
         printDict(module["instances"], "Instantiations")
         if "params" in module:
            printDict(module["params"], "Params")
@@ -790,7 +714,6 @@ class VerilogElaborator():
                 logging.info("Loading file '%s'"%fname)
                 self.addFile(fname)
             except ParseException as err:
-#                logging.error("")
                 logging.error("Error in file '%s' around line '%d'."%(fname,err.lineno))
                 if err.line.find("tmrg ")==0:
                     logging.error("")
@@ -843,7 +766,6 @@ class VerilogElaborator():
             self.logger.info("")
             self.logger.info("Elaborating %s"%(fname))
             tokens=self.files[fname]
-#            print tokens
             for module in tokens:
                 if module.getName()!="module":
                     continue
@@ -872,13 +794,10 @@ class VerilogElaborator():
                     self._elaborate(moduleItem)
 
                 def pdict(d,i="",title=""):
-
-#                    print i+title
                     for e in d:
                         if isinstance(d[e],dict):
                             pdict(d[e],i+"  ",title=e)
                         else:
-#                            print "%s%s:%s"%(i+"  ",e,d[e])
                              pass
 
                 self.modules[moduleName]=copy.deepcopy(self.current_module)
@@ -944,8 +863,6 @@ class VerilogElaborator():
                     self.logger.info(s)
                 else:
                     self.logger.debug(s)
-
-
 
         # check if all modules are known
         self.logger.info("")
