@@ -34,7 +34,7 @@ except:
     import configparser as cp
 from optparse import *
 from .verilog_parser import *
-from .verilogFormater import VerilogFormater
+from .verilog_formater import VerilogFormater
 
 
 class ErrorMessage(BaseException):
