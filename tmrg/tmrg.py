@@ -1277,10 +1277,6 @@ class TMR(VerilogElaborator):
                 "addWires": addWires}
             self.__voterPresent = True
 
-        else:
-            self.logger.warning("Unable to add volter %s (name already exists)" % inst)
-            self.logger.warning("    %s %s %s -> %s & %s" % (inA, inB, inC, out, tmrError))
-
     def _addVotersIfTmr(self, idList, group="", addWires="output"):
         for netID in idList:
             if self.current_module["nets"][netID]["tmr"]:
