@@ -92,7 +92,6 @@ class TBG(TMR):
                         oStr += "  // voter for %s\n" % (ioName)
                         for ext in self.EXT:
                             oStr += "  wire %s %s%s;\n" % (io["range"], ioName, ext)
-#                        oStr+="  assign %s = (%sA & %sB) | (%sB & %sC) | (%sA & %sC);\n"%(ioName,ioName,ioName,ioName,ioName,ioName,ioName)
                         oStr += "  wire %stmrErr;\n" % (ioName)
 
                         _len = self.modules[module]["nets"][ioName]["len"]
@@ -114,7 +113,6 @@ class TBG(TMR):
             # dut tmr instantiation
             oStr += "  %sTMR%s DUT (\n" % (module, parameters)
             sep = "    "
-            # initial declaration
             for ioName in sorted(self.modules[module]["io"]):
                 if self.modules[module]["nets"][ioName]["tmr"]:
                     for ext in self.EXT:
@@ -128,7 +126,6 @@ class TBG(TMR):
             # dut instantiation
             oStr += "  %s%s DUT (\n" % (module, parameters)
             sep = "    "
-            # initial declaration
             for ioName in sorted(self.modules[module]["io"]):
                 oStr += "%s.%s(%s)" % (sep, ioName, ioName)
                 sep = ",\n    "
@@ -244,8 +241,6 @@ class TBG(TMR):
             f.close()
         else:
             print(oStr)
-
-        #generateFromTemplate(fname,tfile, values)
 
 
 def main():

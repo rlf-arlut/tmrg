@@ -129,17 +129,11 @@ class PLA(VerilogElaborator):
             group = getGroup(ins)
             body += "addInstToInstGroup tmrGroup%s {%s}\n" % (group, ins)
 
-
-#        tfile=os.path.join( self.scriptDir,  self.config.get("seeg","template"))
-#        self.logger.info("Taking template from '%s'"%tfile)
-
         fname = self.options.ofile
         self.logger.info("SEE file is stored to '%s'" % fname)
         f = open(fname, "w")
         f.write(body)
         f.close()
-
-#        generateFromTemplate(fname,tfile, values)
 
 
 def main():
@@ -166,8 +160,6 @@ def main():
                       default="",             help="Store detailed log to file")
     parser.add_option("",   "--top-module",        dest="top_module",
                       action="store", default="",  help="Specify top module name")
-
-#    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
 
     logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
     rootLogger = logging.getLogger()
