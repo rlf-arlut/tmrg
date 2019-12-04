@@ -23,9 +23,7 @@ import pprint
 import traceback
 import random
 import re
-
 from optparse import *
-
 from .verilog_elaborator import *
 from .top import readFile
 from .tmrg import TMR

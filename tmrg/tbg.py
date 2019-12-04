@@ -16,9 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from .tmrg import VerilogFormater,readFile,resultLine,TMR
-from .verilog_elaborator import *
-from .toolset import *
 import logging
 import traceback
 import pprint
@@ -28,6 +25,9 @@ import logging
 import random
 import re
 from optparse import *
+from .tmrg import VerilogFormater,readFile,resultLine,TMR
+from .verilog_elaborator import *
+from .toolset import *
 
 class TBG(TMR):
     def __init__(self,options, args):

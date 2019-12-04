@@ -16,9 +16,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from .verilog_elaborator import *
-from .toolset import *
-from .tmrg import VerilogFormater,readFile,resultLine,TMR,makeSureDirExists
 import logging
 import traceback
 import pprint
@@ -27,7 +24,6 @@ import glob
 import logging
 import random
 import re
-from string import Template
 import getpass
 import socket
 import time
@@ -35,6 +31,10 @@ import datetime
 import hashlib
 import zipfile
 from optparse import *
+from string import Template
+from .verilog_elaborator import *
+from .toolset import *
+from .tmrg import VerilogFormater,readFile,resultLine,TMR,makeSureDirExists
 
 class PLA(VerilogElaborator):
     def __init__(self,options, args):
