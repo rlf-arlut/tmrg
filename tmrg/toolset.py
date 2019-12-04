@@ -51,3 +51,14 @@ def tmrg_version():
         tmrg_version.str=tmrg_version.str.rstrip()
     return tmrg_version.str
 tmrg_version.str="" # static variable
+
+def version():
+  verstr="$Id$"
+  return verstr
+
+def makeSureDirExists(path):
+    try:
+        os.makedirs(path)
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
