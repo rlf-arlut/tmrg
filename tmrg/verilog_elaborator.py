@@ -17,7 +17,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import logging
-from optparse import *
 import traceback
 import pprint
 import os
@@ -25,17 +24,17 @@ import glob
 import logging
 import filecmp
 import copy
-try:
-    import ConfigParser as cp
-except:
-    import configparser as cp
-
-from .verilogParser import *
-from .verilogFormater import VerilogFormater
 import shutil
 import zipfile
 import mmap
 import time
+try:
+    import ConfigParser as cp
+except:
+    import configparser as cp
+from optparse import *
+from .verilog_parser import *
+from .verilogFormater import VerilogFormater
 
 
 class ErrorMessage(BaseException):
