@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
+
 def generate_tmr_lib(fname_in, fname_out):
     """ This functions load standard library (from the PDK comonly used in HEP comunity) 
         from fname_in and writes simplified version to fname_out. The simplified version 
@@ -26,15 +27,16 @@ def generate_tmr_lib(fname_in, fname_out):
                             fout.write("    // tmrg seu_reset CDN\n")
                             fout.write("    // tmrg seu_set   SDN\n")
                 elif line_striped.startswith("input") or \
-                     line_striped.startswith("output") or \
-                     line_striped.startswith("endmodule"):
+                        line_striped.startswith("output") or \
+                        line_striped.startswith("endmodule"):
                     if not ignore_module:
                         fout.write(line)
                 elif line_striped.startswith("primitive "):
                     break
 
+
 if __name__ == "__main__":
-    if len(sys.argv)!=3:
-        print("Usage: %s mylib.v mylib_tmr.v"%(sys.argv[0]))
+    if len(sys.argv) != 3:
+        print("Usage: %s mylib.v mylib_tmr.v" % (sys.argv[0]))
         sys.exit(-1)
     generate_tmr_lib(fname_in=sys.argv[1], fname_out=sys.argv[2])
