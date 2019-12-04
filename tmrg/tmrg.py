@@ -33,7 +33,7 @@ import hashlib
 import zipfile
 import logging
 from optparse import *
-from .verilogElaborator import *
+from .verilog_elaborator import *
 from .toolset import *
 
 

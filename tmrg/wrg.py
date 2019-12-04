@@ -26,7 +26,7 @@ import re
 
 from optparse import *
 
-from .verilogElaborator import *
+from .verilog_elaborator import *
 from .top import readFile
 from .tmrg import TMR
 from .toolset import tmrg_version, epilog
