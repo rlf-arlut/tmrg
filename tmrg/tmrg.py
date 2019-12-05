@@ -1078,6 +1078,20 @@ class TMR(VerilogElaborator):
                 moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));" %
                                                                           (width, inst, _in, _a, _b, _c))[0])
 
+        # detect if user created constrains which could generate invalid code
+        vouter_outputs = []
+        for group in sorted(groups):
+            if group in self.current_module["voters"]:
+                for voter in self.current_module["voters"][group]:
+                    vouter_outputs.append(self.current_module["voters"][group][voter]["out"])
+        for fanout in self.current_module["fanouts"]:
+            _in = self.current_module["fanouts"][inst]["in"]
+            if _in in vouter_outputs:
+                self.logger.warning("Signal '%s' is connected to fanout input and voter output." % (_in))
+                self.logger.warning("Probably the resulting code does not reflect the design intent.")
+                self.logger.warning("Please consider upgrading tmrg directives.")
+
+
         paramPos = 0
         for i, item in enumerate(moduleBody):
             if item.getName() == "paramDecl":
