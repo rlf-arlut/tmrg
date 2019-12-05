@@ -25,7 +25,7 @@ import logging
 import random
 import re
 from optparse import *
-from .tmrg import VerilogFormater, readFile, resultLine, TMR
+from .tmrg import readFile, TMR
 from .verilog_elaborator import *
 from .toolset import *
 

@@ -16,7 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from .tmrg import VerilogFormater, readFile, resultLine, TMR, makeSureDirExists
+from .tmrg import readFile, resultLine, TMR, makeSureDirExists
 from .verilog_elaborator import *
 from .toolset import *
 import logging

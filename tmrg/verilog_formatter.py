@@ -5,7 +5,7 @@ else:
     from .pyparsing152 import *
 
 
-class VerilogFormater:
+class VerilogFormatter:
     formater = {}
 
     def setTrace(self, t):

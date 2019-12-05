@@ -34,7 +34,7 @@ from optparse import *
 from string import Template
 from .verilog_elaborator import *
 from .toolset import *
-from .tmrg import VerilogFormater, readFile, resultLine, TMR, makeSureDirExists
+from .tmrg import TMR, makeSureDirExists
 
 
 class PLA(VerilogElaborator):

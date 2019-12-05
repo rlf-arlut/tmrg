@@ -34,7 +34,7 @@ except:
     import configparser as cp
 from optparse import *
 from .verilog_parser import *
-from .verilog_formater import VerilogFormater
+from .verilog_formatter import VerilogFormatter
 
 
 class ErrorMessage(BaseException):
@@ -73,7 +73,7 @@ class VerilogElaborator():
         self.vp.include = options.include
         self.vp.inc_dir = options.inc_dir
 
-        self.vf = VerilogFormater()
+        self.vf = VerilogFormatter()
         self.logger = logging.getLogger('TMR')
         self.libFiles = []
 

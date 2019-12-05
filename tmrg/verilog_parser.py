@@ -86,9 +86,6 @@ usePsyco = False
 import glob
 import copy
 
-from .prettytable import PrettyTable
-from .verilog_formater import VerilogFormater
-
 packratOn = False
 psycoOn = False
 
