@@ -35,7 +35,7 @@ except:
 from optparse import *
 from .verilog_parser import *
 from .verilog_formatter import VerilogFormatter
-
+from .prettytable import PrettyTable
 
 class ErrorMessage(BaseException):
     def __init__(self, s):
