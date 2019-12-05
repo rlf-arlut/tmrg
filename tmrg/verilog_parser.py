@@ -61,13 +61,13 @@
 #   1.0.10 - Fixed change added in 1.0.9 to work for all identifiers, not just those used
 #           for udpInstance.
 #
+
+__version__ = "1.0.10"
+
 import pdb
 import time
 import pprint
 import sys
-
-__version__ = "1.0.10"
-
 import functools
 import logging
 import textwrap
@@ -85,9 +85,6 @@ usePsyco = False
 
 import glob
 import copy
-
-from .prettytable import PrettyTable
-from .verilogFormater import VerilogFormater
 
 packratOn = False
 psycoOn = False
