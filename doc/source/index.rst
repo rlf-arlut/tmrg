@@ -41,7 +41,7 @@ redundancy.
 
 **Other resources**:
 
-  * *How to Design Highly Reliable Digital Electronics* `[slides] <http://tmrg.web.cern.ch/tmrg/ccc/>`_, `[video] <https://media.ccc.de/v/36c3-10575-how_to_design_highly_reliable_digital_electronics#t=133>`_ 36c3, December 2019, Leipzig 
+  * *How to Design Highly Reliable Digital Electronics* `[slides] <http://tmrg.web.cern.ch/tmrg/ccc/>`_, `[video] <https://media.ccc.de/v/36c3-10575-how_to_design_highly_reliable_digital_electronics>`_ 36c3, December 2019, Leipzig 
   * *Single Event Upsets mitigation techniques* `[PDF] <https://indico.cern.ch/event/465343/>`_, EPE-ESE seminar Tuesday 12 Apr 2016
   * *Single Event Effects mitigation with TMRG tool* `[paper] <http://iopscience.iop.org/article/10.1088/1748-0221/12/01/C01082/meta>`_, Journal of Instrumentation, Volume 12, January 2017 
   * *Digital synthesis for rad-hard components* `[PDF] <https://tmrg.web.cern.ch/tmrg/tmrg_kulis_in2p3.pdf>`_, Ecole de Microélectronique IN2P3, 14 - 19 May 2017, Bénodet
