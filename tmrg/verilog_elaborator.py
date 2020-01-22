@@ -817,6 +817,13 @@ class VerilogElaborator():
                 moduleName = moduleHdr[1]
                 moduleParams = moduleHdr[2]
                 modulePorts = moduleHdr[3]
+                auto_inferred = False
+
+                if moduleName.endswith("TMR"):
+                    self.logger.info("Module %s has been already triplicated (%s)" % (moduleName, fname))
+                    moduleName = moduleName[:-len("TMR")]
+                    self.logger.info("Infering non triplicated version: %s" % moduleName)
+                    auto_inferred = True
 
                 self.logger.debug("")
                 self.logger.debug("= "*50)
@@ -836,7 +843,35 @@ class VerilogElaborator():
 
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
+
+                for io in list(self.current_module["io"]):
+                    if io.endswith("A"):
+                        port = io[:-1]
+                        bport = io[:-1] + "B"
+                        cport = io[:-1] + "C"
+                        if bport in self.current_module["io"] and cport in self.current_module["io"]:
+                            self.logger.info("Port %s is triplicated" % (port))
+                            # create new port and net
+                            self.current_module["io"][port] = self.current_module["io"][io]
+                            self.current_module["nets"][port] = self.current_module["nets"][io]
+
+                            # remove triplicated ports and nets
+                            del self.current_module["io"][bport]
+                            del self.current_module["nets"][bport]
+
+                            del self.current_module["io"][cport]
+                            del self.current_module["nets"][cport]
+
+                            del self.current_module["io"][io] # A
+                            del self.current_module["nets"][io]
+
+                            # add constraints
+                            self.current_module["constraints"][port] = True
                 self.current_module["constraints"]["dnt"] = True
+                if auto_inferred:
+                    self.current_module["constraints"]["dnt"] = False
+                    self.current_module["constraints"]["default"] = False
+
                 self.modules[moduleName] = copy.deepcopy(self.current_module)
 
         # display summary
