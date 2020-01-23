@@ -867,6 +867,11 @@ class VerilogElaborator():
 
                             # add constraints
                             self.current_module["constraints"][port] = True
+
+                if "tmrError" in self.current_module["io"]:
+                    self.current_module["constraints"]["tmr_error"] = True
+                    del self.current_module["io"]["tmrError"]
+
                 self.current_module["constraints"]["dnt"] = True
                 if auto_inferred:
                     self.current_module["constraints"]["dnt"] = False
