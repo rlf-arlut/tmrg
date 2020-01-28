@@ -247,7 +247,7 @@ upsets in their design. The simpliest implementation may look like:
         if (SEEEnable)
           begin
             // randomize time, duration, and wire of the next SEE
-            SEEnextTime = SEEDel/2 {$random} % SEEDel;
+            SEEnextTime = #(SEEDel/2) {$random} % SEEDel;
             SEEduration = {$random} % (MAX_UPSET_TIME-1) + 1;  // SEE time is from 1 - MAX_UPSET_TIME ns
             SEEwireId   = {$random} % SEEmaxWireId;
   
