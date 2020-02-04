@@ -25,8 +25,7 @@ import random
 import re
 from optparse import *
 from .verilog_elaborator import *
-from .top import readFile
-from .tmrg import TMR
+from .tmrg import TMR, readFile
 from .toolset import tmrg_version, epilog
 
 
