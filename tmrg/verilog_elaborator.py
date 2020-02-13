@@ -196,7 +196,7 @@ class VerilogElaborator():
         for reg in tokens[-1]:
             name = reg[0]
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs, "range": _range, "len": _len,  "type": "int"}
+                self.current_module["nets"][name] = {"attributes": _atrs, "range": _range, "len": _len,  "type": "int"}
 
     def _elaborate_regdecl(self, tokens):
         _atrs = self.vf.format(tokens[1])
@@ -223,7 +223,7 @@ class VerilogElaborator():
                 _array_from = self.__getArrayFrom(arrayDec)
                 _array_to = self.__getArrayTo(arrayDec)
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs,
+                self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len,
                                                      "from": _from,
@@ -258,8 +258,8 @@ class VerilogElaborator():
 
         for name in tokens[-1]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "input"}
-            self.lastANSIPort["net"] = {"atributes": _atrs,
+            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+            self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
@@ -270,9 +270,9 @@ class VerilogElaborator():
                                         }
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "input"}
+                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs,
+                self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len,
                                                      "type": "wire",
@@ -296,8 +296,8 @@ class VerilogElaborator():
 
         for name in tokens[-1]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "input"}
-            self.lastANSIPort["net"] = {"atributes": _atrs,
+            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+            self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
@@ -307,9 +307,9 @@ class VerilogElaborator():
                                         "array_to": ""}
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "inout"}
+                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "inout"}
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs,
+                self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len,
                                                      "type": "wire",
@@ -351,8 +351,8 @@ class VerilogElaborator():
 
         for name in tokens[-1]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"atributes": _atrs, "range": _range, "len": _len, "type": "output"}
-            self.lastANSIPort["net"] = {"atributes": _atrs,
+            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
+            self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
@@ -362,9 +362,9 @@ class VerilogElaborator():
                                         "array_to": ""}
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"atributes": _atrs, "range": _range, "len": _len, "type": "output"}
+                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs,
+                self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len, "type": "wire",
                                                      "array_len": "",
@@ -372,7 +372,7 @@ class VerilogElaborator():
                                                      "array_from": "",
                                                      "array_to": ""}
             # if not name in  self.current_module["nets"]:
-            #    self.current_module["nets"][name]={"atributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+            #    self.current_module["nets"][name]={"attributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
     def _elaborate_outputhdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
@@ -400,7 +400,7 @@ class VerilogElaborator():
                 _array_len = self.__getArrayLenStr(arrayDec)
                 _array_from = self.__getArrayFrom(arrayDec)
                 _array_to = self.__getArrayTo(arrayDec)
-            self.current_module["nets"][name] = {"atributes": _atrs,
+            self.current_module["nets"][name] = {"attributes": _atrs,
                                                  "range": _range,
                                                  "len": _len,
                                                  "from": _from,
@@ -454,7 +454,7 @@ class VerilogElaborator():
                     if name == idRight+ex:
                         dnt = True
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"atributes": _atrs,
+                self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len,
                                                      "from": _from,
@@ -656,11 +656,11 @@ class VerilogElaborator():
             if len(d) == 0:
                 return
 
-            tab = PrettyTable([dname,  "tmr", "range", "atributes", "array"])
+            tab = PrettyTable([dname,  "tmr", "range", "attributes", "array"])
             tab.min_width[dname] = 50
             tab.min_width["range"] = 20
             tab.min_width["array"] = 20
-            tab.min_width["atributes"] = 20
+            tab.min_width["attributes"] = 20
             tab.min_width["tmr"] = 10
             tab.align[dname] = "l"  # Left align city names
 
@@ -671,17 +671,17 @@ class VerilogElaborator():
                     array_range = item["array_range"]
                 else:
                     array_range = ""
-                if "atributes" in item:
-                    atributes = item["atributes"]
+                if "attributes" in item:
+                    attributes = item["attributes"]
                 else:
-                    atributes = "dupa"
+                    attributes = ""
                 if "tmr" in item:
                     tmr = item["tmr"]
                 else:
                     tmr = "-"
                 if "dnt" in item:
                     tmr = "DNT"
-                tab.add_row([k, tmr, range, atributes, array_range])
+                tab.add_row([k, tmr, range, attributes, array_range])
             tab.padding_width = 1  # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
                 self.logger.info(l)
@@ -817,6 +817,13 @@ class VerilogElaborator():
                 moduleName = moduleHdr[1]
                 moduleParams = moduleHdr[2]
                 modulePorts = moduleHdr[3]
+                auto_inferred = False
+
+                if moduleName.endswith("TMR"):
+                    self.logger.info("Module %s has been already triplicated (%s)" % (moduleName, fname))
+                    moduleName = moduleName[:-len("TMR")]
+                    self.logger.info("Infering non triplicated version: %s" % moduleName)
+                    auto_inferred = True
 
                 self.logger.debug("")
                 self.logger.debug("= "*50)
@@ -836,7 +843,40 @@ class VerilogElaborator():
 
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
+
+                for io in list(self.current_module["io"]):
+                    if io.endswith("A"):
+                        port = io[:-1]
+                        bport = io[:-1] + "B"
+                        cport = io[:-1] + "C"
+                        if bport in self.current_module["io"] and cport in self.current_module["io"]:
+                            self.logger.info("Port %s is triplicated" % (port))
+                            # create new port and net
+                            self.current_module["io"][port] = self.current_module["io"][io]
+                            self.current_module["nets"][port] = self.current_module["nets"][io]
+
+                            # remove triplicated ports and nets
+                            del self.current_module["io"][bport]
+                            del self.current_module["nets"][bport]
+
+                            del self.current_module["io"][cport]
+                            del self.current_module["nets"][cport]
+
+                            del self.current_module["io"][io] # A
+                            del self.current_module["nets"][io]
+
+                            # add constraints
+                            self.current_module["constraints"][port] = True
+
+                if "tmrError" in self.current_module["io"]:
+                    self.current_module["constraints"]["tmr_error"] = True
+                    del self.current_module["io"]["tmrError"]
+
                 self.current_module["constraints"]["dnt"] = True
+                if auto_inferred:
+                    self.current_module["constraints"]["dnt"] = False
+                    self.current_module["constraints"]["default"] = False
+
                 self.modules[moduleName] = copy.deepcopy(self.current_module)
 
         # display summary
