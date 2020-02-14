@@ -1771,6 +1771,22 @@ class TMR(VerilogElaborator):
         ftop = os.path.join(self.config.get("tmrg", "tmr_dir"), topFile+tmrSuffix+ext+'.new')
         self._addCommonModules(ftop)
 
+        if self.options.simplify_verilog:
+            try:
+                from pyosys import libyosys as ys
+                mode = "-o"
+                for fname in sorted(self.files):
+                    file, ext = os.path.splitext(os.path.basename(fname))
+                    fout = os.path.join(self.config.get("tmrg", "tmr_dir"), file+tmrSuffix+ext)+'.new'
+                    design = ys.Design()
+                    ys.run_pass("tee -q %s yosys.log read_verilog %s" % (mode, fout) , design)
+                    ys.run_pass("tee -q -a yosys.log proc", design)
+                    ys.run_pass("tee -q -a yosys.log write_verilog  %s" % fout, design)
+                    mode = "-a"
+                    del design
+            except ModuleNotFoundError:
+                raise ErrorMessage("Option '--simplify-verilog' requires pyosys.")
+                
         for fname in sorted(self.files):
             file, ext = os.path.splitext(os.path.basename(fname))
             fout = os.path.join(self.config.get("tmrg", "tmr_dir"), file+tmrSuffix+ext)
@@ -1950,6 +1966,8 @@ def main():
                         default=False,   help="Include include files")
     dirGroup.add_option("",   "--top-module",        dest="top_module",
                         action="store", default="",  help="Specify top module name")
+    dirGroup.add_option("",   "--simplify-verilog",   dest="simplify_verilog",
+                        action="store_true", default=False,  help="Simplifies generated verilog code to enable SET injection (requires pyosys)")
     parser.add_option_group(tmrGroup)
 
     try:
