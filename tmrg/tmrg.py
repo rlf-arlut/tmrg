@@ -1774,13 +1774,15 @@ class TMR(VerilogElaborator):
         if self.options.simplify_verilog:
             try:
                 from pyosys import libyosys as ys
+                mode = "-o"
                 for fname in sorted(self.files):
                     file, ext = os.path.splitext(os.path.basename(fname))
                     fout = os.path.join(self.config.get("tmrg", "tmr_dir"), file+tmrSuffix+ext)+'.new'
                     design = ys.Design()
-                    ys.run_pass("tee -q -o yosys.log read_verilog %s"%fout, design)
-                    ys.run_pass("tee -q -o yosys.log proc", design)
-                    ys.run_pass("tee -q -o yosys.log write_verilog  %s"%fout, design)
+                    ys.run_pass("tee -q %s yosys.log read_verilog %s" % (mode, fout) , design)
+                    ys.run_pass("tee -q -a yosys.log proc", design)
+                    ys.run_pass("tee -q -a yosys.log write_verilog  %s" % fout, design)
+                    mode = "-a"
                     del design
             except ModuleNotFoundError:
                 raise ErrorMessage("Option '--simplify-verilog' requires pyosys.")
