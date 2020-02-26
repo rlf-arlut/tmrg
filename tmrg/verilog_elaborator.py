@@ -845,7 +845,7 @@ class VerilogElaborator():
                     self._elaborate(moduleItem)
 
                 for io in list(self.current_module["io"]):
-                    if io.endswith("A"):
+                    if io.endswith("A") and auto_inferred:
                         port = io[:-1]
                         bport = io[:-1] + "B"
                         cport = io[:-1] + "C"
