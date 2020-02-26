@@ -5,3 +5,5 @@ a.out
 *TMR.sdc
 .coverage
 .idea
+*.egg-info/
+__pycache__/
