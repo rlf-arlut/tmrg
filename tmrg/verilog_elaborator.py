@@ -844,29 +844,32 @@ class VerilogElaborator():
                 for moduleItem in module[1]:
                     self._elaborate(moduleItem)
 
-                for io in list(self.current_module["io"]):
-                    if io.endswith("A"):
-                        port = io[:-1]
-                        bport = io[:-1] + "B"
-                        cport = io[:-1] + "C"
-                        if bport in self.current_module["io"] and cport in self.current_module["io"]:
-                            self.logger.info("Port %s is triplicated" % (port))
-                            # create new port and net
-                            self.current_module["io"][port] = self.current_module["io"][io]
-                            self.current_module["nets"][port] = self.current_module["nets"][io]
+                if auto_inferred:
+                    for io in list(self.current_module["io"]):
+                        # look for all pins ending with A,B,C and replace with a single pin
+                        # and set proper constraints
+                        if io.endswith("A"):
+                            port = io[:-1]
+                            bport = io[:-1] + "B"
+                            cport = io[:-1] + "C"
+                            if bport in self.current_module["io"] and cport in self.current_module["io"]:
+                                self.logger.info("Port %s is triplicated" % (port))
+                                # create new port and net
+                                self.current_module["io"][port] = self.current_module["io"][io]
+                                self.current_module["nets"][port] = self.current_module["nets"][io]
 
-                            # remove triplicated ports and nets
-                            del self.current_module["io"][bport]
-                            del self.current_module["nets"][bport]
+                                # remove triplicated ports and nets
+                                del self.current_module["io"][bport]
+                                del self.current_module["nets"][bport]
 
-                            del self.current_module["io"][cport]
-                            del self.current_module["nets"][cport]
+                                del self.current_module["io"][cport]
+                                del self.current_module["nets"][cport]
 
-                            del self.current_module["io"][io] # A
-                            del self.current_module["nets"][io]
+                                del self.current_module["io"][io] # A
+                                del self.current_module["nets"][io]
 
-                            # add constraints
-                            self.current_module["constraints"][port] = True
+                                # add constraints
+                                self.current_module["constraints"][port] = True
 
                 if "tmrError" in self.current_module["io"]:
                     self.current_module["constraints"]["tmr_error"] = True
