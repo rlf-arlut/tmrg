@@ -185,6 +185,24 @@ class VerilogFormatter:
         oStr += self.format(tokens[3], i=i+"\t")
         return oStr
 
+    def _format_generate_if_statement(self, tokens, i=""):
+        genvar_cond = self.format(tokens[0])
+        body = self.format(tokens[1], i=i+"\t")
+        oStr = i + "if %s" % genvar_cond + \
+               body
+        return oStr
+
+
+    def _format_generate_if_else_statement(self, tokens, i=""):
+        genvar_cond = self.format(tokens[0])
+        bodyIf = self.format(tokens[1], i=i+"\t")
+        bodyElse = self.format(tokens[1], i=i+"\t")
+        oStr = i + "if %s" % genvar_cond + \
+               bodyIf +  \
+               i + "else" +\
+               bodyElse
+        return oStr
+        
     def _format_generate(self, tokens, i=""):
         oStr = ""
         oStr = "\n"+i
