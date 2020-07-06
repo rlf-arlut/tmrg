@@ -628,7 +628,6 @@ class VerilogParser:
         """
         specifyBlock = Group( "specify" + ZeroOrMore( specifyItem ) + "endspecify" )
 
-        generate_module_loop_statement = Forward()
         self.moduleOrGenerateItem = Forward()
         generate_module_named_block = Group(Suppress("begin") +
                                             Group(Optional(":" + identifier)) +
@@ -637,8 +636,10 @@ class VerilogParser:
                                             Group(Optional(":" + identifier))
                                             ).setResultsName("generate_module_named_block")
 
-        #generate_if_statement =
+        self.moduleOrGenerateItemOrNamed = self.moduleOrGenerateItem | generate_module_named_block
 
+        generate_if_else_statement =  Group(Suppress(if_) + condition + self.moduleOrGenerateItemOrNamed + Suppress(else_) + self.moduleOrGenerateItemOrNamed).setResultsName("generate_if_else_statement")
+        generate_if_statement =     Group(Suppress(if_) + condition + self.moduleOrGenerateItemOrNamed).setResultsName("generate_if_statement")
 
         generate_module_loop_statement = Group( Suppress(for_) +
                                                   Suppress("(")  +
@@ -651,7 +652,6 @@ class VerilogParser:
                                                   generate_module_named_block
                                                ).setResultsName("generate_module_loop_statement")
 
-#        self.moduleOrGenerateItem << ~Keyword("endmodule") + (
         self.moduleOrGenerateItem << (
             parameterDecl |
             self.synopsys_directives |
@@ -690,57 +690,15 @@ class VerilogParser:
             self.directive_translate |
             self.directive_majority_voter_cell  |
             self.directive_fanout_cell  |
-            # this should not be here, however it can be used in modert ga
-            Group(if_ + condition + stmtOrNull + else_ + stmtOrNull).setName("if").setResultsName("ifelse") |
-            Group(if_ + condition + stmtOrNull).setName("if").setResultsName("if") |
-            # these have to be at the end - they start with identifiers
             self.moduleInstantiation |
-            generate_module_loop_statement
-            #Group( if_ + condition + self.moduleOrGenerateItem   +  else_ + self.moduleOrGenerateItem   ).setName("genifelse").setResultsName("genifelse") | \
-#            Group( if_ + condition + self.moduleOrGenerateItem    ).setName("genif").setResultsName("genif")
+            generate_module_loop_statement |
+            generate_if_else_statement |
+            generate_if_statement 
         )
-
-
-#        generate_module_case_statement =Keyword("case")+  "(" + self.expr + ")" genvar_module_case_item { genvar_module_case_item } Keyword("endcase")
-
-        #genvar_module_case_item ::=
-        #constant_expression { , constant_expression } : generate_module_item
-        #|	default [ : ] generate_module_item
-        #generate_module_item = Forward()
-        #generate_module_conditional_statement = Keyword("if") + self.expr + generate_module_item + Group(Optional(Keyword("else") +  generate_module_item ))
-
-
-#        genvar_decl_assignment = Group(identifier + "=" +self.expr).setResultsName("genvar_decl_assignment")
-
-        #self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
-#                             + Group(self.expr) ).setResultsName( "assgnmt" )
-
-        #Group(for_ + Suppress("(") + Group(self.assgnmt) + Suppress(self.semi) + Group(self.expr) + Suppress(
-#            self.semi) + Group(self.assgnmt) + Suppress(")") + self.stmt).setResultsName("forstmt") |
-#        \
-# \
-
-
-#genvar_assignment ::=
-#genvar_identifier assignment_operator constant_expression
-#|	inc_or_dec_operator genvar_identifier
-#|	genvar_identifier inc_or_dec_operator
-#genvar_decl_assignment ::=
-#[ genvar ] genvar_identifier = constant_expression
-#generate_module_named_block ::=
-#begin : generate_block_identifier { generate_module_item } end [ : generate_block_identifier ]
-#|	generate_block_identifier : generate_module_block
-#generate_module_block ::=
-#begin [ : generate_block_identifier ] { generate_module_item } end [ : generate_block_identifier ]
 
         generate_body =  OneOrMore(self.moduleOrGenerateItem)# |generate_module_loop_statement
 
-#                                |	generate_module_case_statement\
-
-
-
         self.generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
-
 
         self.moduleItem= self.generate | self.moduleOrGenerateItem
         # | generate_module_loop_statement
