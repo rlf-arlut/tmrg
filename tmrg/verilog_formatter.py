@@ -196,7 +196,7 @@ class VerilogFormatter:
     def _format_generate_if_else_statement(self, tokens, i=""):
         genvar_cond = self.format(tokens[0])
         bodyIf = self.format(tokens[1], i=i+"\t")
-        bodyElse = self.format(tokens[1], i=i+"\t")
+        bodyElse = self.format(tokens[2], i=i+"\t")
         oStr = i + "if %s" % genvar_cond + \
                bodyIf +  \
                i + "else" +\
