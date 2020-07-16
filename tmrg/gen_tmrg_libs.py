@@ -34,9 +34,11 @@ def generate_tmr_lib(fname_in, fname_out):
                 elif line_striped.startswith("primitive "):
                     break
 
-
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 3:
         print("Usage: %s mylib.v mylib_tmr.v" % (sys.argv[0]))
         sys.exit(-1)
     generate_tmr_lib(fname_in=sys.argv[1], fname_out=sys.argv[2])
+
+if __name__ == "__main__":
+    main()
