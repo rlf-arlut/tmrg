@@ -105,6 +105,15 @@ class VerilogFormatter:
             oStr += "%s %s %s%s%s;\n" % (label, attributes, spec, port[0], r)
         return oStr
 
+    def _format_force(self, tokens, i=""):
+        force = str(tokens[0])
+        assgnmt = self._format_assgnmt(tokens[1])
+        return "%s%s %s;\n" % (i, force, assgnmt)
+
+    def _format_release(self, tokens, i=""):
+        release = str(tokens[0])
+        return "%s%s %s;\n" % (i, release, self.format(tokens[1]))
+
     def _format_netDecl3(self, tokens, i=""):
         oStr = ""
         label = str(tokens[0])
