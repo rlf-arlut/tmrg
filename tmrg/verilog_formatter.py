@@ -297,7 +297,7 @@ class VerilogFormatter:
         oStr = ""
         delay = self.format(tokens[0])
         stm = self.format(tokens[1])
-        oStr += "%s %s" % (delay, stm)
+        oStr += "%s%s %s" % (i, delay, stm)
         return oStr
 
     def _format_task(self, tokens, i=""):
