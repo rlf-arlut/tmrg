@@ -116,6 +116,7 @@ simpleTests=(
   "verilog/wor01.v",
   "verilog/wor02.v",
   "verilog/generate_if.v",
+  "verilog/force_release.v",
 )
 
 

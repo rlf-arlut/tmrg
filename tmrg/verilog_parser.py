@@ -339,9 +339,9 @@ class VerilogParser:
             Group( disable + identifier + self.semi ) |\
             Group( assign + self.assgnmt + self.semi ).setResultsName("assign") |\
             Group( deassign + lvalue + self.semi ) |\
-            Group( force + self.assgnmt + self.semi ) |\
+            Group( force + Group(self.assgnmt) + self.semi ).setResultsName("force") |\
             Group( self.directive_synopsys_case )| \
-            Group( release + lvalue + self.semi ) |\
+            Group( release + lvalue + self.semi ).setResultsName("release") |\
             Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
