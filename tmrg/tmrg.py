@@ -991,7 +991,15 @@ class TMR(VerilogElaborator):
                             majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
                             (width, inst, _a, _b, _c, _out, _err))[0])
 
-            # after all voters are added, we can create or them all
+            if group in self.current_module["tmrErrNets"]:
+                errSignals = errSignals | self.current_module["tmrErrNets"][group]
+
+            # add wires for all error signals
+            if len(errSignals):
+                for signal in sorted(errSignals):
+                    moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % signal)[0])
+
+            # after all voters are added, we can create an "OR" of all them
             if "tmrError" in self.current_module["nets"]:
 
                 if self.current_module["constraints"]["tmrErrorOut"]:
@@ -1001,10 +1009,6 @@ class TMR(VerilogElaborator):
                     if not self.current_module["constraints"]["tmrErrorOut"]:
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire tmrError%s;" % group)[0])
                         self.logger.debug("Adding wire tmrError%s;" % group)
-
-                if group in self.current_module["tmrErrNets"]:
-                    #print group
-                    errSignals = errSignals | self.current_module["tmrErrNets"][group]
                 sep = ""
                 asgnStr = "assign tmrError%s=" % group
                 if len(errSignals):
@@ -1013,13 +1017,14 @@ class TMR(VerilogElaborator):
                         if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
                             self.logger.debug("Removing signal '%s' from tmrError", signal)
                             continue
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % signal)[0])
                         asgnStr += sep+signal
                         sep = "|"
                 else:
                     asgnStr += "1'b0"
                 asgnStr += ";"
                 moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
+
+
 
         for fanout in self.current_module["fanouts"]:
             inst = fanout
