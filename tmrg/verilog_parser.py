@@ -815,7 +815,7 @@ class VerilogParser:
             return " ".join(toks)+ ";"
         self.synopsysDirective.setParseAction(synopsysDirectiveAction)
 
-        self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine")+ restOfLine).setResultsName("compDirective")
+        self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine default_nettype")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
             if toks[0]=="include":
                 if self.include:
