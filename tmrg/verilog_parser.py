@@ -345,6 +345,7 @@ class VerilogParser:
             Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
+            self.synopsys_directives |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )
             # these  *have* to go at the end of the list!!!
 
