@@ -67,6 +67,7 @@
 
 __version__ = "1.0.10"
 
+import re
 import pdb
 import time
 import pprint
@@ -817,6 +818,11 @@ class VerilogParser:
 
         self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine default_nettype")+ restOfLine).setResultsName("compDirective")
         def compDirectiveAction(toks):
+            # Remove single line comments behind directives to make
+            # sure we don't create an error if toks[1] contains a single
+            # line comment which would obviously obfuscate the semicolon
+            toks[1]=re.sub("\/\/.*", "", toks[1])
+
             if toks[0]=="include":
                 if self.include:
                     fname=toks[1].replace('"','').strip()
