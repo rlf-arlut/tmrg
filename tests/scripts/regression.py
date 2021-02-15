@@ -119,7 +119,7 @@ simpleTests=(
   "verilog/generate_if.v",
   "verilog/force_release.v",
   "verilog/default_nettype.v",
-  "compDirectivesComment.v",
+  "verilog/compDirectivesComment.v",
 )
 
 
