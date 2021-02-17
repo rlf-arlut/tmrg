@@ -842,6 +842,17 @@ class VerilogParser:
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
 
+        self.compMacro = (Suppress('`') + Regex( r"[a-zA-Z0-1_]+" ) + restOfLine).setResultsName("compMacro")
+        def compMacroAction(data, idx, toks):
+            #Delay statements require literal space after macro
+            if data[idx-1] == '#':
+                space=" "
+            #Other statements require one macro name
+            else:
+                space="__SPACE__"
+            return "COMP_MACRO__"+toks[0]+"".join(toks[1:]).replace(" ",space)
+        self.compMacro.setParseAction(compMacroAction)
+
 
     def parseFile(self,fname):
         self.logger.debug("Parsing file '%s'"%fname)
@@ -858,6 +869,7 @@ class VerilogParser:
         preParsedStrng = self.synopsysDirective.transformString( preParsedStrng )
         preParsedStrng = cppStyleComment.suppress().transformString(preParsedStrng)
         preParsedStrng = self.compDirective.transformString(preParsedStrng) # do it twice in case there are defines in included files
+        preParsedStrng = self.compMacro.transformString(preParsedStrng)
         preParsedStrngNew=""
         translate=True
 
@@ -873,12 +885,29 @@ class VerilogParser:
         self.verilog=preParsedStrngNew
         try:
             self.tokens = self.verilogbnf.parseString(preParsedStrngNew)
+
+            #Replace COMP_MACRO token
+            self.tokens = self.__replaceMacro__(self.tokens)
         except:
             for i,l in enumerate(preParsedStrngNew.split("\n")):
                 self.logger.debug("[%d] %s"%(i,l))
             raise
 
         return self.tokens
+
+    #Replace COMP_MACRO__ with a backtick(`) in a parsed token list and
+    #replace __SPACE__ with a literal space
+    def __replaceMacro__( self,tokens,d="" ):
+        idx = 0
+        for item in tokens :
+            if type(item) == ParseResults:
+                tokens[idx] = self.__replaceMacro__(item,d+"  ")
+            elif type(item) == str and "COMP_MACRO__" in item:
+                tokens[idx] = tokens[idx].replace("COMP_MACRO__","`")
+                tokens[idx] = tokens[idx].replace("__SPACE__"," ")
+            idx += 1
+
+        return tokens
 
 if __name__=="__main__":
     print("This module is not ment to be run!")
