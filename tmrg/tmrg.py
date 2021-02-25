@@ -575,7 +575,8 @@ class TMR(VerilogElaborator):
                     for inst in range(len(instCpy[2])):  # iterage over all instances
                         instCpy[2][inst][0][0] = instCpy[2][inst][0][0]+post  # change instance name
                         for port in instCpy[2][inst][1]:
-                                #print port
+                            if len(port) == 1:
+                                raise ErrorMessage("Implicit connections in module instantiation are not supported\nProblematic instance: `%s` (module: `%s`)" % (instance, identifier))
                             if len(port[3]):  # if the port is disconected, the lenght will be 0
                                 ids = self.getLeftRightHandSide(port[3])
                                 for rid in ids["right"]:
@@ -2049,7 +2050,8 @@ def main():
                 pass
 
     except ErrorMessage as e:
-        logging.error(str(e))
+        for line in str(e).split("\n"):
+            logging.error(line)
         exc_type, exc_value, exc_traceback = sys.exc_info()
         logging.debug("The exception was raised from:")
         for l in traceback.format_tb(exc_traceback):
