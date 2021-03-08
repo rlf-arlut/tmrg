@@ -1,17 +1,17 @@
 module submodule (
-    input a,
-    output b
+  input i,
+  output z
 );
-    // tmrg tmr_error true
-    wire a_voted = a;
-    assign b = a;
+  // tmrg tmr_error true
+  wire i_voted = i;
+  assign z = i_voted;
 endmodule
 
 module topmodule (
-    input a,
-    output b
+  input i,
+  output z
 );
-    submodule submodule_inst (.a(a), .b(b));
+  submodule submodule_inst (.i(i), .z(z));
 endmodule
 
 
