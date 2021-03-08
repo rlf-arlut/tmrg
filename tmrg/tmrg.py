@@ -41,7 +41,7 @@ def tmr_reg_list(tokens):
     newtokens = ParseResults([], name=tokens.getName())
     for element in tokens:
         if element[0] in self.toTMR:
-            for post in self.EXT:
+            for post in self.tmrNetName:
                 newtokens2 = element.deepcopy()
                 newtokens2[0] = element[0]+post
                 newtokens.append(newtokens2)
@@ -93,21 +93,23 @@ class CmdConstrainParser:
 class TMR(VerilogElaborator):
     def __init__(self, options, args):
         VerilogElaborator.__init__(self, options, args, cnfgName="tmrg")
-        self.EXT = ('A', 'B', 'C')
+        self.tmrNetName = ('A', 'B', 'C')
         self.votedNetName = "Voted"
         self.tmrErrorGlobalName = "tmrError"
         self.tmrErrorNetName = "tmrError"
         self.tmrErrorGroupName = "tmrError"
         self.tmrModuleName = "%sTMR"
         self.majorityVoterCellName = "majorityVoter"
+        self.voterInstanceName = "%sVoter"
         if options.lower_snake_case:
             self.votedNetName = "_voted"
             self.tmrErrorGlobalName = "tmr_error"
             self.tmrErrorNetName = "_tmr_error"
             self.tmrErrorGroupName = "tmr_error_"
-            self.EXT = ('_tmra', '_tmrb', '_tmrc')
+            self.tmrNetName = ('_a', '_b', '_c')
             self.tmrModuleName = "%s_tmr"
             self.majorityVoterCellName = "majority_voter"
+            self.voterInstanceName = "%s_voter"
 
         self.__voterPresent = False
         self.__fanoutPresent = False
@@ -311,7 +313,7 @@ class TMR(VerilogElaborator):
 
         self._addFanoutsIfTmr(ids["right"], addWires="output")
 
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name = name+i
@@ -332,7 +334,7 @@ class TMR(VerilogElaborator):
 
         if not tmr:
             return tokens
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name = name+i
@@ -357,7 +359,7 @@ class TMR(VerilogElaborator):
 
         self._addFanoutsIfTmr(ids["right"], addWires="output")
         result = []
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"]) + list(ids["left"]):
                 _to_name = name+i
@@ -370,7 +372,7 @@ class TMR(VerilogElaborator):
             newtokens = ParseResults([], name=tokens.getName())
             for element in tokens:
                 if self.hasAnythingToTMR(element):
-                    for post in self.EXT:
+                    for post in self.tmrNetName:
                         element2 = element.deepcopy()
                         for var in self.toTMR:
                             self.replace(element2, var, var+post)
@@ -393,7 +395,7 @@ class TMR(VerilogElaborator):
 
         # check if this is explicit fanout
         eFanout = False
-        for ext in self.EXT:
+        for ext in self.tmrNetName:
             if left == right+ext:
                 eFanout = True
 
@@ -406,7 +408,7 @@ class TMR(VerilogElaborator):
         eGroup = ""
         eNet = ""
         for net in self.current_module["nets"]:
-            for ext in self.EXT:
+            for ext in self.tmrNetName:
                 if net+ext == left:
                     eVoter = True
                     eGroup = ext
@@ -417,7 +419,7 @@ class TMR(VerilogElaborator):
                 self._addVoter(name, "", addWires="output")
             return tokens
         eFanin = False
-        for ext in self.EXT:
+        for ext in self.tmrNetName:
             if left+ext == right:
                 eFanin = True
         if eFanin:
@@ -451,11 +453,11 @@ class TMR(VerilogElaborator):
             self.logger.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
             newtokens = ParseResults([], name=tokens.getName())
 
-            a = right+self.EXT[0]
-            b = right+self.EXT[1]
-            c = right+self.EXT[2]
-            for ext in self.EXT:
-                voterInstName = "%sVoter%s" % (right, ext)
+            a = right+self.tmrNetName[0]
+            b = right+self.tmrNetName[1]
+            c = right+self.tmrNetName[2]
+            for ext in self.tmrNetName:
+                voterInstName = self.voterInstanceName % right + ext
                 name_voted = "%s%s" % (left, ext)
                 netErrorName = "%s%s%s" % (right, self.tmrErrorNetName, ext)
                 self._addVoterExtended(voterInstName=voterInstName,
@@ -482,7 +484,7 @@ class TMR(VerilogElaborator):
             return tokens
         self._addFanoutsIfTmr(ids["right"], addWires="output")
 
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name = name+i
@@ -502,7 +504,7 @@ class TMR(VerilogElaborator):
             return tokens
 
         result = []
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name = name+i
@@ -524,7 +526,7 @@ class TMR(VerilogElaborator):
             return tokens
 
         result = []
-        for i in self.EXT:
+        for i in self.tmrNetName:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
                 _to_name = name+i
@@ -553,7 +555,7 @@ class TMR(VerilogElaborator):
                 toTMR.add(name)
         result = []
         if len(toTMR):
-            for i in self.EXT:
+            for i in self.tmrNetName:
                 cpy = tokens.deepcopy()
                 for name in toTMR:
                     _to_name = name+i
@@ -586,7 +588,7 @@ class TMR(VerilogElaborator):
             if tmr:
                 ret = []
                 # triplicate istances
-                for post in self.EXT:
+                for post in self.tmrNetName:
                     instCpy = tokens.deepcopy()
                     for inst in range(len(instCpy[2])):  # iterage over all instances
                         instCpy[2][inst][0][0] = instCpy[2][inst][0][0]+post  # change instance name
@@ -667,7 +669,7 @@ class TMR(VerilogElaborator):
                                 else:
                                     self._addFanout(sport, addWires="input")
                     elif dportTmr:
-                        for post in self.EXT:
+                        for post in self.tmrNetName:
                             portCpy = port.deepcopy()
                             portCpy[1] = dport+post
                             for name in list(ids["right"]):
@@ -685,7 +687,7 @@ class TMR(VerilogElaborator):
                 # TODO ADD TMR ERROR !!!!!!!!!!!!
                 # "tmrError" in self.modules[identifier]["nets"]:
                 if self.modules[identifier]["constraints"]["tmrErrorOut"]:
-                    for post in self.EXT:
+                    for post in self.tmrNetName:
                         netName = "%s%s%s" % (iname, self.tmrErrorNetName, post)
                         self.logger.debug("Adding net '%s' for module '%s'" % (netName, identifier))
                         tmrErrOut = self.vp.namedPortConnection.parseString(".%s%s(%s)" % (self.tmrErrorGlobalName, post, netName))[0]
@@ -731,7 +733,7 @@ class TMR(VerilogElaborator):
                 if not vote:
                     newModuleItems.append(moduleItem)
                 else:
-                    inst = voteNet+"Voter"
+                    inst = self.voterInstanceName % voteNet
                     self.logger.info("Instializaing voter %s" % inst)
                     net = self.modules[moduleName]["nets"][voteNet]
                     _range = net["range"]
@@ -739,9 +741,9 @@ class TMR(VerilogElaborator):
                     _len = net["len"]
                     _out = voteNet+self.votedNetName
                     _err = voteNet + self.tmrErrorNetName
-                    _a = voteNet + self.EXT[0]
-                    _b = voteNet + self.EXT[1]
-                    _c = voteNet + self.EXT[2]
+                    _a = voteNet + self.tmrNetName[0]
+                    _b = voteNet + self.tmrNetName[1]
+                    _c = voteNet + self.tmrNetName[2]
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _a))[0])
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _b))[0])
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _c))[0])
@@ -791,7 +793,7 @@ class TMR(VerilogElaborator):
 
                     if doTmr:
                         sep = ""
-                        for post in self.EXT:
+                        for post in self.tmrNetName:
                             newport = portName+post
                             newports.append(newport)
                             portstr += sep+newport
@@ -809,7 +811,7 @@ class TMR(VerilogElaborator):
                     portstr = "Port %s -> " % (portName)
                     if doTmr:
                         sep = ""
-                        for post in self.EXT:
+                        for post in self.tmrNetName:
                             portCpy = port.deepcopy()
                             newPortName = portName+post
                             self.replace(portCpy, portName, newPortName)
@@ -836,7 +838,7 @@ class TMR(VerilogElaborator):
             pass
         for wire in wrapperWires:
             newModuleItems.append(wire)
-        for ext in self.EXT:
+        for ext in self.tmrNetName:
             instName = wrapper[0][1]+ext
             modName = slice[0][1]
             portStr = ""
@@ -893,7 +895,7 @@ class TMR(VerilogElaborator):
 
                     if doTmr:
                         sep = ""
-                        for post in self.EXT:
+                        for post in self.tmrNetName:
                             newport = portName+post
                             newports.append(newport)
                             portstr += sep+newport
@@ -911,7 +913,7 @@ class TMR(VerilogElaborator):
                     portstr = "Port %s -> " % (portName)
                     if doTmr:
                         sep = ""
-                        for post in self.EXT:
+                        for post in self.tmrNetName:
                             portCpy = port.deepcopy()
                             newPortName = portName+post
                             self.replace(portCpy, portName, newPortName)
@@ -1231,7 +1233,7 @@ class TMR(VerilogElaborator):
         for element in tokens:
             if element in self.current_module["nets"]:
                 if self.current_module["nets"][element]["tmr"]:
-                    for post in self.EXT:
+                    for post in self.tmrNetName:
                         newtokens.append(element+post)
                 else:
                     newtokens.append(element)
@@ -1278,14 +1280,14 @@ class TMR(VerilogElaborator):
             self.current_module["voters"][group] = {}
             self.logger.info("Creating TMR error group %s" % group)
 
-        voterInstName = "%sVoter" % (netID)
+        voterInstName = self.voterInstanceName % (netID)
         if not voterInstName in self.current_module["voters"][group]:
 
             nameVoted = "%s" % (netID)
             netErrorName = "%s%s" % (netID, self.tmrErrorNetName)
-            inA = netID+self.EXT[0]
-            inB = netID+self.EXT[1]
-            inC = netID+self.EXT[2]
+            inA = netID+self.tmrNetName[0]
+            inB = netID+self.tmrNetName[1]
+            inC = netID+self.tmrNetName[2]
             self.logger.debug("Adding voter '%s' to group '%s' (simple)" % (voterInstName, group))
             self.logger.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, nameVoted, netErrorName))
 
@@ -1326,9 +1328,9 @@ class TMR(VerilogElaborator):
 
         if not inst in self.current_module["fanouts"]:
             _in = netID
-            outA = netID+self.EXT[0]
-            outB = netID+self.EXT[1]
-            outC = netID+self.EXT[2]
+            outA = netID+self.tmrNetName[0]
+            outB = netID+self.tmrNetName[1]
+            outC = netID+self.tmrNetName[2]
             range = self.current_module["nets"][netID]["range"]
             array_range = self.current_module["nets"][netID]["array_range"]
             array_len = self.current_module["nets"][netID]["array_len"]

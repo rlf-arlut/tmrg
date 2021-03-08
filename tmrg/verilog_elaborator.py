@@ -450,7 +450,7 @@ class VerilogElaborator():
             dnt = False
             if len(ids["right"]) != 0:
                 idRight = ids["right"].pop()
-                for ex in self.EXT:
+                for ex in self.tmrNetName:
                     if name == idRight+ex:
                         dnt = True
             if not name in self.current_module["nets"]:
