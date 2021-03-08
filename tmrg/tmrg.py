@@ -94,6 +94,10 @@ class TMR(VerilogElaborator):
     def __init__(self, options, args):
         VerilogElaborator.__init__(self, options, args, cnfgName="tmrg")
         self.EXT = ('A', 'B', 'C')
+        self.votedNetName = "Voted"
+        if options.lower_snake_case:
+            self.votedNetName = "_voted"
+
         self.__voterPresent = False
         self.__fanoutPresent = False
         self.__init_tripclicate_callbacks()
@@ -721,7 +725,7 @@ class TMR(VerilogElaborator):
                     _range = net["range"]
 
                     _len = net["len"]
-                    _out = voteNet+"Voted"
+                    _out = voteNet+self.votedNetName
                     _err = voteNet+"TmrError"
                     _a = voteNet+"A"
                     _b = voteNet+"B"
@@ -1544,7 +1548,7 @@ class TMR(VerilogElaborator):
             self.logger.info("Module %s" % module)
             for net1 in self.modules[module]["nets"]:
                 for net2 in self.modules[module]["nets"]:
-                    if net1+"Voted" == net2:
+                    if net1 + self.votedNetName == net2:
                         self.voting_nets.append((net1, net2))
                         self.logger.info("Full voting detected for nets %s -> %s" % (net1, net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or not self.modules[module]["nets"][net2]["tmr"]:
@@ -1970,6 +1974,7 @@ def main():
     tmrGroup.add_option("",  "--stats",              dest="stats",    action="store_true",   help="Print statistics")
     tmrGroup.add_option("",  "--include",            dest="include",    action="store_true",
                         default=False,   help="Include include files")
+    tmrGroup.add_option("",  "--lower-snake-case",   dest="lower_snake_case", action="store_true", help="")
     dirGroup.add_option("",   "--top-module",        dest="top_module",
                         action="store", default="",  help="Specify top module name")
     dirGroup.add_option("",   "--simplify-verilog",   dest="simplify_verilog",
