@@ -98,11 +98,14 @@ class TMR(VerilogElaborator):
         self.tmrErrorGlobalName = "tmrError"
         self.tmrErrorNetName = "tmrError"
         self.tmrErrorGroupName = "tmrError"
+        self.tmrModuleName = "%sTMR"
         if options.lower_snake_case:
             self.votedNetName = "_voted"
             self.tmrErrorGlobalName = "tmr_error"
             self.tmrErrorNetName = "_tmr_error"
             self.tmrErrorGroupName = "tmr_error_"
+            self.EXT = ('_tmra', '_tmrb', '_tmrc')
+            self.tmrModuleName = "%s_tmr"
 
         self.__voterPresent = False
         self.__fanoutPresent = False
@@ -452,7 +455,7 @@ class TMR(VerilogElaborator):
             for ext in self.EXT:
                 voterInstName = "%sVoter%s" % (right, ext)
                 name_voted = "%s%s" % (left, ext)
-                netErrorName = "%sTmrError%s" % (right, ext)
+                netErrorName = "%s%s%s" % (right, self.tmrErrorNetName, ext)
                 self._addVoterExtended(voterInstName=voterInstName,
                                        inA=a,
                                        inB=b,
@@ -634,7 +637,7 @@ class TMR(VerilogElaborator):
                             self.logger.debug("Wire '%s' does not exist in the net database" % sname)
                             self.logger.debug("The connection will not be changed.")
         else:
-            identifierTMR = identifier+"TMR"
+            identifierTMR = self.tmrModuleName % identifier
             tokens[0] = identifierTMR
             tokensIns = ParseResults([], name=tokens[2].getName())
 
@@ -734,9 +737,9 @@ class TMR(VerilogElaborator):
                     _len = net["len"]
                     _out = voteNet+self.votedNetName
                     _err = voteNet + self.tmrErrorNetName
-                    _a = voteNet+"A"
-                    _b = voteNet+"B"
-                    _c = voteNet+"C"
+                    _a = voteNet + self.EXT[0]
+                    _b = voteNet + self.EXT[1]
+                    _c = voteNet + self.EXT[2]
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _a))[0])
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _b))[0])
                     newModuleItems.insert(0, self.vp.inputDecl.parseString("input %s %s;" % (_range, _c))[0])
@@ -860,7 +863,7 @@ class TMR(VerilogElaborator):
         if "slicing" in self.modules[moduleName]["constraints"]:
             self.logger.info("Module '%s' is to be sliced" % moduleName)
             return self.__slice_module(tokens)
-        header[1] = str(moduleName)+"TMR"
+        header[1] = self.tmrModuleName % str(moduleName)
         self.logger.debug("")
         self.logger.debug("= "*50)
         self.logger.debug("Module %s -> %s" % (moduleName, header[1]))
@@ -1277,7 +1280,7 @@ class TMR(VerilogElaborator):
         if not voterInstName in self.current_module["voters"][group]:
 
             nameVoted = "%s" % (netID)
-            netErrorName = "%sTmrError" % (netID)
+            netErrorName = "%s%s" % (netID, self.tmrErrorNetName)
             inA = netID+self.EXT[0]
             inB = netID+self.EXT[1]
             inC = netID+self.EXT[2]
