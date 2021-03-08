@@ -99,6 +99,7 @@ class TMR(VerilogElaborator):
         self.tmrErrorNetName = "tmrError"
         self.tmrErrorGroupName = "tmrError"
         self.tmrModuleName = "%sTMR"
+        self.majorityVoterCellName = "majorityVoter"
         if options.lower_snake_case:
             self.votedNetName = "_voted"
             self.tmrErrorGlobalName = "tmr_error"
@@ -106,6 +107,7 @@ class TMR(VerilogElaborator):
             self.tmrErrorGroupName = "tmr_error_"
             self.EXT = ('_tmra', '_tmrb', '_tmrc')
             self.tmrModuleName = "%s_tmr"
+            self.majorityVoterCellName = "majority_voter"
 
         self.__voterPresent = False
         self.__fanoutPresent = False
@@ -756,7 +758,7 @@ class TMR(VerilogElaborator):
                     width = ""
                     if _len != "1":
                         width += "#(.WIDTH(%s)) " % _len
-                    majorityVoterCell = "majorityVoter"+self.options.common_cells_postfix
+                    majorityVoterCell = self.majorityVoterCellName +self.options.common_cells_postfix
                     if "majority_voter_cell" in self.modules[moduleName]["constraints"]:
                         majorityVoterCell = self.modules[moduleName]["constraints"]["majority_voter_cell"]
                     newModuleItems.append(self.vp.moduleInstantiation.parseString(majorityVoterCell+" %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s));" %
@@ -977,7 +979,7 @@ class TMR(VerilogElaborator):
                     if _len != "1":
                         width += "#(.WIDTH(%s)) " % _len
 
-                    majorityVoterCell = "majorityVoter"+self.options.common_cells_postfix
+                    majorityVoterCell = self.majorityVoterCellName + self.options.common_cells_postfix
                     if "majority_voter_cell" in self.current_module["constraints"]:
                         majorityVoterCell = self.current_module["constraints"]["majority_voter_cell"]
 
