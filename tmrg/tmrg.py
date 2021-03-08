@@ -95,8 +95,14 @@ class TMR(VerilogElaborator):
         VerilogElaborator.__init__(self, options, args, cnfgName="tmrg")
         self.EXT = ('A', 'B', 'C')
         self.votedNetName = "Voted"
+        self.tmrErrorGlobalName = "tmrError"
+        self.tmrErrorNetName = "tmrError"
+        self.tmrErrorGroupName = "tmrError"
         if options.lower_snake_case:
             self.votedNetName = "_voted"
+            self.tmrErrorGlobalName = "tmr_error"
+            self.tmrErrorNetName = "_tmr_error"
+            self.tmrErrorGroupName = "tmr_error_"
 
         self.__voterPresent = False
         self.__fanoutPresent = False
@@ -415,19 +421,20 @@ class TMR(VerilogElaborator):
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
         # commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
-        if left.lower().find("tmrerror") >= 0:
-            if left == "tmrError":
-                self.logger.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
-                return []
 
+        if left == self.tmrErrorGlobalName:
+            self.logger.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
+            return []
+
+        if left.lower().find(self.tmrErrorNetName) >= 0:
             for net in self.current_module["nets"]:
-                netTmrErr = net+"TmrError"
+                netTmrErr = net + self.tmrErrorNetName
                 if left == netTmrErr:
                     self.logger.info("Removing declaration of %s" % (left))
                     return []
 
             for net in self.current_module["instances"]:
-                netTmrErr = net+"tmrError"
+                netTmrErr = net + self.tmrErrorNetName
                 if left == netTmrErr:
                     self.logger.info("Removing declaration of %s" % (left))
                     return []
@@ -674,9 +681,9 @@ class TMR(VerilogElaborator):
                 # "tmrError" in self.modules[identifier]["nets"]:
                 if self.modules[identifier]["constraints"]["tmrErrorOut"]:
                     for post in self.EXT:
-                        netName = "%stmrError%s" % (iname, post)
+                        netName = "%s%s%s" % (iname, self.tmrErrorNetName, post)
                         self.logger.debug("Adding net '%s' for module '%s'" % (netName, identifier))
-                        tmrErrOut = self.vp.namedPortConnection.parseString(".tmrError%s(%s)" % (post, netName))[0]
+                        tmrErrOut = self.vp.namedPortConnection.parseString(".%s%s(%s)" % (self.tmrErrorGlobalName, post, netName))[0]
                         self._addTmrErrorWire(post, netName)
                         newPorts.append(tmrErrOut)
 
@@ -726,7 +733,7 @@ class TMR(VerilogElaborator):
 
                     _len = net["len"]
                     _out = voteNet+self.votedNetName
-                    _err = voteNet+"TmrError"
+                    _err = voteNet + self.tmrErrorNetName
                     _a = voteNet+"A"
                     _b = voteNet+"B"
                     _c = voteNet+"C"
@@ -812,7 +819,7 @@ class TMR(VerilogElaborator):
             if "tmrError" in self.current_module["nets"]:
                 groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                 for group in sorted(groups):
-                    newport = "tmrError%s" % group
+                    newport = self.tmrErrorGrpupName % group
                     newports.append(newport)
                     self.logger.debug("Port %s" % (newport))
             wrapper[0][3] = newports
@@ -915,7 +922,7 @@ class TMR(VerilogElaborator):
             if self.current_module["constraints"]["tmrErrorOut"]:
                 groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                 for group in sorted(groups):
-                    newport = "tmrError%s" % group
+                    newport = self.tmrErrorGlobalName + group
                     if self.current_module["portMode"] == "ANSI":
                         newport = self.vp.portOut.parseString("output %s" % newport)[0]
                         newports.append(newport)
@@ -971,7 +978,7 @@ class TMR(VerilogElaborator):
                     if "majority_voter_cell" in self.current_module["constraints"]:
                         majorityVoterCell = self.current_module["constraints"]["majority_voter_cell"]
 
-                    if "tmrError" in self.current_module["nets"]:
+                    if self.tmrErrorGlobalName in self.current_module["nets"]:
                         errSignals.add(_err)
                     else:
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
@@ -993,8 +1000,8 @@ class TMR(VerilogElaborator):
                         moduleBody.append(self.vp.generate.parseString(genstr)[0])
                     else:  # normal voter
                         moduleBody.append(self.vp.moduleInstantiation.parseString(
-                            majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
-                            (width, inst, _a, _b, _c, _out, _err))[0])
+                            majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .%s(%s));" %
+                            (width, inst, _a, _b, _c, _out, self.tmrErrorGlobalName, _err))[0])
 
             if group in self.current_module["tmrErrNets"]:
                 errSignals = errSignals | self.current_module["tmrErrNets"][group]
@@ -1005,7 +1012,7 @@ class TMR(VerilogElaborator):
                     moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % signal)[0])
 
             # after all voters are added, we can create an "OR" of all them
-            if "tmrError" in self.current_module["nets"]:
+            if self.tmrErrorGlobalName in self.current_module["nets"]:
 
                 if self.current_module["constraints"]["tmrErrorOut"]:
                     if self.current_module["portMode"] == "non-ANSI":
@@ -1015,10 +1022,10 @@ class TMR(VerilogElaborator):
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire tmrError%s;" % group)[0])
                         self.logger.debug("Adding wire tmrError%s;" % group)
                 sep = ""
-                asgnStr = "assign tmrError%s=" % group
+                asgnStr = "assign %s%s=" % (self.tmrErrorGroupName, group)
                 if len(errSignals):
                     for signal in sorted(errSignals):
-                        signalRaw = signal[:-len("TmrError"+group)]
+                        signalRaw = signal[:-len(self.tmrErrorGroupName + group)]
                         if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
                             self.logger.debug("Removing signal '%s' from tmrError", signal)
                             continue
