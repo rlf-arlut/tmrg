@@ -2,13 +2,13 @@
 `define INIT_DELAY #2
 `define CONST_VAL 0
 
-module macro02(data, clk, out);
+module macro02();
 	parameter INIT = 0;
-	parameter WIDTH = 4;
+	parameter WIDTH = 2;
 	
-	input [WIDTH-1:0] data;
+	reg [WIDTH-1:0] data;
 	input clk;
-	output reg [WIDTH-1:0] out;
+	reg [WIDTH-1:0] out;
 
 	initial data <= #`INIT_DELAY_NUM INIT;
 	initial data <= # `INIT_DELAY_NUM INIT;
