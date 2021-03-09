@@ -66,6 +66,7 @@ simpleTests=(
   "verilog/tmr2.v",
   "verilog/assigment.v",
   "verilog/compDirectives.v",
+  "verilog/compDirectives2.v",
   "verilog/fsm01.v",
   "verilog/hier03.v",
   "verilog/instTmrError.v",
