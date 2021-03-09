@@ -249,9 +249,9 @@ class VerilogParser:
 
         delayOrEventControl = delay | eventControl | macroInArg
 
-        #Ugly fix to circumvent bug in blocking assignment with a single macro (see also verilog_formatter.py:_format_assgnmt)
+        #Ugly fix to circumvent bug in blocking assignment with a single macro
         def duplicate(toks):
-            toks = [toks[0],toks[0]]
+            toks = toks[0]+ParseResults("",[])
             return toks
 
         self.assgnmt   = (( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr) ) |
