@@ -124,6 +124,7 @@ simpleTests=(
   "verilog/default_nettype.v",
   "verilog/compDirectivesComment.v",
   "verilog/macro01.v",
+  "verilog/macro02.v",
 )
 
 
