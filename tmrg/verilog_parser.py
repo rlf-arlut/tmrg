@@ -243,14 +243,23 @@ class VerilogParser:
                      Word(alphanums+"`$_") | #identifier |
                      ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" )
                    ).setName("delayArg")
-        delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")
-        delayOrEventControl = delay | eventControl
+        delay = Group( ("#" + delayArg) ).setName("delay").setResultsName("delay")
 
-        self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
-                             + Group(self.expr) ).setResultsName( "assgnmt" )
+        macroInArg = Regex("`[a-zA-Z0-9_\$]+").setResultsName("macroInArg") 
 
-        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay")            + Group(self.expr) ) |
-                          ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl") + Group(self.expr) )
+        delayOrEventControl = delay | eventControl | macroInArg
+
+        #Ugly fix to circumvent bug in blocking assignment with a single macro (see also verilog_formatter.py:_format_assgnmt)
+        def duplicate(toks):
+            toks = [toks[0],toks[0]]
+            return toks
+
+        self.assgnmt   = (( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr) ) |
+                          ( lvalue + Suppress("=") + Group(macroInArg).setParseAction(duplicate) )
+                         ).setResultsName( "assgnmt" )
+
+        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr) ) |
+                          ( lvalue + Suppress("<=") + Group(macroInArg) )
                          ).setResultsName( "nbassgnmt" )
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")

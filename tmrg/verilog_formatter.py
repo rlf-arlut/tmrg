@@ -500,11 +500,11 @@ class VerilogFormatter:
 
     def _format_NbAssgnmt(self, tokens, i=""):
         lval = self.format(tokens[0])
-        delay = self.format(tokens[1])
-        if delay != "":
-            delay += " "
+        delayOrEventControl = self.format(tokens[1])
+        if delayOrEventControl != "":
+            delayOrEventControl += " "
         expr = self.format(tokens[2])
-        oStr = "%s <= %s%s;" % (lval, delay, expr)
+        oStr = "%s <= %s%s;" % (lval, delayOrEventControl, expr)
 
         return oStr
 
@@ -557,7 +557,7 @@ class VerilogFormatter:
         return self._format_paramdecl(tokens)
 
     def _format_delayOrEventControl(self, tokens, i=""):
-        oStr = ""
+        oStr = "".join(tokens[0])
         return oStr
 
     def _format_blockName(self, tokens, i=""):
@@ -585,7 +585,8 @@ class VerilogFormatter:
     def _format_assgnmt(self, tokens, i=""):
         oStr = ""
         lvalue = self.format(tokens[0])
-        delayOrEventControl = self.format(tokens[1])+" "
+        #"".join(tokens[1]) is used together with the 'duplicate' fix in verilog_parser.py
+        delayOrEventControl = self.format("".join(tokens[1]))+" "
         expr = self.format(tokens[2])
 
         oStr = "%s = %s%s" % (lvalue, delayOrEventControl, expr)
