@@ -259,7 +259,7 @@ class VerilogParser:
                          ).setResultsName( "assgnmt" )
 
         self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr) ) |
-                          ( lvalue + Suppress("<=") + Group(macroInArg) )
+                          ( lvalue + Suppress("<=") + Group(macroInArg).setParseAction(duplicate)  )
                          ).setResultsName( "nbassgnmt" )
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
