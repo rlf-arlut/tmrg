@@ -18,7 +18,8 @@ regression_ubuntu:
    stage: test
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
    script: 
-        - python --version
+        - python3 --version
+        - python2 --version
         - source etc/tmrg.sh
         - tmrg --help
         - cd tests/
