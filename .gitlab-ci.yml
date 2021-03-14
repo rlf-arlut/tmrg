@@ -16,7 +16,7 @@ stages:
 #regression testing
 regression_ubuntu:
    stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg_ubuntu20
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
    script: 
         - python --version
         - source etc/tmrg.sh
