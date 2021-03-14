@@ -125,6 +125,7 @@ simpleTests=(
   "verilog/compDirectivesComment.v",
   "verilog/macro01.v",
   "verilog/macro02.v",
+  "verilog/macro03.v",
 )
 
 
