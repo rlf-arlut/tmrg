@@ -232,8 +232,10 @@ class VerilogParser:
         release    = Keyword("release")
         assign     = Keyword("assign").setResultsName("keyword")
 
+        macroInArg = Regex("`[a-zA-Z0-9_\$]+").setResultsName("macroInArg") 
+
         eventExpr = Forward()
-        eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
+        eventTerm = Group ("*" | ( Optional (posedge | negedge | macroInArg) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
             Group( (delimitedList( eventTerm , (or_|",") )).setResultsName("delimitedOrList") )
             )
@@ -244,8 +246,6 @@ class VerilogParser:
                      ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" )
                    ).setName("delayArg")
         delay = Group( ("#" + delayArg) ).setName("delay").setResultsName("delay")
-
-        macroInArg = Regex("`[a-zA-Z0-9_\$]+").setResultsName("macroInArg") 
 
         delayOrEventControl = delay | eventControl | macroInArg
 
