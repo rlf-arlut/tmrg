@@ -1595,7 +1595,7 @@ class TMR(VerilogElaborator):
                 else:
                     oStr += "\n"
             else:
-                oStr = "File is NOT under version control!\n"
+                oStr = "Git SHA           : File not in git repository!\n"
 
             t = os.path.getmtime(fname)
             oStr += "Modification time : %s\n" % datetime.datetime.fromtimestamp(t)
