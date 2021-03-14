@@ -39,10 +39,10 @@ def runCommand(cmd, cwd):
     try:
         p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         out, err = p.communicate()
-    except OSError as err:
+    except OSError as exception:
         self.logger.info("Error running command '%s'" % cmd)
-        self.logger.info(str(err))
-        out, err = "", str(err)
+        self.logger.info(str(exception))
+        out, err = "", str(exception)
 
     return out, err
 
@@ -51,7 +51,7 @@ def tmrg_version():
     if tmrg_version.str == "":
         d = os.path.dirname(__file__)
         tmrg_version.str, errors = runCommand('git rev-parse HEAD', cwd=d)
-        tmrg_version.str = tmrg_version.str.rstrip()
+        tmrg_version.str = tmrg_version.str.rstrip().decode("utf-8")
     return tmrg_version.str
 
 
