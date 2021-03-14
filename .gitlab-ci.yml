@@ -16,12 +16,8 @@ stages:
 #regression testing
 regression_ubuntu:
    stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
-#   image: ubuntu:latest
+   image: gitlab-registry.cern.ch/tmrg/tmrg_ubuntu20
    script: 
-#        - apt-get update -y
-#        - apt-get install iverilog python-coverage -y
-#        - apt-get install build-essential -y
         - source etc/tmrg.sh
         - tmrg --help
         - cd tests/
