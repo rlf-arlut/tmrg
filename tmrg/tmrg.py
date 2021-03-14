@@ -1584,106 +1584,18 @@ class TMR(VerilogElaborator):
         HLEN = 100
         header = "/"+("*"*HLEN)+"\n"
 
-        def runCommand(cmd):
-            try:
-                p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                out, err = p.communicate()
-            except OSError as err:
-                self.logger.info("Error running command '%s'" % cmd)
-                self.logger.info(str(err))
-                out, err = "", str(err)
-
-            return out, err
-
-        def getSvnInfo(fname):
-            out, err = runCommand("svn info %s" % fname)
-            if len(err) > 0:
-                return False, ""
-            return True, out
-
-        def getSosInfo(fname):
-            out, err = runCommand(
-                'soscmd status -f%%T\\t%%S\\t%%C\\t%%N\\t%%R\\t%%L\\t%%V\\t%%P\\t%%A\\t%%I\\t%%O %s' % fname)
-            if len(err) > 0:
-                return False, ""
-            try:
-                info = out.split("\n")[1]
-                info = info.split("\t")
-                oStr = "Type of the object          : "
-                if info[0] == 'f':
-                    oStr += "File"
-                if info[0] == 'p':
-                    oStr += "Package"
-                if info[0] == 'd':
-                    oStr += "Directory"
-                if info[0] == 's':
-                    oStr += "Symbolic Link"
-                if info[0] == 'F':
-                    oStr += "Reference File"
-                if info[0] == 'P':
-                    oStr += "Reference Package"
-                if info[0] == 'D':
-                    oStr += "Reference Dir"
-                if info[0] == 'S':
-                    oStr += "Reference Symbolic Link"
-
-                oStr += "\nRevision number             : %s" % info[6]
-                if info[4] == '-':
-                    oStr += "\n                              Workarea has  the latest revision"
-                if info[4] == 'N':
-                    oStr += "\n                              Not using latest revision i.e a newer revision exists in the repository"
-
-                if info[5] == '-':
-                    oStr += "\n                              Current revision of object matches RSO."
-                if info[5] == 'R':
-                    oStr += "\n                              Current revision of object DOES NOT match the RSO"
-                oStr += "\nPath of object              : %s" % info[7]
-                oStr += "\nAuthor name                 : %s" % info[8]
-
-                oStr += "\nCheck in/out time           : %s" % info[9]
-                oStr += "\nCheck in/out log            : %s" % info[10]
-
-                oStr += "\nState of the object         : "
-                if info[1] == 'O':
-                    oStr += "Checked out"
-                if info[1] == '-':
-                    oStr += "Checked In"
-                if info[1] == 'W':
-                    oStr += "Checked out without Lock"
-                if info[1] == 'N':
-                    oStr += "Unpopulated"
-                if info[1] == 'X':
-                    oStr += "Read access denied"
-                if info[1] == '?':
-                    oStr += "Unmanaged"
-
-                oStr += "\nChange status of the object : "
-                if info[2] == 'M':
-                    oStr += "Modified in this workarea"
-                if info[2] == '!':
-                    oStr += "Deleted in workarea"
-                if info[2] == '-':
-                    oStr += "Not modified"
-                if info[2] == '?':
-                    oStr += "Not applicable"
-
-                oStr += "\nLock status of the object   : "
-                if info[3] == 'L':
-                    oStr += "Locked"
-                if info[3] == '-':
-                    oStr += "Not locked"
-                if info[3] == '?':
-                    oStr += "Not applicable"
-            except:
-                oStr = "Error during processing SOS data"
-
-            return True, oStr
-
         def getRevInfo(fname):
-            svn, svnlog = getSvnInfo(fname)
-            if svn:
-                return "File under SVN control.\n"+svnlog
-            oStr = "File is NOT under version control!\n"
+            git_version, errors = runCommand('git rev-parse HEAD')
+            if git_version:
+                oStr = "Git SHA           : %s" % git_version.rstrip().decode("utf-8")
+                git_status, errors = runCommand('git status --short %s'%fname)
+                git_status = git_status.rstrip().decode("utf-8")
+                if git_status:
+                    oStr += " (%s)\n" % git_status
+                else:
+                    oStr += "\n"
+            else:
+                oStr = "File is NOT under version control!\n"
 
             t = os.path.getmtime(fname)
             oStr += "Modification time : %s\n" % datetime.datetime.fromtimestamp(t)
