@@ -158,7 +158,7 @@ class VerilogParser:
         basedNumber = Combine( Optional( Word(nums + "_") ) + base + Word(hexnums+"xXzZ"),
                                joinString="", adjacent=False ).setResultsName("basedNumber")
         number = ( basedNumber | \
-                   Regex(r"[+-]?[0-9_]+(\.[0-9_]*)?([Ee][+-]?[0-9_]+)?") \
+                   Regex(r"[+-]?[0-9]+(\.[0-9_]*)?([0-9_]*)?([Ee][+-]?[0-9_]+)?") \
                   ).setName("numeric")
         self.expr = Forward()
 
