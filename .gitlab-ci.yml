@@ -3,7 +3,6 @@ stages:
   - build
   - deploy
 
-#regression testing
 regression_ubuntu18_python2:
    stage: test
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
@@ -18,20 +17,7 @@ regression_ubuntu18_python2:
         - cd tests/
         - ./scripts/regression.py
 
-#regression testing
-regression_ubuntu:
-   stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
-   script: 
-        - python3 --version
-        - python2 --version
-        - source etc/tmrg.sh
-        - tmrg --help
-        - cd tests/
-        - ./scripts/regression.py
-
-#regression testing
-regression_ubuntu_venv:
+regression_ubuntu20_python3:
    stage: test
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
    script: 
