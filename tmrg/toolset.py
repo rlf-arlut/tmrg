@@ -4,6 +4,7 @@ import webbrowser
 from string import Template
 import os
 import subprocess
+import logging
 
 epilog = """
 TMRG toolset:
@@ -35,15 +36,14 @@ def startDocumentation():
     webbrowser.open_new(docInx)
 
 
-def runCommand(cmd, cwd):
+def runCommand(cmd, cwd=None):
     try:
         p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
         out, err = p.communicate()
-    except OSError as err:
-        self.logger.info("Error running command '%s'" % cmd)
-        self.logger.info(str(err))
-        out, err = "", str(err)
-
+    except OSError as exception:
+        logging.info("Error running command '%s'" % cmd)
+        logging.info(str(exception))
+        out, err = "", str(exception)
     return out, err
 
 
@@ -51,7 +51,7 @@ def tmrg_version():
     if tmrg_version.str == "":
         d = os.path.dirname(__file__)
         tmrg_version.str, errors = runCommand('git rev-parse HEAD', cwd=d)
-        tmrg_version.str = tmrg_version.str.rstrip()
+        tmrg_version.str = tmrg_version.str.rstrip().decode("utf-8")
     return tmrg_version.str
 
 
