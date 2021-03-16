@@ -33,7 +33,7 @@ regression_ubuntu_venv:
    script: 
         - python3 -m venv venv
         - source venv/bin/activate
-        - python --version
+        - pip install -e .
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
