@@ -8,8 +8,11 @@ regression_ubuntu18_python2:
    stage: test
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
    script: 
+        - virtualenv venv
         - which python
-        - source etc/tmrg.sh
+        - source venv/bin/activate
+        - pip install -e .
+        - pip install coverage
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
