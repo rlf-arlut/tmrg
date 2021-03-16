@@ -19,6 +19,7 @@ if not os.path.exists(tmpDir):
     os.makedirs(tmpDir)
 
 def getstatusoutput(cmd):
+    logging.debug(cmd)
     p = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout, stderr = p.communicate()
     return int(p.returncode), stdout.decode('utf8')
@@ -218,7 +219,7 @@ mustFailTests=(
  )
 
 
-runCov = "python-coverage run -a --include '*verilog*,*tmrg*,*seeg*,*plag*' "
+runCov = "coverage run -a --omit=*/venv/* --include '*verilog*,*tmrg*,*seeg*,*plag*' "
 
 def runSimpleTests():
     srcFiles=[]
@@ -289,12 +290,12 @@ def runSimpleTests():
     return errors
 def coverageClean():
     logging.info("Cleanning coverate reports")
-    cmd = "python-coverage erase"
+    cmd = "coverage erase"
     cmd = "echo x"
     err, outLog = getstatusoutput(cmd)
 
 def coverageSummary():
-    cmd = "python-coverage report -m "
+    cmd = "coverage report -m "
     err,outLog = getstatusoutput(cmd)
     logging.info("")
     logging.info("Coverage")
