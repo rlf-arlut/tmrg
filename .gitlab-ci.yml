@@ -1,7 +1,7 @@
 stages:
   - test
-  - doc
-  - deploy
+  - doc_build
+  - doc_deploy
 
 regression_ubuntu18_python2:
    stage: test
@@ -32,7 +32,7 @@ regression_ubuntu20_python3:
         - ./scripts/regression.py
 
 doc_build_not_master:
-   stage: doc
+   stage: doc_build
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
@@ -42,7 +42,7 @@ doc_build_not_master:
         - master
 
 doc_build_master:
-   stage: doc
+   stage: doc_build
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
@@ -56,25 +56,17 @@ doc_build_master:
    artifacts:
      paths:
        - public
-     # Make it vanish in 1 hour
      expire_in: 1 hour
    only:
      - master
 
-# Deploy to an EOS folder the contents generated
 deployment:
-  # Executed during the deploy stage
-  stage: deploy
-  # Only when the master branch is pushed
+  stage: doc_deploy
   only:
     - master
-  # Custom docker image providing the needed tools to deploy in EOS
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   script:
-  # Script that performs the deploy to EOS. Makes use of the variables defined in the project
-  # It will copy the generated content to the folder in EOS
   - deploy-eos
-  # do not run any globally defined before_script or after_script for this step
   before_script: []
   after_script: []
 
