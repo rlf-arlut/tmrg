@@ -4,6 +4,17 @@ stages:
   - deploy
 
 #regression testing
+regression_ubuntu18_python2:
+   stage: test
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
+   script: 
+        - which python
+        - source etc/tmrg.sh
+        - tmrg --help
+        - cd tests/
+        - ./scripts/regression.py
+
+#regression testing
 regression_ubuntu:
    stage: test
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
