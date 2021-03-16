@@ -25,6 +25,18 @@ regression_ubuntu:
         - cd tests/
         - ./scripts/regression.py
 
+#regression testing
+regression_ubuntu_venv:
+   stage: test
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
+   script: 
+        - python3 -m venv venv
+        - source venv/bin/activate
+        - python --version
+        - tmrg --help
+        - cd tests/
+        - ./scripts/regression.py
+
 #this is only to check if the documentation can be build
 doc_build_not_master:
    stage: test
