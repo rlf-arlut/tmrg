@@ -9,8 +9,9 @@ regression_ubuntu18_python2:
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
    script: 
         - virtualenv venv
-        - which python
         - source venv/bin/activate
+        - which python
+        - python --version
         - pip install -e .
         - pip install coverage
         - tmrg --help
@@ -36,6 +37,8 @@ regression_ubuntu_venv:
    script: 
         - python3 -m venv venv
         - source venv/bin/activate
+        - which python
+        - python --version
         - pip install -e .
         - pip install coverage
         - tmrg --help
