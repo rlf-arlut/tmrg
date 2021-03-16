@@ -1,6 +1,6 @@
 stages:
   - test
-  - build
+  - doc
   - deploy
 
 regression_ubuntu18_python2:
@@ -31,10 +31,9 @@ regression_ubuntu20_python3:
         - cd tests/
         - ./scripts/regression.py
 
-#this is only to check if the documentation can be build
 doc_build_not_master:
-   stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
+   stage: doc
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
         - make latexpdf
@@ -43,8 +42,8 @@ doc_build_not_master:
         - master
 
 doc_build_master:
-   stage: build
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
+   stage: doc
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
         - make latexpdf
