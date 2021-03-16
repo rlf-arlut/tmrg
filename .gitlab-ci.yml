@@ -1,36 +1,39 @@
-#image: python:2.7
-
-#before_script:
-#  - uname -r
-#  - which python
-#  - python --version
-#  - apt-get update -y
-#  - apt-get install iverilog python-coverage -y
-#  - source etc/tmrg.sh
-
 stages:
   - test
-  - build
-  - deploy
+  - doc_build
+  - doc_deploy
 
-#regression testing
-regression_ubuntu:
+regression_ubuntu18_python2:
    stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
-#   image: ubuntu:latest
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
    script: 
-#        - apt-get update -y
-#        - apt-get install iverilog python-coverage -y
-#        - apt-get install build-essential -y
-        - source etc/tmrg.sh
+        - virtualenv venv
+        - source venv/bin/activate
+        - which python
+        - python --version
+        - pip install -e .
+        - pip install coverage
         - tmrg --help
         - cd tests/
         - ./scripts/regression.py
 
-#this is only to check if the documentation can be build
-doc_build_not_master:
+regression_ubuntu20_python3:
    stage: test
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
+   script: 
+        - python3 -m venv venv
+        - source venv/bin/activate
+        - which python
+        - python --version
+        - pip install -e .
+        - pip install coverage
+        - tmrg --help
+        - cd tests/
+        - ./scripts/regression.py
+
+doc_build_not_master:
+   stage: doc_build
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
         - make latexpdf
@@ -38,29 +41,9 @@ doc_build_not_master:
    except:
         - master
 
-#doc_build_not_master:
-#   stage: build
-#   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
-#   script: 
-#        - cd doc
-#        - make html
-#        - make latexpdf
-#        - cp -rf web ../public
-#        - cd build
-#        - mv html tmrg
-#        - zip -r tmrg_doc_html.zip tmrg
-#        
-#   artifacts:
-#     paths:
-#       - doc/build/latex/tmrg.pdf
-#       - doc/build/tmrg_doc_html.zip
-#       - public
-#  e:
-#    - master
-
 doc_build_master:
-   stage: build
-   image: gitlab-registry.cern.ch/tmrg/tmrg:latest 
+   stage: doc_build
+   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
    script: 
         - cd doc
         - make latexpdf
@@ -73,66 +56,18 @@ doc_build_master:
    artifacts:
      paths:
        - public
-     # Make it vanish in 1 hour
      expire_in: 1 hour
    only:
      - master
 
-#build_tarbal:
-#   stage: build
-#   image: gitlab-registry.cern.ch/skulis/tmrg:latest 
-#   script: 
-#   artifacts:
-#     paths:
-#       - tmrg.tgz
-#     # Make it vanish in 1 hour
-#     expire_in: 1 hour
-#   only:
-#     - master
-
-
-# Deploy to an EOS folder the contents generated
 deployment:
-  # Executed during the deploy stage
-  stage: deploy
-  # Only when the master branch is pushed
+  stage: doc_deploy
   only:
     - master
-  # Custom docker image providing the needed tools to deploy in EOS
   image: gitlab-registry.cern.ch/ci-tools/ci-web-deployer:latest
   script:
-  # Script that performs the deploy to EOS. Makes use of the variables defined in the project
-  # It will copy the generated content to the folder in EOS
   - deploy-eos
-  # do not run any globally defined before_script or after_script for this step
   before_script: []
   after_script: []
-
-#        - apt-get update -y
-#        - apt-get -y install sphinx-common make texlive-latex-base texlive-latex-recommended texlive-fonts-recommended texlive-latex-extra
-
-#test_centos6:
-#   image: centos:6
-#   script: 
-#        - yum -y install  python-coverage iverilog
-##        - apt-get install iverilog python-coverage -y
-##        - apt-get install build-essential -y
-#        - source etc/tmrg.sh
-#        - tmrg --help
-#        - cd tests/
-#        - ./scripts/regression.py
-##        - make
-
-#test_slc6:
-#    image: cern/slc6-base
-#    script: 
-#        - yum -y install  python-coverage
-##        - apt-get install iverilog python-coverage -y
-##        - apt-get install build-essential -y
-#        - source etc/tmrg.sh
-#        - tmrg --help
-#        - cd tests/
-#        - ./scripts/regression.py
-##        - make
 
 # coverage regexp : ^\[INFO\s+\]\s+\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
