@@ -269,7 +269,9 @@ def runSimpleTests():
             logging.info("  | Error code %d"%err)
             for l in outLog.split("\n"):
                 logging.info("  | %s"%l)
-
+            with open(outTmr) as fin:
+                for line_index, line in enumerate(fin.readlines()):
+                    logging.info("[%3d] %s", line_index + 1, line)
 
         if absTMR in tmrFiles:
             logging.info("File '%s' exists. Checking ..."%absTMR)
