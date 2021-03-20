@@ -1960,7 +1960,7 @@ def main():
                 os.rmdir(options.bugReportDir)
             except:
                 pass
-
+        sys.exit(0)
     except ErrorMessage as e:
         for line in str(e).split("\n"):
             logging.error(line)
