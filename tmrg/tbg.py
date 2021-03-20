@@ -289,12 +289,13 @@ def main():
         tbg.parse()
         tbg.elaborate(allowMissingModules=True)
         tbg.generate()
+        sys.exit(0)
     except ErrorMessage as er:
         logging.error(er)
-        os._exit(1)
+        sys.exit(1)
     except OptParseError as er:
         logging.error(er)
-        os._exit(2)
+        sys.exit(2)
 
 
 if __name__ == "__main__":
