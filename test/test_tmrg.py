@@ -149,9 +149,8 @@ class TestTmrgOnFile():
             "verilog/compDirectivesComment.v",
         ]
     )
+
     def test_tmrg_on_file(self, cli_args, capfd, verilog_file):
-#        /home/skulis/work/tmrg/test
-#        assert validate_data(file)
       file_name = os.path.join(os.path.dirname(__file__), verilog_file)
       cli_args.add_args([file_name])
       assert not run_tmrg()
