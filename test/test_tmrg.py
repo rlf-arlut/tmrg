@@ -35,7 +35,8 @@ def run_tmrg():
     return retval.value.code
 
 def test_no_arguments(capfd):
-    """Generate error message and return code without manifest"""
-    assert not run_tmrg()  # TODO / BUG: Why does tmake not return 1 when this error is encountered?
+    """Generate error message and return code without arguments"""
+    assert run_tmrg()
     expect_in_stderr("No modules found. Please refer to the documentation", capfd)
+
 
