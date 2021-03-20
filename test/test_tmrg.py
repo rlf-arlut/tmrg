@@ -1,50 +1,19 @@
 import os
 import pytest
-
-@pytest.fixture(autouse=True)
-def tmp_run_dir(monkeypatch, tmp_path):
-    """Fixture running each test in an isolated, temporary directory"""
-    monkeypatch.chdir(tmp_path)
-
-class CliArgPatcher:
-    def __init__(self, monkeypatch):
-        self._monkeypatch = monkeypatch
-        self._args = ["tmrg"]
-        self._monkeypatch.setattr("sys.argv", self._args)
-    
-    def add_args(self, arg_list):
-        self._args += arg_list
+from .common import *
+from tmrg.tmrg import main as tmrg_main
 
 @pytest.fixture
-def cli_args(monkeypatch):
-    patcher = CliArgPatcher(monkeypatch)
-    yield patcher
+def tmrg(monkeypatch):
+    return CliArgPatcher(monkeypatch, "tmrg", main_function=tmrg_main)
 
-
-def expect_in_stderr(string, capture):
-    assert string in str(capture.readouterr())
-
-def expect_not_in_stderr(string, capture):
-    assert string not in str(capture.readouterr())
-
-def run_tmrg():
-    """Execute tmrg main, verify it exists using sys.exit(), return exit code"""
-    from tmrg.tmrg import main as tmrg_main
-    with pytest.raises(SystemExit) as retval:
-        tmrg_main()
-    return retval.value.code
-
-def test_no_arguments(capfd):
-    """Generate error message and return code without arguments"""
-    assert run_tmrg()
+def test_tmrg_no_arguments(tmrg, capfd):
+    assert tmrg()
     expect_in_stderr("No modules found. Please refer to the documentation", capfd)
 
-def tewst_missing_file(cli_args, capfd):
-    """Generate error message and return code without arguments"""
-    cli_args.add_args(["not_existing.v"])
-    assert not run_tmrg()
+def test_tmrg_missing_file(tmrg, capfd):
+    assert tmrg(["not_existing.v"])
     expect_in_stderr("File or directory does not exists", capfd)
-
 
 class TestTmrgOnFile():
     @pytest.mark.parametrize(
@@ -150,9 +119,7 @@ class TestTmrgOnFile():
         ]
     )
 
-    def test_tmrg_on_file(self, cli_args, capfd, verilog_file):
+    def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
       file_name = os.path.join(os.path.dirname(__file__), verilog_file)
-      cli_args.add_args([file_name])
-      assert not run_tmrg()
-
+      assert not tmrg([file_name])
 
