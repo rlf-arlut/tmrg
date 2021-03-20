@@ -1,0 +1,7 @@
+[run]
+omit =
+       tmrg/gen_tmrg_libs.py
+       tmrg/pyparsing152.py
+       tmrg/release.py
+       tmrg/prettytable.py
+       tmrg/pyparsing241.py 
