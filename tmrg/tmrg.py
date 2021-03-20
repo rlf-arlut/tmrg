@@ -1970,7 +1970,7 @@ def main():
             for ll in l.split("\n"):
                 logging.debug(ll)
         logging.debug(ll)
-        os._exit(1)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
