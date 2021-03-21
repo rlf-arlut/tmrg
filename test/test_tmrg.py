@@ -19,6 +19,42 @@ def test_tmrg_simple_verilog(tmrg, capsys):
     assert not tmrg([file_in_test_dir("verilog/always.v")])
     assert_output_streams(capsys)
 
+def test_tmrg_multiple_top_files(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/topModule.v")])
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["The design has multiple top cells"])
+
+def test_tmrg_multiple_top_modules_specify(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/topModule.v"), "--top-module=m1"])
+    assert_output_streams(capfd)
+
+def test_tmrg_include(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/include.v"), "--include", "--inc-dir", file_in_test_dir("verilog")])
+    assert_output_streams(capfd)
+
+def test_tmrg_include_lib(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/libtest.v"), "--lib", file_in_test_dir("verilog/lib.v")])
+    assert_output_streams(capfd)
+
+def test_tmrg_stats(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--stats"])
+    assert_output_streams(capfd, expect_stdout_empty=False, expect_in_stdout=["Total number of files parsed:", "Total number of lines parsed"])
+
+def test_tmrg_warning_left_hand_side_concatenation(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/leftSideConcatenation.v")])
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Unsupported syntax : concatenation on left hand side of the assignment", "Output may be incorrect."])
+
+# FIXME
+def disable_test_tmrg_output_log(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--log", "fsm01.log", "-v" ])
+    assert_output_streams(capfd, expect_stderr_empty=False)
+    assert os.path.isfile("fsm01.log")
+
+def test_tmrg_hierahical(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/hier/m1.v"), file_in_test_dir("verilog/hier/m2.v"), file_in_test_dir("verilog/hier/m3.v"), file_in_test_dir("verilog/hier/m4.v"), file_in_test_dir("verilog/hier/m5.v"), file_in_test_dir("verilog/hier/top.v")])
+    assert_output_streams(capfd)
+
+# FIXME  ("tmrg","--generate-report %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
+
 class TestTmrgOnSingleFile():
     @pytest.mark.parametrize(
         'verilog_file', [
