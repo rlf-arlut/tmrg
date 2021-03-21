@@ -9,5 +9,5 @@ def tbg(monkeypatch):
 
 def test_tbg_no_arguments(tbg, capfd):
     assert tbg()
-    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify netlist file name"])
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify verilog file name"])
 

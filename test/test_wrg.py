@@ -9,5 +9,5 @@ def wrg(monkeypatch):
 
 def test_wrg_no_arguments(wrg, capfd):
     assert wrg()
-    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify netlist file name"])
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify verilog file name"])
 
