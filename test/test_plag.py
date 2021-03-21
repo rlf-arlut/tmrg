@@ -24,7 +24,7 @@ def test_plag_help(plag, capfd):
     assert_output_streams(capfd, expect_stdout_empty=False, expect_in_stdout=["Usage: plag", "Options:", "--verbose"])
 
 def test_plag_invalid_option(plag, capfd):
-    assert not plag(["--no-such-option"])
+    assert plag(["--no-such-option"])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["no such option"])
 
 def test_plag_invalid_option(plag, capfd):
