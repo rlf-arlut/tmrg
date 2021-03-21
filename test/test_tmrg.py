@@ -9,11 +9,11 @@ def tmrg(monkeypatch):
 
 def test_tmrg_no_arguments(tmrg, capfd):
     assert tmrg()
-    expect_in_stderr("No modules found. Please refer to the documentation", capfd)
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["No modules found. Please refer to the documentation"])
 
 def test_tmrg_missing_file(tmrg, capfd):
     assert tmrg(["not_existing.v"])
-    expect_in_stderr("File or directory does not exists", capfd)
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["File or directory does not exists"])
 
 class TestTmrgOnFile():
     @pytest.mark.parametrize(
@@ -120,6 +120,7 @@ class TestTmrgOnFile():
     )
 
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
-      file_name = os.path.join(os.path.dirname(__file__), verilog_file)
-      assert not tmrg([file_name])
+      assert not tmrg([file_in_test_dir(verilog_file)])
+      assert_output_streams(capfd)
+
 

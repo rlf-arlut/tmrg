@@ -9,9 +9,5 @@ def seeg(monkeypatch):
 
 def test_seeg_no_arguments(seeg, capfd):
     assert seeg()
-    expect_in_stderr("You have to specify netlist file name", capfd)
-
-def test_seeg_missing_file(seeg, capfd):
-    assert seeg(["not_existing.v"])
-    expect_in_stderr("File or directory does not exists", capfd)
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify netlist file name"])
 
