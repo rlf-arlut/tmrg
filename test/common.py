@@ -23,13 +23,32 @@ class CliArgPatcher:
 # Helper functions
 #
 
-def expect_in_stdout(string, capture):
+def assert_output_streams(
+    capture,
+    expect_stdout_empty=True,
+    expect_stderr_empty=True,
+    expect_in_stdout=[],
+    expect_in_stderr=[],
+    forbid_in_stdout=[],
+    forbid_in_stderr=[]):
+
     out, err = capture.readouterr()
-    assert string in out
 
-def expect_in_stderr(string, capture):
-    assert string in str(capture.readouterr())
+    assert bool(out) ^ expect_stdout_empty
 
-def expect_not_in_stderr(string, capture):
-    assert string not in str(capture.readouterr())
+    assert bool(err) ^ expect_stderr_empty
 
+    for string in expect_in_stdout:
+        assert string in out
+
+    for string in expect_in_stderr:
+        assert string in err
+
+    for string in forbid_in_stdout:
+        assert string not in out
+
+    for string in forbid_in_stderr:
+        assert string not in err
+
+def file_in_test_dir(file_name):
+    return os.path.join(os.path.dirname(__file__), file_name)
