@@ -27,7 +27,7 @@ def test_plag_invalid_option(plag, capfd):
     assert plag(["--no-such-option"])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["no such option"])
 
-def test_plag_invalid_option(plag, capfd):
+def test_plag_error_in_verilog(plag, capfd):
     file_name = os.path.join(os.path.dirname(__file__), "verilog/verilogError.v")
     assert plag([file_name])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Error during parsing"])
@@ -45,10 +45,6 @@ def test_plag_working_exclude(plag, capfd):
     assert not plag([file_in_test_dir("netlist/accTMR.v"), '-l', file_in_test_dir("libs/tcbn65lp.v"), '--exclude', file_in_test_dir("cnf/exclude.txt"), '--cells=DFCNQD1'])
     assert_output_streams(capfd)
     assert os.path.isfile("tmrPlace.tcl")
-
-def test_plag_missing_library(plag, capfd):
-    assert plag([file_in_test_dir("netlist/accTMR.v")])
-    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Command line specified config file does not exists"])
 
 def test_plag_missing_library(plag, capfd):
     assert plag([file_in_test_dir("netlist/accTMR.v")])
