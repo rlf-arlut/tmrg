@@ -1886,16 +1886,16 @@ def main():
     dirGroup.add_option("",   "--simplify-verilog",   dest="simplify_verilog",
                         action="store_true", default=False,  help="Simplifies generated verilog code to enable SET injection (requires pyosys)")
     parser.add_option_group(tmrGroup)
-
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.DEBUG)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+    exit_code = 0
     try:
         (options, args) = parser.parse_args()
 
-        logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
-        rootLogger = logging.getLogger()
-        rootLogger.setLevel(logging.DEBUG)
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(logFormatter)
-        rootLogger.addHandler(consoleHandler)
 
         if options.verbose == 0:
             consoleHandler.setLevel(logging.WARNING)
@@ -1959,7 +1959,6 @@ def main():
                 os.rmdir(options.bugReportDir)
             except:
                 pass
-        sys.exit(0)
     except ErrorMessage as e:
         for line in str(e).split("\n"):
             logging.error(line)
@@ -1969,7 +1968,10 @@ def main():
             for ll in l.split("\n"):
                 logging.debug(ll)
         logging.debug(ll)
-        sys.exit(1)
+        rootLogger.handlers = []
+        exit_code = 1
+    rootLogger.handlers = []
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":

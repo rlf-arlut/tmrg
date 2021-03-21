@@ -189,8 +189,7 @@ def main():
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
-
-
+    exit_code = 0
     try:
         (options, args) = parser.parse_args()
 
@@ -212,14 +211,14 @@ def main():
         tbg.parse()
         tbg.elaborate(allowMissingModules=True)
         tbg.generate()
-        sys.exit(0)
     except ErrorMessage as er:
         logging.error(er)
-        sys.exit(1)
+        exit_code = 1
     except OptParseError as er:
         logging.error(er)
-        sys.exit(2)
-
+        exit_code = 2
+    rootLogger.handlers = []
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()
