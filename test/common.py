@@ -36,10 +36,10 @@ def assert_output_streams(
 
     assert bool(out) ^ expect_stdout_empty, "stderr_lenght:%d stdout_lenght:%d" % (len(err), len(out))
 
-    assert bool(err) ^ expect_stderr_empty, "stderr_lenght:%d stdout_lenght:%d" % (len(err), len(out))
+    assert bool(err) ^ expect_stderr_empty, "stderr_lenght:%d stdout_lenght:%d" % (len(err), len(out)) + err
 
     for string in expect_in_stdout:
-        assert string in out
+        assert string in out, "Dlugosc:" + str(len(out))
 
     for string in expect_in_stderr:
         assert string in err
