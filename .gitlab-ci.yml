@@ -23,7 +23,7 @@ regression_ubuntu20_python3:
   script: 
     - source test/create_venv.sh
     - source venv/bin/activate
-    - python -m pytest
+    - python -m pytest -v
   artifacts:
     reports:
       junit: pytest.xml
