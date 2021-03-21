@@ -3,25 +3,23 @@ stages:
   - doc_build
   - doc_deploy
 
-#regression_ubuntu18_python2:
-#   stage: test
-#   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
-#   script: 
-#        - virtualenv venv
-#        - source venv/bin/activate
-#        - which python
-#        - python --version
-#        - pip install -e .
-#        - pip install coverage
-#        - tmrg --help
-#        - cd tests/
-#        - ./scripts/regression.py
+regression_ubuntu18_python2:
+  stage: test
+  image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu18
+  script: 
+    - source test/create_venv_python3.sh
+    - source venv/bin/activate
+    - python -m pytest -v
+  artifacts:
+    reports:
+      junit: pytest.xml
+      cobertura: coverage.xml
 
 regression_ubuntu20_python3:
   stage: test
   image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_ubuntu20
   script: 
-    - source test/create_venv.sh
+    - source test/create_venv_python3.sh
     - source venv/bin/activate
     - python -m pytest -v
   artifacts:
