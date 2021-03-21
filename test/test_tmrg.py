@@ -15,7 +15,11 @@ def test_tmrg_missing_file(tmrg, capfd):
     assert tmrg(["not_existing.v"])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["File or directory does not exists"])
 
-class TestTmrgOnFile():
+def test_tmrg_simple_verilog(tmrg, capsys):
+    assert not tmrg([file_in_test_dir("verilog/always.v")])
+    assert_output_streams(capsys)
+
+class T2estTmrgOnFile():
     @pytest.mark.parametrize(
         'verilog_file', [
             "verilog/always.v",
@@ -122,5 +126,6 @@ class TestTmrgOnFile():
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
       assert not tmrg([file_in_test_dir(verilog_file)])
       assert_output_streams(capfd)
+
 
 
