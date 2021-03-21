@@ -19,7 +19,7 @@ def test_tmrg_simple_verilog(tmrg, capsys):
     assert not tmrg([file_in_test_dir("verilog/always.v")])
     assert_output_streams(capsys)
 
-class T2estTmrgOnFile():
+class TestTmrgOnSingleFile():
     @pytest.mark.parametrize(
         'verilog_file', [
             "verilog/always.v",
@@ -70,7 +70,6 @@ class T2estTmrgOnFile():
             "verilog/notxor.v",
             "verilog/slice01.v",
             "verilog/noports.v",
-            "../examples/slice.v",
             "verilog/tmr3.v",
             "verilog/ifdef.v",
             "verilog/underscore.v",
@@ -83,6 +82,17 @@ class T2estTmrgOnFile():
             "verilog/tmrError04.v",
             "verilog/tmrError05.v",
             "verilog/tmrError06.v",
+            "verilog/tmrErrorExclude.v",
+            "verilog/vectorRange.v",
+            "verilog/generate05.v",
+            "verilog/generate06.v",
+            "verilog/wor01.v",
+            "verilog/wor02.v",
+            "verilog/generate_if.v",
+            "verilog/force_release.v",
+            "verilog/default_nettype.v",
+            "verilog/compDirectivesComment.v",
+            "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
             "../examples/comb05.v",
@@ -110,22 +120,14 @@ class T2estTmrgOnFile():
             "../examples/resetBlock04.v",
             "../examples/vote02.v",
             "../examples/pipelineWithSeuCoutner.v",
-            "verilog/tmrErrorExclude.v",
-            "verilog/vectorRange.v",
-            "verilog/generate05.v",
-            "verilog/generate06.v",
-            "verilog/wor01.v",
-            "verilog/wor02.v",
-            "verilog/generate_if.v",
-            "verilog/force_release.v",
-            "verilog/default_nettype.v",
-            "verilog/compDirectivesComment.v",
         ]
     )
 
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
       assert not tmrg([file_in_test_dir(verilog_file)])
+      basename = os.path.basename(verilog_file)
+      expected_tmr_file = basename.replace(".v", "TMR.v")
       assert_output_streams(capfd)
-
+      assert os.path.isfile(expected_tmr_file)
 
 
