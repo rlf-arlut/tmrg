@@ -9,12 +9,12 @@ def tmp_run_dir(monkeypatch, tmp_path):
 class CliArgPatcher:
     def __init__(self, monkeypatch, tool_name, main_function):
         self._monkeypatch = monkeypatch
-        self._args = [tool_name]
-        self._monkeypatch.setattr("sys.argv", self._args)
+        self._tool_name = tool_name
         self.main_function = main_function
 
     def __call__(self, arg_list=[]):
-        self._args += arg_list
+        self._args = [self._tool_name] + arg_list
+        self._monkeypatch.setattr("sys.argv", self._args)
         with pytest.raises(SystemExit) as retval:
             self.main_function()
         return retval.value.code
