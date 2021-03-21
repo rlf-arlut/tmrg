@@ -183,7 +183,13 @@ def main():
     parser.add_option("",   "--top-module",        dest="top_module",
                       action="store", default="",  help="Specify top module name")
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.WARNING)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+
 
     try:
         (options, args) = parser.parse_args()
