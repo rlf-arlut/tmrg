@@ -20,7 +20,6 @@ import traceback
 import pprint
 import os
 import glob
-import logging
 import filecmp
 import copy
 import time
@@ -101,32 +100,32 @@ class TMR(VerilogElaborator):
         # command line specified config files
         for fname in self.options.config:
             if os.path.exists(fname):
-                self.logger.debug("Loading command line specified config file from %s" % fname)
+                logging.debug("Loading command line specified config file from %s" % fname)
                 self.config.read(fname)
                 if self.options.generateBugReport:
                     bn = os.path.basename(fname)
                     fcopy = os.path.join(self.options.bugReportDir, "cmd_%s.cfg" % bn)
-                    self.logger.debug("Coping  command line specified config file from '%s' to '%s'" % (fname, fcopy))
+                    logging.debug("Coping  command line specified config file from '%s' to '%s'" % (fname, fcopy))
                     shutil.copyfile(fname, fcopy)
             else:
                 raise ErrorMessage("Command line specified config file does not exists at %s" % fname)
         if "tmr_dir" in dir(self.options) and self.options.tmr_dir:
-            self.logger.debug("Setting tmr_dir to %s" % self.options.tmr_dir)
+            logging.debug("Setting tmr_dir to %s" % self.options.tmr_dir)
             self.config.set("tmrg", "tmr_dir", self.options.tmr_dir)
 
         if "rtl_dir" in dir(self.options) and self.options.rtl_dir:
-            self.logger.debug("Setting rtl_dir to %s" % self.options.rtl_dir)
+            logging.debug("Setting rtl_dir to %s" % self.options.rtl_dir)
             self.config.set("tmrg", "rtl_dir", self.options.rtl_dir)
 
         if "tmr_suffix" in dir(self.options) and self.options.tmr_suffix:
-            self.logger.debug("Setting tmr_suffix to %s" % self.options.tmr_suffix)
+            logging.debug("Setting tmr_suffix to %s" % self.options.tmr_suffix)
             self.config.set("tmrg", "tmr_suffix", self.options.tmr_suffix)
 
         if self.config.has_option('tmrg', 'files'):
             files = self.config.get("tmrg", "files").split()
             for file in files:
                 file = file.strip()
-                self.logger.debug("Adding file from config file %s" % file)
+                logging.debug("Adding file from config file %s" % file)
                 self.args.append(file)
 
         if self.config.has_option('tmrg', 'libs'):
@@ -136,7 +135,7 @@ class TMR(VerilogElaborator):
                 if len(file) == 0:
                     continue
                 file = file.strip()
-                self.logger.debug("Adding lib file from config file : %s" % file)
+                logging.debug("Adding lib file from config file : %s" % file)
                 self.libFiles.append(file)
 
         # parse command line constrains
@@ -152,13 +151,13 @@ class TMR(VerilogElaborator):
                 for _id in tokens:
                     if _id.find(".") >= 0:
                         module, net = _id.split(".")
-                        self.logger.info("Command line constrain '%s' for net '%s' in module '%s'" %
+                        logging.info("Command line constrain '%s' for net '%s' in module '%s'" %
                                          (name, net, module))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module] = {}
                         self.cmdLineConstrains[module][net] = tmrVal
                     else:
-                        self.logger.info("Command line constrain '%s' for net '%s'" % (name, net))
+                        logging.info("Command line constrain '%s' for net '%s'" % (name, net))
                         net = _id
                         if not "global" in self.cmdLineConstrains:
                             self.cmdLineConstrains["global"] = {}
@@ -169,7 +168,7 @@ class TMR(VerilogElaborator):
                     tmrVal = True
                 if len(tokens[1]) > 0:
                     for module in tokens[1]:
-                        self.logger.info("Command line constrain '%s' for module '%s' (value:%s)" %
+                        logging.info("Command line constrain '%s' for module '%s' (value:%s)" %
                                          (name, module, str(tmrVal)))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module] = {}
@@ -184,7 +183,7 @@ class TMR(VerilogElaborator):
                     tmrErr = True
                 if len(tokens[1]) > 0:
                     for module in tokens[1]:
-                        self.logger.info("Command line constrain '%s' for module '%s' (value:%s)" %
+                        logging.info("Command line constrain '%s' for module '%s' (value:%s)" %
                                          (name, module, str(tmrErr)))
                         if not module in self.cmdLineConstrains:
                             self.cmdLineConstrains[module] = {}
@@ -200,13 +199,13 @@ class TMR(VerilogElaborator):
                     if not "constraints" in self.cmdLineConstrains[module]:
                         self.cmdLineConstrains[module]["constraints"] = {}
                     self.cmdLineConstrains[module]["constraints"]["dnt"] = True
-                    self.logger.info("Command line constrain '%s' for module '%s')" % (name, module))
+                    logging.info("Command line constrain '%s' for module '%s')" % (name, module))
 
             else:
-                self.logger.warning("Unknown constrain '%s'" % name)
+                logging.warning("Unknown constrain '%s'" % name)
         if len(self.args) == 0:
             rtl_dir = self.config.get("tmrg", "rtl_dir")
-            self.logger.debug("No input arguments specified. All files from rtl_dir (%s) will be parsed." % rtl_dir)
+            logging.debug("No input arguments specified. All files from rtl_dir (%s) will be parsed." % rtl_dir)
             self.args = [rtl_dir]
 
     def __init_tripclicate_callbacks(self):
@@ -216,7 +215,7 @@ class TMR(VerilogElaborator):
             if member.find("_TMR__triplicate_") == 0:
                 token = member[len("_TMR__triplicate_"):].lower()
                 self.triplicator[token] = getattr(self, member)
-                self.logger.debug("Found triplicator for %s" % token)
+                logging.debug("Found triplicator for %s" % token)
 
     def __triplicate_directive_default(self, tokens):
         return []
@@ -247,7 +246,7 @@ class TMR(VerilogElaborator):
                     print(i, "_(2 tmr)_>", str(tokens)[:100])
                 tokens = self.triplicator[name](tokens)
             else:
-                self.logger.debug("No triplicator for %s" % name)
+                logging.debug("No triplicator for %s" % name)
                 newTokens = ParseResults([], name=tokens.getName())
                 if debug:
                     print(i, "_(3 lis)_ >", str(tokens)[:100])
@@ -286,10 +285,10 @@ class TMR(VerilogElaborator):
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
-        self.logger.debug("[Always block]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[Always block]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
         if not tmr:
             self._addVotersIfTmr(ids["right"], addWires="output")
             return tokens
@@ -310,10 +309,10 @@ class TMR(VerilogElaborator):
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
-        self.logger.debug("[Initial block]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[Initial block]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
 
         if not tmr:
             return tokens
@@ -331,10 +330,10 @@ class TMR(VerilogElaborator):
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
-        self.logger.debug("[Continuous Assign block]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[Continuous Assign block]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
 
         if not tmr:
             self._addVotersIfTmr(ids["right"], group="", addWires="output")
@@ -371,10 +370,10 @@ class TMR(VerilogElaborator):
 
         right = self.vf.format(tokens[5][0][2][0])
 
-        self.logger.debug("[net declaration with assigment]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[net declaration with assigment]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
 
         # check if this is explicit fanout
         eFanout = False
@@ -383,7 +382,7 @@ class TMR(VerilogElaborator):
                 eFanout = True
 
         if eFanout:
-            self.logger.info("Removing declaration of '%s' (it comes from a fanout of %s)" % (left, right))
+            logging.info("Removing declaration of '%s' (it comes from a fanout of %s)" % (left, right))
             return ParseResults([], name=tokens.getName())
 
         # check if this is part of explicit voter
@@ -397,7 +396,7 @@ class TMR(VerilogElaborator):
                     eGroup = ext
                     eNet = net
         if eVoter:
-            self.logger.info("Explicit fanin '%s' part of '%s' (group %s)" % (left, eNet, eGroup))
+            logging.info("Explicit fanin '%s' part of '%s' (group %s)" % (left, eNet, eGroup))
             for name in list(ids["right"]):
                 self._addVoter(name, "", addWires="output")
             return tokens
@@ -406,33 +405,33 @@ class TMR(VerilogElaborator):
             if left+ext == right:
                 eFanin = True
         if eFanin:
-            self.logger.info("Removing declaration of '%s' (it was declared for fanin)" % (left))
+            logging.info("Removing declaration of '%s' (it was declared for fanin)" % (left))
             return ParseResults([], name=tokens.getName())
 
         # FIX ME !!!!!!!!!! quick and dirty !!!!!!
         # commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
         if left.lower().find("tmrerror") >= 0:
             if left == "tmrError":
-                self.logger.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
+                logging.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
                 return []
 
             for net in self.current_module["nets"]:
                 netTmrErr = net+"TmrError"
                 if left == netTmrErr:
-                    self.logger.info("Removing declaration of %s" % (left))
+                    logging.info("Removing declaration of %s" % (left))
                     return []
 
             for net in self.current_module["instances"]:
                 netTmrErr = net+"tmrError"
                 if left == netTmrErr:
-                    self.logger.info("Removing declaration of %s" % (left))
+                    logging.info("Removing declaration of %s" % (left))
                     return []
 
         if len(self.voting_nets):
             if (right, left) in self.voting_nets:
                 vote = True
         if vote:
-            self.logger.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
+            logging.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
             newtokens = ParseResults([], name=tokens.getName())
 
             a = right+self.EXT[0]
@@ -478,10 +477,10 @@ class TMR(VerilogElaborator):
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
-        self.logger.debug("[net1decl]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[net1decl]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
         if not tmr:
             return tokens
 
@@ -500,10 +499,10 @@ class TMR(VerilogElaborator):
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
-        self.logger.debug("[reg block]")
-        self.logger.debug("      Left :"+" ".join(sorted(ids["left"])))
-        self.logger.debug("      Right:"+" ".join(sorted(ids["right"])))
-        self.logger.debug("      TMR  :"+str(tmr))
+        logging.debug("[reg block]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
         if not tmr:
             return tokens
 
@@ -519,8 +518,8 @@ class TMR(VerilogElaborator):
 
     def __triplicate_integerDecl(self, tokens):
         #        print tokens
-        self.logger.debug("[integer dec]")
-        self.logger.debug("      Left : "+str(tokens[-1]))
+        logging.debug("[integer dec]")
+        logging.debug("      Left : "+str(tokens[-1]))
         toTMR = set()
         for _id in tokens[-1]:
             name = _id[0]
@@ -530,9 +529,9 @@ class TMR(VerilogElaborator):
                     TMR = True
             else:
                 if len(name) and name[0] == '`':
-                    self.logger.warning("Define %s" % name)
+                    logging.warning("Define %s" % name)
                 else:
-                    self.logger.warning("Unknown net '%s' (TMR may malfunction)" % name)
+                    logging.warning("Unknown net '%s' (TMR may malfunction)" % name)
             if TMR:
                 toTMR.add(name)
         result = []
@@ -551,21 +550,21 @@ class TMR(VerilogElaborator):
         identifier = tokens[0]
         instance = tokens[2][0][0][0]
 
-        self.logger.debug("[module instances]")
-        self.logger.debug("      ID  :"+identifier)
-        self.logger.debug("      Ins :"+instance)
+        logging.debug("[module instances]")
+        logging.debug("      ID  :"+identifier)
+        logging.debug("      Ins :"+instance)
 
         # if we know the instance
         if not identifier in self.modules:
-            self.logger.error("")
-            self.logger.error("      Module %s is unknown" % identifier)
+            logging.error("")
+            logging.error("      Module %s is unknown" % identifier)
             raise ErrorMessage("      Module %s is unknown" % identifier)
         if "dntinst" in self.current_module["constraints"]:
             if instance in self.current_module["constraints"]["dntinst"]:
-                self.logger.debug("Instance '%s' has property do_not_touch." % instance)
+                logging.debug("Instance '%s' has property do_not_touch." % instance)
                 return tokens
         if "dnt" in self.modules[identifier]["constraints"] and self.modules[identifier]["constraints"]["dnt"]:
-            self.logger.debug("      Module '%s' will not be touched (id:%s)" % (identifier, instance))
+            logging.debug("      Module '%s' will not be touched (id:%s)" % (identifier, instance))
             tmr = self.current_module["instances"][instance]["tmr"]
             if tmr:
                 ret = []
@@ -593,7 +592,7 @@ class TMR(VerilogElaborator):
                     #print dname,dtype, ids
                     for sname in ids["right"]:
                         stmr = self.current_module["nets"][sname]["tmr"]
-                        self.logger.debug("      %s (%s) -> %s (tmr:%s)" % (dname, dtype, sname, str(stmr)))
+                        logging.debug("      %s (%s) -> %s (tmr:%s)" % (dname, dtype, sname, str(stmr)))
                         if not stmr:
                             if dtype == "input":
                                 self._addFanout(sname, addWires="output")
@@ -613,15 +612,15 @@ class TMR(VerilogElaborator):
                             continue
                         if sname in self.current_module["nets"]:
                             stmr = self.current_module["nets"][sname]["tmr"]
-                            self.logger.debug("      %s (%s) -> %s (tmr:%s)" % (dname, dtype, sname, str(stmr)))
+                            logging.debug("      %s (%s) -> %s (tmr:%s)" % (dname, dtype, sname, str(stmr)))
                             if stmr:
                                 if dtype == "input":
                                     self._addVoter(sname, addWires="output")
                                 else:
                                     self._addFanout(sname, addWires="input")
                         else:
-                            self.logger.debug("Wire '%s' does not exist in the net database" % sname)
-                            self.logger.debug("The connection will not be changed.")
+                            logging.debug("Wire '%s' does not exist in the net database" % sname)
+                            logging.debug("The connection will not be changed.")
         else:
             identifierTMR = identifier+"TMR"
             tokens[0] = identifierTMR
@@ -640,7 +639,7 @@ class TMR(VerilogElaborator):
                         raise ErrorMessage("Module '%s' does not have port '%s'" % (identifier, dport))
                     dportTmr = self.modules[identifier]["nets"][dport]["tmr"]
 
-                    self.logger.debug("      %s (tmr:%s) -> %s" % (dport, dportTmr, self.vf.format(sport)))
+                    logging.debug("      %s (tmr:%s) -> %s" % (dport, dportTmr, self.vf.format(sport)))
                     if not dportTmr:
                         newPorts.append(port)
                         for sport in ids['right']:
@@ -671,7 +670,7 @@ class TMR(VerilogElaborator):
                 if self.modules[identifier]["constraints"]["tmrErrorOut"]:
                     for post in self.EXT:
                         netName = "%stmrError%s" % (iname, post)
-                        self.logger.debug("Adding net '%s' for module '%s'" % (netName, identifier))
+                        logging.debug("Adding net '%s' for module '%s'" % (netName, identifier))
                         tmrErrOut = self.vp.namedPortConnection.parseString(".tmrError%s(%s)" % (post, netName))[0]
                         self._addTmrErrorWire(post, netName)
                         newPorts.append(tmrErrOut)
@@ -716,7 +715,7 @@ class TMR(VerilogElaborator):
                     newModuleItems.append(moduleItem)
                 else:
                     inst = voteNet+"Voter"
-                    self.logger.info("Instializaing voter %s" % inst)
+                    logging.info("Instializaing voter %s" % inst)
                     net = self.modules[moduleName]["nets"][voteNet]
                     _range = net["range"]
 
@@ -768,7 +767,7 @@ class TMR(VerilogElaborator):
                     portName = port[0]
                     portList.append(portName)
                     if not portName in self.current_module["nets"]:
-                        self.logger.warning("Net '%s' unknown." % portName)
+                        logging.warning("Net '%s' unknown." % portName)
                         continue
                     doTmr = self.current_module["nets"][portName]["tmr"]
                     portstr = "Port %s -> " % (portName)
@@ -782,12 +781,12 @@ class TMR(VerilogElaborator):
                             sep = ", "
                     else:
                         newports.append(port)
-                    self.logger.debug(portstr)
+                    logging.debug(portstr)
                 else:
                     portName = port[4][0]
                     portList.append(portName)
                     if not portName in self.current_module["nets"]:
-                        self.logger.warning("Net '%s' unknown." % portName)
+                        logging.warning("Net '%s' unknown." % portName)
                         continue
                     doTmr = self.current_module["nets"][portName]["tmr"]
                     portstr = "Port %s -> " % (portName)
@@ -803,14 +802,14 @@ class TMR(VerilogElaborator):
                     else:
                         newports.append(port)
 
-                    self.logger.debug(portstr)
+                    logging.debug(portstr)
 
             if "tmrError" in self.current_module["nets"]:
                 groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
                 for group in sorted(groups):
                     newport = "tmrError%s" % group
                     newports.append(newport)
-                    self.logger.debug("Port %s" % (newport))
+                    logging.debug("Port %s" % (newport))
             wrapper[0][3] = newports
 
         newModuleItems = ParseResults([], name=tokens[1].getName())
@@ -844,24 +843,24 @@ class TMR(VerilogElaborator):
         moduleName = header[1]
         self.current_module = self.modules[moduleName]
         if "dnt" in self.modules[moduleName]["constraints"] and self.modules[moduleName]["constraints"]["dnt"]:
-            self.logger.info("Module '%s' is not to be touched" % moduleName)
+            logging.info("Module '%s' is not to be touched" % moduleName)
             return tokens
         if "slicing" in self.modules[moduleName]["constraints"]:
-            self.logger.info("Module '%s' is to be sliced" % moduleName)
+            logging.info("Module '%s' is to be sliced" % moduleName)
             return self.__slice_module(tokens)
         header[1] = str(moduleName)+"TMR"
-        self.logger.debug("")
-        self.logger.debug("= "*50)
-        self.logger.debug("Module %s -> %s" % (moduleName, header[1]))
-        self.logger.debug("= "*50)
+        logging.debug("")
+        logging.debug("= "*50)
+        logging.debug("Module %s -> %s" % (moduleName, header[1]))
+        logging.debug("= "*50)
 
-        self.logger.debug("- module body "+"- "*43)
+        logging.debug("- module body "+"- "*43)
 
         moduleBody = tokens[1]
         moduleBody = self.__triplicate(moduleBody)
         tokens[1] = moduleBody
 
-        self.logger.debug("- module header "+"- "*42)
+        logging.debug("- module header "+"- "*42)
         # triplicate module header | add tmr signals
         if len(header) > 3:
             ports = header[3]
@@ -870,7 +869,7 @@ class TMR(VerilogElaborator):
                 if port.getName() == "port":
                     portName = port[0][0]
                     if not portName in self.current_module["nets"]:
-                        self.logger.warning("Net '%s' unknown." % portName)
+                        logging.warning("Net '%s' unknown." % portName)
                         continue
                     doTmr = self.current_module["nets"][portName]["tmr"]
                     portstr = "Port %s -> " % (portName)
@@ -885,11 +884,11 @@ class TMR(VerilogElaborator):
                     else:
                         newports.append(portName)
                         portstr += portName
-                    self.logger.debug(portstr)
+                    logging.debug(portstr)
                 else:
                     portName = port[4][0]
                     if not portName in self.current_module["nets"]:
-                        self.logger.warning("Net '%s' unknown." % portName)
+                        logging.warning("Net '%s' unknown." % portName)
                         continue
                     doTmr = self.current_module["nets"][portName]["tmr"]
                     portstr = "Port %s -> " % (portName)
@@ -906,7 +905,7 @@ class TMR(VerilogElaborator):
                         newports.append(port)
                         portstr += portName
 
-                    self.logger.debug(portstr)
+                    logging.debug(portstr)
 
             if self.current_module["constraints"]["tmrErrorOut"]:
                 groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
@@ -917,10 +916,10 @@ class TMR(VerilogElaborator):
                         newports.append(newport)
                     else:
                         newports.append(newport)
-                    self.logger.debug("Port %s" % (newport))
+                    logging.debug("Port %s" % (newport))
             header[3] = newports
 
-        self.logger.debug("- voters & fanouts  "+"- "*40)
+        logging.debug("- voters & fanouts  "+"- "*40)
         groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
         for group in sorted(groups):
             errSignals = set()
@@ -942,16 +941,16 @@ class TMR(VerilogElaborator):
 
                     attributes = voter["attributes"]
                     addWires = voter["addWires"]
-                    self.logger.info("Instializaing voter %s (addWires:%s)" % (inst, addWires))
+                    logging.info("Instializaing voter %s (addWires:%s)" % (inst, addWires))
                     if addWires == "output":
-                        self.logger.debug("Adding output wire %s" % (_out))
+                        logging.debug("Adding output wire %s" % (_out))
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire  %s %s %s %s;" %
                                                                           (attributes, _range, _out, _array_range))[0])
                         #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
                         #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
                         #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                     elif addWires == "input":
-                        self.logger.debug("Adding input wires %s, %s , %s" % (_a, _b, _c))
+                        logging.debug("Adding input wires %s, %s , %s" % (_a, _b, _c))
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                           (attributes, _range, _a, _array_range))[0])
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
@@ -1009,14 +1008,14 @@ class TMR(VerilogElaborator):
                 else:
                     if not self.current_module["constraints"]["tmrErrorOut"]:
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wire tmrError%s;" % group)[0])
-                        self.logger.debug("Adding wire tmrError%s;" % group)
+                        logging.debug("Adding wire tmrError%s;" % group)
                 sep = ""
                 asgnStr = "assign tmrError%s=" % group
                 if len(errSignals):
                     for signal in sorted(errSignals):
                         signalRaw = signal[:-len("TmrError"+group)]
                         if "tmr_error_exclude" in self.current_module["constraints"] and signalRaw in self.current_module["constraints"]["tmr_error_exclude"]:
-                            self.logger.debug("Removing signal '%s' from tmrError", signal)
+                            logging.debug("Removing signal '%s' from tmrError", signal)
                             continue
                         asgnStr += sep+signal
                         sep = "|"
@@ -1030,7 +1029,7 @@ class TMR(VerilogElaborator):
         for fanout in self.current_module["fanouts"]:
             inst = fanout
             fanout = self.current_module["fanouts"][inst]
-            self.logger.info("Instializaing fanout %s" % inst)
+            logging.info("Instializaing fanout %s" % inst)
             _range = fanout["range"]
             _array_range = fanout["array_range"]
             _array_len = fanout["array_len"]
@@ -1044,7 +1043,7 @@ class TMR(VerilogElaborator):
             addWires = fanout["addWires"]
             attributes = fanout["attributes"]
             if addWires == "output":
-                self.logger.debug("Adding output wires %s, %s , %s" % (_a, _b, _c))
+                logging.debug("Adding output wires %s, %s , %s" % (_a, _b, _c))
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                   (attributes, _range, _a, _array_range))[0])
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
@@ -1052,7 +1051,7 @@ class TMR(VerilogElaborator):
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                   (attributes, _range, _c, _array_range))[0])
             elif addWires == "input":
-                self.logger.debug("Adding input wire %s" % (_in))
+                logging.debug("Adding input wire %s" % (_in))
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                   (attributes, _range, _in, _array_range))[0])
 
@@ -1093,20 +1092,20 @@ class TMR(VerilogElaborator):
         for fanout in self.current_module["fanouts"]:
             _in = self.current_module["fanouts"][inst]["in"]
             if _in in vouter_outputs:
-                self.logger.warning("Signal '%s' is connected to fanout input and voter output." % (_in))
-                self.logger.warning("Probably the resulting code does not reflect the design intent.")
-                self.logger.warning("Please consider upgrading tmrg directives.")
+                logging.warning("Signal '%s' is connected to fanout input and voter output." % (_in))
+                logging.warning("Probably the resulting code does not reflect the design intent.")
+                logging.warning("Please consider upgrading tmrg directives.")
 
 
         paramPos = 0
         for i, item in enumerate(moduleBody):
             if item.getName() == "paramDecl":
-                self.logger.debug("Moving declaration to the front '%s'" % (str(item)))
+                logging.debug("Moving declaration to the front '%s'" % (str(item)))
                 moduleBody.insert(paramPos, item)
                 paramPos += 1
                 del moduleBody[i+1]
             if item.getName() == "localparamDecl":
-                self.logger.debug("Moving declaration to the front '%s'" % (str(item)))
+                logging.debug("Moving declaration to the front '%s'" % (str(item)))
                 moduleBody.insert(paramPos, item)
                 paramPos += 1
                 del moduleBody[i+1]
@@ -1117,14 +1116,14 @@ class TMR(VerilogElaborator):
         before = str(tokens[-1])
         tokens[-1] = self._tmr_list(tokens[-1])
         after = str(tokens[-1])
-        self.logger.debug("Output %s->%s" % (before, after))
+        logging.debug("Output %s->%s" % (before, after))
         return tokens
 
     def __triplicate_input(self, tokens):
         before = str(tokens[-1])
         tokens[-1] = self._tmr_list(tokens[-1])
         after = str(tokens[-1])
-        self.logger.debug("Input %s->%s" % (before, after))
+        logging.debug("Input %s->%s" % (before, after))
         return tokens
 
     def checkIfContains(self, tokens, label):
@@ -1191,14 +1190,14 @@ class TMR(VerilogElaborator):
                     leftNoTMR = True
             else:
                 if len(net) and net[0] == '`':
-                    self.logger.warning("Define %s" % net)
+                    logging.warning("Define %s" % net)
                 else:
-                    self.logger.warning("Unknown net '%s' (TMR may malfunction)" % net)
+                    logging.warning("Unknown net '%s' (TMR may malfunction)" % net)
         if leftTMR and leftNoTMR:
-            self.logger.error(
+            logging.error(
                 "Block contains both type of elements (should and should not be triplicated!) in one expresion. ")
-            self.logger.error("This request will not be properly processed!")
-            self.logger.error("Elements: %s" % (" ".join(sorted(res["left"]))))
+            logging.error("This request will not be properly processed!")
+            logging.error("Elements: %s" % (" ".join(sorted(res["left"]))))
             return False
         return leftTMR
 
@@ -1220,7 +1219,7 @@ class TMR(VerilogElaborator):
                 else:
                     newtokens.append(element)
             else:
-                self.logger.warning("Net %s unknown!" % element)
+                logging.warning("Net %s unknown!" % element)
                 newtokens.append(element)
         return newtokens
 
@@ -1235,10 +1234,10 @@ class TMR(VerilogElaborator):
     def _addVoterExtended(self, voterInstName, inA, inB, inC, out, tmrError, range, len, group, array_range, array_len, attributes, array_from, array_to, addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group] = {}
-            self.logger.info("Creating TMR error group %s" % group)
+            logging.info("Creating TMR error group %s" % group)
         if not voterInstName in self.current_module["voters"][group]:
-            self.logger.debug("Adding voter '%s' to group '%s' (extended)" % (voterInstName, group))
-            self.logger.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, out, tmrError))
+            logging.debug("Adding voter '%s' to group '%s' (extended)" % (voterInstName, group))
+            logging.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, out, tmrError))
             self.current_module["voters"][group][voterInstName] = {
                 "inA": inA,
                 "inB": inB,
@@ -1260,7 +1259,7 @@ class TMR(VerilogElaborator):
 
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group] = {}
-            self.logger.info("Creating TMR error group %s" % group)
+            logging.info("Creating TMR error group %s" % group)
 
         voterInstName = "%sVoter" % (netID)
         if not voterInstName in self.current_module["voters"][group]:
@@ -1270,8 +1269,8 @@ class TMR(VerilogElaborator):
             inA = netID+self.EXT[0]
             inB = netID+self.EXT[1]
             inC = netID+self.EXT[2]
-            self.logger.debug("Adding voter '%s' to group '%s' (simple)" % (voterInstName, group))
-            self.logger.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, nameVoted, netErrorName))
+            logging.debug("Adding voter '%s' to group '%s' (simple)" % (voterInstName, group))
+            logging.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, nameVoted, netErrorName))
 
             range = self.current_module["nets"][netID]["range"]
             len = self.current_module["nets"][netID]["len"]
@@ -1305,7 +1304,7 @@ class TMR(VerilogElaborator):
     def _addFanout(self, netID, addWires=""):
         inst = netID+"Fanout"
         if not netID in self.current_module["nets"]:
-            self.logger.warning("Net %s unknown in addFanout!" % netID)
+            logging.warning("Net %s unknown in addFanout!" % netID)
             return
 
         if not inst in self.current_module["fanouts"]:
@@ -1320,8 +1319,8 @@ class TMR(VerilogElaborator):
             array_to = self.current_module["nets"][netID]["array_to"]
             len = self.current_module["nets"][netID]["len"]
             attributes = self.current_module["nets"][netID]["attributes"]
-            self.logger.debug("Adding fanout %s" % inst)
-            self.logger.debug("    %s -> %s %s %s " % (_in, outA, outB, outC))
+            logging.debug("Adding fanout %s" % inst)
+            logging.debug("    %s -> %s %s %s " % (_in, outA, outB, outC))
             self.current_module["fanouts"][inst] = {"in": _in,
                                                     "outA": outA,
                                                     "outB": outB,
@@ -1363,13 +1362,13 @@ class TMR(VerilogElaborator):
 
     def exc(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        self.logger.error("")
-        self.logger.error("TMR exception:")
+        logging.error("")
+        logging.error("TMR exception:")
         for l in traceback.format_exception(exc_type, exc_value,
                                             exc_traceback):
             for ll in l.split("\n"):
-                self.logger.error(ll)
-        self.logger.error(ll)
+                logging.error(ll)
+        logging.error(ll)
 
     def __getLenStr(self, toks):
         rangeLen = "1"
@@ -1392,10 +1391,10 @@ class TMR(VerilogElaborator):
         # allowMissingModules = False # FIXME shoudl not be here like that (added for wrappers)
         VerilogElaborator.elaborate(self, allowMissingModules=allowMissingModules)
         # apply constrains
-        self.logger.info("")
-        self.logger.info("Applying constrains")
+        logging.info("")
+        logging.info("Applying constrains")
         for module in sorted(self.modules):
-            self.logger.info("Module %s" % module)
+            logging.info("Module %s" % module)
 
             # tmr error output
             # global settings
@@ -1413,7 +1412,7 @@ class TMR(VerilogElaborator):
             if module in self.cmdLineConstrains and "tmr_error" in self.cmdLineConstrains[module]:
                 tmrErrOut = self.cmdLineConstrains[module]["tmr_error"]
                 s += " -> cmdModule:%s" % (str(tmrErrOut))
-            self.logger.info(" | tmrErrOut : %s (%s)" % (str(tmrErrOut), s))
+            logging.info(" | tmrErrOut : %s (%s)" % (str(tmrErrOut), s))
             if tmrErrOut:
                 self.modules[module]["nets"]["tmrError"] = {"range": "", "len": "1", "tmr": True,
                                                             "from": "", "to": "", "attributes": "",
@@ -1434,7 +1433,7 @@ class TMR(VerilogElaborator):
                 do_not_touch = True
                 s += " -> cmdModule:%s" % (str(do_not_touch))
             self.modules[module]["constraints"]["dnt"] = do_not_touch
-            self.logger.info(" | do_not_touch : %s (%s)" % (str(tmrErrOut), s))
+            logging.info(" | do_not_touch : %s (%s)" % (str(tmrErrOut), s))
 
             for net in self.modules[module]["nets"]:
                 tmr = False
@@ -1489,7 +1488,7 @@ class TMR(VerilogElaborator):
                     tmr = False
                     s += " -> do_not_touch:%s" % (str(tmr))
 
-                self.logger.info(" | net %s : %s (%s)" % (net, str(tmr), s))
+                logging.info(" | net %s : %s (%s)" % (net, str(tmr), s))
                 self.modules[module]["nets"][net]["tmr"] = tmr
 
             for inst in self.modules[module]["instances"]:
@@ -1533,25 +1532,25 @@ class TMR(VerilogElaborator):
                     tmr = self.cmdLineConstrains[module][inst]
                     s += " -> cmd:%s" % (str(tmr))
 
-                self.logger.info(" | inst %s : %s (%s)" % (inst, str(tmr), s))
+                logging.info(" | inst %s : %s (%s)" % (inst, str(tmr), s))
                 self.modules[module]["instances"][inst]["tmr"] = tmr
 
         # apply special constrains by name conventions
-        self.logger.info("")
-        self.logger.info("Applying constrains by name")
+        logging.info("")
+        logging.info("Applying constrains by name")
         self.voting_nets = []
         for module in sorted(self.modules):
-            self.logger.info("Module %s" % module)
+            logging.info("Module %s" % module)
             for net1 in self.modules[module]["nets"]:
                 for net2 in self.modules[module]["nets"]:
                     if net1+"Voted" == net2:
                         self.voting_nets.append((net1, net2))
-                        self.logger.info("Full voting detected for nets %s -> %s" % (net1, net2))
+                        logging.info("Full voting detected for nets %s -> %s" % (net1, net2))
                         if not self.modules[module]["nets"][net1]["tmr"] or not self.modules[module]["nets"][net2]["tmr"]:
-                            self.logger.warning("Nets for full voting should be triplicated! (%s:%s, %s:%s)" % (
+                            logging.warning("Nets for full voting should be triplicated! (%s:%s, %s:%s)" % (
                                 net1, self.modules[module]["nets"][net1]["tmr"], net2, self.modules[module]["nets"][net2]["tmr"]))
         if len(self.voting_nets):
-            self.logger.info("Voting present (%d nets)" % (len(self.voting_nets)))
+            logging.info("Voting present (%d nets)" % (len(self.voting_nets)))
 
     def _addCommonModules(self, fname, voter=False, fanout=False):
         if not self.__fanoutPresent and not self.__voterPresent:
@@ -1560,12 +1559,12 @@ class TMR(VerilogElaborator):
             return
         if self.options.no_common_definitions:
             return
-        self.logger.info("Declarations of voters and fanouts are being added to %s" % fname)
+        logging.info("Declarations of voters and fanouts are being added to %s" % fname)
         f = open(fname, "a")
 
         if self.__voterPresent:
             vfile = os.path.join(self.scriptDir,  self.config.get("tmrg", "voter_definition"))
-            self.logger.info("Taking voter declaration from %s" % vfile)
+            logging.info("Taking voter declaration from %s" % vfile)
             f.write("\n\n// %s\n" % vfile)
             fileContent = readFile(vfile)
             fileContent = fileContent.replace("majorityVoter", "majorityVoter"+self.options.common_cells_postfix)
@@ -1573,7 +1572,7 @@ class TMR(VerilogElaborator):
 
         if self.__fanoutPresent:
             ffile = os.path.join(self.scriptDir,  self.config.get("tmrg", "fanout_definition"))
-            self.logger.info("Taking fanout declaration from %s" % ffile)
+            logging.info("Taking fanout declaration from %s" % ffile)
             f.write("\n\n// %s\n" % ffile)
             fileContent = readFile(ffile)
             fileContent = fileContent.replace("fanout", "fanout"+self.options.common_cells_postfix)
@@ -1652,8 +1651,8 @@ class TMR(VerilogElaborator):
         tmrSuffix = "TMR"
         spaces = self.config.getint("tmrg", "spaces")
 
-        self.logger.debug("")
-        self.logger.info("Triplciation starts here")
+        logging.debug("")
+        logging.info("Triplciation starts here")
         tmr_start_time = time.time()
         self.tmrLinesTotal = 0
         self.statsLogs = []
@@ -1662,16 +1661,16 @@ class TMR(VerilogElaborator):
 
         for fname in sorted(self.files):
             file, ext = os.path.splitext(os.path.basename(fname))
-            self.logger.info("")
-            self.logger.debug("#"*100)
-            self.logger.info("Triplicating file %s" % (fname))
-            self.logger.debug("#"*100)
+            logging.info("")
+            logging.debug("#"*100)
+            logging.info("Triplicating file %s" % (fname))
+            logging.debug("#"*100)
             tokens = self.files[fname]
             tmrTokens = self.__triplicate(tokens)
 
             fout = os.path.join(self.config.get("tmrg", "tmr_dir"), file+tmrSuffix+ext)
             foutnew = fout+'.new'
-            self.logger.debug("Saving result of triplication to %s" % foutnew)
+            logging.debug("Saving result of triplication to %s" % foutnew)
 
             f = open(foutnew, "w")
             if self.options.header and self.config.getboolean("tmrg", "add_header"):
@@ -1713,23 +1712,23 @@ class TMR(VerilogElaborator):
             if self.options.generateBugReport:
                 bn = file+tmrSuffix+ext
                 fcopy = os.path.join(self.options.bugReportDir, bn)
-                self.logger.debug("Coping output file from '%s' to '%s'" % (foutnew, fcopy))
+                logging.debug("Coping output file from '%s' to '%s'" % (foutnew, fcopy))
                 shutil.copyfile(foutnew, fcopy)
 
             if os.path.exists(fout):
                 if filecmp.cmp(fout, foutnew):
-                    self.logger.info("File '%s' exists. Its content is up to date." % fout)
-                    self.logger.debug("Removing temporary file %s." % foutnew)
+                    logging.info("File '%s' exists. Its content is up to date." % fout)
+                    logging.debug("Removing temporary file %s." % foutnew)
                     os.remove(foutnew)
                 else:
                     if self.config.getboolean("tmrg", "overwrite_files"):
-                        self.logger.debug("Overwriting %s by %s" % (fout, foutnew))
+                        logging.debug("Overwriting %s by %s" % (fout, foutnew))
                         os.rename(foutnew, fout)
                     else:
-                        self.logger.warning("File '%s' exists. Saving output to '%s'" % (fout, foutnew))
+                        logging.warning("File '%s' exists. Saving output to '%s'" % (fout, foutnew))
             else:
-                self.logger.info("Saving output to '%s'" % (fout))
-                self.logger.debug("Rename %s to %s" % (foutnew, fout))
+                logging.info("Saving output to '%s'" % (fout))
+                logging.debug("Rename %s to %s" % (foutnew, fout))
                 os.rename(foutnew, fout)
         self.genSDC()
         if self.options.stats:
@@ -1782,7 +1781,7 @@ class TMR(VerilogElaborator):
                 fsdc = self.config.get("tmrg", "sdc_file_name")
             else:
                 fsdc = os.path.join(self.config.get("tmrg", "tmr_dir"), topFile+tmrSuffix+".sdc")
-            self.logger.info("Generating SDC constraints file %s" % fsdc)
+            logging.info("Generating SDC constraints file %s" % fsdc)
 
             header = ""
             if self.config.getboolean("tmrg", "sdc_headers") or self.options.sdc_headers:
@@ -1825,7 +1824,7 @@ proc constrainNet netName {
 
             if self.options.generateBugReport:
                 fcopy = os.path.join(self.options.bugReportDir, os.path.basename(fsdc))
-                self.logger.debug("Coping output file from '%s' to '%s'" % (fsdc, fcopy))
+                logging.debug("Coping output file from '%s' to '%s'" % (fsdc, fcopy))
                 shutil.copyfile(fsdc, fcopy)
 
 

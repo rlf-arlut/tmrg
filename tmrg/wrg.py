@@ -35,7 +35,7 @@ class TBG(TMR):
 
     def loadVoterDefinition(self, voterName="majorityVoterTB"):
         vfile = os.path.join(self.scriptDir,  self.config.get("tmrg", "voter_definition"))
-        self.logger.info("Taking voter declaration from %s" % vfile)
+        logging.info("Taking voter declaration from %s" % vfile)
         return readFile(vfile).replace("majorityVoter", voterName)
 
     def generate(self):
@@ -71,7 +71,7 @@ class TBG(TMR):
                 elif io["type"] == "output":
                     oStr += "  output %s %s;\n" % (io["range"], ioName)
                 else:
-                    self.logger.warning("Unsuported IO type: %s" % io["type"])
+                    logging.warning("Unsuported IO type: %s" % io["type"])
 
             oStr += "\n// - - - - - - - - - - - - - Device Under Test section - - - - - - - - - - - -\n"
             oStr += "\n`ifdef TMR\n"
@@ -103,7 +103,7 @@ class TBG(TMR):
                         oStr += "  );\n"
 
                     else:
-                        self.logger.warning("Unsuported IO type: %s" % io["type"])
+                        logging.warning("Unsuported IO type: %s" % io["type"])
 
             # dut tmr instantiation
             oStr += "  %sTMR%s DUT (\n" % (module, parameters)
@@ -152,7 +152,7 @@ class TBG(TMR):
 
             oStr += "endmodule\n"
         if self.options.outputFname != "":
-            self.logger.info("Writing testbench to %s" % self.options.outputFname)
+            logging.info("Writing testbench to %s" % self.options.outputFname)
             f = open(self.options.outputFname, "w")
             f.write(oStr)
             f.close()

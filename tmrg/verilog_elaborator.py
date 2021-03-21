@@ -74,15 +74,8 @@ class VerilogElaborator():
         self.vp.inc_dir = options.inc_dir
 
         self.vf = VerilogFormatter()
-        self.logger = logging.getLogger('TMR')
         self.libFiles = []
 
-        if self.options.verbose == 0:
-            self.logger.setLevel(logging.WARNING)
-        if self.options.verbose == 1:
-            self.logger.setLevel(logging.INFO)
-        elif self.options.verbose >= 2:
-            self.logger.setLevel(logging.DEBUG)
         self.files = {}
         self.libs = {}
         self.__init_elaborate_callbacks()
@@ -91,32 +84,32 @@ class VerilogElaborator():
 
         self.config = cp.ConfigParser()
         self.scriptDir = os.path.abspath(os.path.dirname(__file__))
-        self.logger.debug("Script path : %s" % self.scriptDir)
+        logging.debug("Script path : %s" % self.scriptDir)
 
         # master clonfig file
         masterCnfg = os.path.join(self.scriptDir, "../etc/%s.cfg" % cnfgName)
         if os.path.exists(masterCnfg):
-            self.logger.debug("Loading master config file from %s" % masterCnfg)
+            logging.debug("Loading master config file from %s" % masterCnfg)
             self.config.read(masterCnfg)
             if self.options.generateBugReport:
                 fcopy = os.path.join(self.options.bugReportDir, "master.cfg")
-                self.logger.debug("Coping master config file from '%s' to '%s'" % (masterCnfg, fcopy))
+                logging.debug("Coping master config file from '%s' to '%s'" % (masterCnfg, fcopy))
                 shutil.copyfile(masterCnfg, fcopy)
 
         else:
-            self.logger.warning("Master config file does not exists at '%s'" % masterCnfg)
+            logging.warning("Master config file does not exists at '%s'" % masterCnfg)
 
         # user config file
         userCnfg = os.path.expanduser('~/.%s.cfg' % cnfgName)
         if os.path.exists(userCnfg):
-            self.logger.debug("Loading user config file from %s" % userCnfg)
+            logging.debug("Loading user config file from %s" % userCnfg)
             self.config.read(userCnfg)
             if self.options.generateBugReport:
                 fcopy = os.path.join(self.options.bugReportDir, "user.cfg")
-                self.logger.debug("Coping user config file from '%s' to '%s'" % (userCnfg, fcopy))
+                logging.debug("Coping user config file from '%s' to '%s'" % (userCnfg, fcopy))
                 shutil.copyfile(userCnfg, fcopy)
         else:
-            self.logger.info("User config file does not exists at '%s'" % userCnfg)
+            logging.info("User config file does not exists at '%s'" % userCnfg)
         self.translate = True
         self.linesTotal = 0
 
@@ -127,7 +120,7 @@ class VerilogElaborator():
             if member.find("_elaborate_") == 0:
                 token = member[len("_elaborate_"):].lower()
                 self.elaborator[token] = getattr(self, member)
-                self.logger.debug("Found elaborator for %s" % token)
+                logging.debug("Found elaborator for %s" % token)
 
     def getLeftRightHandSide(self, t, res=None):
         if res == None:
@@ -321,13 +314,13 @@ class VerilogElaborator():
     def _elaborate_inputhdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
             self.current_module["portMode"] = "ANSI"
-            self.logger.info("Port mode : ANSI")
+            logging.info("Port mode : ANSI")
         self._elaborate_input(tokens)
 
     def _elaborate_inouthdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
             self.current_module["portMode"] = "ANSI"
-            self.logger.info("Port mode : ANSI")
+            logging.info("Port mode : ANSI")
 
         self._elaborate_inout(tokens)
 
@@ -377,7 +370,7 @@ class VerilogElaborator():
     def _elaborate_outputhdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
             self.current_module["portMode"] = "ANSI"
-            self.logger.info("Port mode : ANSI")
+            logging.info("Port mode : ANSI")
 
         self._elaborate_output(tokens)
 
@@ -425,7 +418,7 @@ class VerilogElaborator():
             pname = param[0][0]
             pval = self.vf.format(param[0][1:])
 
-            self.logger.debug("Parameter %s = %s" % (pname, pval))
+            logging.debug("Parameter %s = %s" % (pname, pval))
             self.current_module["params"][pname] = {"value": pval, "range": _range, "len": _len, "type": "localparam"}
 
     def _elaborate_paramdecl(self, tokens):
@@ -434,7 +427,7 @@ class VerilogElaborator():
         for param in tokens[2]:
             pname = param[0][0]
             pval = self.vf.format(param[0][1:])
-            self.logger.debug("Parameter %s = %s" % (pname, pval))
+            logging.debug("Parameter %s = %s" % (pname, pval))
             self.current_module["params"][pname] = {"value": pval, "range": _range, "len": _len, "type": "param"}
 
     def _elaborate_netdecl3(self, tokens):
@@ -467,7 +460,7 @@ class VerilogElaborator():
                                                      }
                 if dnt:
                     self.current_module["nets"][name]["dnt"] = True
-                    self.logger.debug("Net %s will not be touched!" % name)
+                    logging.debug("Net %s will not be touched!" % name)
 
     def _elaborate_directive_default(self, tokens):
         tmr = False
@@ -499,7 +492,7 @@ class VerilogElaborator():
         elif tokens[0].lower() == "on":
             self.translate = True
         else:
-            self.logger.error("Unknown parameter for tmrg translate directive '%s'" % tokens[0])
+            logging.error("Unknown parameter for tmrg translate directive '%s'" % tokens[0])
 
     def _elaborate_directive_tmr_error(self, tokens):
         en = False
@@ -533,24 +526,24 @@ class VerilogElaborator():
             name = str(tokens.getName()).lower()
             if len(tokens) == 0:
                 return
-            self.logger.debug("[%-20s] len:%2d  str:'%s' >" % (name, len(tokens), str(tokens)[:80]))
+            logging.debug("[%-20s] len:%2d  str:'%s' >" % (name, len(tokens), str(tokens)[:80]))
             if name in self.elaborator:
                 self.elaborator[name](tokens)
             else:
-                self.logger.debug("No elaborator for %s" % name)
+                logging.debug("No elaborator for %s" % name)
                 if len(tokens):
                     for t in tokens:
                         self._elaborate(t)
 
     def exc(self):
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        self.logger.error("")
-        self.logger.error("TMR exception:")
+        logging.error("")
+        logging.error("TMR exception:")
         for l in traceback.format_exception(exc_type, exc_value,
                                             exc_traceback):
             for ll in l.split("\n"):
-                self.logger.error(ll)
-        self.logger.error(ll)
+                logging.error(ll)
+        logging.error(ll)
 
     def lineCount(self, fname):
         f = open(fname)
@@ -568,7 +561,7 @@ class VerilogElaborator():
         if self.options.generateBugReport:
             bn = os.path.basename(fname)
             fcopy = os.path.join(self.options.bugReportDir, bn)
-            self.logger.debug("Coping source file from '%s' to '%s'" % (fname, fcopy))
+            logging.debug("Coping source file from '%s' to '%s'" % (fname, fcopy))
             shutil.copyfile(fname, fcopy)
         tokens = self.vp.parseFile(fname)
         if self.options.stats:
@@ -582,7 +575,7 @@ class VerilogElaborator():
         if self.options.generateBugReport:
             bn = os.path.basename(fname)
             fcopy = os.path.join(self.options.bugReportDir, bn)
-            self.logger.debug("Coping library file from '%s' to '%s'" % (fname, fcopy))
+            logging.debug("Coping library file from '%s' to '%s'" % (fname, fcopy))
             shutil.copyfile(fname, fcopy)
         tokens = self.vp.parseFile(fname)
         if self.options.stats:
@@ -684,10 +677,10 @@ class VerilogElaborator():
                 tab.add_row([k, tmr, range, attributes, array_range])
             tab.padding_width = 1  # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
-                self.logger.info(l)
+                logging.info(l)
 
-        self.logger.info("")
-        self.logger.info("Module:%s (dnt:%s)" % (module["name"], module["constraints"]["dnt"]))
+        logging.info("")
+        logging.info("Module:%s (dnt:%s)" % (module["name"], module["constraints"]["dnt"]))
         printDict(module["nets"],    "Nets")
         printDict(module["instances"], "Instantiations")
         if "params" in module:
@@ -708,7 +701,7 @@ class VerilogElaborator():
                     for fname in glob.glob("%s/*.v" % name):
                         files.append(fname)
                 else:
-                    self.logger.error("File or directory does not exists '%s'" % name)
+                    logging.error("File or directory does not exists '%s'" % name)
 
             return files
         parse_start_time = time.time()
@@ -767,8 +760,8 @@ class VerilogElaborator():
         self.modules = {}
         # elaborate all modules
         for fname in sorted(self.files):
-            self.logger.info("")
-            self.logger.info("Elaborating %s" % (fname))
+            logging.info("")
+            logging.info("Elaborating %s" % (fname))
             tokens = self.files[fname]
             for module in tokens:
                 if module.getName() != "module":
@@ -778,17 +771,17 @@ class VerilogElaborator():
                 moduleName = moduleHdr[1]
                 moduleParams = moduleHdr[2]
                 modulePorts = moduleHdr[3]
-                self.logger.debug("")
-                self.logger.debug("= "*50)
-                self.logger.info("Module %s (%s)" % (moduleName, fname))
-                self.logger.debug("= "*50)
+                logging.debug("")
+                logging.debug("= "*50)
+                logging.info("Module %s (%s)" % (moduleName, fname))
+                logging.debug("= "*50)
                 self.current_module = {"instances": {}, "nets": {}, "name": moduleName, "io": {}, "constraints": {"dnt": False},
                                        "instantiated": 0, 'file': fname, "fanouts": {}, "voters": {}, "params": {}, "portMode": "non-ANSI",
                                        "tmrErrNets": {}}
                 for param in moduleParams:
                     pname = param[1][0]
                     pval = self.vf.format(param[1][1])
-                    self.logger.debug("Parameter %s = %s" % (pname, pval))
+                    logging.debug("Parameter %s = %s" % (pname, pval))
                     self.current_module["params"][pname] = {"value": pval, "range": "", "len": "", "type": "param"}
 
                 for port in modulePorts:
@@ -807,8 +800,8 @@ class VerilogElaborator():
                 self.modules[moduleName] = copy.deepcopy(self.current_module)
 
         for fname in sorted(self.libs):
-            self.logger.info("")
-            self.logger.info("Elaborating library %s" % (fname))
+            logging.info("")
+            logging.info("Elaborating library %s" % (fname))
             tokens = self.libs[fname]
             for module in tokens:
                 if module.getName() != "module":
@@ -820,22 +813,22 @@ class VerilogElaborator():
                 auto_inferred = False
 
                 if moduleName.endswith("TMR"):
-                    self.logger.info("Module %s has been already triplicated (%s)" % (moduleName, fname))
+                    logging.info("Module %s has been already triplicated (%s)" % (moduleName, fname))
                     moduleName = moduleName[:-len("TMR")]
-                    self.logger.info("Infering non triplicated version: %s" % moduleName)
+                    logging.info("Infering non triplicated version: %s" % moduleName)
                     auto_inferred = True
 
-                self.logger.debug("")
-                self.logger.debug("= "*50)
-                self.logger.info("Module %s (%s)" % (moduleName, fname))
-                self.logger.debug("= "*50)
+                logging.debug("")
+                logging.debug("= "*50)
+                logging.info("Module %s (%s)" % (moduleName, fname))
+                logging.debug("= "*50)
                 self.current_module = {"instances": {}, "nets": {}, "name": moduleName, "io": {}, "constraints": {}, "instantiated": 0,
                                        'file': fname, "fanouts": {}, "voters": {}, "lib": fname, "portMode": "non-ANSI"}
 
                 for param in moduleParams:
                     pname = param[0]
                     pval = self.vf.format(param[1])
-                    self.logger.debug("Parameter %s = %s" % (pname, pval))
+                    logging.debug("Parameter %s = %s" % (pname, pval))
                     self.current_module["params"][pname] = {"value": pval, "range": "", "len": "", "type": "param"}
 
                 for port in modulePorts:
@@ -853,7 +846,7 @@ class VerilogElaborator():
                             bport = io[:-1] + "B"
                             cport = io[:-1] + "C"
                             if bport in self.current_module["io"] and cport in self.current_module["io"]:
-                                self.logger.info("Port %s is triplicated" % (port))
+                                logging.info("Port %s is triplicated" % (port))
                                 # create new port and net
                                 self.current_module["io"][port] = self.current_module["io"][io]
                                 self.current_module["nets"][port] = self.current_module["nets"][io]
@@ -884,12 +877,12 @@ class VerilogElaborator():
 
         # display summary
         if len(self.modules) > 1:
-            self.logger.info("")
-            self.logger.info("Modules found %d" % len(self.modules))
+            logging.info("")
+            logging.info("Modules found %d" % len(self.modules))
             libDetails = {}
             for module in sorted(self.modules):
                 if "lib" not in self.modules[module]:
-                    self.logger.info(" - %s (%s)" % (module, self.modules[module]["file"]))
+                    logging.info(" - %s (%s)" % (module, self.modules[module]["file"]))
                 else:
                     lib = self.modules[module]["lib"]
                     if not lib in libDetails:
@@ -902,19 +895,19 @@ class VerilogElaborator():
                     s += m+" "
                     if len(s) > 100:
                         if infoed < 5:
-                            self.logger.info(s)
+                            logging.info(s)
                         else:
-                            self.logger.debug(s)
+                            logging.debug(s)
                         s = ""
                         infoed += 1
                 if infoed < 5:
-                    self.logger.info(s)
+                    logging.info(s)
                 else:
-                    self.logger.debug(s)
+                    logging.debug(s)
 
         # check if all modules are known
-        self.logger.info("")
-        self.logger.info("Checking the design hierarchy")
+        logging.info("")
+        logging.info("Checking the design hierarchy")
         elaborationError = False
         for module in self.modules:
             for instName in self.modules[module]["instances"]:
@@ -923,10 +916,10 @@ class VerilogElaborator():
                     self.modules[instance]["instantiated"] += 1
                 else:
                     if "dnt" in self.modules[module]["constraints"] and self.modules[module]["constraints"]["dnt"]:
-                        self.logger.warning("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'." % (
+                        logging.warning("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'." % (
                             module, instName, instance))
                     else:
-                        self.logger.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'." % (
+                        logging.error("Unknown module instantiation! In module '%s', instance name '%s' instance type '%s'." % (
                             module, instName, instance))
                         elaborationError = True
 
@@ -951,13 +944,13 @@ class VerilogElaborator():
             top_module = self.options.top_module
         if top_module:
             if not top_module in self.modules:
-                self.logger.error("Specified top module (%s) not found.", self.options.top_module)
+                logging.error("Specified top module (%s) not found.", self.options.top_module)
                 elaborationError = True
             else:
                 self.topModule = top_module
-                self.logger.info("Top module found (%s)!", self.topModule)
+                logging.info("Top module found (%s)!", self.topModule)
         elif tops != 1:
-            self.logger.warning("The design has multiple top cells! Output may not be correct!")
+            logging.warning("The design has multiple top cells! Output may not be correct!")
 
         if not allowMissingModules and elaborationError:
             raise ErrorMessage("Serious error during elaboration.")
@@ -973,12 +966,12 @@ class VerilogElaborator():
             for instName in self.modules[module]["instances"]:
                 inst = self.modules[module]["instances"][instName]["instance"]
                 if inst in self.modules:
-                    self.logger.info(i+"- "+instName+":"+inst)
+                    logging.info(i+"- "+instName+":"+inst)
                     _printH(inst, i)
                 else:
-                    self.logger.info(i+"- [!] "+instName+":"+inst)
+                    logging.info(i+"- [!] "+instName+":"+inst)
 
-        self.logger.info("[%s]" % topModule)
+        logging.info("[%s]" % topModule)
         _printH(topModule)
 
     def showSummary(self):

@@ -132,8 +132,6 @@ class VerilogParser:
         self.include=False
         self.inc_dir=[]
 
-        self.logger = logging.getLogger('VP')
-
         self.compilerDirective = Combine( "`" + \
             oneOf("define undef ifdef else endif default_nettype "
                   "include resetall timescale unconnected_drive "
@@ -826,25 +824,25 @@ class VerilogParser:
             if toks[0]=="include":
                 if self.include:
                     fname=toks[1].replace('"','').strip()
-                    self.logger.info("Including '%s'"% fname)
+                    logging.info("Including '%s'"% fname)
                     found = False
                     for d in self.inc_dir:
                         fullname=os.path.join(d,fname)
                         if os.path.isfile(fullname):
-                            self.logger.info("File '%s' found in '%s'"%(fname,fullname))
+                            logging.info("File '%s' found in '%s'"%(fname,fullname))
                             fin=open(fullname)
                             fcontent=fin.read()
                             fin.close()
                             return fcontent
                             found=True
                     if not found:
-                        self.logger.warning("File '%s' not found" % (fname))
+                        logging.warning("File '%s' not found" % (fname))
             return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
 
 
     def parseFile(self,fname):
-        self.logger.debug("Parsing file '%s'"%fname)
+        logging.debug("Parsing file '%s'"%fname)
         self.fname=fname
         f=open(fname,"r")
         body=f.read()
@@ -875,7 +873,7 @@ class VerilogParser:
             self.tokens = self.verilogbnf.parseString(preParsedStrngNew)
         except:
             for i,l in enumerate(preParsedStrngNew.split("\n")):
-                self.logger.debug("[%d] %s"%(i,l))
+                logging.debug("[%d] %s"%(i,l))
             raise
 
         return self.tokens
