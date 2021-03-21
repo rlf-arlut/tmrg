@@ -10,3 +10,5 @@ omit =
 exclude_lines =
     if debug:
     if __name__ == "__main__":
+    if self.options.generateBugReport:
+    if options.generateBugReport:
