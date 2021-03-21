@@ -39,10 +39,12 @@ def test_plag_config_does_not_exist(plag, capfd):
 def test_plag_working(plag, capfd):
     assert not plag([file_in_test_dir("netlist/accTMR.v"), '-l', file_in_test_dir("libs/tcbn65lp.v"), '-c', file_in_test_dir("cnf/plag.cfg")])
     assert_output_streams(capfd)
+    assert os.path.isfile("tmrPlace.tcl")
 
 def test_plag_working_exclude(plag, capfd):
     assert not plag([file_in_test_dir("netlist/accTMR.v"), '-l', file_in_test_dir("libs/tcbn65lp.v"), '--exclude', file_in_test_dir("cnf/exclude.txt"), '--cells=DFCNQD1'])
     assert_output_streams(capfd)
+    assert os.path.isfile("tmrPlace.tcl")
 
 def test_plag_missing_library(plag, capfd):
     assert plag([file_in_test_dir("netlist/accTMR.v")])
@@ -55,8 +57,10 @@ def test_plag_missing_library(plag, capfd):
 def test_plag_working_verbose(plag, capfd):
     assert not plag([file_in_test_dir("netlist/accTMR.v"), '-l', file_in_test_dir("libs/tcbn65lp.v"), '-v'])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["SEE file is stored to "], forbid_in_stderr=["Instances to be placed : 0"])
+    assert os.path.isfile("tmrPlace.tcl")
 
 def test_plag_working_very_verbose(plag, capfd):
     assert not plag([file_in_test_dir("netlist/accTMR.v"), '-l', file_in_test_dir("libs/tcbn65lp.v"), '-vv'])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["SEE file is stored to ", "Instances to be placed : 0"])
+    assert os.path.isfile("tmrPlace.tcl")
 
