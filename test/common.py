@@ -34,9 +34,9 @@ def assert_output_streams(
 
     out, err = capture.readouterr()
 
-    assert bool(out) ^ expect_stdout_empty
+    assert bool(out) ^ expect_stdout_empty, "expect_stdout_empty: %s stdout_lenght:%d" % (expect_stdout_empty, len(out))
 
-    assert bool(err) ^ expect_stderr_empty
+    assert bool(err) ^ expect_stderr_empty, "expect_stderr_empty: %s stderr_lenght:%d" % (expect_stderr_empty, len(err))
 
     for string in expect_in_stdout:
         assert string in out
