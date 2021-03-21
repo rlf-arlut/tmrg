@@ -47,16 +47,15 @@ def test_tmrg_hierahical(tmrg, capfd):
     assert not tmrg([file_in_test_dir("verilog/hier/m1.v"), file_in_test_dir("verilog/hier/m2.v"), file_in_test_dir("verilog/hier/m3.v"), file_in_test_dir("verilog/hier/m4.v"), file_in_test_dir("verilog/hier/m5.v"), file_in_test_dir("verilog/hier/top.v")])
     assert_output_streams(capfd)
 
-# FIXME - breaks something in logging
-def disable_test_tmrg_output_log(tmrg, capfd):
+def test_tmrg_output_log(tmrg, capfd):
     assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--log", "fsm01.log", "-v" ])
     assert_output_streams(capfd, expect_stderr_empty=False)
     assert os.path.isfile("fsm01.log")
 
-# FIXME - breaks something in logging
-def disable_test_tmrg_generate_bug_report(tmrg, capfd):
+def test_tmrg_generate_bug_report(tmrg, capfd):
     assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--generate-report"])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Creating zip archive with bug report"])
+    # FIXME: check if archive exists
 
 class TestTmrgOnSingleFile():
     @pytest.mark.parametrize(
