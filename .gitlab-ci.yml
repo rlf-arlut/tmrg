@@ -3,8 +3,6 @@ stages:
   - doc_build
   - doc_deploy
 
-regression
-
 .regression_template: &regression
   stage: test
   script: 
