@@ -43,17 +43,20 @@ def test_tmrg_warning_left_hand_side_concatenation(tmrg, capfd):
     assert not tmrg([file_in_test_dir("verilog/leftSideConcatenation.v")])
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Unsupported syntax : concatenation on left hand side of the assignment", "Output may be incorrect."])
 
-# FIXME
+def test_tmrg_hierahical(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/hier/m1.v"), file_in_test_dir("verilog/hier/m2.v"), file_in_test_dir("verilog/hier/m3.v"), file_in_test_dir("verilog/hier/m4.v"), file_in_test_dir("verilog/hier/m5.v"), file_in_test_dir("verilog/hier/top.v")])
+    assert_output_streams(capfd)
+
+# FIXME - breaks something in logging
 def disable_test_tmrg_output_log(tmrg, capfd):
     assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--log", "fsm01.log", "-v" ])
     assert_output_streams(capfd, expect_stderr_empty=False)
     assert os.path.isfile("fsm01.log")
 
-def test_tmrg_hierahical(tmrg, capfd):
-    assert not tmrg([file_in_test_dir("verilog/hier/m1.v"), file_in_test_dir("verilog/hier/m2.v"), file_in_test_dir("verilog/hier/m3.v"), file_in_test_dir("verilog/hier/m4.v"), file_in_test_dir("verilog/hier/m5.v"), file_in_test_dir("verilog/hier/top.v")])
-    assert_output_streams(capfd)
-
-# FIXME  ("tmrg","--generate-report %s/verilog/fsm01.v"%(top),1,None), #TODO check if file exists
+# FIXME - breaks something in logging
+def disable_test_tmrg_generate_bug_report(tmrg, capfd):
+    assert not tmrg([file_in_test_dir("verilog/fsm01.v"), "--generate-report"])
+    assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Creating zip archive with bug report"])
 
 class TestTmrgOnSingleFile():
     @pytest.mark.parametrize(
