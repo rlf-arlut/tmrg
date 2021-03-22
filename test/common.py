@@ -1,5 +1,6 @@
 import os
 import pytest
+import subprocess
 
 @pytest.fixture(autouse=True)
 def tmp_run_dir(monkeypatch, tmp_path):
@@ -18,6 +19,12 @@ class CliArgPatcher:
         with pytest.raises(SystemExit) as retval:
             self.main_function()
         return retval.value.code
+
+def syntax_check(file_name):
+    p = subprocess.Popen(["iverilog", file_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout, stderr = p.communicate()
+    assert not int(p.returncode)
+    assert not stdout.decode('utf8')
 
 #
 # Helper functions

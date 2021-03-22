@@ -162,6 +162,7 @@ class TestTmrgOnSingleFile():
     )
 
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
+      syntax_check(file_in_test_dir(verilog_file))
       assert not tmrg([file_in_test_dir(verilog_file)])
       basename = os.path.basename(verilog_file)
       expected_tmr_file = basename.replace(".v", "TMR.v")
