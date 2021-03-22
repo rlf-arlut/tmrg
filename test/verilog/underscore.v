@@ -9,7 +9,7 @@ module underscore(in1, in2, out);
 
 	assign out = my_xor;
 	assign out = _xor;
-	assign out = 1'b0_0;
+	assign out = 1'b0_;
 	assign out = 0_0;
 	assign out = 0_0______1;
 endmodule
