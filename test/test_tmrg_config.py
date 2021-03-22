@@ -1,77 +1,95 @@
-import os
-import pytest
-from .common import *
-from tmrg.tmrg import main as tmrg_main
 import filecmp
+from .common import assert_output_streams
+from .test_tmrg import tmrg
 
-@pytest.fixture
-def tmrg(monkeypatch):
-    return CliArgPatcher(monkeypatch, "tmrg", main_function=tmrg_main)
-
-import logging
 def test_tmrg_configuration(tmrg, capfd):
     """This test uses a very simple verilog code and triplicates it 5 times with 3 different
-       constraining methods (configuration file/in code constraints/command line arguments) every
-       time comparing if all the methods yield the same output.
+    constraining methods (configuration file/in code constraints/command line arguments) every
+    time comparing if all the methods yield the same output.
     """
-    errors=0
     test = {
-        "name":"First test",
-        "verilog":""" module comb( input [7:0]  in, output [7:0] out );
+        "name": "First test",
+        "verilog": """ module comb( input [7:0]  in, output [7:0] out );
                   %(tmrg_constraints)s
                   assign out=~in;
                   endmodule
                   """,
-        "configurations":(
-            {"config_file":"[comb]\ndefault : triplicate",
-             "comment":"// tmrg default triplicate",
-             "cmd_line_args":['-w', 'default triplicate']},
-
-            {"config_file":"[comb]\ndefault : do_not_triplicate",
-             "comment":"// tmrg default do_not_triplicate",
-             "cmd_line_args":['-w', 'default do_not_triplicate comb']},
-
-            {"config_file":"[comb]\ndefault : do_not_triplicate\nin:triplicate",
-             "comment":"// tmrg default do_not_triplicate\n //tmrg triplicate in",
-             "cmd_line_args":['-w', 'default do_not_triplicate comb', '-w', 'triplicate comb.in"']},
-
-            {"config_file":"[comb]\ndefault : triplicate\nout:do_not_triplicate",
-             "comment":"// tmrg default triplicate\n //tmrg do_not_triplicate out",
-             "cmd_line_args":['-w', 'default triplicate comb', '-w', 'do_not_triplicate comb.out']},
-
-            {"config_file":"[comb]\ndo_not_touch : true",
-             "comment":"// tmrg do_not_touch",
-             "cmd_line_args":['-w', 'do_not_touch comb']},
-         )}
+        "configurations": (
+            {
+                "config_file": "[comb]\ndefault : triplicate",
+                "comment": "// tmrg default triplicate",
+                "cmd_line_args": ["-w", "default triplicate"],
+            },
+            {
+                "config_file": "[comb]\ndefault : do_not_triplicate",
+                "comment": "// tmrg default do_not_triplicate",
+                "cmd_line_args": ["-w", "default do_not_triplicate comb"],
+            },
+            {
+                "config_file": "[comb]\ndefault : do_not_triplicate\nin:triplicate",
+                "comment": "// tmrg default do_not_triplicate\n //tmrg triplicate in",
+                "cmd_line_args": [
+                    "-w",
+                    "default do_not_triplicate comb",
+                    "-w",
+                    'triplicate comb.in"',
+                ],
+            },
+            {
+                "config_file": "[comb]\ndefault : triplicate\nout:do_not_triplicate",
+                "comment": "// tmrg default triplicate\n //tmrg do_not_triplicate out",
+                "cmd_line_args": [
+                    "-w",
+                    "default triplicate comb",
+                    "-w",
+                    "do_not_triplicate comb.out",
+                ],
+            },
+            {
+                "config_file": "[comb]\ndo_not_touch : true",
+                "comment": "// tmrg do_not_touch",
+                "cmd_line_args": ["-w", "do_not_touch comb"],
+            },
+        ),
+    }
     verilog_source = test["verilog"]
-    for j, conf in enumerate(test["configurations"]):
-        coreName="m%03d"%(j)
+    for j, configuration in enumerate(test["configurations"]):
+        core_name = "m%03d" % (j)
 
         # tmrg test with configuration file
-        verilog_cnffile_name = "%s_file.v"%coreName
+        verilog_cnffile_name = "%s_file.v" % core_name
         verilog_cnffile_tmr_name = verilog_cnffile_name.replace(".v", "TMR.v")
-        confi_file_name = "%s_file.cnf"%coreName
+        confi_file_name = "%s_file.cnf" % core_name
         with open(verilog_cnffile_name, "w") as verilog_file:
-            verilog_file.write(verilog_source % {'tmrg_constraints': ""})
+            verilog_file.write(verilog_source % {"tmrg_constraints": ""})
         with open(confi_file_name, "w") as config_file:
-            config_file.write(test["configurations"][j]["config_file"]+"\n")
-        assert not tmrg(['--no-header', verilog_cnffile_name,'--config=%s' % confi_file_name])
+            config_file.write(configuration["config_file"] + "\n")
+        assert not tmrg(
+            ["--no-header", verilog_cnffile_name, "--config=%s" % confi_file_name]
+        )
         assert_output_streams(capfd)
 
         # tmrg test with in-verilog-file constraints
-        verilog_with_comments_file_name = "%s_comment.v"%coreName
-        verilog_with_comments_file_tmr_name = verilog_with_comments_file_name.replace(".v", "TMR.v")
+        verilog_with_comments_file_name = "%s_comment.v" % core_name
+        verilog_with_comments_file_tmr_name = verilog_with_comments_file_name.replace(
+            ".v", "TMR.v"
+        )
         with open(verilog_with_comments_file_name, "w") as verilog_file:
-            verilog_file.write(verilog_source % {'tmrg_constraints': test["configurations"][j]["comment"]})
-        assert not tmrg(['--no-header', verilog_with_comments_file_name])
+            verilog_file.write(
+                verilog_source % {"tmrg_constraints": configuration["comment"]}
+            )
+        assert not tmrg(["--no-header", verilog_with_comments_file_name])
         assert_output_streams(capfd)
 
         # tmrg test with command line constraints
-        verilog_cmdline_file_name = "%s_cmdline.v"%coreName
+        verilog_cmdline_file_name = "%s_cmdline.v" % core_name
         verilog_cmdline_file_tmr_name = verilog_cmdline_file_name.replace(".v", "TMR.v")
         with open(verilog_cmdline_file_name, "w") as verilog_file:
-            verilog_file.write(verilog_source % {'tmrg_constraints': ""})
-        assert not tmrg(['--no-header', verilog_cmdline_file_name] + test["configurations"][j]["cmd_line_args"])
+            verilog_file.write(verilog_source % {"tmrg_constraints": ""})
+        assert not tmrg(
+            ["--no-header", verilog_cmdline_file_name]
+            + configuration["cmd_line_args"]
+        )
         assert_output_streams(capfd)
 
         # Compare all files generated by TMRG
