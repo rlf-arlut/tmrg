@@ -5,7 +5,7 @@ from tmrg.tbg import main as tbg_main
 
 @pytest.fixture
 def tbg(monkeypatch):
-    return CliArgPatcher(monkeypatch, "tbg", main_function=tbg_main)
+    return CliExecutor(monkeypatch, "tbg", main_function=tbg_main)
 
 def test_tbg_no_arguments(tbg, capfd):
     assert tbg()

@@ -5,7 +5,7 @@ from tmrg.wrg import main as wrg_main
 
 @pytest.fixture
 def wrg(monkeypatch):
-    return CliArgPatcher(monkeypatch, "wrg", main_function=wrg_main)
+    return CliExecutor(monkeypatch, "wrg", main_function=wrg_main)
 
 def test_wrg_no_arguments(wrg, capfd):
     assert wrg()

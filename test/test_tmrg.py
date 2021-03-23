@@ -5,7 +5,7 @@ from tmrg.tmrg import main as tmrg_main
 
 @pytest.fixture
 def tmrg(monkeypatch):
-    return CliArgPatcher(monkeypatch, "tmrg", main_function=tmrg_main)
+    return CliExecutor(monkeypatch, "tmrg", main_function=tmrg_main)
 
 def test_tmrg_no_arguments(tmrg, capfd):
     assert tmrg()

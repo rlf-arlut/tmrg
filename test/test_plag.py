@@ -5,7 +5,7 @@ from tmrg.plag import main as plag_main
 
 @pytest.fixture
 def plag(monkeypatch):
-    return CliArgPatcher(monkeypatch, "plag", main_function=plag_main)
+    return CliExecutor(monkeypatch, "plag", main_function=plag_main)
 
 def test_plag_no_arguments(plag, capfd):
     assert plag()

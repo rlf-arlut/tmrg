@@ -5,7 +5,7 @@ from tmrg.seeg import main as seeg_main
 
 @pytest.fixture
 def seeg(monkeypatch):
-    return CliArgPatcher(monkeypatch, "seeg", main_function=seeg_main)
+    return CliExecutor(monkeypatch, "seeg", main_function=seeg_main)
 
 def test_seeg_no_arguments(seeg, capfd):
     assert seeg()

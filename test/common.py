@@ -7,7 +7,7 @@ def tmp_run_dir(monkeypatch, tmp_path):
     """Fixture running each test in an isolated, temporary directory"""
     monkeypatch.chdir(tmp_path)
 
-class CliArgPatcher:
+class CliExecutor:
     def __init__(self, monkeypatch, tool_name, main_function):
         self._monkeypatch = monkeypatch
         self._tool_name = tool_name
