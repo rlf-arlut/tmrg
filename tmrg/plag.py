@@ -43,12 +43,12 @@ class PLA(VerilogElaborator):
         # command line specified config files
         for fname in self.options.config:
             if os.path.exists(fname):
-                self.logger.debug("Loading command line specified config file from %s" % fname)
+                logging.debug("Loading command line specified config file from %s" % fname)
                 self.config.read(fname)
                 if self.options.generateBugReport:
                     bn = os.path.basename(fname)
                     fcopy = os.path.join(self.options.bugReportDir, "cmd_%s.cfg" % bn)
-                    self.logger.debug("Coping  command line specified config file from '%s' to '%s'" % (fname, fcopy))
+                    logging.debug("Coping  command line specified config file from '%s' to '%s'" % (fname, fcopy))
                     shutil.copyfile(fname, fcopy)
             else:
                 raise ErrorMessage("Command line specified config file does not exists at %s" % fname)
@@ -57,12 +57,12 @@ class PLA(VerilogElaborator):
         logging.debug("")
 
         instances = self.getAllInsttances(self.topModule, self.topModule)
-        self.logger.info("Found '%d' instances in the design" % len(instances))
+        logging.info("Found '%d' instances in the design" % len(instances))
 
         cells = self.config.get("plag", "cells")
         if self.options.cells != "":
             cells = self.options.cells
-        self.logger.info("Cells : %s" % cells)
+        logging.info("Cells : %s" % cells)
         cells = cells.split()
 
         filteredInstances = []
@@ -70,12 +70,12 @@ class PLA(VerilogElaborator):
             if cell in cells:
                 filteredInstances.append(instId)
         instances = filteredInstances
-        self.logger.info("")
+        logging.info("")
 
         if self.options.exlude != "":
             logging.info("Loading exlude file from from '%s'" % self.options.exlude)
             if not os.path.isfile(self.options.exlude):
-                self.logger.warning("File does not exists. Constrains will not be applied.")
+                logging.warning("File does not exists. Constrains will not be applied.")
             else:
                 f = open(self.options.exlude, "r")
                 toExlude = []
@@ -130,7 +130,7 @@ class PLA(VerilogElaborator):
             body += "addInstToInstGroup tmrGroup%s {%s}\n" % (group, ins)
 
         fname = self.options.ofile
-        self.logger.info("SEE file is stored to '%s'" % fname)
+        logging.info("SEE file is stored to '%s'" % fname)
         f = open(fname, "w")
         f.write(body)
         f.close()
@@ -167,7 +167,7 @@ def main():
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
-
+    exit_code = 0
     try:
         (options, args) = parser.parse_args()
 
@@ -203,14 +203,14 @@ def main():
         plag.parse()
         plag.elaborate()
         plag.generate()
-
     except ErrorMessage as er:
         logging.error(er)
-        os._exit(1)
+        exit_code = 1
     except OptParseError as er:
         logging.error(er)
-        os._exit(2)
-
+        exit_code = 2
+    rootLogger.handlers = []
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()

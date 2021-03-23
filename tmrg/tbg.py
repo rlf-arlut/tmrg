@@ -36,7 +36,7 @@ class TBG(TMR):
 
     def loadVoterDefinition(self, voterName="majorityVoterTB"):
         vfile = os.path.join(self.scriptDir,  self.config.get("tmrg", "voter_definition"))
-        self.logger.info("Taking voter declaration from %s" % vfile)
+        logging.info("Taking voter declaration from %s" % vfile)
         return readFile(vfile).replace("majorityVoter", voterName)
 
     def generate(self):
@@ -76,7 +76,7 @@ class TBG(TMR):
                 elif io["type"] == "output":
                     oStr += "  wire %s %s;\n" % (io["range"], ioName)
                 else:
-                    self.logger.warning("Unsuported IO type: %s" % io["type"])
+                    logging.warning("Unsuported IO type: %s" % io["type"])
 
             oStr += "\n// - - - - - - - - - - - - - Device Under Test section - - - - - - - - - - - -\n"
             oStr += "\n`ifdef TMR\n"
@@ -108,7 +108,7 @@ class TBG(TMR):
                         oStr += "  );\n"
 
                     else:
-                        self.logger.warning("Unsuported IO type: %s" % io["type"])
+                        logging.warning("Unsuported IO type: %s" % io["type"])
 
             # dut tmr instantiation
             oStr += "  %sTMR%s DUT (\n" % (module, parameters)
@@ -235,7 +235,7 @@ class TBG(TMR):
 
             oStr += "endmodule\n"
         if self.options.outputFname != "":
-            self.logger.info("Writing testbench to %s" % self.options.outputFname)
+            logging.info("Writing testbench to %s" % self.options.outputFname)
             f = open(self.options.outputFname, "w")
             f.write(oStr)
             f.close()
@@ -266,8 +266,13 @@ def main():
     parser.add_option("",   "--top-module",        dest="top_module",
                       action="store", default="",  help="Specify top module name")
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
-
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.WARNING)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+    exit_code = 0
     try:
         (options, args) = parser.parse_args()
 
@@ -291,11 +296,12 @@ def main():
         tbg.generate()
     except ErrorMessage as er:
         logging.error(er)
-        os._exit(1)
+        exit_code = 1
     except OptParseError as er:
         logging.error(er)
-        os._exit(2)
-
+        exit_code = 2
+    rootLogger.handlers = []
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()

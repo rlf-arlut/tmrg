@@ -1,0 +1,12 @@
+[run]
+omit =
+       tmrg/gen_tmrg_libs.py
+       tmrg/pyparsing152.py
+       tmrg/release.py
+       tmrg/prettytable.py
+       tmrg/pyparsing241.py
+
+[report]
+exclude_lines =
+    if debug:
+    if __name__ == "__main__":

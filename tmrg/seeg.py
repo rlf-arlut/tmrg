@@ -99,17 +99,17 @@ class SEE(VerilogElaborator):
             for net in self.modules[self.topModule]["io"]:
                 if self.modules[self.topModule]["io"][net]["type"] == "input":
                     setNets.append("DUT.%s" % net)
-        self.logger.info("Found '%d' SET nets in the design" % len(setNets))
+        logging.info("Found '%d' SET nets in the design" % len(setNets))
 
         seuNets = outputSeuNets(self.topModule, "DUT.")
-        self.logger.info("Found '%d' SEU nets in the design" % len(seuNets))
+        logging.info("Found '%d' SEU nets in the design" % len(seuNets))
 
-        self.logger.info("")
+        logging.info("")
 
         if self.options.exlude != "":
             logging.info("Loading excluded file from from '%s'" % self.options.exlude)
             if not os.path.isfile(self.options.exlude):
-                self.logger.warning("File does not exists. Constrains will not be applied.")
+                logging.warning("File does not exists. Constrains will not be applied.")
             else:
                 f = open(self.options.exlude, "r")
                 toExlude = []
@@ -171,7 +171,7 @@ class SEE(VerilogElaborator):
         values['set_display_net'] = values['set_display_net'].rstrip()
 
         if len(values['set_force_net']) == 0:
-            self.logger.warning("No SET wires!")
+            logging.warning("No SET wires!")
             values['set_force_net'] = "    // No SET wires found !\n"
             values['set_release_net'] = "    // No SET wires found !\n"
             values['set_display_net'] = "    // No SET wires found !\n"
@@ -195,7 +195,7 @@ class SEE(VerilogElaborator):
         values['seu_display_net'] = values['seu_display_net'].rstrip()
 
         if len(values['seu_force_net']) == 0:
-            self.logger.warning("No SEU wires!")
+            logging.warning("No SEU wires!")
             values['seu_force_net'] = "    // No SEU wires found !\n"
             values['seu_release_net'] = "    // No SEU wires found !\n"
             values['seu_display_net'] = "    // No SEU wires found !\n"
@@ -206,10 +206,10 @@ class SEE(VerilogElaborator):
 
         values['see_full_list'] += "\n"
         tfile = os.path.join(self.scriptDir,  self.config.get("seeg", "template"))
-        self.logger.info("Taking template from '%s'" % tfile)
+        logging.info("Taking template from '%s'" % tfile)
 
         fname = self.options.ofile
-        self.logger.info("SEE file is stored to '%s'" % fname)
+        logging.info("SEE file is stored to '%s'" % fname)
 
         generateFromTemplate(fname, tfile, values)
 
@@ -237,8 +237,13 @@ def main():
     parser.add_option("",   "--top-module",        dest="top_module",
                       action="store", default="",  help="Specify top module name")
 
-    logging.basicConfig(format='[%(levelname)-7s] %(message)s', level=logging.INFO)
-
+    logFormatter = logging.Formatter('[%(levelname)-7s] %(message)s')
+    rootLogger = logging.getLogger()
+    rootLogger.setLevel(logging.WARNING)
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    rootLogger.addHandler(consoleHandler)
+    exit_code = 0
     try:
         (options, args) = parser.parse_args()
 
@@ -276,11 +281,12 @@ def main():
         seeg.generate()
     except ErrorMessage as er:
         logging.error(er)
-        os._exit(1)
+        exit_code = 1
     except OptParseError as er:
         logging.error(er)
-        os._exit(2)
-
+        exit_code = 2
+    rootLogger.handlers = []
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()

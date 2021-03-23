@@ -1,6 +1,6 @@
 module comb00( 
-  input [7:0]  in, 
-  output [7:0] out
+  input in, 
+  output out
   );
   assign out=~in;
   // tmrg do_not_triplicate yv
