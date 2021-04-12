@@ -255,6 +255,7 @@ class VerilogParser:
 
         paramAssgnmt = Group(  identifier + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
+        self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
         parameterDecl      = Group( "parameter" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
         localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
@@ -342,6 +343,7 @@ class VerilogParser:
             Group( self.directive_synopsys_case )| \
             Group( release + lvalue + self.semi ).setResultsName("release") |\
             Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
+            self.comp_directive |\
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )
@@ -609,7 +611,6 @@ class VerilogParser:
         self.directive_majority_voter_cell  = Group( tmrg + Suppress("majority_voter_cell")  + OneOrMore(identifier) + Suppress(self.semi)).setResultsName("directive_majority_voter_cell")
         self.directive_fanout_cell      = Group( tmrg + Suppress("fanout_cell")  + OneOrMore(identifier) + Suppress(self.semi)).setResultsName("directive_fanout_cell")
 
-        self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
         """
         x::= <specparam_declaration>
