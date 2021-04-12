@@ -549,7 +549,6 @@ class TMR(VerilogElaborator):
     def __triplicate_ModuleInstantiation(self, tokens):
         identifier = tokens[0]
         instance = tokens[2][0][0][0]
-
         logging.debug("[module instances]")
         logging.debug("      ID  :"+identifier)
         logging.debug("      Ins :"+instance)
@@ -655,7 +654,7 @@ class TMR(VerilogElaborator):
                             portCpy[1] = dport+post
                             for name in list(ids["right"]):
                                 _to_name = name+post
-                                self.replace(portCpy, name, _to_name)
+                                self.replace(portCpy[3], name, _to_name)
                             newPorts.append(portCpy)
                         for sport in ids['right']:
                             #print sport

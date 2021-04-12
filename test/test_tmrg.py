@@ -99,6 +99,7 @@ class TestTmrgOnSingleFile():
             "verilog/instantiation.v",
             "verilog/netdeclaration.v",
             "verilog/portDeclaration.v",
+            "verilog/port_names.v",
             "verilog/tmr2.v",
             "verilog/assigment.v",
             "verilog/compDirectives.v",
