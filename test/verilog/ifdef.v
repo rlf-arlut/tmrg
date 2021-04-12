@@ -13,5 +13,12 @@
 `else
   real IFL [6:0], i , k[0:1];
   real z;
-`endif   
+`endif
+
+  reg m;
+  always @(m) begin
+`ifdef SYN
+   $display("Test");
+`endif
+  end
 endmodule
