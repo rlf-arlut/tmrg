@@ -57,7 +57,7 @@ def test_tmrg_generate_bug_report(tmrg, capfd):
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["Creating zip archive with bug report"])
     # FIXME: check if archive exists
 
-class TestTmrgOnSingleFile():
+class TestTmrgOnSingleVerilogFile():
     @pytest.mark.parametrize(
         'verilog_file', [
             "verilog/always.v",
@@ -171,5 +171,21 @@ class TestTmrgOnSingleFile():
       assert not tmrg([file_in_test_dir(verilog_file)])
       basename = os.path.basename(verilog_file)
       expected_tmr_file = basename.replace(".v", "TMR.v")
+      assert_output_streams(capfd)
+      assert os.path.isfile(expected_tmr_file)
+
+
+class TestTmrgOnSingleSystemVerilogFile():
+    @pytest.mark.parametrize(
+        'verilog_file', [
+            "systemverilog/endmodule_label_dff.sv",
+        ]
+    )
+
+    def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
+      syntax_check(file_in_test_dir(verilog_file), flags=["-g2012"])
+      assert not tmrg([file_in_test_dir(verilog_file)])
+      basename = os.path.basename(verilog_file)
+      expected_tmr_file = basename.replace(".sv", "TMR.sv")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
