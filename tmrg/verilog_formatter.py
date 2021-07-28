@@ -495,7 +495,11 @@ class VerilogFormatter:
         moduleBody = tokens[1]
         for moduleItem in moduleBody:
             oStr += self.format(moduleItem)
-        oStr += "endmodule\n\n"
+        print()
+        endmodule_label = ""
+        if len(tokens[3]):
+            endmodule_label = " : %s" % modname
+        oStr += "endmodule%s\n\n" % (endmodule_label)
         return oStr
 
     def _format_NbAssgnmt(self, tokens, i=""):
