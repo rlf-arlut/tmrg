@@ -229,6 +229,7 @@ class VerilogParser:
         force      = Keyword("force")
         release    = Keyword("release")
         assign     = Keyword("assign").setResultsName("keyword")
+        unique     = Keyword("unique")
 
         eventExpr = Forward()
         eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
@@ -327,7 +328,7 @@ class VerilogParser:
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
             Group( delayOrEventControl + stmtOrNull ).setResultsName("delayStm") |\
-            Group( case + Suppress("(") + Group(self.expr) + Suppress(")") +  Group(OneOrMore( caseItem )) + endcase ).setResultsName("case") |\
+            Group( Group(Optional(unique)) + case + Suppress("(") + Group(self.expr) + Suppress(")") +  Group(OneOrMore( caseItem )) + endcase ).setResultsName("case") |\
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
