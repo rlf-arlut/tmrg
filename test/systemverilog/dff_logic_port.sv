@@ -12,7 +12,7 @@ module dff_logic_port
    input logic c,
    output logic q);
   // tmrg default triplicate
-  logic dVoted=d;
+  wire dVoted=d;
   always @(posedge c)
     q<=dVoted;
 endmodule

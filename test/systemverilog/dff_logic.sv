@@ -12,7 +12,7 @@ module dff_logic(d,c,q);
   input d,c;
   output q;
   logic q;
-  logic dVoted=d;
+  wire dVoted=d;
   always @(posedge c)
     q<=dVoted;
 endmodule
