@@ -163,8 +163,6 @@ class TestTmrgOnSingleVerilogFile():
             "../examples/resetBlock04.v",
             "../examples/vote02.v",
             "../examples/pipelineWithSeuCoutner.v",
-            "systemverilog/dff_logic.sv",
-            "systemverilog/dff_logic_port.sv",
         ]
     )
 
@@ -182,6 +180,8 @@ class TestTmrgOnSingleSystemVerilogFile():
         'verilog_file', [
             "systemverilog/endmodule_label_dff.sv",
             "systemverilog/real_signals.sv",
+            "systemverilog/dff_logic.sv",
+            "systemverilog/dff_logic_port.sv",
         ]
     )
 
