@@ -760,7 +760,8 @@ class VerilogParser:
 
         self.module = Group(  moduleHdr +
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
-                 self.endmodule ).setName("module").setResultsName("module")
+                 self.endmodule +
+                 Group(Optional(":" + identifier)) ).setName("module").setResultsName("module")
 
 
         udpDecl = self.outputDecl | self.inputDecl | self.regDecl
