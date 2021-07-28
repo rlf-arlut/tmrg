@@ -495,7 +495,7 @@ class VerilogFormatter:
         moduleBody = tokens[1]
         for moduleItem in moduleBody:
             oStr += self.format(moduleItem)
-        print()
+
         endmodule_label = ""
         if len(tokens[3]):
             endmodule_label = " : %s" % modname
