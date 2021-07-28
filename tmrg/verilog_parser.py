@@ -262,25 +262,25 @@ class VerilogParser:
         localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
         self.inputDecl = Group( "input"  + 
-                                Group(Optional(oneOf("wire reg"))) + 
+                                Group(Optional(oneOf("wire reg logic"))) + 
                                 Group(Optional(oneOf("signed real"))) + 
                                 Group(Optional( self.range )).setResultsName("range") + 
                                 Group(delimitedList( identifier )) + 
                                 Suppress(self.semi) ).setResultsName("input")
-        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + 
+        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional(oneOf("signed real"))) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("output")
         self.inoutDecl  = Group( "inout"  + 
-                          Group(Optional(oneOf("wire reg"))) + 
+                          Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("inout")
 
         regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
-        self.regDecl = Group( "reg" +
+        self.regDecl = Group( oneOf("reg logic")+
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
@@ -726,21 +726,21 @@ class VerilogParser:
         inputOutput = oneOf("input output inout")
         self.portIn = Group(
                         Keyword("input") + 
-                        Group(Optional(oneOf("wire reg"))) + 
+                        Group(Optional(oneOf("wire reg logic"))) + 
                         Group(Optional(oneOf("signed real"))) +  
                         Group(Optional( self.range )).setResultsName("range") + 
                         Group(identifier).setResultsName("names")
                       ).setResultsName("inputHdr")
         self.portOut = Group( 
                          Keyword("output") + 
-                         Group(Optional(oneOf("wire reg"))) + 
+                         Group(Optional(oneOf("wire reg logic"))) + 
                          Group(Optional(oneOf("signed real"))) +  
                          Group(Optional( self.range )).setResultsName("range") + 
                          Group(identifier).setResultsName("names")
                        ).setResultsName("outputHdr")
         self.portInOut= Group( 
                           Keyword("inout")  + 
-                          Group(Optional(oneOf("wire reg"))) + 
+                          Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(identifier).setResultsName("names")
