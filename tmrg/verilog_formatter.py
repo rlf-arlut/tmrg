@@ -371,12 +371,9 @@ class VerilogFormatter:
 
     def _format_case(self, tokens, i=""):
 
-        unique = ""
-        if tokens[0]:
-            unique = "%s " % tokens[0]
         label = tokens[1]
         cond = self.format(tokens[2])
-        oStr = "%s%s (%s)\n" % (unique, label, cond)
+        oStr = "%s%s (%s)\n" % (self.format(tokens[0]), label, cond)
         for t in tokens[3]:
             oStr += i+"\t"+self.format(t, i+"\t")+"\n"
         oStr += i+tokens[4]
