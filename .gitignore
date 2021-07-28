@@ -2,6 +2,7 @@
 a.out
 *.pyc
 *TMR.v
+*TMR.sv
 *TMR.sdc
 .coverage
 .idea
