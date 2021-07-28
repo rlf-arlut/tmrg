@@ -131,6 +131,10 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/force_release.v",
             "verilog/default_nettype.v",
             "verilog/compDirectivesComment.v",
+            "verilog/casez01.v",
+            "verilog/casez02.v",
+            "verilog/casex01.v",
+            "verilog/casex02.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
@@ -169,6 +173,7 @@ class TestTmrgOnSingleVerilogFile():
       expected_tmr_file = basename.replace(".v", "TMR.v")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
+
 
 class TestTmrgOnSingleSystemVerilogFile():
     @pytest.mark.parametrize(
