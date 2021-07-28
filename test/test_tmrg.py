@@ -163,6 +163,9 @@ class TestTmrgOnSingleVerilogFile():
             "../examples/resetBlock04.v",
             "../examples/vote02.v",
             "../examples/pipelineWithSeuCoutner.v",
+            'asicworld/systemverilog/decoder_using_unique_case.sv',
+            'asicworld/systemverilog/decoder_using_unique_casex.sv',
+            'asicworld/systemverilog/decoder_using_unique_casez.sv',
         ]
     )
 
