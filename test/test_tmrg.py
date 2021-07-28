@@ -131,6 +131,7 @@ class TestTmrgOnSingleFile():
             "verilog/force_release.v",
             "verilog/default_nettype.v",
             "verilog/compDirectivesComment.v",
+            "verilog/endmodule_label_dff.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
@@ -169,5 +170,3 @@ class TestTmrgOnSingleFile():
       expected_tmr_file = basename.replace(".v", "TMR.v")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
-
-
