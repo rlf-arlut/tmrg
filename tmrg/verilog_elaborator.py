@@ -147,6 +147,7 @@ class VerilogElaborator():
 
         if isinstance(t, ParseResults):
             name = str(t.getName()).lower()
+            print(name, t)
             if len(t) == 0:
                 return res
             if name in ("assgnmt", "nbassgnmt"):
@@ -158,7 +159,7 @@ class VerilogElaborator():
                     logging.error("Unsupported syntax : concatenation on left hand side of the assignment (%s). " %
                                   str(self.vf.format(t)))
                     logging.error("Output may be incorrect.")
-                res["right"].update(_extractID(t[2]))
+                res["right"].update(_extractID(t[-1]))
             elif name in ("regdecl"):
                 for tt in t[3]:
                     left_id = tt[0]
