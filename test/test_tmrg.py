@@ -196,4 +196,4 @@ class TestTmrgOnSingleSystemVerilogFile():
       expected_tmr_file = basename.replace(".sv", "TMR.sv")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
-      syntax_check(file_in_test_dir(expected_tmr_file))
+      syntax_check(file_in_test_dir(expected_tmr_file), flags=["-g2012"])
