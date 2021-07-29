@@ -17,8 +17,8 @@ module for_loops (
   integer z;
   always_ff @(posedge clk) begin
     if (rst)
-      for (int j=0;j<N;j=j+1)
-        data[j] <=   0;
+      for (z=0;z<N;z++)
+        data[z] <=   0;
     else
       for (z=0; z<N; z++)
         if(z < x)
