@@ -667,6 +667,13 @@ class VerilogFormatter:
         oStr = ""
         return oStr
 
+    def _format_package_import_item(self, tokens, i=""):
+        return "".join(tokens)
+
+    def _format_package_import_declaration(self, tokens, i=""):
+        oStr = i + tokens[0] + " " + self.format(tokens[1]) + ";\n"
+        return oStr
+
     def __init__(self):
         for member in dir(self):
             if member.find("_format_") == 0:
