@@ -135,7 +135,6 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/casez02.v",
             "verilog/casex01.v",
             "verilog/casex02.v",
-            "verilog/real_interfaces.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
@@ -180,6 +179,7 @@ class TestTmrgOnSingleSystemVerilogFile():
     @pytest.mark.parametrize(
         'verilog_file', [
             "systemverilog/endmodule_label_dff.sv",
+            "systemverilog/real_signals.sv",
         ]
     )
 
