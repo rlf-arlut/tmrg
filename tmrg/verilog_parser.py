@@ -245,8 +245,9 @@ class VerilogParser:
         delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")
         delayOrEventControl = delay | eventControl
 
-        self.assgnmt   = ( lvalue + Suppress("=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl")
-                             + Group(self.expr) ).setResultsName( "assgnmt" )
+        self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
+
+        self.incr_decr   = ( lvalue + oneOf("++ --")).setResultsName( "incr_decr" )
 
         self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay")            + Group(self.expr) ) |
                           ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl") + Group(self.expr) )
@@ -332,7 +333,7 @@ class VerilogParser:
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
-            Group( for_ + Suppress("(") + Group(self.assgnmt) + Suppress(self.semi) + Group( self.expr ) + Suppress(self.semi) + Group(self.assgnmt) + Suppress(")") + self.stmt ).setResultsName("forstmt") |\
+            Group( for_ + Suppress("(") + Group(self.assgnmt) + Suppress(self.semi) + Group( self.expr ) + Suppress(self.semi) + Group(self.assgnmt | self.incr_decr) + Suppress(")") + self.stmt ).setResultsName("forstmt") |\
             Group( fork + ZeroOrMore( self.stmt ) + join ) |\
             Group( fork + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ) |\
             Group( wait + "(" + self.expr + ")" + stmtOrNull ) |\
