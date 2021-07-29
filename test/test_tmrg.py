@@ -201,6 +201,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/always_latch_02.sv",
             "systemverilog/always_latch_03.sv",
             "systemverilog/always_latch_04.sv",
+            "systemverilog/for_loops.sv",
         ]
     )
 
