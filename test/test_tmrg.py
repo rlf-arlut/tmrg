@@ -173,6 +173,7 @@ class TestTmrgOnSingleVerilogFile():
       expected_tmr_file = basename.replace(".v", "TMR.v")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
+      syntax_check(expected_tmr_file)
 
 
 class TestTmrgOnSingleSystemVerilogFile():
@@ -195,3 +196,4 @@ class TestTmrgOnSingleSystemVerilogFile():
       expected_tmr_file = basename.replace(".sv", "TMR.sv")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
+      syntax_check(expected_tmr_file, flags=["-g2012"])
