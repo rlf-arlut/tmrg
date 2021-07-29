@@ -408,6 +408,29 @@ class VerilogElaborator():
             else:
                 details = ""
 
+    def _elaborate_assgnmt_with_declaration(self, tokens):
+        type = tokens[0]
+        name = tokens[1][0]
+        _atrs = ""
+        _range = ""
+        _from = ""
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
+        _len = ""
+        _to = ""
+        self.current_module["nets"][name] = {"attributes": _atrs,
+                                             "range": _range,
+                                             "len": _len,
+                                             "from": _from,
+                                             "to": _to,
+                                             "type": type,
+                                             "array_range": _array_range,
+                                             "array_len": _array_len,
+                                             "array_from": _array_from,
+                                             "array_to": _array_to}
+
     def _elaborate_localparamdecl(self, tokens):
         _range = self.vf.format(tokens[1])
         _len = self.__getLenStr(tokens[1])
