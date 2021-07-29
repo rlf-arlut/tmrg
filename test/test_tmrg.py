@@ -179,6 +179,7 @@ class TestTmrgOnSingleSystemVerilogFile():
     @pytest.mark.parametrize(
         'verilog_file', [
             "systemverilog/endmodule_label_dff.sv",
+            "systemverilog/real_signals.sv",
         ]
     )
 
