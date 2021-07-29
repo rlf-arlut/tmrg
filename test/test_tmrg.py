@@ -182,6 +182,9 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/real_signals.sv",
             "systemverilog/dff_logic.sv",
             "systemverilog/dff_logic_port.sv",
+            "systemverilog/dff_always_ff.sv",
+            "systemverilog/dff_always_ff01.sv",
+            "systemverilog/dff_always_ff02.sv",
         ]
     )
 
