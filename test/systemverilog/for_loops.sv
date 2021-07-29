@@ -26,4 +26,9 @@ module for_loops (
         else
           data[z] <=   1;
   end
+
+  initial begin
+    for (int g=N;g>=0;g--)
+        data[g] <=   0;
+  end
 endmodule   :   for_loops
