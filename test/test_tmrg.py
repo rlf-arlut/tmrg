@@ -135,6 +135,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/casez02.v",
             "verilog/casex01.v",
             "verilog/casex02.v",
+            "verilog/real_interfaces.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
