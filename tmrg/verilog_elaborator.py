@@ -147,7 +147,6 @@ class VerilogElaborator():
 
         if isinstance(t, ParseResults):
             name = str(t.getName()).lower()
-            print(name, t)
             if len(t) == 0:
                 return res
             if name in ("assgnmt", "nbassgnmt"):
