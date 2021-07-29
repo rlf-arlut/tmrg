@@ -613,6 +613,9 @@ class VerilogParser:
         self.directive_fanout_cell      = Group( tmrg + Suppress("fanout_cell")  + OneOrMore(identifier) + Suppress(self.semi)).setResultsName("directive_fanout_cell")
 
 
+        package_import_item = Group(identifier + "::" + (identifier | "*")).setResultsName("package_import_item")
+        package_import_declaration = Group(Keyword("import") + Group(delimitedList(package_import_item)) + Suppress(self.semi)).setResultsName("package_import_declaration")
+
         """
         x::= <specparam_declaration>
         x||= <path_declaration>
@@ -659,6 +662,7 @@ class VerilogParser:
             self.netDecl1 |
             self.netDecl2 |
             self.genVarDecl |
+            package_import_declaration |
             timeDecl |
             integerDecl |
             self.integerDeclAssgn |
