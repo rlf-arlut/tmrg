@@ -376,7 +376,7 @@ class VerilogParser:
         x||= force <assignment> ;
         x||= release <lvalue> ;
         """
-        self.alwaysStmt = Group( oneOf("always always_ff") + Group(Optional(eventControl)) + self.stmt ).setName("alwaysStmt").setResultsName("always")
+        self.alwaysStmt = Group( oneOf("always always_ff always_comb") + Group(Optional(eventControl)) + self.stmt ).setName("alwaysStmt").setResultsName("always")
         initialStmt = Group( Keyword("initial") + self.stmt ).setName("initialStmt").setResultsName("initialStmt")
 
         chargeStrength = Group( "(" + oneOf( "small medium large" ) + ")" ).setName("chargeStrength")
