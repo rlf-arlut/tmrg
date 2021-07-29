@@ -263,12 +263,12 @@ class VerilogParser:
 
         self.inputDecl = Group( "input"  + 
                                 Group(Optional(oneOf("wire reg"))) + 
-                                Group(Optional("signed")) + 
+                                Group(Optional(oneOf("signed real"))) + 
                                 Group(Optional( self.range )).setResultsName("range") + 
                                 Group(delimitedList( identifier )) + 
                                 Suppress(self.semi) ).setResultsName("input")
         self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + 
-                          Group(Optional("signed")) + 
+                          Group(Optional(oneOf("signed real"))) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("output")
@@ -727,14 +727,14 @@ class VerilogParser:
         self.portIn = Group(
                         Keyword("input") + 
                         Group(Optional(oneOf("wire reg"))) + 
-                        Group(Optional("signed")) +  
+                        Group(Optional(oneOf("signed real"))) +  
                         Group(Optional( self.range )).setResultsName("range") + 
                         Group(identifier).setResultsName("names")
                       ).setResultsName("inputHdr")
         self.portOut = Group( 
                          Keyword("output") + 
                          Group(Optional(oneOf("wire reg"))) + 
-                         Group(Optional("signed")) +  
+                         Group(Optional(oneOf("signed real"))) +  
                          Group(Optional( self.range )).setResultsName("range") + 
                          Group(identifier).setResultsName("names")
                        ).setResultsName("outputHdr")
