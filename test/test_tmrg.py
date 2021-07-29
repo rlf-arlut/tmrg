@@ -186,6 +186,10 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/dff_always_ff.sv",
             "systemverilog/dff_always_ff01.sv",
             "systemverilog/dff_always_ff02.sv",
+            "systemverilog/always_comb_01.sv",
+            "systemverilog/always_comb_02.sv",
+#            "systemverilog/always_comb_03.sv",
+#            "systemverilog/always_comb_04.sv",
         ]
     )
 
