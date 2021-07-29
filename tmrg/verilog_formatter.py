@@ -231,11 +231,8 @@ class VerilogFormatter:
         return oStr
 
     def _format_Always(self, tokens, i=""):
-        oStr = "\n"+i
-        eventCtrl = self.format(tokens[0])
-        stmt = self.format(tokens[1], i+"\t")
-        oStr += "always %s\n" % eventCtrl
-        oStr += i+"\t%s\n" % stmt
+        oStr = "\n"+i + "%s %s\n" % (self.format(tokens[0]), self.format(tokens[1]))
+        oStr += i+"\t%s\n" % self.format(tokens[2], i+"\t")
         return oStr
 
     def _format_subscrRef(self, tokens, i=""):

@@ -13,7 +13,7 @@ module tfc_fifo #(
     // tmrg default do_not_triplicate
     // tmrg triplicate rst_n main_clk
     // tmrg triplicate tfc_out_tmr fifo_tmr
-		// tmrg triplicate j i
+    // tmrg triplicate j i
     reg [TFC_WIDTH-1:0] tfc_out_tmr;
     assign tfc_out=tfc_out_tmr;
 
@@ -34,8 +34,8 @@ module tfc_fifo #(
         else
             fifo_tmr[0] <= tfc_in;
 
+    integer i;
     always @(posedge main_clk or negedge rst_n) begin : fifo_main
-        integer i;
         if (!rst_n)
             for(i=1; i<FIFO_DEPTH; i=i+1)
                 fifo_tmr[i] <= 0;
