@@ -262,25 +262,25 @@ class VerilogParser:
         localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
         self.inputDecl = Group( "input"  + 
-                                Group(Optional(oneOf("wire reg"))) + 
+                                Group(Optional(oneOf("wire reg logic"))) + 
                                 Group(Optional(oneOf("signed real"))) + 
                                 Group(Optional( self.range )).setResultsName("range") + 
                                 Group(delimitedList( identifier )) + 
                                 Suppress(self.semi) ).setResultsName("input")
-        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg"))) + 
+        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional(oneOf("signed real"))) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("output")
         self.inoutDecl  = Group( "inout"  + 
-                          Group(Optional(oneOf("wire reg"))) + 
+                          Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("inout")
 
         regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
-        self.regDecl = Group( "reg" +
+        self.regDecl = Group( oneOf("reg logic")+
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
@@ -294,7 +294,7 @@ class VerilogParser:
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
-        nettype = oneOf("wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
+        nettype = oneOf("logic wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
         expandRange = Group(Optional( oneOf("scalared vectored") )) + self.range
         realID = Group(identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
         realDecl = Group( "real" + delimitedList( realID ) + Suppress(self.semi) ).setResultsName("realDecl")
@@ -726,21 +726,21 @@ class VerilogParser:
         inputOutput = oneOf("input output inout")
         self.portIn = Group(
                         Keyword("input") + 
-                        Group(Optional(oneOf("wire reg"))) + 
+                        Group(Optional(oneOf("wire reg logic"))) + 
                         Group(Optional(oneOf("signed real"))) +  
                         Group(Optional( self.range )).setResultsName("range") + 
                         Group(identifier).setResultsName("names")
                       ).setResultsName("inputHdr")
         self.portOut = Group( 
                          Keyword("output") + 
-                         Group(Optional(oneOf("wire reg"))) + 
+                         Group(Optional(oneOf("wire reg logic"))) + 
                          Group(Optional(oneOf("signed real"))) +  
                          Group(Optional( self.range )).setResultsName("range") + 
                          Group(identifier).setResultsName("names")
                        ).setResultsName("outputHdr")
         self.portInOut= Group( 
                           Keyword("inout")  + 
-                          Group(Optional(oneOf("wire reg"))) + 
+                          Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(identifier).setResultsName("names")
