@@ -19,6 +19,6 @@ module dff_always_ff02
 
   always_ff @(posedge c)
     if (rst) q <= 1'b0;
-    else     q <=d Voted;
+    else     q <=dVoted;
 
 endmodule
