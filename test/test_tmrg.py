@@ -194,6 +194,10 @@ class TestTmrgOnSingleSystemVerilogFile():
 #            "systemverilog/always_comb_import.sv",
 #            "systemverilog/always_comb_import_unused_function.sv",
 #            "systemverilog/always_comb_importstar.sv",
+            "systemverilog/always_latch_01.sv",
+            "systemverilog/always_latch_02.sv",
+            "systemverilog/always_latch_03.sv",
+            "systemverilog/always_latch_04.sv",
         ]
     )
 
