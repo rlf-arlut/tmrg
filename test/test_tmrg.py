@@ -181,7 +181,6 @@ class TestTmrgOnSingleSystemVerilogFile():
         'verilog_file', [
             "systemverilog/endmodule_label_dff.sv",
             "systemverilog/real_signals.sv",
-            "systemverilog/package_import.sv",
             "systemverilog/dff_logic.sv",
             "systemverilog/dff_logic_port.sv",
             "systemverilog/dff_always_ff.sv",
@@ -194,6 +193,10 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/always_comb_import.sv",
             "systemverilog/always_comb_import_unused_function.sv",
             "systemverilog/always_comb_importstar.sv",
+#            "systemverilog/package_import.sv",
+#            "systemverilog/always_comb_import.sv",
+#            "systemverilog/always_comb_import_unused_function.sv",
+#            "systemverilog/always_comb_importstar.sv",
         ]
     )
 
