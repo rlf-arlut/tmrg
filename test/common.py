@@ -33,7 +33,7 @@ def syntax_check(file_name, tools=["iverilog","verible-verilog-syntax"], flags=[
     for i,tool in enumerate(tools):
         p = subprocess.Popen([tool,] + flags[i] + [file_name,] , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
-        success[i] = (not int(p.returncode)) and (not stdout.decode('uft8'))
+        success[i] = (not int(p.returncode)) and (not stdout.decode('utf8'))
     assert True in success
 
 #
