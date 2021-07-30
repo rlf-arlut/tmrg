@@ -20,11 +20,21 @@ class CliExecutor:
             self.main_function()
         return retval.value.code
 
-def syntax_check(file_name, flags=[]):
-    p = subprocess.Popen(["iverilog",] + flags + [file_name,] , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout, stderr = p.communicate()
-    assert not int(p.returncode)
-    assert not stdout.decode('utf8')
+def syntax_check(file_name, tools=["iverilog","verible-verilog-syntax"], flags=[[],[]]):
+    """Checks the syntax with the provided flags.
+    By default the tools used are iverilog and verible.
+    The tool should return 0 in case of success.
+    The `flags` input is a list of lists with the same size of tools list.
+
+    The method does assert if all the provided tools fail.
+    """
+    assert len(tools)==len(flags)
+    success = [False]*len(tools)
+    for i,tool in enumerate(tools):
+        p = subprocess.Popen([tool,] + flags[i] + [file_name,] , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate()
+        success[i] = (not int(p.returncode)) and (not stdout.decode('uft8'))
+    assert True in success
 
 #
 # Helper functions
