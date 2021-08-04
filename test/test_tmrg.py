@@ -207,6 +207,9 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/assignment_operators.sv",
             "systemverilog/forloop_generate01.sv",
             "systemverilog/forloop_generate02.sv",
+            "systemverilog/package_import_enum01.sv",
+            "systemverilog/package_import_enum02.sv",
+            "systemverilog/package_import_enum03.sv",
         ]
     )
 
