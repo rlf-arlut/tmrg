@@ -1651,7 +1651,7 @@ class TMR(VerilogElaborator):
         spaces = self.config.getint("tmrg", "spaces")
 
         logging.debug("")
-        logging.info("Triplciation starts here")
+        logging.info("Triplication starts here")
         tmr_start_time = time.time()
         self.tmrLinesTotal = 0
         self.statsLogs = []
@@ -1869,7 +1869,7 @@ def main():
     tmrGroup.add_option("", "--common-cells-postfix",  dest="common_cells_postfix",  action="store",
                         default="",    help="String to be appended to common cell names")
     tmrGroup.add_option("",  "--no-header",          dest="header",       action="store_false",
-                        default=True, help="Do not append  information headder to triplicated file.")
+                        default=True, help="Do not append  information header to triplicated file.")
     tmrGroup.add_option("",  "--sdc-generate",       dest="sdc_generate",   action="store_true",
                         default=False, help="Generate SDC file for Design Compiler")
     tmrGroup.add_option("",  "--sdc-headers",        dest="sdc_headers",
