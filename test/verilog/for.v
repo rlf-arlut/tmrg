@@ -7,7 +7,7 @@ genvar i,j;
 wire [15:0] x;
 wire [15:0] o;
 generate
-  for (i = 0; i < 16; i = i +1) begin 
+  for (int i = 0; i < 16; i = i +1) begin 
     assign x[i]=1;
   end
 endgenerate

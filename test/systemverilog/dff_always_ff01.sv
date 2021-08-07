@@ -16,7 +16,7 @@ module dff_always_ff01
   // tmrg default triplicate
   wire dVoted=d;
 
-  always_ff @(posedge c or negedge rst_b)
+  always_ff2 @(posedge c or negedge rst_b)
     if (!rst_b) q <= 1'b0;
     else        q<=dVoted;
 

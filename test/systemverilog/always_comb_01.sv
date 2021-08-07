@@ -21,7 +21,7 @@ module always_comb_01
   always_comb begin :labelled_always_comb
     binary_int = 0;
     if (enable) begin
-      if (encoder_in == 16'h0002) binary_int = 1;
+      if (encoder_in == 16'h0002) binary_int = 1
       if (encoder_in == 16'h0004) binary_int = 2;
       if (encoder_in == 16'h0008) binary_int = 3;
       if (encoder_in == 16'h0010) binary_int = 4;
