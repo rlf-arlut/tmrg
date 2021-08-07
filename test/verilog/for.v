@@ -3,14 +3,12 @@ module buf2(input i,output o);
 endmodule
 
 module forModuleTest;
-genvar i,j;
-wire [15:0] x;
+genvar j;
+reg [15:0] x;
 wire [15:0] o;
-generate
-  for (int i = 0; i < 16; i = i +1) begin 
-    assign x[i]=1;
-  end
-endgenerate
+initial
+  for (int i = 0; i < 16; i = i +1)
+    x[i]=1;
 
 generate
   for (j = 0; j < 16; j = j +1) begin : loop
