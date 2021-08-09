@@ -201,6 +201,12 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/always_latch_02.sv",
             "systemverilog/always_latch_03.sv",
             "systemverilog/always_latch_04.sv",
+            "systemverilog/for_loops.sv",
+            "systemverilog/always_comb_import_for.sv",
+            "systemverilog/always_ff_import_for_01.sv",
+            "systemverilog/assignment_operators.sv",
+            "systemverilog/forloop_generate01.sv",
+            "systemverilog/forloop_generate02.sv",
         ]
     )
 

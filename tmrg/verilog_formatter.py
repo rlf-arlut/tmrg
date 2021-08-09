@@ -586,11 +586,18 @@ class VerilogFormatter:
     def _format_assgnmt(self, tokens, i=""):
         oStr = ""
         lvalue = self.format(tokens[0])
-        delayOrEventControl = self.format(tokens[1])+" "
-        expr = self.format(tokens[2])
+        assign = tokens[1]
+        delayOrEventControl = self.format(tokens[2])+" "
+        expr = self.format(tokens[3])
 
         oStr = "%s = %s%s" % (lvalue, delayOrEventControl, expr)
         return oStr
+
+    def _format_assgnmt_with_declaration(self, tokens, i=""):
+        return tokens[0] + " " + self._format_assgnmt(tokens[1:])
+
+    def _format_incr_decr(self, tokens, i=""):
+        return self.format(tokens[0]) + " " + tokens[1]
 
     def _format_forstmt(self, tokens, i=""):
         e1 = self.format(tokens[1])

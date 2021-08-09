@@ -367,8 +367,7 @@ class TMR(VerilogElaborator):
 
         tmr = self.checkIfTmrNeeded(tokens)
         left = tokens[5][0][0][0]
-
-        right = self.vf.format(tokens[5][0][2][0])
+        right = self.vf.format(tokens[5][0][3][0])
 
         logging.debug("[net declaration with assigment]")
         logging.debug("      Left :"+" ".join(sorted(ids["left"])))
