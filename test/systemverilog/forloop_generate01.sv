@@ -12,10 +12,11 @@ module forloop_generate_01
    input logic r,
    output logic [31:0] a);
 
-genvar j;
-generate
-  for (j=0; j<32; j++)
-    always @(posedge c)
-      if (r) a[j] <= 1'b0;
-      else   a[j] <= j%2;
-endgenerate
+  genvar j;
+  generate
+    for (j=0; j<32; j++)
+      always @(posedge c)
+        if (r) a[j] <= 1'b0;
+        else   a[j] <= j%2;
+  endgenerate
+endmodule

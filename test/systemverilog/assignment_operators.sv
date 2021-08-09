@@ -14,7 +14,7 @@ module assignment_operator
 
   always_ff @(posedge clk) begin
     if(rst)
-      a = '10;
+      a = 'd10;
     else begin
       a += 2;
       a -= 2;
