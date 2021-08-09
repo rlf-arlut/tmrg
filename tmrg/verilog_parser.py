@@ -152,7 +152,7 @@ class VerilogParser:
         identifier = ( identifier1 | identifier2).setResultsName("id")
 
         hexnums = nums + "abcdefABCDEF" + "_?"
-        base = Regex("'[bBoOdDhH]").setName("base")
+        base = Regex("'[bBoOdDhH]*").setName("base")
         basedNumber = Combine( Optional( Word(nums + "_") ) + base + Word(hexnums+"xXzZ"),
                                joinString="", adjacent=False ).setResultsName("basedNumber")
         number = ( basedNumber | \
