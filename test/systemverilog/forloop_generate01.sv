@@ -7,7 +7,7 @@
 // 2021.08.09  mlupi   Created
 //-----------------------------------------------------------------------------
 
-module comb(
+module seq(
   input c,
   input r,
   output reg a
@@ -25,8 +25,8 @@ module forloop_generate_01
 
   genvar j;
   generate
-    for (j=0; j<32; j++) begin : gen_comb
-      comb comb (
+    for (j=0; j<32; j++) begin : gen_seq
+      seq seq (
         .c(c),
         .r(r),
         .a(a[j])
