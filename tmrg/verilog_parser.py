@@ -283,7 +283,8 @@ class VerilogParser:
                           Suppress(self.semi) ).setResultsName("inout")
 
         regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
-        self.regDecl = Group( oneOf("reg logic")+
+        enum_identifier = identifier
+        self.regDecl = Group( (oneOf("reg logic") | enum_identifier) +
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
@@ -413,7 +414,7 @@ class VerilogParser:
 
         netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
 
-        self.netDecl1 = Group(nettype +
+        self.netDecl1 = Group( (nettype | enum_identifier) +
                               Group(Optional("signed")) +
                               Group(Optional( expandRange )).setResultsName("range") +
                               Group(Optional( delay )) +
@@ -432,7 +433,7 @@ class VerilogParser:
                               ).setResultsName("netDecl2")
 
 
-        self.netDecl3 = Group(nettype +
+        self.netDecl3 = Group( (nettype | enum_identifier) +
                               Group(Optional("signed")) +
                               Group(Optional( driveStrength )) +
                               Group(Optional( expandRange )).setResultsName("range") +
