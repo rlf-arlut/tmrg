@@ -1,3 +1,3 @@
 module invalidSyntax;
-  reg2 test;
+  reg test
 endmodule
