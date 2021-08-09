@@ -7,6 +7,17 @@
 // 2021.08.09  mlupi   Created
 //-----------------------------------------------------------------------------
 
+module comb(
+  input c,
+  input r,
+  output reg a
+  );
+  always @(posedge c)
+    if (r) a <= 1'b0;
+    else   a <= a + 1'b1;
+endmodule
+
+
 module forloop_generate_01
   (input logic c,
    input logic r,
@@ -14,9 +25,12 @@ module forloop_generate_01
 
   genvar j;
   generate
-    for (j=0; j<32; j++)
-      always @(posedge c)
-        if (r) a[j] <= 1'b0;
-        else   a[j] <= j%2;
+    for (j=0; j<32; j++) begin : gen_comb
+      comb comb (
+        .c(c),
+        .r(r),
+        .a(a[j])
+      );
+    end
   endgenerate
 endmodule
