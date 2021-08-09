@@ -245,7 +245,7 @@ class VerilogParser:
         delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")
         delayOrEventControl = delay | eventControl
 
-        self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
+        self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
 
         self.assgnmt_with_declaration   = (oneOf("int") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
 
