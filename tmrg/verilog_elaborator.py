@@ -236,7 +236,8 @@ class VerilogElaborator():
         self.current_module["instances"][instance] = {"instance": identifier, "range": _range, "len": _len}
 
     def _elaborate_always(self, tokens):
-        self._elaborate(tokens[1])
+        for t in tokens[1:]:
+            self._elaborate(t)
 
     def _elaborate_input(self, tokens):
         _dir = tokens[0]
