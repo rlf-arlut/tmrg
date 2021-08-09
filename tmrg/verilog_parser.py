@@ -266,7 +266,7 @@ class VerilogParser:
 
 
         enum_identifier_with_package_name = Group(identifier + "::" + identifier)
-        enum_identifier = Group(~Keyword("assign") + ( identifier | enum_identifier_with_package_name))
+        enum_identifier = Group(~oneOf("assign function tmrg initial generate genvar real integer __COMP_DIRECTIVE") + ( identifier | enum_identifier_with_package_name))
 
         self.inputDecl = Group( "input"  +
                                 Group(Optional(oneOf("wire reg logic")) | enum_identifier) +
