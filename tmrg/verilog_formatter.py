@@ -92,7 +92,7 @@ class VerilogFormatter:
 
     def _format_RegDecl(self, tokens, i=""):
         oStr = ""
-        label = str(tokens[0])
+        label = str("".join(tokens[0]))
         attributes = self.format(tokens[1])
 
         spec = self.format(tokens[2])

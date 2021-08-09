@@ -264,26 +264,28 @@ class VerilogParser:
         parameterDecl      = Group( "parameter" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
         localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
-        self.inputDecl = Group( "input"  + 
-                                Group(Optional(oneOf("wire reg logic"))) + 
-                                Group(Optional(oneOf("signed real"))) + 
-                                Group(Optional( self.range )).setResultsName("range") + 
-                                Group(delimitedList( identifier )) + 
+        enum_identifier =   Group(~Keyword("assign") + identifier + Optional( "::" + identifier))
+
+        self.inputDecl = Group( "input"  +
+                                Group(Optional(oneOf("wire reg logic")) | enum_identifier) +
+                                Group(Optional(oneOf("signed real"))) +
+                                Group(Optional( self.range )).setResultsName("range") +
+                                Group(delimitedList( identifier )) +
                                 Suppress(self.semi) ).setResultsName("input")
-        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg logic"))) + 
-                          Group(Optional(oneOf("signed real"))) + 
-                          Group(Optional( self.range )).setResultsName("range") + 
-                          Group(delimitedList( identifier )) + 
+        self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg logic"))  | enum_identifier ) +
+                          Group(Optional(oneOf("signed real"))) +
+                          Group(Optional( self.range )).setResultsName("range") +
+                          Group(delimitedList( identifier )) +
                           Suppress(self.semi) ).setResultsName("output")
-        self.inoutDecl  = Group( "inout"  + 
-                          Group(Optional(oneOf("wire reg logic"))) + 
-                          Group(Optional("signed")) + 
-                          Group(Optional( self.range )).setResultsName("range") + 
-                          Group(delimitedList( identifier )) + 
+        self.inoutDecl  = Group( "inout"  +
+                          Group(Optional(oneOf("wire reg logic")) | enum_identifier ) +
+                          Group(Optional("signed")) +
+                          Group(Optional( self.range )).setResultsName("range") +
+                          Group(delimitedList( identifier )) +
                           Suppress(self.semi) ).setResultsName("inout")
 
         regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
-        enum_identifier = identifier
+
         self.regDecl = Group( (oneOf("reg logic") | enum_identifier) +
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
@@ -733,32 +735,32 @@ class VerilogParser:
 
         inputOutput = oneOf("input output inout")
         self.portIn = Group(
-                        Keyword("input") + 
-                        Group(Optional(oneOf("wire reg logic"))) + 
-                        Group(Optional(oneOf("signed real"))) +  
-                        Group(Optional( self.range )).setResultsName("range") + 
+                        Keyword("input") +
+                        Group(Optional(oneOf("wire reg logic") | enum_identifier )) +
+                        Group(Optional(oneOf("signed real"))) +
+                        Group(Optional( self.range )).setResultsName("range") +
                         Group(identifier).setResultsName("names")
                       ).setResultsName("inputHdr")
-        self.portOut = Group( 
-                         Keyword("output") + 
-                         Group(Optional(oneOf("wire reg logic"))) + 
-                         Group(Optional(oneOf("signed real"))) +  
-                         Group(Optional( self.range )).setResultsName("range") + 
+        self.portOut = Group(
+                         Keyword("output") +
+                         Group(Optional(oneOf("wire reg logic") | enum_identifier )) +
+                         Group(Optional(oneOf("signed real"))) +
+                         Group(Optional( self.range )).setResultsName("range") +
                          Group(identifier).setResultsName("names")
                        ).setResultsName("outputHdr")
-        self.portInOut= Group( 
-                          Keyword("inout")  + 
-                          Group(Optional(oneOf("wire reg logic"))) + 
-                          Group(Optional("signed")) + 
-                          Group(Optional( self.range )).setResultsName("range") + 
+        self.portInOut= Group(
+                          Keyword("inout")  +
+                          Group(Optional(oneOf("wire reg logic") | enum_identifier )) +
+                          Group(Optional("signed")) +
+                          Group(Optional( self.range )).setResultsName("range") +
                           Group(identifier).setResultsName("names")
                         ).setResultsName("inoutHdr")
 
-        moduleHdr = Group ( oneOf("module macromodule") + 
+        moduleHdr = Group ( oneOf("module macromodule") +
         identifier.setResultsName("moduleName") +
                             Group(Optional( Suppress("#")+Suppress("(") +
-                                            delimitedList( Group(Optional(Suppress("parameter"))+ 
-                                            Group(Optional( self.range )) + paramAssgnmt) ) + 
+                                            delimitedList( Group(Optional(Suppress("parameter"))+
+                                            Group(Optional( self.range )) + paramAssgnmt) ) +
                                             Suppress(")") ))+
                             Group(Optional( Suppress("(") +
                                             Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
