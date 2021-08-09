@@ -14,3 +14,10 @@ RUN DEBIAN_FRONTEND="noninteractive" cd iverilog &&\
 RUN DEBIAN_FRONTEND="noninteractive" cd /usr/local/bin &&\
                                        ln -s /usr/bin/python3 python &&\
                                        pip3 install --upgrade pip
+
+# Taken from https://github.com/chipsalliance/verible/releases/tag/v0.0-1316-g94f5d01
+# The ubuntu 20.04 version was downloaded for this image
+
+ADD verible-v0.0-1316-g94f5d01_u2004/bin/verible-verilog-format /usr/sbin/verible-verilog-format
+ADD verible-v0.0-1316-g94f5d01_u2004/bin/verible-verilog-lint /usr/sbin/verible-verilog-lint
+ADD verible-v0.0-1316-g94f5d01_u2004/bin/verible-verilog-syntax /usr/sbin/verible-verilog-syntax
