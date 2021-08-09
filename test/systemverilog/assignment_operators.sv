@@ -8,8 +8,8 @@
 //-----------------------------------------------------------------------------
 
 module assignment_operator
-  (input logic c,
-   input logic r,
+  (input logic clk,
+   input logic rst,
    output logic [31:0] a);
 
   always_ff @(posedge clk) begin
