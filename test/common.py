@@ -20,11 +20,23 @@ class CliExecutor:
             self.main_function()
         return retval.value.code
 
-def syntax_check(file_name, flags=[]):
-    p = subprocess.Popen(["iverilog",] + flags + [file_name,] , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout, stderr = p.communicate()
-    assert not int(p.returncode)
-    assert not stdout.decode('utf8')
+def syntax_check(file_name, cmds=["iverilog","verible-verilog-syntax"]):
+    """Checks the syntax with the cmds.
+    By default the tools used are iverilog and verible.
+    The tool should return 0 in case of success.
+    By default this methods will append a placeholder for filename at the end of the
+    command if not already present
+
+    The method does assert if all the provided tools fail.
+    """
+    success = [False]*len(cmds)     # Init to failure
+    for i,cmd in enumerate(cmds):
+        if '%s' not in cmd.split(): # Add filename placeholder if not present
+            cmd += " %s"
+        p = subprocess.Popen((cmd % file_name).split() , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout, stderr = p.communicate()
+        success[i] = (not int(p.returncode)) and (not stdout.decode('utf8'))
+    assert True in success
 
 #
 # Helper functions

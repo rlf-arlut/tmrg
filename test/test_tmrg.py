@@ -167,13 +167,13 @@ class TestTmrgOnSingleVerilogFile():
     )
 
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
-      syntax_check(file_in_test_dir(verilog_file))
+      syntax_check(file_in_test_dir(verilog_file), cmds=["iverilog"])
       assert not tmrg([file_in_test_dir(verilog_file)])
       basename = os.path.basename(verilog_file)
       expected_tmr_file = basename.replace(".v", "TMR.v")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
-      syntax_check(expected_tmr_file)
+      syntax_check(expected_tmr_file, cmds=["iverilog"])
 
 
 class TestTmrgOnSingleSystemVerilogFile():
@@ -186,26 +186,29 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/dff_always_ff.sv",
             "systemverilog/dff_always_ff01.sv",
             "systemverilog/dff_always_ff02.sv",
+            "systemverilog/decoder_using_unique_case.sv",
+            "systemverilog/decoder_using_unique_casex.sv",
+            "systemverilog/decoder_using_unique_casez.sv",
             "systemverilog/always_comb_01.sv",
             "systemverilog/always_comb_02.sv",
-#            "systemverilog/always_comb_03.sv",
-#            "systemverilog/always_comb_04.sv",
-#            "systemverilog/package_import.sv",
-#            "systemverilog/always_comb_import.sv",
-#            "systemverilog/always_comb_import_unused_function.sv",
-#            "systemverilog/always_comb_importstar.sv",
+            "systemverilog/always_comb_03.sv",
+            "systemverilog/always_comb_04.sv",
+            "systemverilog/package_import.sv",
+            "systemverilog/always_comb_import.sv",
+            #"systemverilog/always_comb_import_unused_function.sv",
+            "systemverilog/always_comb_importstar.sv",
             "systemverilog/always_latch_01.sv",
             "systemverilog/always_latch_02.sv",
-#            "systemverilog/always_latch_03.sv",
-#            "systemverilog/always_latch_04.sv",
+            "systemverilog/always_latch_03.sv",
+            "systemverilog/always_latch_04.sv",
         ]
     )
 
     def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
-      syntax_check(file_in_test_dir(verilog_file), flags=["-g2012"])
+      syntax_check(file_in_test_dir(verilog_file), cmds=["iverilog -g2012","verible-verilog-syntax"])
       assert not tmrg([file_in_test_dir(verilog_file)])
       basename = os.path.basename(verilog_file)
       expected_tmr_file = basename.replace(".sv", "TMR.sv")
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
-      syntax_check(expected_tmr_file, flags=["-g2012"])
+      syntax_check(expected_tmr_file, cmds=["iverilog -g2012","verible-verilog-syntax"])
