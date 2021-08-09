@@ -648,7 +648,7 @@ class VerilogParser:
                                                   Suppress(self.semi) +
                                                     Group(self.expr) +
                                                   Suppress(self.semi) +
-                                                    Group(self.assgnmt) +
+                                                    Group(self.assgnmt | self.incr_decr) +
                                                   Suppress(")") +
                                                   generate_module_named_block
                                                ).setResultsName("generate_module_loop_statement")
