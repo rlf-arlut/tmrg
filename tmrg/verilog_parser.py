@@ -738,21 +738,21 @@ class VerilogParser:
         inputOutput = oneOf("input output inout")
         self.portIn = Group(
                         Keyword("input") +
-                        Group(Optional(oneOf("wire reg logic")) | enum_identifier_with_package_name ) +
+                        Group(Optional(oneOf("wire reg logic") | enum_identifier_with_package_name )) +
                         Group(Optional(oneOf("signed real"))) +
                         Group(Optional( self.range )).setResultsName("range") +
                         Group(identifier).setResultsName("names")
                       ).setResultsName("inputHdr")
         self.portOut = Group(
                          Keyword("output") +
-                         Group(Optional(oneOf("wire reg logic")) | enum_identifier_with_package_name ) +
+                         Group(Optional(oneOf("wire reg logic") | enum_identifier_with_package_name )) +
                          Group(Optional(oneOf("signed real"))) +
                          Group(Optional( self.range )).setResultsName("range") +
                          Group(identifier).setResultsName("names")
                        ).setResultsName("outputHdr")
         self.portInOut= Group(
                           Keyword("inout")  +
-                          Group(Optional(oneOf("wire reg logic")) | enum_identifier_with_package_name ) +
+                          Group(Optional(oneOf("wire reg logic") | enum_identifier_with_package_name )) +
                           Group(Optional("signed")) +
                           Group(Optional( self.range )).setResultsName("range") +
                           Group(identifier).setResultsName("names")
