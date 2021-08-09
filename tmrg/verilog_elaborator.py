@@ -158,7 +158,7 @@ class VerilogElaborator():
                     logging.error("Unsupported syntax : concatenation on left hand side of the assignment (%s). " %
                                   str(self.vf.format(t)))
                     logging.error("Output may be incorrect.")
-                res["right"].update(_extractID(t[2]))
+                res["right"].update(_extractID(t[-1]))
             elif name in ("regdecl"):
                 for tt in t[3]:
                     left_id = tt[0]
@@ -236,7 +236,8 @@ class VerilogElaborator():
         self.current_module["instances"][instance] = {"instance": identifier, "range": _range, "len": _len}
 
     def _elaborate_always(self, tokens):
-        self._elaborate(tokens[1])
+        for t in tokens[1:]:
+            self._elaborate(t)
 
     def _elaborate_input(self, tokens):
         _dir = tokens[0]
@@ -407,6 +408,29 @@ class VerilogElaborator():
                 details = "(range:%s len:%s)" % (_range, _len)
             else:
                 details = ""
+
+    def _elaborate_assgnmt_with_declaration(self, tokens):
+        type = tokens[0]
+        name = tokens[1][0]
+        _atrs = ""
+        _range = ""
+        _from = ""
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
+        _len = ""
+        _to = ""
+        self.current_module["nets"][name] = {"attributes": _atrs,
+                                             "range": _range,
+                                             "len": _len,
+                                             "from": _from,
+                                             "to": _to,
+                                             "type": type,
+                                             "array_range": _array_range,
+                                             "array_len": _array_len,
+                                             "array_from": _array_from,
+                                             "array_to": _array_to}
 
     def _elaborate_localparamdecl(self, tokens):
         _range = self.vf.format(tokens[1])
