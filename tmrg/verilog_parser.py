@@ -247,7 +247,7 @@ class VerilogParser:
 
         self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
 
-        self.assgnmt_with_declaration   = (oneOf("int") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
+        self.assgnmt_with_declaration   = (oneOf("int genvar") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
 
         self.incr_decr   = ( lvalue + oneOf("++ --")).setResultsName( "incr_decr" )
 
@@ -644,7 +644,7 @@ class VerilogParser:
 
         generate_module_loop_statement = Group( Suppress(for_) +
                                                   Suppress("(")  +
-                                                    Group(self.assgnmt) +
+                                                    Group(self.assgnmt|self.assgnmt_with_declaration) +
                                                   Suppress(self.semi) +
                                                     Group(self.expr) +
                                                   Suppress(self.semi) +
