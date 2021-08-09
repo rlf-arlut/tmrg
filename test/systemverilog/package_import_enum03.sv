@@ -17,7 +17,7 @@ module package_import_emum03
 
   FSM_States_t state, next_state;
   FSM_States_t stateVoted = state;
-  my_package_pkg::FSM_States_t my_other_state;
+
   always_ff @(posedge c)
     if (rst)
       state <= FSM_S0;
