@@ -58,6 +58,9 @@ class VerilogFormatter:
             oStr += "%s %s%s;\n" % (label, spec, port)
         return oStr
 
+    def _format_enum_identifier_with_package_name(self, tokens, i=""):
+        return "".join(tokens[0])
+
     def _format_Input(self, tokens, i=""):
         return self._formatIo(tokens)
 

@@ -265,8 +265,8 @@ class VerilogParser:
         localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
 
 
-        enum_identifier_with_package_name = Group(identifier + "::" + identifier)
-        enum_identifier = Group(~oneOf("assign function tmrg initial generate genvar real integer __COMP_DIRECTIVE always always_ff always_comb always_latch") + ( identifier | enum_identifier_with_package_name))
+        enum_identifier_with_package_name = Group(identifier + "::" + identifier).setResultsName("enum_identifier_with_package_name")
+        enum_identifier = Group(~oneOf("assign function tmrg initial generate genvar real integer __COMP_DIRECTIVE always always_ff always_comb always_latch") + ( identifier | enum_identifier_with_package_name)).setResultsName("enum_identifier")
 
         self.inputDecl = Group( "input"  +
                                 Group(Optional(oneOf("wire reg logic")) | enum_identifier) +
