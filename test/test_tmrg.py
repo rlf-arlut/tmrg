@@ -210,6 +210,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/package_import_enum01.sv",
             "systemverilog/package_import_enum02.sv",
             "systemverilog/package_import_enum03.sv",
+            "systemverilog/package_import_enum04.sv",
         ]
     )
 
