@@ -197,7 +197,6 @@ class VerilogElaborator():
         _len = self.__getLenStr(tokens[2])
         _from = self.__getFromStr(tokens[2])
         _to = self.__getToStr(tokens[2])
-
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
@@ -215,6 +214,11 @@ class VerilogElaborator():
                 _array_len = self.__getArrayLenStr(arrayDec)
                 _array_from = self.__getArrayFrom(arrayDec)
                 _array_to = self.__getArrayTo(arrayDec)
+
+            if not isinstance(tokens[0], str) and tokens[0].getName() == "enum_identifier":
+                _range = "[$bits(%s)-1:0]" % str(tokens[0][0])
+                _len = "$bits(%s)" % str(tokens[0][0])
+
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
