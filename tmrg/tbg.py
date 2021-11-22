@@ -132,6 +132,15 @@ class TBG(TMR):
             oStr += "\n  );\n"
             oStr += "`endif\n"
 
+            oStr += "\n// - - - - - - - - - - - - Optional formal SEU injection section - - - - - - - - - - - - - \n"
+            oStr += "`ifdef TMR\n"
+            oStr += "`ifdef NETLIST\n"
+            oStr += "`ifdef FRMSVA\n"
+            oStr += "`include \"seu_assert.sv\"\n"
+            oStr += "`endif\n"
+            oStr += "`endif\n"
+            oStr += "`endif\n"
+
             oStr += "\n// - - - - - - - - - - - - Timing annotation section - - - - - - - - - - - - - \n"
             oStr += """`ifdef SDF
   initial
