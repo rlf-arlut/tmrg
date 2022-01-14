@@ -214,6 +214,8 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/forinalwaysff.sv",
             "systemverilog/forinalwayscomb.sv",
             "systemverilog/ifndef.sv",
+            "systemverilog/unpacked_array_ranges.sv",
+            "systemverilog/unpacked_array_sizes.sv",
         ]
     )
 
