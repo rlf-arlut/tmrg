@@ -63,6 +63,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/always.v",
             "verilog/alwaysComma.v",
             "verilog/case01.v",
+            "verilog/dreg.v",
             "verilog/function.v",
             "verilog/index.v",
             "verilog/lib.v",
