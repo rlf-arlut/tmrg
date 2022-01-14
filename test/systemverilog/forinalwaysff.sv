@@ -9,11 +9,12 @@
 // 2022.01.14  mlupi   Created
 //-----------------------------------------------------------------------------
 
-module comb #(parameter N=2)
-  (input [N-1:0] d,
+module dreg #(parameter N=2)
+  (input clock,
+   input [N-1:0] d,
    output reg [N-1:0] q);
 
-  always @(d)
+  always_ff @(posedge clock)
     for (int i=0; i<N; i++)
       q[i] <= d[N-i];
 endmodule
