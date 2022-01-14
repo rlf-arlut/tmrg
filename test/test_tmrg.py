@@ -63,6 +63,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/always.v",
             "verilog/alwaysComma.v",
             "verilog/case01.v",
+            "verilog/dreg.v",
             "verilog/function.v",
             "verilog/index.v",
             "verilog/lib.v",
@@ -135,6 +136,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/casez02.v",
             "verilog/casex01.v",
             "verilog/casex02.v",
+            "verilog/multidimentionalarray.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
@@ -208,6 +210,10 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/forloop_generate01.sv",
             "systemverilog/forloop_generate02.sv",
             "systemverilog/rhs_assign.sv",
+            "systemverilog/forinalways.sv",
+            "systemverilog/forinalwaysff.sv",
+            "systemverilog/forinalwayscomb.sv",
+            "systemverilog/ifndef.sv",
         ]
     )
 
