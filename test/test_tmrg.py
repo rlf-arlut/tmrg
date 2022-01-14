@@ -96,6 +96,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/comb02.v",
             "verilog/forLoop.v",
             "verilog/for.v",
+            "verilog/forinalways.v",
             "verilog/hier02.v",
             "verilog/instantiation.v",
             "verilog/netdeclaration.v",
