@@ -111,6 +111,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/noports.v",
             "verilog/tmr3.v",
             "verilog/ifdef.v",
+            "verilog/ifndef.v",
             "verilog/underscore.v",
             "verilog/begin.v",
             "verilog/complexInst.v",
