@@ -96,7 +96,6 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/comb02.v",
             "verilog/forLoop.v",
             "verilog/for.v",
-            "verilog/forinalways.v",
             "verilog/hier02.v",
             "verilog/instantiation.v",
             "verilog/netdeclaration.v",
@@ -113,7 +112,6 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/noports.v",
             "verilog/tmr3.v",
             "verilog/ifdef.v",
-            "verilog/ifndef.v",
             "verilog/underscore.v",
             "verilog/begin.v",
             "verilog/complexInst.v",
@@ -212,6 +210,8 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/forloop_generate01.sv",
             "systemverilog/forloop_generate02.sv",
             "systemverilog/rhs_assign.sv",
+            "systemverilog/forinalways.sv",
+            "systemverilog/ifndef.sv",
         ]
     )
 
