@@ -209,12 +209,19 @@ class VerilogElaborator():
             _array_len = ""
             _array_from = ""
             _array_to = ""
-            if len(reg) > 1:
+            if len(reg[1]):
+                # this part decodes declarations using range: name [N:M]
                 arrayDec = reg[1]
                 _array_range = self.vf.format(arrayDec)
                 _array_len = self.__getArrayLenStr(arrayDec)
                 _array_from = self.__getArrayFrom(arrayDec)
                 _array_to = self.__getArrayTo(arrayDec)
+            elif len(reg[2]):
+                # this part decodes declarations using size: name [M]
+                _array_len = self.vf.format(reg[2][1])
+                _array_from = 0
+                _array_to = "%s - 1" % (_array_len)
+                _array_range = "[ %s : %s ]" % (_array_from, _array_to)
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
