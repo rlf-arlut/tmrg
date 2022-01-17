@@ -15,4 +15,5 @@ module mymod #(parameter M=2)
    output logic q);
 
   logic p [M];
+  wire [0:M-1] pVoted = p;
 endmodule
