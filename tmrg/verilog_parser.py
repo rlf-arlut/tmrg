@@ -282,7 +282,8 @@ class VerilogParser:
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("inout")
 
-        regIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
+        regIdentifier = Group( identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) )
+                               + Group(Optional( "[" + Group(self.expr) + "]" ) ))
         self.regDecl = Group( oneOf("reg logic")+
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
