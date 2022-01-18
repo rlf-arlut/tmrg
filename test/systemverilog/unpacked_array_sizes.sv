@@ -7,6 +7,7 @@
 //-----------------------------------------------------------------------------
 // Date        Author  Note
 // 2022.01.14  mlupi   Created
+// 2022.01.18  mlupi   Adapted for #44
 //-----------------------------------------------------------------------------
 
 module mymod #(parameter M=2)
@@ -15,5 +16,6 @@ module mymod #(parameter M=2)
    output logic q);
 
   logic p [M];
-  wire [0:M-1] pVoted = p;
+  wire [0:M-1] ppackedVoted = p;
+  wire punpackedVoted [M] = p;
 endmodule
