@@ -1,6 +1,7 @@
 import os
 import pytest
 import subprocess
+import logging
 
 @pytest.fixture(autouse=True)
 def tmp_run_dir(monkeypatch, tmp_path):
@@ -30,12 +31,14 @@ def syntax_check(file_name, cmds=["iverilog","verible-verilog-syntax"]):
     The method does assert if all the provided tools fail.
     """
     success = [False]*len(cmds)     # Init to failure
-    for i,cmd in enumerate(cmds):
+    for i, cmd in enumerate(cmds):
         if '%s' not in cmd.split(): # Add filename placeholder if not present
             cmd += " %s"
         p = subprocess.Popen((cmd % file_name).split() , stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         stdout, stderr = p.communicate()
         success[i] = (not int(p.returncode)) and (not stdout.decode('utf8'))
+        if not success[i]:
+            logging.error("Command '%s' failed.", (cmd % file_name))
     assert True in success
 
 #
