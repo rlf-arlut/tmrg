@@ -41,6 +41,9 @@ class VerilogFormatter:
             oStr += self.format(t)+" "
         return oStr
 
+    def _format_array_size(self, tokens, i=""):
+        return "[%s]" % self.format(tokens[0])
+
     def _formatIo(self, tokens, i=""):
         oStr = ""
         label = str(tokens[0])
@@ -74,8 +77,10 @@ class VerilogFormatter:
         spec += self.format(tokens[2])
         spec += self.format(tokens[3])
         ports = tokens[4]
+        array = self.format(tokens[5])
+        array += self.format(tokens[6])
         for port in ports:
-            oStr += "%s %s %s" % (label, spec, port)
+            oStr += "%s %s %s %s" % (label, spec, port, array)
         return oStr
 
     def _format_inputhdr(self, tokens, i=""):
