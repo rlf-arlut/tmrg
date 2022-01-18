@@ -251,24 +251,39 @@ class VerilogElaborator():
         _atrs = self.vf.format(tokens[2])
         _range = self.vf.format(tokens[3])
         _len = self.__getLenStr(tokens[3])
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
+        if len(tokens[6]):
+            # this part decodes declarations using size: name [M]
+            _array_len = self.vf.format(tokens[6][0])
+            _array_from = 0
+            _array_to = "%s - 1" % (_array_len)
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+        elif len(tokens[5]):
+            # this part decodes declarations using range: name [N:M]
+            _array_from = self.vf.format(tokens[5][0])
+            _array_to = self.vf.format(tokens[5][1])
+            _array_len = self.__getLenStr(tokens[5])
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
 
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
             details = ""
 
-        for name in tokens[-1]:
+        for name in tokens[4]:
             self.lastANSIPort = {}
             self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
             self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
-                                        "array_len": "",
-                                        "array_range": "",
-                                        "array_from": "",
-                                        "array_to": ""
-                                        }
+                                        "array_len": _array_len,
+                                        "array_range": _array_range,
+                                        "array_from": _array_from,
+                                        "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
                 self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
@@ -277,11 +292,10 @@ class VerilogElaborator():
                                                      "range": _range,
                                                      "len": _len,
                                                      "type": "wire",
-                                                     "array_len": "",
-                                                     "array_range": "",
-                                                     "array_from": "",
-                                                     "array_to": ""
-                                                     }  # TODO add better array support ?
+                                                     "array_len": _array_len,
+                                                     "array_range": _array_range,
+                                                     "array_from": _array_from,
+                                                     "array_to": _array_to}
 
     def _elaborate_inout(self, tokens):
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
@@ -290,6 +304,22 @@ class VerilogElaborator():
         _atrs = self.vf.format(tokens[2])
         _range = self.vf.format(tokens[3])
         _len = self.__getLenStr(tokens[3])
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
+        if len(tokens[6]):
+            # this part decodes declarations using size: name [M]
+            _array_len = self.vf.format(tokens[6][0])
+            _array_from = 0
+            _array_to = "%s - 1" % (_array_len)
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+        elif len(tokens[5]):
+            # this part decodes declarations using range: name [N:M]
+            _array_from = self.vf.format(tokens[5][0])
+            _array_to = self.vf.format(tokens[5][1])
+            _array_len = self.__getLenStr(tokens[5])
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
@@ -302,10 +332,10 @@ class VerilogElaborator():
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
-                                        "array_len": "",
-                                        "array_range": "",
-                                        "array_from": "",
-                                        "array_to": ""}
+                                        "array_len": _array_len,
+                                        "array_range": _array_range,
+                                        "array_from": _array_from,
+                                        "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
                 self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "inout"}
@@ -314,10 +344,11 @@ class VerilogElaborator():
                                                      "range": _range,
                                                      "len": _len,
                                                      "type": "wire",
-                                                     "array_len": "",
-                                                     "array_range": "",
-                                                     "array_from": "",
-                                                     "array_to": ""}
+                                                     "array_len": _array_len,
+                                                     "array_range": _array_range,
+                                                     "array_from": _array_from,
+                                                     "array_to": _array_to}
+
 
     def _elaborate_inputhdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
@@ -341,26 +372,43 @@ class VerilogElaborator():
                 self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
 
     def _elaborate_output(self, tokens):
+        print(tokens)
         _dir = tokens[0]
         _atrs = self.vf.format(tokens[2])
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
         _range = self.vf.format(tokens[3])
         _len = self.__getLenStr(tokens[3])
+        if len(tokens[6]):
+            # this part decodes declarations using size: name [M]
+            _array_len = self.vf.format(tokens[6][0])
+            _array_from = 0
+            _array_to = "%s - 1" % (_array_len)
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+        elif len(tokens[5]):
+            # this part decodes declarations using range: name [N:M]
+            _array_from = self.vf.format(tokens[5][0])
+            _array_to = self.vf.format(tokens[5][1])
+            _array_len = self.__getLenStr(tokens[5])
+            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
         if _len != "1":
             details = "(range:%s len:%s)" % (_range, _len)
         else:
             details = ""
 
-        for name in tokens[-1]:
+        for name in tokens[4]:
             self.lastANSIPort = {}
             self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
             self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
                                         "type": "wire",
-                                        "array_len": "",
-                                        "array_range": "",
-                                        "array_from": "",
-                                        "array_to": ""}
+                                        "array_len": _array_len,
+                                        "array_range": _array_range,
+                                        "array_from": _array_from,
+                                        "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
                 self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
@@ -368,10 +416,10 @@ class VerilogElaborator():
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
                                                      "len": _len, "type": "wire",
-                                                     "array_len": "",
-                                                     "array_range": "",
-                                                     "array_from": "",
-                                                     "array_to": ""}
+                                                     "array_len": _array_len,
+                                                     "array_range": _array_range,
+                                                     "array_from": _array_from,
+                                                     "array_to": _array_to}
             # if not name in  self.current_module["nets"]:
             #    self.current_module["nets"][name]={"attributes":_atrs,"range":_range, "len":_len,"type":"wire"}
 
