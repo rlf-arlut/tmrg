@@ -255,13 +255,13 @@ class VerilogElaborator():
         _array_len = ""
         _array_from = ""
         _array_to = ""
-        if len(tokens[6]):
+        if len(tokens) == 7 and len(tokens[6]):
             # this part decodes declarations using size: name [M]
             _array_len = self.vf.format(tokens[6][0])
             _array_from = 0
             _array_to = "%s - 1" % (_array_len)
             _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        elif len(tokens[5]):
+        elif len(tokens) >= 6 and len(tokens[5]):
             # this part decodes declarations using range: name [N:M]
             _array_from = self.vf.format(tokens[5][0])
             _array_to = self.vf.format(tokens[5][1])
@@ -308,13 +308,13 @@ class VerilogElaborator():
         _array_len = ""
         _array_from = ""
         _array_to = ""
-        if len(tokens[6]):
+        if len(tokens) == 7 and len(tokens[6]):
             # this part decodes declarations using size: name [M]
             _array_len = self.vf.format(tokens[6][0])
             _array_from = 0
             _array_to = "%s - 1" % (_array_len)
             _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        elif len(tokens[5]):
+        elif len(tokens) >= 6 and len(tokens[5]):
             # this part decodes declarations using range: name [N:M]
             _array_from = self.vf.format(tokens[5][0])
             _array_to = self.vf.format(tokens[5][1])
@@ -380,13 +380,13 @@ class VerilogElaborator():
         _array_to = ""
         _range = self.vf.format(tokens[3])
         _len = self.__getLenStr(tokens[3])
-        if len(tokens[6]):
+        if len(tokens) == 7 and len(tokens[6]):
             # this part decodes declarations using size: name [M]
             _array_len = self.vf.format(tokens[6][0])
             _array_from = 0
             _array_to = "%s - 1" % (_array_len)
             _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        elif len(tokens[5]):
+        elif len(tokens) >= 6 and len(tokens[5]):
             # this part decodes declarations using range: name [N:M]
             _array_from = self.vf.format(tokens[5][0])
             _array_to = self.vf.format(tokens[5][1])
