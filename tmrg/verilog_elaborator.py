@@ -325,7 +325,7 @@ class VerilogElaborator():
         else:
             details = ""
 
-        for name in tokens[-1]:
+        for name in tokens[4]:
             self.lastANSIPort = {}
             self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
             self.lastANSIPort["net"] = {"attributes": _atrs,
