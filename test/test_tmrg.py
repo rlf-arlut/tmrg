@@ -219,6 +219,8 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/forloopcast.sv",
             "systemverilog/unpacked_array_ranges_port.sv",
             "systemverilog/unpacked_array_sizes_port.sv",
+            "systemverilog/multidimentionalarray_port_ranges.sv",
+            "systemverilog/multidimentionalarray_port_sizes.sv",
         ]
     )
 
