@@ -372,7 +372,6 @@ class VerilogElaborator():
                 self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
 
     def _elaborate_output(self, tokens):
-        print(tokens)
         _dir = tokens[0]
         _atrs = self.vf.format(tokens[2])
         _array_range = ""
