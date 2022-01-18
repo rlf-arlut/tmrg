@@ -26,4 +26,5 @@ module dreg #(parameter N=2,
     end
   endgenerate
 
+  wire [N-1:0] qVoted [0:M-1] = q;
 endmodule
