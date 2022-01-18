@@ -257,7 +257,7 @@ class VerilogParser:
                          ).setResultsName( "nbassgnmt" )
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
-
+        self.array_size  = ( Suppress("[") + Group(self.expr) + Suppress("]")).setResultsName("array_size")
         paramAssgnmt = Group(  identifier + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
@@ -738,21 +738,27 @@ class VerilogParser:
                         Group(Optional(oneOf("wire reg logic"))) + 
                         Group(Optional(oneOf("signed real"))) +  
                         Group(Optional( self.range )).setResultsName("range") + 
-                        Group(identifier).setResultsName("names")
+                        Group(identifier).setResultsName("names") +
+                         Group(Optional( self.range )).setResultsName("range") +
+                         Group(Optional(self.array_size))
                       ).setResultsName("inputHdr")
         self.portOut = Group( 
                          Keyword("output") + 
                          Group(Optional(oneOf("wire reg logic"))) + 
                          Group(Optional(oneOf("signed real"))) +  
                          Group(Optional( self.range )).setResultsName("range") + 
-                         Group(identifier).setResultsName("names")
+                         Group(identifier).setResultsName("names") +
+                         Group(Optional( self.range )).setResultsName("range") +
+                         Group(Optional(self.array_size))
                        ).setResultsName("outputHdr")
         self.portInOut= Group( 
                           Keyword("inout")  + 
                           Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
                           Group(Optional( self.range )).setResultsName("range") + 
-                          Group(identifier).setResultsName("names")
+                          Group(identifier).setResultsName("names") +
+                         Group(Optional( self.range )).setResultsName("range") +
+                         Group(Optional(self.array_size))
                         ).setResultsName("inoutHdr")
 
         moduleHdr = Group ( oneOf("module macromodule") + 
