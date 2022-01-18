@@ -20,7 +20,10 @@ module mymod #(parameter M=2)
    output q3 [M]
    );
 
-wire [0:M-1] d1Voted = d1;
-wire [0:M-1] d2Voted = d2;
-wire [0:M-1] d3Voted = d3;
+  wire [0:M-1] d1packedVoted = d1;
+  wire [0:M-1] d2packedVoted = d2;
+  wire [0:M-1] d3packedVoted = d3;
+  wire d1unpackedVoted [M] = d1;
+  wire d2unpackedVoted [M] = d2;
+  wire d3unpackedVoted [M] = d3;
 endmodule

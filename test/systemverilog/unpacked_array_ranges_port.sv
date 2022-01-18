@@ -26,5 +26,6 @@ module mymod #(parameter M=2)
    output q6 [0:M-1]
    );
 wire [M-1:0] d3Voted = d3;
-wire [M-1:0] d4Voted = d4;
+  wire [M-1:0] d4packedVoted = d4;
+  wire d4unpackedVoted [0:M-1] = d4;
 endmodule
