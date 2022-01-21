@@ -12,8 +12,8 @@ module test;
   // integer_atom_type
   localparam byte         a = 1;
   localparam shortint     b = 0;
-  localparam unsigned int c = 10;
-  localparam signed int   d = 10;
+  localparam unsigned     c = 10;
+  localparam signed       d = 10;
   localparam longint      e = 21;
   localparam integer      f = 31;
 
