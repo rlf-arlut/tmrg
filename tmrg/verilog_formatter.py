@@ -550,13 +550,14 @@ class VerilogFormatter:
     def _format_paramdecl(self, tokens, i=""):
         oStr = ""
         signed = self.format(tokens[1])
-        range = self.format(tokens[2])
-        if len(range) >= 0:
-            range = " "+range
-        for p in tokens[3]:
+        type_ = self.format(tokens[2])
+        range = self.format(tokens[3])
+        for p in tokens[4]:
             pname = p[0][0]
-            oStr += tokens[0]+" %s %s %s=" % (signed, range, pname)
+            oStr += tokens[0]+" %s %s %s %s=" % (signed, type_, range, pname)
             oStr += self.format(p[0][1:])+";\n"
+        while "  " in oStr:
+            oStr = oStr.replace("  "," ")
         return oStr
 
     def _format_localparamdecl(self, tokens, i=""):
