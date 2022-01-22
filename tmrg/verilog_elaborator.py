@@ -500,7 +500,7 @@ class VerilogElaborator():
     def _elaborate_paramdecl(self, tokens):
         _range = self.vf.format(tokens[1])
         _len = self.__getLenStr(tokens[1])
-        for param in tokens[2]:
+        for param in tokens[4]:
             pname = param[0][0]
             pval = self.vf.format(param[0][1:])
             logging.debug("Parameter %s = %s" % (pname, pval))
