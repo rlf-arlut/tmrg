@@ -262,8 +262,21 @@ class VerilogParser:
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
-        parameterDecl      = Group( "parameter" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("paramDecl")
-        localParameterDecl = Group("localparam" + Group(Optional("signed"))+ Group(Optional( self.range )) + Group(delimitedList( Group(paramAssgnmt) )) + Suppress(self.semi)).setResultsName("localparamDecl")
+        parameterDecl      = Group( "parameter" +
+                                    Group(Optional(oneOf("unsigned signed"))) +
+                                    Group(Optional(oneOf("byte shortint int longint bit logic reg"))) +
+                                    Group(Optional( self.range )) +
+                                    Group(delimitedList( Group(paramAssgnmt))) +
+                                    Suppress(self.semi)
+                                  ).setResultsName("paramDecl")
+
+        localParameterDecl = Group("localparam" +
+                                   Group(Optional(oneOf("unsigned signed"))) +
+                                   Group(Optional(oneOf("byte shortint int longint bit logic reg integer"))) +
+                                   Group(Optional(self.range )) +
+                                   Group(delimitedList(Group(paramAssgnmt))) +
+                                   Suppress(self.semi)
+                                  ).setResultsName("localparamDecl")
 
         self.inputDecl = Group( "input"  + 
                                 Group(Optional(oneOf("wire reg logic"))) + 
