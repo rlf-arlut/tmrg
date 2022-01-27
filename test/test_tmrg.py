@@ -222,7 +222,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/multidimentionalarray_port_ranges.sv",
             "systemverilog/multidimentionalarray_port_sizes.sv",
             "systemverilog/localparam.sv",
-            "systemverilog/rhs_truncate.sv",
+            "systemverilog/rhs_trucation.sv",
         ]
     )
 
