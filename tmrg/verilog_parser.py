@@ -182,6 +182,7 @@ class VerilogParser:
         primary = ( number |
                     ("(" + mintypmaxExpr + ")" ) |
                     ( "(" + Group(self.expr) + ")" ).setName("nestedExpr") |
+                    (identifier + "::" + identifier) |
                     multiConcat |
                     concat |
                     dblQuotedString |
