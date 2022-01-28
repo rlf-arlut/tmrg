@@ -475,16 +475,17 @@ class VerilogElaborator():
         _array_to = ""
         _len = ""
         _to = ""
-        self.current_module["nets"][name] = {"attributes": _atrs,
-                                             "range": _range,
-                                             "len": _len,
-                                             "from": _from,
-                                             "to": _to,
-                                             "type": type,
-                                             "array_range": _array_range,
-                                             "array_len": _array_len,
-                                             "array_from": _array_from,
-                                             "array_to": _array_to}
+        if type!="genvar":
+            self.current_module["nets"][name] = {"attributes": _atrs,
+                                                 "range": _range,
+                                                 "len": _len,
+                                                 "from": _from,
+                                                 "to": _to,
+                                                 "type": type,
+                                                 "array_range": _array_range,
+                                                 "array_len": _array_len,
+                                                 "array_from": _array_from,
+                                                 "array_to": _array_to}
 
     def _elaborate_localparamdecl(self, tokens):
         _range = self.vf.format(tokens[1])
