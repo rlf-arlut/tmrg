@@ -29,6 +29,7 @@ setuptools.setup(
                             'seeg = tmrg.seeg:main',
                             'tbg = tmrg.tbg:main',
                             'plag = tmrg.plag:main',
-                            'wrg = tmrg.wrg:main']
+                            'wrg = tmrg.wrg:main',
+                            'gen_tmrg_libs = tmrg.gen_tmrg_libs:main']
     }
 )
