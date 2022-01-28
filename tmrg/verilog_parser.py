@@ -195,7 +195,7 @@ class VerilogParser:
                        "||  <  <=  >  >=  &  |  ^  ^~  ~^  >>  << ** <<< >>>" ).setName("binop")
         inlineIfExpr= Group( Group(primary) + Suppress(Literal("?")) + Group(self.expr) + Suppress(Literal(":")) + Group(self.expr) ).setResultsName("inlineIfExpr")
 
-        cast = identifier + "'" + "(" + self.expr + ")"
+        cast = (identifier | "(" + self.expr + ")" | number) + "'" + "(" + self.expr + ")"
         self.expr << (
                       ( unop + self.expr ) |  # must be first!
                       inlineIfExpr | cast |
