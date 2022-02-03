@@ -554,8 +554,9 @@ class VerilogFormatter:
         range = self.format(tokens[3])
         for p in tokens[4]:
             pname = p[0][0]
-            oStr += tokens[0]+" %s %s %s %s=" % (signed, type_, range, pname)
-            oStr += self.format(p[0][1:])+";\n"
+            size = self.format(p[0][1])
+            oStr += tokens[0]+" %s %s %s %s %s=" % (signed, type_, range, pname, size)
+            oStr += self.format(p[0][2:])+";\n"
         while "  " in oStr:
             oStr = oStr.replace("  "," ")
         return oStr
