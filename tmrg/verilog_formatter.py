@@ -479,9 +479,7 @@ class VerilogFormatter:
             sep = ""
             for p in header[2]:
                 _range = self.format(p[0])
-                if _range != "":
-                    _range += " "
-                oStr += "%sparameter %s%s=%s" % (sep, _range, p[1][0], self.format(p[1][1]))
+                oStr += "%sparameter %s %s" % (sep, _range, self.format(p[1]))
                 sep = ",\n  "
             oStr += "\n)"
         sep = ""
@@ -543,8 +541,9 @@ class VerilogFormatter:
 
     def _format_paramAssgnmt(self, tokens, i=""):
         id = self.format(tokens[0])
-        val = self.format(tokens[1])
-        oStr = "%s=%s" % (id, val)
+        size = self.format(tokens[1])
+        val = self.format(tokens[2])
+        oStr = "%s %s = %s" % (id, size, val)
         return oStr.rstrip()
 
     def _format_paramdecl(self, tokens, i=""):
