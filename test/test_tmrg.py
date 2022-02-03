@@ -188,6 +188,8 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/dff_always_ff.sv",
             "systemverilog/dff_always_ff01.sv",
             "systemverilog/dff_always_ff02.sv",
+            "systemverilog/dff_always_ff03.sv",
+            "systemverilog/dff_always_ff04.sv",
             "systemverilog/decoder_using_unique_case.sv",
             "systemverilog/decoder_using_unique_casex.sv",
             "systemverilog/decoder_using_unique_casez.sv",
