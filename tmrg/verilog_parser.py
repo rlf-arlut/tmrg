@@ -160,7 +160,7 @@ class VerilogParser:
                   ).setName("numeric")
         self.expr = Forward()
 
-        concat = Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
+        concat = Optional("'")+Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
         funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( Group(self.expr) )) )) + ")").setResultsName("funcCall")
 
@@ -259,7 +259,7 @@ class VerilogParser:
 
         self.range = ( Suppress("[") + Group(self.expr) + Suppress(":") + Group(self.expr) + Suppress("]")).setResultsName("range")
         self.array_size  = ( Suppress("[") + Group(self.expr) + Suppress("]")).setResultsName("array_size")
-        paramAssgnmt = Group(  identifier + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
+        paramAssgnmt = Group(  identifier + Group(Optional(self.array_size|self.range)) + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
