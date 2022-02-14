@@ -226,7 +226,6 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/localparam.sv",
             "systemverilog/package_import_width.sv",
             "systemverilog/rhs_trucation.sv",
-            "systemverilog/issue_53.sv",
         ]
     )
 
@@ -238,3 +237,24 @@ class TestTmrgOnSingleSystemVerilogFile():
       assert_output_streams(capfd)
       assert os.path.isfile(expected_tmr_file)
       syntax_check(expected_tmr_file, cmds=["iverilog -g2012","verible-verilog-syntax"])
+
+
+class TestTmrgOnSingleSystemVerilogFileOnlyIverilog():
+    """This class is to test a SystemVerilog file only using iverilog.
+    Verible can be too permissive then testing the output of TMRG, leading to bugs
+    splipping throught the CI. If this happens, add the files for this list instead
+    of using TestTmrgOnSingleSystemVerilogFile"""
+    @pytest.mark.parametrize(
+        'verilog_file', [
+            "systemverilog/issue_53.sv",
+        ]
+    )
+
+    def test_tmrg_on_file(self, tmrg, capfd, verilog_file):
+      syntax_check(file_in_test_dir(verilog_file), cmds=["iverilog -g2012"])
+      assert not tmrg([file_in_test_dir(verilog_file)])
+      basename = os.path.basename(verilog_file)
+      expected_tmr_file = basename.replace(".sv", "TMR.sv")
+      assert_output_streams(capfd)
+      assert os.path.isfile(expected_tmr_file)
+      syntax_check(expected_tmr_file, cmds=["iverilog -g2012"])
