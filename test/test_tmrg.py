@@ -246,7 +246,7 @@ class TestTmrgOnSingleSystemVerilogFileOnlyIverilog():
     of using TestTmrgOnSingleSystemVerilogFile"""
     @pytest.mark.parametrize(
         'verilog_file', [
-            "systemverilog/issue_53.sv",
+            #"systemverilog/issue_53.sv",
         ]
     )
 
