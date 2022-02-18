@@ -1107,7 +1107,11 @@ class TMR(VerilogElaborator):
                 moduleBody.insert(paramPos, item)
                 paramPos += 1
                 del moduleBody[i+1]
-
+            if item.getName() == "package_import_declaration":
+                logging.debug("Moving import to the front '%s'" % (str(item)))
+                moduleBody.insert(paramPos, item)
+                paramPos += 1
+                del moduleBody[i+1]
         return [tokens]
 
     def __triplicate_output(self, tokens):
