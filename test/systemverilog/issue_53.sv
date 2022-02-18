@@ -10,4 +10,6 @@
 module test;
   import mypkg::A;
   localparam B = A;
+  import mypkg::C;
+  localparam D = C;
 endmodule
