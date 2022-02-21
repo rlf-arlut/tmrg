@@ -12,6 +12,7 @@ A [template](#[template]) is available at the end with the different sections.
 - Release script
 - Limited support for SystemVerilog
 - Verible in CI for SystemVerilog files
+- Testcase for DFF with aynchronous reset when using SystemVerilog `always_ff` construct [Issue 50](https://gitlab.cern.ch/tmrg/tmrg/-/issues/50)
 
 ### Changed
 
@@ -36,6 +37,8 @@ A [template](#[template]) is available at the end with the different sections.
 - [Issue 48](https://gitlab.cern.ch/tmrg/tmrg/-/issues/48): SystemVerilog genvar in for-loop was not correctly triplicated
 - [Issue 47](https://gitlab.cern.ch/tmrg/tmrg/-/issues/47): SystemVerilog package parameter in module IO width support
 - [Issue 46](https://gitlab.cern.ch/tmrg/tmrg/-/issues/46): SystemVerilog right-hand side cast to certain number of bits construct support
+- [Issue 49](https://gitlab.cern.ch/tmrg/tmrg/-/issues/49): SystemVerilog right-hand side cast to certain number of bits construct support
+- [Issue 53](https://gitlab.cern.ch/tmrg/tmrg/-/issues/53): SystemVerilog unpacked array of packed array as `localparam` construct support
 
 ### Deprecated
 
