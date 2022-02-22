@@ -44,7 +44,7 @@ class ErrorMessage(BaseException):
 
 def readFile(fname):
     if os.path.isfile(fname):
-        f = open(fname, "r")
+        f = open(fname, "r", encoding="utf-8")
         body = f.read()
         f.close()
         return body
@@ -623,7 +623,7 @@ class VerilogElaborator():
         logging.error(ll)
 
     def lineCount(self, fname):
-        f = open(fname)
+        f = open(fname, "r", encoding="utf-8")
         lines = 0
         buf_size = 1024 * 1024
         read_f = f.read  # loop optimization

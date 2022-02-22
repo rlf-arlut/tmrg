@@ -862,7 +862,7 @@ class VerilogParser:
                         fullname=os.path.join(d,fname)
                         if os.path.isfile(fullname):
                             logging.info("File '%s' found in '%s'"%(fname,fullname))
-                            fin=open(fullname)
+                            fin=open(fullname, "r", encoding="utf-8")
                             fcontent=fin.read()
                             fin.close()
                             return fcontent
@@ -876,7 +876,7 @@ class VerilogParser:
     def parseFile(self,fname):
         logging.debug("Parsing file '%s'"%fname)
         self.fname=fname
-        f=open(fname,"r")
+        f=open(fname, "r", encoding="utf-8")
         body=f.read()
         f.close()
         return self.parseString(body)

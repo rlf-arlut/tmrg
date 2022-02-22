@@ -1674,7 +1674,7 @@ class TMR(VerilogElaborator):
             foutnew = fout+'.new'
             logging.debug("Saving result of triplication to %s" % foutnew)
 
-            f = open(foutnew, "w")
+            f = open(foutnew, "w", encoding="utf-8")
             if self.options.header and self.config.getboolean("tmrg", "add_header"):
                 header = self.getHeader(fname, fout)
                 f.write(header)
@@ -1790,7 +1790,7 @@ class TMR(VerilogElaborator):
                 header = "set sdc_version 1.3\n"
             # generate sdf file
             ret = _findVotersAndFanouts(self.topModule, i="/")
-            f = open(fsdc, "w")
+            f = open(fsdc, "w", encoding="utf-8")
             f.write(header)
             f.write("""
 set tmrgSucces 0
