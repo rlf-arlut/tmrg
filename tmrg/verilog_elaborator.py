@@ -900,7 +900,7 @@ class VerilogElaborator():
                 logging.info("Module %s (%s)" % (moduleName, fname))
                 logging.debug("= "*50)
                 self.current_module = {"instances": {}, "nets": {}, "name": moduleName, "io": {}, "constraints": {}, "instantiated": 0,
-                                       'file': fname, "fanouts": {}, "voters": {}, "lib": fname, "portMode": "non-ANSI"}
+                                       'file': fname, "fanouts": {}, "voters": {}, "lib": fname, "portMode": "non-ANSI", "params": {}}
 
                 for param in moduleParams:
                     pname = param[0]
