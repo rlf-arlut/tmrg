@@ -921,8 +921,8 @@ class TMR(VerilogElaborator):
         groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
         for group in sorted(groups):
             errSignals = set()
-            if group in self.current_module["voters"]:
-                for voter in self.current_module["voters"][group]:
+            if group in sorted(self.current_module["voters"]):
+                for voter in sorted(self.current_module["voters"][group]):
                     inst = voter
                     voter = self.current_module["voters"][group][voter]
                     _range = voter["range"]
@@ -989,7 +989,7 @@ class TMR(VerilogElaborator):
                             majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
                             (width, inst, _a, _b, _c, _out, _err))[0])
 
-            if group in self.current_module["tmrErrNets"]:
+            if group in sorted(self.current_module["tmrErrNets"]):
                 errSignals = errSignals | self.current_module["tmrErrNets"][group]
 
             # add wires for all error signals
@@ -1024,7 +1024,7 @@ class TMR(VerilogElaborator):
 
 
 
-        for fanout in self.current_module["fanouts"]:
+        for fanout in sorted(self.current_module["fanouts"]):
             inst = fanout
             fanout = self.current_module["fanouts"][inst]
             logging.info("Instializaing fanout %s" % inst)
@@ -1084,10 +1084,10 @@ class TMR(VerilogElaborator):
         # detect if user created constrains which could generate invalid code
         vouter_outputs = []
         for group in sorted(groups):
-            if group in self.current_module["voters"]:
-                for voter in self.current_module["voters"][group]:
+            if group in sorted(self.current_module["voters"]):
+                for voter in sorted(self.current_module["voters"][group]):
                     vouter_outputs.append(self.current_module["voters"][group][voter]["out"])
-        for fanout in self.current_module["fanouts"]:
+        for fanout in sorted(self.current_module["fanouts"]):
             _in = self.current_module["fanouts"][inst]["in"]
             if _in in vouter_outputs:
                 logging.warning("Signal '%s' is connected to fanout input and voter output." % (_in))
