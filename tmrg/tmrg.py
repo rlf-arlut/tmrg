@@ -921,7 +921,7 @@ class TMR(VerilogElaborator):
         groups = set(self.current_module["voters"].keys()) | set(self.current_module["tmrErrNets"].keys())
         for group in sorted(groups):
             errSignals = set()
-            if group in self.current_module["voters"]:
+            if group in sorted(self.current_module["voters"]):
                 for voter in sorted(self.current_module["voters"][group]):
                     inst = voter
                     voter = self.current_module["voters"][group][voter]
@@ -989,7 +989,7 @@ class TMR(VerilogElaborator):
                             majorityVoterCell + " %s%s (.inA(%s), .inB(%s), .inC(%s), .out(%s), .tmrErr(%s));" %
                             (width, inst, _a, _b, _c, _out, _err))[0])
 
-            if group in self.current_module["tmrErrNets"]:
+            if group in sorted(self.current_module["tmrErrNets"]):
                 errSignals = errSignals | self.current_module["tmrErrNets"][group]
 
             # add wires for all error signals
@@ -1084,7 +1084,7 @@ class TMR(VerilogElaborator):
         # detect if user created constrains which could generate invalid code
         vouter_outputs = []
         for group in sorted(groups):
-            if group in self.current_module["voters"]:
+            if group in sorted(self.current_module["voters"]):
                 for voter in sorted(self.current_module["voters"][group]):
                     vouter_outputs.append(self.current_module["voters"][group][voter]["out"])
         for fanout in sorted(self.current_module["fanouts"]):
