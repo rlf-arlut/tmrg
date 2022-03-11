@@ -2,10 +2,11 @@ stages:
   - test
   - doc_build
   - doc_deploy
+  - release
 
 .regression_template: &regression
   stage: test
-  script: 
+  script:
     - source test/create_venv.sh
     - source venv/bin/activate
     - python -m pytest -v
@@ -25,7 +26,7 @@ regression_ubuntu20_python3:
 doc_build_not_master:
    stage: doc_build
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
-   script: 
+   script:
         - cd doc
         - make latexpdf
         - make html
@@ -35,10 +36,10 @@ doc_build_not_master:
 doc_build_master:
    stage: doc_build
    image: gitlab-registry.cern.ch/tmrg/tmrg/tmrg_doc
-   script: 
+   script:
         - cd doc
         - make latexpdf
-        - make html 
+        - make html
         - mv build/html/ ../public
         - mv build/latex/tmrg.pdf ../public
         - cd ../
@@ -62,3 +63,19 @@ deployment:
   after_script: []
 
 # coverage regexp : ^\[INFO\s+\]\s+\|\s+\TOTAL\s+\d+\s+\d+\s+(\d+\%)
+
+# NOTE: SUPER_SECRET_TOKEN needs to be set as CI variable (**NOT PROTECTED** but **MASKED**)
+release:
+  image: gitlab-registry.cern.ch/tmrg/tmrg/pylint
+  stage: release
+  when: manual
+  allow_failure: true
+  tags:
+    - docker
+  only:
+    - tags
+  except:
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /\[.*skip[ -]release.*\]/
+  script:
+    - python3 ci_scripts/release/create_release.py --changelog CHANGELOG.md --project_id $CI_PROJECT_ID --private_token $SUPER_SECRET_TOKEN --tag_name $CI_COMMIT_REF_NAME
