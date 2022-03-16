@@ -128,7 +128,7 @@ def delimitedList( expr, delim=",",name="" ):
 class VerilogParser:
 
     def __init__(self):
-        sys.setrecursionlimit(2000)
+        sys.setrecursionlimit(4000)
         self.include=False
         self.inc_dir=[]
 
