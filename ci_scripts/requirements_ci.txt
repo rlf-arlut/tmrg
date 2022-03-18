@@ -1,0 +1,4 @@
+coloredlogs>=15.0.1
+pylint>=2.9.3
+python-gitlab>=2.9.0
+requests>=2.26.0
