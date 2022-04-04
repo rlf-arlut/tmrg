@@ -16,6 +16,7 @@ A [template](#[template]) is available at the end with the different sections.
 - Support for Verilog `param` construct in libraries
 
 ### Changed
+- Increased python recursion limit to 4000
 
 ### Fixed
 - [Issue 26](https://gitlab.cern.ch/tmrg/tmrg/-/issues/26): improved testing for `casez`/`casex` construct
