@@ -43,7 +43,7 @@ A [template](#[template]) is available at the end with the different sections.
 - [Issue 49](https://gitlab.cern.ch/tmrg/tmrg/-/issues/49): SystemVerilog right-hand side cast to certain number of bits construct support
 - [Issue 53](https://gitlab.cern.ch/tmrg/tmrg/-/issues/53): SystemVerilog unpacked array of packed array as `localparam` construct support
 - [Issue 52](https://gitlab.cern.ch/tmrg/tmrg/-/issues/52): Improved reproducibility across different systems
-
+- [Issue 58](https://gitlab.cern.ch/tmrg/tmrg/-/issues/58): Expressions in case items are not output correctly
 
 ### Deprecated
 
