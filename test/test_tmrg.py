@@ -141,6 +141,7 @@ class TestTmrgOnSingleVerilogFile():
             "verilog/full_parallel_case.v",
             "verilog/parallel_case.v",
             "verilog/parallel_full_case.v",
+            "verilog/case_item_expression.v",
             "../examples/slice.v",
             "../examples/clockGating01.v",
             "../examples/comb02.v",
