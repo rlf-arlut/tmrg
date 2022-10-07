@@ -14,6 +14,7 @@ A [template](#[template]) is available at the end with the different sections.
 - Verible in CI for SystemVerilog files
 - Testcase for DFF with aynchronous reset when using SystemVerilog `always_ff` construct [Issue 50](https://gitlab.cern.ch/tmrg/tmrg/-/issues/50)
 - Support for Verilog `param` construct in libraries
+- [Issue 57](https://gitlab.cern.ch/tmrg/tmrg/-/issues/57): Support for Verilog attributes
 
 ### Changed
 - Increased python recursion limit to 4000
