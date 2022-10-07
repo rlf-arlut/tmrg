@@ -12,6 +12,7 @@ stages:
     - python -m pytest -v
   artifacts:
     reports:
+      junit: pytest.xml
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
