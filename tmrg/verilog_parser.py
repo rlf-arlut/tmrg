@@ -263,6 +263,13 @@ class VerilogParser:
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
+        attr_spec = Group(identifier + Optional("=" + self.expr)).setResultsName("attr_spec")
+
+        attribute_instance = Group( "(*" +
+                                    Group(delimitedList(attr_spec)) +
+                                    "*)"
+                                  ).setResultsName("attribute_instance")
+        
         parameterDecl      = Group( "parameter" +
                                     Group(Optional(oneOf("unsigned signed"))) +
                                     Group(Optional(oneOf("byte shortint int longint bit logic reg"))) +
@@ -297,6 +304,7 @@ class VerilogParser:
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("inout")
 
+        
         regIdentifier = Group( identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) )
                                + Group(Optional( "[" + Group(self.expr) + "]" ) ))
         self.regDecl = Group( oneOf("reg logic")+
@@ -364,6 +372,7 @@ class VerilogParser:
             Group( release + lvalue + self.semi ).setResultsName("release") |\
             Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
             self.comp_directive |\
+            attribute_instance |
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
             Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )

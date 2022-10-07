@@ -619,6 +619,18 @@ class VerilogFormatter:
             oStr += self.format(t)
         return oStr
 
+    def _format_attr_spec(self, tokens, i=""):
+        return " ".join(tokens)
+
+    def _format_attribute_instance(self, tokens, i=""):
+        oStr = tokens[0] + " "
+        attr_list = []
+        for attr in tokens[1]:
+          attr_list.append(self.format(attr))
+        oStr += ", ".join(attr_list)
+        oStr += " " + tokens[2]
+        return oStr
+
     def _format_continuousAssign(self, tokens, i=""):
         oStr = i
         driveStrength = self.format(tokens[0])
