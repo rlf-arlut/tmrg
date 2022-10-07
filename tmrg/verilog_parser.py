@@ -346,7 +346,7 @@ class VerilogParser:
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")
         stmtOrNull = self.stmt | self.semi
-        caseItem = Group( Group(delimitedList( self.expr )) + Suppress(":") + stmtOrNull ).setResultsName("caseItem") | \
+        caseItem = Group( Group(delimitedList( Group(self.expr) )) + Suppress(":") + stmtOrNull ).setResultsName("caseItem") | \
                    Group( default + Optional(":") + stmtOrNull ) | \
                    Group(self.directive_synopsys_case)
         condition=Group("(" + self.expr + ")").setResultsName("condition")
