@@ -6,6 +6,14 @@ The latest version (highest in this file) is the running version.
 When updating it, keep in mind.
 A [template](#[template]) is available at the end with the different sections.
 
+## [0.1.1]
+### Added
+- [Issue 57](https://gitlab.cern.ch/tmrg/tmrg/-/issues/57): Support for Verilog attributes
+
+### Changed
+
+### Fixed
+
 ## [0.1.0]
 ### Added
 - Changelog
