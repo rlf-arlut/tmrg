@@ -3,7 +3,7 @@ module parallel_case ();
     reg foo, bar;
 
     always @* begin 
-    (* parallel_case *)
+    (* parallel_case=1 *)
         case (foo)
             1'b0: bar = 1'b0;
             1'b1: bar = 1'b1;
