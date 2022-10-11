@@ -231,6 +231,19 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/localparam.sv",
             "systemverilog/package_import_width.sv",
             "systemverilog/rhs_trucation.sv",
+            "systemverilog/issue_59.sv",
+            "systemverilog/blocking_procedural_assignment_andequal.sv",
+            "systemverilog/blocking_procedural_assignment_divideequal.sv",
+            "systemverilog/blocking_procedural_assignment_equal.sv",
+            "systemverilog/blocking_procedural_assignment_minusequal.sv",
+            "systemverilog/blocking_procedural_assignment_moduloequal.sv",
+            "systemverilog/blocking_procedural_assignment_multiequal.sv",
+            "systemverilog/blocking_procedural_assignment_orequal.sv",
+            "systemverilog/blocking_procedural_assignment_plusequal.sv",
+            "systemverilog/blocking_procedural_assignment_shiftlequal.sv",
+            "systemverilog/blocking_procedural_assignment_shiftllequal.sv",
+            "systemverilog/blocking_procedural_assignment_shiftrequal.sv",
+            "systemverilog/blocking_procedural_assignment_shiftrrequal.sv",
         ]
     )
 
