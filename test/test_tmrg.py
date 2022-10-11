@@ -231,6 +231,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/localparam.sv",
             "systemverilog/package_import_width.sv",
             "systemverilog/rhs_trucation.sv",
+            "systemverilog/issue_59.sv",
         ]
     )
 
