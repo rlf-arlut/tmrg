@@ -595,8 +595,7 @@ class VerilogFormatter:
         assign = tokens[1]
         delayOrEventControl = self.format(tokens[2])+" "
         expr = self.format(tokens[3])
-
-        oStr = "%s = %s%s" % (lvalue, delayOrEventControl, expr)
+        oStr = "%s %s %s%s" % (lvalue, assign, delayOrEventControl, expr)
         return oStr
 
     def _format_assgnmt_with_declaration(self, tokens, i=""):
