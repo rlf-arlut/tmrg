@@ -682,6 +682,8 @@ class TMR(VerilogElaborator):
 
 
     def __triplicate_gateDecl(self, tokens):
+        logging.error("Verilog gate level modeling is generally not supported.")
+        logging.error("Please carefully review the generated code.")
         gate = tokens[0]
         instance = tokens[3][0][0][0]
         logging.debug("[gate instances]")
