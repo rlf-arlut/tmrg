@@ -45,6 +45,7 @@ A [template](#[template]) is available at the end with the different sections.
 - [Issue 52](https://gitlab.cern.ch/tmrg/tmrg/-/issues/52): Improved reproducibility across different systems
 - [Issue 58](https://gitlab.cern.ch/tmrg/tmrg/-/issues/58): Expressions in case items are not output correctly
 - [Issue 59](https://gitlab.cern.ch/tmrg/tmrg/-/issues/59): Blocking procedural assingment
+- [Issue 60](https://gitlab.cern.ch/tmrg/tmrg/-/issues/60): TMRG silently ignores buf and similar primitives
 
 ### Deprecated
 
