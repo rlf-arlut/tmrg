@@ -120,7 +120,7 @@ class VerilogFormatter:
         return "%s%s %s;\n" % (i, release, self.format(tokens[1]))
 
     def _format_netDecl3(self, tokens, i=""):
-        oStr = ""
+        oStr = i
         label = str(tokens[0])
         sign = self.format(tokens[1])
         drives = self.format(tokens[2])
@@ -139,7 +139,7 @@ class VerilogFormatter:
         return oStr
 
     def _format_realDecl(self, tokens, i=""):
-        oStr = ""
+        oStr = i
         real = str(tokens[0])
         ports = tokens[1:]
         for port in ports:
@@ -151,7 +151,7 @@ class VerilogFormatter:
         return oStr
 
     def _format_netDecl1(self, tokens, i=""):
-        oStr = ""
+        oStr = i
         nettype = str(tokens[0])
         sign = self.format(tokens[1])
         range = self.format(tokens[2])
@@ -172,7 +172,7 @@ class VerilogFormatter:
         return oStr
 
     def _format_genVarDecl(self, tokens, i=""):
-        oStr = ""
+        oStr = i
         genvar = str(tokens[0])
         expr = self.format(tokens[1:])
         oStr = genvar+" "+expr+";\n"
@@ -687,9 +687,14 @@ class VerilogFormatter:
     def _format_directive_translate(self, tokens, i=""):
         return ""
 
-    def _format_gate(self, tokens, i=""):
-        oStr = ""
-        return oStr
+    def _format_gateDecl(self, tokens, i=""):
+        ostr = ""
+        gate = self.format(tokens[0])
+        for gate_inst, ports in tokens[3]:
+            gate_inst_str = self.format(gate_inst)
+            ports_str = self.format(ports)
+            ostr += "\n%s%s %s (%s);\n" % (i, gate, gate_inst_str, ports_str)
+        return ostr
 
     def _format_package_import_item(self, tokens, i=""):
         return "".join(tokens)

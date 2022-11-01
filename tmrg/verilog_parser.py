@@ -475,13 +475,13 @@ class VerilogParser:
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
                          "pmos rpmos cmos rcmos   tran rtran  tranif0  "
                          "rtranif0  tranif1 rtranif1"  )
-        gateInstance = Optional( Group( identifier + Optional( self.range ) ) ) + \
-                        "(" + Group( delimitedList( self.expr ) ) + ")"
-        gateDecl = Group( gateType +
-            Optional( driveStrength ) +
-            Optional( delay ) +
-            delimitedList( gateInstance) +
-            self.semi ).setResultsName("gate")
+        gateInstance = Group( Optional( Group( identifier + Optional( self.range ) ) ) + \
+                        Suppress("(") + Group( delimitedList( self.expr ) ) + Suppress(")"))
+        self.gateDecl = Group( gateType +
+            Group(Optional(driveStrength)) +
+            Group(Optional( delay)) +
+            Group(delimitedList( gateInstance)) +
+            Suppress(self.semi) ).setResultsName("gateDecl")
 
         udpInstance = Group( Group( identifier + Optional(self.range | subscrRef) ) +
             "(" + Group( delimitedList( self.expr ) ) + ")" )
@@ -696,7 +696,7 @@ class VerilogParser:
             self.integerDeclAssgn |
             realDecl |
             eventDecl |
-            gateDecl |
+            self.gateDecl |
             parameterOverride |
             self.continuousAssign |
             specifyBlock |

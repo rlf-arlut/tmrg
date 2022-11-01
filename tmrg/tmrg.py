@@ -680,6 +680,47 @@ class TMR(VerilogElaborator):
 
         return tokens
 
+
+    def __triplicate_gateDecl(self, tokens):
+        logging.warning("Verilog gate level modeling is generally not supported.")
+        logging.warning("Please carefully review the generated code.")
+        gate = tokens[0]
+        instance = tokens[3][0][0][0]
+        logging.debug("[gate instances]")
+        logging.debug("      gate: %s", gate)
+        logging.debug("      ins : %s", instance)
+
+        logging.debug("      Gate '%s' will not be touched (%s)" % (gate, instance))
+
+        nets_tmr = set()
+        for port in tokens[3][0][1]:
+            ids = self.getLeftRightHandSide(port)
+            for rid in ids["right"]:
+                net_tmr = self.current_module["nets"][rid]["tmr"]
+                nets_tmr.add(net_tmr)
+
+        if len(nets_tmr)!=1:
+            raise ErrorMessage("Gate '%s' connects to triplicated and not triplicated wires!" % (instance))
+        tmr = next(iter(nets_tmr))
+        if tmr:
+                ret = []
+                # triplicate instances
+                for post in self.EXT:
+                    instCpy = tokens.deepcopy()
+                    for inst in range(len(instCpy[3])):  # iterate over all instances
+                        instCpy[3][inst][0][0] = instCpy[3][inst][0][0]+post  # change instance name
+                        for port in instCpy[3][inst][1]:
+                            ids = self.getLeftRightHandSide(port)
+                            for rid in ids["right"]:
+                                net_tmr = self.current_module["nets"][rid]["tmr"]
+                                self.replace(port, rid, rid+post)
+                    ret.append(instCpy)
+
+                return ret
+        else:
+                ret = tokens
+        return tokens
+
     def __slice_module(self, tokens):
         result = []
         header = tokens[0]

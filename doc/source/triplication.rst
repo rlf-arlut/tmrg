@@ -906,4 +906,5 @@ Limitations
     in blocks
   * only named connections are supported for module instantiation
   * do not use expressions in the module connections
+  * do not use gate primitives
 
