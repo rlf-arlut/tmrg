@@ -810,6 +810,7 @@ class VerilogElaborator():
                 logging.info("Loading lib file '%s'" % fname)
                 self.addLibFile(fname)
             except ParseException as err:
+                logging.error("Error in file '%s' around line '%d'." % (fname, err.lineno))
                 logging.error("")
                 logging.error(err.line)
                 logging.error(" "*(err.column-1) + "^")
