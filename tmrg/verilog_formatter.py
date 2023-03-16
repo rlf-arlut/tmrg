@@ -462,7 +462,6 @@ class VerilogFormatter:
         return ostr
 
     def _format_functionDecl(self, tokens, i=""):
-        print(tokens)
         oStr = "%s%s %s %s %s%s\n" % (i, tokens[0], tokens[1][0], self.format(tokens[2]), tokens[3], tokens[4])
         for item in tokens[5]:
             oStr += i + "\t" + self.format(item)
