@@ -430,7 +430,7 @@ class VerilogParser:
 
         lifetime = oneOf("static automatic")
         functionDecl = Group(
-            "function" + Group(lifetime) + Group(Optional( self.range | "integer" | "real" )) + identifier + self.semi +
+            "function" + Group(Optional(lifetime)) + Group(Optional( self.range | "integer" | "real" )) + identifier + self.semi +
             Group( OneOrMore( tfDecl ) ) +
             Group( ZeroOrMore( self.stmt ) ) +
             "endfunction"
