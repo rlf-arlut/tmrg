@@ -217,6 +217,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/assignment_operators.sv",
             "systemverilog/forloop_generate01.sv",
             "systemverilog/forloop_generate02.sv",
+            "systemverilog/function_automatic.sv",
             "systemverilog/rhs_assign.sv",
             "systemverilog/forinalways.sv",
             "systemverilog/forinalwaysff.sv",
