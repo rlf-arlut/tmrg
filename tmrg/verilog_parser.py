@@ -273,7 +273,7 @@ class VerilogParser:
         
         parameterDecl      = Group( "parameter" +
                                     Group(Optional(oneOf("unsigned signed"))) +
-                                    Group(Optional(oneOf("byte shortint int longint bit logic reg"))) +
+                                    Group(Optional(oneOf("byte shortint int longint bit logic reg integer"))) +
                                     Group(Optional( self.range )) +
                                     Group(delimitedList( Group(paramAssgnmt))) +
                                     Suppress(self.semi)
