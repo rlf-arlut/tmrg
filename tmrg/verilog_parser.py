@@ -250,7 +250,7 @@ class VerilogParser:
 
         self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
 
-        self.assgnmt_with_declaration   = (oneOf("int genvar") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
+        self.assgnmt_with_declaration   = (oneOf("int genvar integer") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
 
         self.incr_decr   = ( lvalue + oneOf("++ --")).setResultsName( "incr_decr" )
 
