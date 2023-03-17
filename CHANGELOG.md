@@ -48,6 +48,7 @@ A [template](#[template]) is available at the end with the different sections.
 - [Issue 60](https://gitlab.cern.ch/tmrg/tmrg/-/issues/60): TMRG silently ignores buf and similar primitives
 - [Issue 62](https://gitlab.cern.ch/tmrg/tmrg/-/issues/62): Add support for integer parameter type
 - [Issue 63](https://gitlab.cern.ch/tmrg/tmrg/-/issues/63): Add lifetime for functions
+- [Issue 64](https://gitlab.cern.ch/tmrg/tmrg/-/issues/64): Add integer type for inline assignment
 
 ### Deprecated
 

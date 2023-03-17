@@ -31,4 +31,12 @@ module for_loops (
     for (int g=N;g>=0;g--)
         data[g] <=   0;
   end
+
+  always_comb begin
+    for (integer i=0; i<N; i++)
+      if(i < x)
+        data[i] = 0;
+      else 
+        data[i] = 1;
+  end
 endmodule   :   for_loops
