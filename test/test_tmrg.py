@@ -203,6 +203,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/always_comb_02.sv",
             "systemverilog/always_comb_03.sv",
             "systemverilog/always_comb_04.sv",
+            "systemverilog/always_comb_05.sv",
             "systemverilog/package_import.sv",
             "systemverilog/always_comb_import.sv",
             #"systemverilog/always_comb_import_unused_function.sv",

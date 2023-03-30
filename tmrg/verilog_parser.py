@@ -371,7 +371,7 @@ class VerilogParser:
             Group( force + Group(self.assgnmt) + self.semi ).setResultsName("force") |\
             Group( self.directive_synopsys_case )| \
             Group( release + lvalue + self.semi ).setResultsName("release") |\
-            Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) ).setResultsName("beginEndLabel") |\
+            Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) + Optional(Suppress(Literal(":") + blockName))).setResultsName("beginEndLabel") |\
             self.comp_directive |\
             attribute_instance |
             Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
