@@ -18,6 +18,7 @@ A [template](#[template]) is available at the end with the different sections.
 
 ### Changed
 - Increased python recursion limit to 4000
+- Fix the TMRG paper reference in the README file
 
 ### Fixed
 - [Issue 26](https://gitlab.cern.ch/tmrg/tmrg/-/issues/26): improved testing for `casez`/`casex` construct
