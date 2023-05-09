@@ -12,18 +12,20 @@ def test_tbg_no_arguments(tbg, capfd):
     assert_output_streams(capfd, expect_stderr_empty=False, expect_in_stderr=["You have to specify verilog file name"])
 
 
-class TestTbgOnSingleVerilogFile():
+class TestTbgOnSingleSystemVerilogFile():
     @pytest.mark.parametrize(
         'verilog_file', [
-            "verilog/tbg_arrays.v",
+            "systemverilog/tbg_arrays.sv",
         ]
     )
 
     def test_tbg_on_file(self, tbg, capfd, verilog_file):
-      syntax_check(file_in_test_dir(verilog_file), cmds=["iverilog"])
-      assert not tbg([file_in_test_dir(verilog_file)])
-      basename = os.path.basename(verilog_file)
-      expected_tmr_file = basename.replace(".v", "TMR.v")
-      assert_output_streams(capfd)
-      assert os.path.isfile(expected_tmr_file)
-      syntax_check(expected_tmr_file, cmds=["iverilog"])
+      basefile = file_in_test_dir(verilog_file)
+      syntax_check(basefile, cmds=["iverilog -g2012"])
+      x = tbg([file_in_test_dir(verilog_file)])
+      out, err = capfd.readouterr()
+      tb_file = file_in_test_dir(verilog_file).replace(".sv", "_tb.sv")
+      assert bool(err)==False, "stderr_lenght:%d stdout_lenght:%d" % (len(err), len(out)) + err
+      with open(tb_file, "w") as fout:
+          fout.write(out)
+      syntax_check(basefile, cmds=["iverilog -g2012 %s" % tb_file])
