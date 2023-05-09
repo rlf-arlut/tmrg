@@ -275,7 +275,15 @@ class VerilogElaborator():
 
         for name in tokens[4]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+            self.lastANSIPort["io"] = {"attributes": _atrs,
+                                       "range": _range,
+                                       "len": _len,
+                                       "type": "input",
+                                       "array_len": _array_len,
+                                       "array_range": _array_range,
+                                       "array_from": _array_from,
+                                       "array_to": _array_to
+                                      }
             self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
@@ -286,7 +294,15 @@ class VerilogElaborator():
                                         "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+                self.current_module["io"][name] = {"attributes": _atrs,
+                                                   "range": _range,
+                                                   "len": _len,
+                                                   "type": "input",
+                                                   "array_len": _array_len,
+                                                   "array_range": _array_range,
+                                                   "array_from": _array_from,
+                                                   "array_to": _array_to
+                                                  }
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
@@ -327,7 +343,15 @@ class VerilogElaborator():
 
         for name in tokens[4]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+            self.lastANSIPort["io"] = {"attributes": _atrs,
+                                       "range": _range,
+                                       "len": _len,
+                                       "type": "input",
+                                       "array_len": _array_len,
+                                       "array_range": _array_range,
+                                       "array_from": _array_from,
+                                       "array_to": _array_to,
+                                      }
             self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
@@ -338,7 +362,15 @@ class VerilogElaborator():
                                         "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "inout"}
+                self.current_module["io"][name] = {"attributes": _atrs,
+                                                   "range": _range,
+                                                   "len": _len,
+                                                   "type": "inout",
+                                                   "array_len": _array_len,
+                                                   "array_range": _array_range,
+                                                   "array_from": _array_from,
+                                                   "array_to": _array_to,
+                                                  }
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
@@ -399,7 +431,15 @@ class VerilogElaborator():
 
         for name in tokens[4]:
             self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
+            self.lastANSIPort["io"] = {"attributes": _atrs,
+                                       "range": _range,
+                                       "len": _len,
+                                       "type": "output",
+                                       "array_len": _array_len,
+                                       "array_range": _array_range,
+                                       "array_from": _array_from,
+                                       "array_to": _array_to,
+                                      }
             self.lastANSIPort["net"] = {"attributes": _atrs,
                                         "range": _range,
                                         "len": _len,
@@ -410,7 +450,15 @@ class VerilogElaborator():
                                         "array_to": _array_to}
 
             if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
+                self.current_module["io"][name] = {"attributes": _atrs,
+                                                   "range": _range,
+                                                   "len": _len,
+                                                   "type": "output",
+                                                   "array_len": _array_len,
+                                                   "array_range": _array_range,
+                                                   "array_from": _array_from,
+                                                   "array_to": _array_to,
+                                                  }
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
