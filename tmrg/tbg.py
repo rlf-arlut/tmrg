@@ -68,13 +68,13 @@ class TBG(TMR):
             for ioName in sorted(self.modules[module]["io"]):
                 io = self.modules[module]["io"][ioName]
                 if io["type"] == "input":
-                    oStr += "  reg %s %s;\n" % (io["range"], ioName)
+                    oStr += "  reg %s %s %s;\n" % (io["range"], ioName, io["array_range"])
                     if ioName.lower().find("clk") >= 0 or ioName.lower().find("clock") >= 0:
                         clocks.append(ioName)
                     if ioName.lower().find("rst") >= 0 or ioName.lower().find("reset") >= 0:
                         resets.append(ioName)
                 elif io["type"] == "output":
-                    oStr += "  wire %s %s;\n" % (io["range"], ioName)
+                    oStr += "  wire %s %s %s;\n" % (io["range"], ioName, io["array_range"])
                 else:
                     logging.warning("Unsuported IO type: %s" % io["type"])
 
@@ -87,25 +87,43 @@ class TBG(TMR):
                     if io["type"] == "input":
                         oStr += "  // fanout for %s\n" % (ioName)
                         for ext in self.EXT:
-                            oStr += "  wire %s %s%s=%s;\n" % (io["range"], ioName, ext, ioName)
+                            oStr += "  wire %s %s%s%s=%s;\n" % (io["range"], ioName, ext,io["array_range"], ioName)
                     elif io["type"] == "output":
-                        oStr += "  // voter for %s\n" % (ioName)
+                        oStr += "  // voters for %s\n" % (ioName)
                         for ext in self.EXT:
-                            oStr += "  wire %s %s%s;\n" % (io["range"], ioName, ext)
-                        oStr += "  wire %stmrErr;\n" % (ioName)
-
+                            oStr += "  wire %s %s%s%s;\n" % (io["range"], ioName, ext, io["array_range"])
+                        oStr += "  wire %stmrErr;\n" % (ioName) 
                         _len = self.modules[module]["nets"][ioName]["len"]
                         width = ""
                         if _len != "1":
                             width += "#(.WIDTH(%s)) " % _len
 
-                        oStr += "  %s %s%s (\n" % (voterCell, width, ioName+"Voter")
-                        oStr += "    .inA(%sA),\n" % (ioName)
-                        oStr += "    .inB(%sB),\n" % (ioName)
-                        oStr += "    .inC(%sC),\n" % (ioName)
-                        oStr += "    .out(%s),\n" % (ioName)
-                        oStr += "    .tmrErr(%stmrErr)\n" % (ioName)
-                        oStr += "  );\n"
+                        if io["array_range"] == "":
+                            oStr += "  %s %s%s (\n" % (voterCell, width, ioName+"Voter")
+                            oStr += "    .inA(%sA),\n" % (ioName)
+                            oStr += "    .inB(%sB),\n" % (ioName)
+                            oStr += "    .inC(%sC),\n" % (ioName)
+                            oStr += "    .out(%s),\n" % (ioName)
+                            oStr += "    .tmrErr(%stmrErr)\n" % (ioName)
+                            oStr += "  );\n"
+                        else:
+                            pass
+                            varname = "gen_%s" % ioName
+                            oStr += "  genvar %s;\n" % varname
+                            _array_start = """((%s>%s) ? %s : %s )""" % (io["array_from"], io["array_to"], io["array_to"], io["array_from"])
+                            _array_stop = """((%s>%s) ? %s : %s )""" % (io["array_from"], io["array_to"], io["array_from"], io["array_to"])
+                            oStr+= "  generate\n"
+                            oStr+= "    for(%s=%s;%s<=%s;%s=%s+1)\n" % (varname, _array_start, varname, _array_stop, varname, varname)
+                            oStr+= "      begin : %s_voter\n" % varname
+                            oStr+= "        %s %s%s (\n" % (voterCell, width, ioName+"Voter")
+                            oStr+= "          .inA(%sA[%s]),\n" % (ioName, varname)
+                            oStr+= "          .inB(%sB[%s]),\n" % (ioName, varname)
+                            oStr+= "          .inC(%sC[%s]),\n" % (ioName, varname)
+                            oStr+= "          .out(%s[%s]),\n" % (ioName, varname)
+                            oStr+= "          .tmrErr(%stmrErr)\n" % (ioName)
+                            oStr+= "        );\n"
+                            oStr+= "      end\n"
+                            oStr+= "  endgenerate\n"
 
                     else:
                         logging.warning("Unsuported IO type: %s" % io["type"])
