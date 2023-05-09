@@ -19,7 +19,7 @@ class TestTbgOnSingleVerilogFile():
         ]
     )
 
-    def test_tbg_on_file(self, tmrg, capfd, verilog_file):
+    def test_tbg_on_file(self, tbg, capfd, verilog_file):
       syntax_check(file_in_test_dir(verilog_file), cmds=["iverilog"])
       assert not tbg([file_in_test_dir(verilog_file)])
       basename = os.path.basename(verilog_file)
