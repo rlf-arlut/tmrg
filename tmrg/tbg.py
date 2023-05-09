@@ -230,7 +230,8 @@ class TBG(TMR):
                             oStr += "      %s=1;\n" % (ioName)
                             resetsRelease = "      %s=0;\n" % (ioName)
                     else:
-                        oStr += "      %s=0;\n" % (ioName)
+                        if io["array_range"] == "":
+                            oStr += "      %s=0;\n" % (ioName)
             if len(resetsRelease):
                 oStr += "      #10_000\n"+resetsRelease
             oStr += "`ifdef SEE\n"
