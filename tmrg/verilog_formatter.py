@@ -3,7 +3,9 @@ if sys.version_info[0] >= 3:
     from .pyparsing241 import *
 else:
     from .pyparsing152 import *
-
+"""
+from pyparsing import *
+"""
 
 class VerilogFormatter:
     formater = {}
@@ -72,13 +74,18 @@ class VerilogFormatter:
 
     def _formatIoHdr(self, tokens, i=""):
         oStr = ""
+        spec = ""
         label = str(tokens[0])
-        spec = self.format(tokens[1])
-        spec += self.format(tokens[2])
-        spec += self.format(tokens[3])
-        ports = tokens[4]
-        array = self.format(tokens[5])
-        array += self.format(tokens[6])
+
+        if tokens.get("standard"):
+            spec = self.format(tokens.get("standard").get("kind"))
+            spec += self.format(tokens.get("standard").get("attrs"))
+            spec += self.format(tokens.get("standard").get("packed_range"))
+        else:
+            spec = self.format(tokens.get("custom").get("custom_type")[0])
+        ports = tokens.get("names")
+        array = self.format(tokens.get("unpacked_range"))
+        array += self.format(tokens.get("array_size"))
         for port in ports:
             oStr += "%s %s %s %s" % (label, spec, port, array)
         return oStr
@@ -120,6 +127,27 @@ class VerilogFormatter:
         return "%s%s %s;\n" % (i, release, self.format(tokens[1]))
 
     def _format_netDecl3(self, tokens, i=""):
+        print("----------------------------------------------------------------------TRIPLICANING %s", tokens)
+        oStr = i
+        label = str(tokens[0])
+        sign = self.format(tokens[1])
+        drives = self.format(tokens[2])
+        spec = self.format(tokens[3])
+        delay = self.format(tokens[4])
+        if drives != "":
+            drives += " "
+        if spec != "":
+            spec += " "
+        if delay != "":
+            delay += " "
+        ports = tokens[5]
+        for port in ports:
+            port_str = self.format(port)
+            oStr += "%s %s%s%s%s%s;\n" % (label, sign, drives, spec, delay, port_str)
+        return oStr
+
+    def _format_customDeclwAssign(self, tokens, i=""):
+        print("----------------------------------------------------------------------TRIPLICANING %s", tokens)
         oStr = i
         label = str(tokens[0])
         sign = self.format(tokens[1])
@@ -577,6 +605,33 @@ class VerilogFormatter:
         label = tokens[0]
         for var in tokens[1]:
             oStr += "%s %s;\n" % (label, self.format(var))
+        return oStr
+
+    def _format_customDecl(self, tokens, i=""):
+        oStr = ""
+        label = tokens[0]
+        for var in tokens[1]:
+            oStr += "%s %s;\n" % (label, self.format(var))
+        return oStr
+
+    def _format_structDecl(self, tokens, i=""):
+        oStr = tokens[0] + " { \n"
+
+        for var in tokens[1]:
+            label = str(var[0])
+            attributes = self.format(var[1])
+
+            spec = self.format(var[2])
+            if spec != "":
+                spec += " "
+            for port in var[3]:
+                r = ""
+                if len(port) > 1:
+                    r = " "+self.format(port[1:])
+                oStr += "    %s %s %s%s%s;\n" % (label, attributes, spec, port[0], r)
+
+        oStr += "} " + tokens[2] + ";\n"
+
         return oStr
 
     def _format_integerDeclAssgn(self, tokens, i=""):

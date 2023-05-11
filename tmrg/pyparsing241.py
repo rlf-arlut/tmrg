@@ -947,6 +947,8 @@ class ParseResults(object):
         return ret
 
     def deepcopy( self ):
+        import pickle
+        return pickle.loads(pickle.dumps(self)) 
         """kulis. Returns a new copy of a ParseResults object (not references!)"""
         def naiveCopy(tokens):
             if isinstance(tokens, ParseResults):

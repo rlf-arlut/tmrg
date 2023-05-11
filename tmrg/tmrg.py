@@ -279,6 +279,15 @@ class TMR(VerilogElaborator):
             print(i, "_(ret)_>", str(tokens)[:100])
         return tokens
 
+    @staticmethod
+    def _append_tmr(net, letter):
+        pointpos = net.find(".")
+
+        if pointpos == -1:
+            return net + letter
+        
+        return net[0:pointpos] + letter + net[pointpos:]
+
     def __triplicate_Always(self, tokens):
         result = []
         # check if the module needs triplication
@@ -298,7 +307,7 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             self.appendToBlockName(cpy, i)
             result.append(cpy)
@@ -319,7 +328,7 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             self.appendToBlockName(cpy, i)
             result.append(cpy)
@@ -344,24 +353,12 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"]) + list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             result.append(cpy)
         return result
 
     def __triplicate_NetDecl3(self, tokens):
-        def tmr_reg_list(tokens):
-            newtokens = ParseResults([], name=tokens.getName())
-            for element in tokens:
-                if self.hasAnythingToTMR(element):
-                    for post in self.EXT:
-                        element2 = element.deepcopy()
-                        for var in self.toTMR:
-                            self.replace(element2, var, var+post)
-                        newtokens.append(element2)
-                else:
-                    newtokens.append(element)
-            return newtokens
         ids = self.getLeftRightHandSide(tokens)
         vote = False
 
@@ -446,6 +443,7 @@ class TMR(VerilogElaborator):
                                        inC=c,
                                        out=name_voted,
                                        tmrError=netErrorName,
+                                       type=self.current_module["nets"][right]["type"],
                                        attributes=self.current_module["nets"][right]["attributes"],
                                        range=self.current_module["nets"][right]["range"],
                                        len=self.current_module["nets"][right]["len"],
@@ -467,7 +465,7 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             result.append(cpy)
         return result
@@ -487,7 +485,7 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             result.append(cpy)
 
@@ -509,16 +507,24 @@ class TMR(VerilogElaborator):
         for i in self.EXT:
             cpy = tokens.deepcopy()
             for name in list(ids["right"])+list(ids["left"]):
-                _to_name = name+i
+                _to_name = self._append_tmr(name, i)
                 self.replace(cpy, name, _to_name)
             result.append(cpy)
 
         return result
 
+    """
+    def __triplicate_StructDecl(self, tokens):
+        logging.debug("[struct dec]")
+        logging.debug("      left : "+str(tokens[-1]))
+        print(tokens)
+        return tokens
+    """
+
     def __triplicate_integerDecl(self, tokens):
         #        print tokens
         logging.debug("[integer dec]")
-        logging.debug("      Left : "+str(tokens[-1]))
+        logging.debug("      left : "+str(tokens[-1]))
         toTMR = set()
         for _id in tokens[-1]:
             name = _id[0]
@@ -538,12 +544,161 @@ class TMR(VerilogElaborator):
             for i in self.EXT:
                 cpy = tokens.deepcopy()
                 for name in toTMR:
-                    _to_name = name+i
+                    _to_name = self._append_tmr(name, i)
                     self.replace(cpy, name, _to_name)
                 result.append(cpy)
             return result
         else:
             return tokens
+
+    def __triplicate_fields(self, tokens):
+        # Don't triplicate
+        # If not present, will try to triplicate members!
+        return tokens
+
+    def __triplicate_customDecl(self, tokens):
+        #        print tokens
+        logging.debug("[custom decl]")
+        logging.debug("      left : "+str(tokens[1]))
+
+        toTMR = set()
+        for name in tokens[1]:
+            TMR = False
+            if name in self.current_module["nets"]:
+                if self.current_module["nets"][name]["tmr"]:
+                    TMR = True
+            else:
+                if len(name) and name[0] == '`':
+                    logging.warning("Define %s" % name)
+                else:
+                    logging.warning("Unknown net '%s' (TMR may malfunction)" % name)
+            if TMR:
+                toTMR.add(name)
+        logging.debug(toTMR)
+        result = []
+        if len(toTMR):
+            for i in self.EXT:
+                logging.debug(tokens)
+                cpy = tokens.deepcopy()
+                for name in toTMR:
+                    _to_name = self._append_tmr(name, i)
+                    self.replace(cpy, name, _to_name)
+                result.append(cpy)
+            return result
+        else:
+            return tokens
+
+    def __triplicate_customDeclwAssign(self, tokens):
+        ids = self.getLeftRightHandSide(tokens)
+        vote = False
+
+        tmr = self.checkIfTmrNeeded(tokens)
+        left = tokens[1][0][0][0]
+        right = self.vf.format(tokens[1][0][3][0])
+
+        logging.debug("[custom declaration with assigment]")
+        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
+        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
+        logging.debug("      TMR  :"+str(tmr))
+
+        # check if this is explicit fanout
+        eFanout = False
+        for ext in self.EXT:
+            if left == right+ext:
+                eFanout = True
+
+        if eFanout:
+            logging.info("Removing declaration of '%s' (it comes from a fanout of %s)" % (left, right))
+            return ParseResults([], name=tokens.getName())
+
+        # check if this is part of explicit voter
+        eVoter = False
+        eGroup = ""
+        eNet = ""
+        for net in self.current_module["nets"]:
+            for ext in self.EXT:
+                if net+ext == left:
+                    eVoter = True
+                    eGroup = ext
+                    eNet = net
+        if eVoter:
+            logging.info("Explicit fanin '%s' part of '%s' (group %s)" % (left, eNet, eGroup))
+            for name in list(ids["right"]):
+                self._addVoter(name, "", addWires="output")
+            return tokens
+        eFanin = False
+        for ext in self.EXT:
+            if left+ext == right:
+                eFanin = True
+        if eFanin:
+            logging.info("Removing declaration of '%s' (it was declared for fanin)" % (left))
+            return ParseResults([], name=tokens.getName())
+
+        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
+        # commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
+        if left.lower().find("tmrerror") >= 0:
+            if left == "tmrError":
+                logging.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
+                return []
+
+            for net in self.current_module["nets"]:
+                netTmrErr = net+"TmrError"
+                if left == netTmrErr:
+                    logging.info("Removing declaration of %s" % (left))
+                    return []
+
+            for net in self.current_module["instances"]:
+                netTmrErr = net+"tmrError"
+                if left == netTmrErr:
+                    logging.info("Removing declaration of %s" % (left))
+                    return []
+
+        if len(self.voting_nets):
+            if (right, left) in self.voting_nets:
+                vote = True
+        if vote:
+            logging.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
+            newtokens = ParseResults([], name=tokens.getName())
+
+            a = right+self.EXT[0]
+            b = right+self.EXT[1]
+            c = right+self.EXT[2]
+            for ext in self.EXT:
+                voterInstName = "%sVoter%s" % (right, ext)
+                name_voted = "%s%s" % (left, ext)
+                netErrorName = "%sTmrError%s" % (right, ext)
+                self._addVoterExtended(voterInstName=voterInstName,
+                                       inA=a,
+                                       inB=b,
+                                       inC=c,
+                                       out=name_voted,
+                                       tmrError=netErrorName,
+                                       type=self.current_module["nets"][right]["type"],
+                                       attributes=self.current_module["nets"][right]["attributes"],
+                                       range=self.current_module["nets"][right]["range"],
+                                       len=self.current_module["nets"][right]["len"],
+                                       array_range=self.current_module["nets"][right]["array_range"],
+                                       array_len=self.current_module["nets"][right]["array_len"],
+                                       array_to=self.current_module["nets"][right]["array_to"],
+                                       array_from=self.current_module["nets"][right]["array_from"],
+                                       group=ext,
+                                       addWires="output")
+            tokens = newtokens
+            return tokens
+        # in any other case, triplicate right hand side
+        result = []
+        if not tmr:
+            self._addVotersIfTmr(ids["right"], group="", addWires="output")
+            return tokens
+        self._addFanoutsIfTmr(ids["right"], addWires="output")
+
+        for i in self.EXT:
+            cpy = tokens.deepcopy()
+            for name in list(ids["right"])+list(ids["left"]):
+                _to_name = self._append_tmr(name, i)
+                self.replace(cpy, name, _to_name)
+            result.append(cpy)
+        return result
 
     def __triplicate_ModuleInstantiation(self, tokens):
         identifier = tokens[0]
@@ -925,7 +1080,7 @@ class TMR(VerilogElaborator):
                         portstr += portName
                     logging.debug(portstr)
                 else:
-                    portName = port[4][0]
+                    portName = port.get("names")[0]
                     if not portName in self.current_module["nets"]:
                         logging.warning("Net '%s' unknown." % portName)
                         continue
@@ -971,6 +1126,7 @@ class TMR(VerilogElaborator):
                     _array_len = voter["array_len"]
                     _array_from = voter["array_from"]
                     _array_to = voter["array_to"]
+                    _type = voter["type"]
                     _len = voter["len"]
                     _out = voter["out"]
                     _err = voter["err"]
@@ -980,22 +1136,37 @@ class TMR(VerilogElaborator):
 
                     attributes = voter["attributes"]
                     addWires = voter["addWires"]
-                    logging.info("Instializaing voter %s (addWires:%s)" % (inst, addWires))
-                    if addWires == "output":
-                        logging.debug("Adding output wire %s" % (_out))
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wire  %s %s %s %s;" %
-                                                                          (attributes, _range, _out, _array_range))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                        #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
-                    elif addWires == "input":
-                        logging.debug("Adding input wires %s, %s , %s" % (_a, _b, _c))
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
-                                                                          (attributes, _range, _a, _array_range))[0])
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
-                                                                          (attributes, _range, _c, _array_range))[0])
-                        moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
-                                                                          (attributes, _range, _b, _array_range))[0])
+                    logging.info("Instializaing voter %s of type %s (addWires:%s)" % (inst, _type, addWires))
+
+                    if _type == "wire":
+                        if addWires == "output":
+                            logging.debug("Adding output wire %s" % (_out))
+                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire  %s %s %s %s;" %
+                                                                              (attributes, _range, _out, _array_range))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
+                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
+                        elif addWires == "input":
+                            logging.debug("Adding input wires %s, %s , %s" % (_a, _b, _c))
+                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
+                                                                              (attributes, _range, _a, _array_range))[0])
+                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
+                                                                              (attributes, _range, _b, _array_range))[0])
+                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
+                                                                              (attributes, _range, _c, _array_range))[0])
+                    else:
+                        if addWires == "output":
+                            logging.debug("Adding output %s %s" % (_type, _out))
+                            moduleBody.insert(0, self.vp.customDecl.parseString("%s %s;" %
+                                                                              (_type, _out))[0])
+                        elif addWires == "input":
+                            logging.debug("Adding input %s %s, %s , %s" % (_type, _a, _b, _c))
+                            moduleBody.insert(0, self.vp.customDecl.parseString("%s %s;" %
+                                                                              (_type, _a))[0])
+                            moduleBody.insert(0, self.vp.customDecl.parseString("%s %s;" %
+                                                                              (_type, _b))[0])
+                            moduleBody.insert(0, self.vp.customDecl.parseString("%s %s;" %
+                                                                              (_type, _c))[0])
 
                     width = ""
                     if _len != "1":
@@ -1182,14 +1353,53 @@ class TMR(VerilogElaborator):
         return _check(tokens, label)
 
     def replace(self, tokens, _from, _to):
+        def check_and_replace(looking_for, l, i, replace_with):
+            item = l[i]
+
+            if not item:
+                return False
+
+            netname, netfield = self.split_name(item)
+            if netname not in self.current_module["nets"]:
+                return False
+
+            if self.current_module["nets"][netname]["type"] in self.current_module["structs"]:
+                fields = self.current_module["structs"][self.current_module["nets"][netname]["type"]]["fields"]
+
+                # Referencing the whole struct is legal
+                #if not netfield:
+                #    raise ValueError("")
+
+                if netfield and netfield not in fields:
+                    raise ValueError("Field %s is not a field of struct %s. Available fields are: %s" % (netfield, netname, fields))
+
+                if looking_for == netname:
+                    if netfield:
+                        l[i] = replace_with + "." + netfield
+                    else:
+                        l[i] = replace_with
+
+                    return
+            elif netfield:
+                raise ValueError("Trying to access field %s of %s, which is not a struct" % (netfield, netname))
+
+            if looking_for == netname:
+                l[i] = replace_with    
+
         def _replace(tokens, _from, _to):
             if isinstance(tokens, ParseResults):
-                for i in range(len(tokens)):
-                    if isinstance(tokens[i], ParseResults):
-                        res = _replace(tokens[i], _from, _to)
+                for i, d in enumerate(tokens):
+                    if isinstance(d, ParseResults):
+                        res = _replace(d, _from, _to)
                     else:
-                        if tokens[i] == _from:
-                            tokens[i] = _to
+                        check_and_replace(_from, tokens, i, _to)
+
+                for k, v in tokens.items():
+                    if isinstance(v, ParseResults):
+                        res = _replace(v, _from, _to)
+                    else:
+                        check_and_replace(_from, tokens, k, _to)
+
         return _replace(tokens, _from, _to)
 
     def appendToBlockName(self, tokens, postfix):
@@ -1201,6 +1411,7 @@ class TMR(VerilogElaborator):
                             tokens[i][0] += postfix
                         else:
                             res = _appendToBlockName(tokens[i], postfix)
+
         return _appendToBlockName(tokens, postfix)
 
     def replaceDot(self, tokens, post):
@@ -1226,7 +1437,30 @@ class TMR(VerilogElaborator):
         leftTMR = False
         leftNoTMR = False
         for net in res["left"]:
-            if net in self.current_module["nets"]:
+            # Check if struct
+            pointpos = net.find('.')
+            if pointpos != -1:
+                _field = net[pointpos:]
+                _net = net[0:pointpos]
+
+                if _net not in self.current_module["nets"]:
+                    raise ValueError("Error while elaborating %s: %s is not defined" % (net, _net))
+
+                _struct = self.current_module["nets"][_net]["type"]
+                
+                if _struct not in self.current_module["structs"]:
+                    raise ValueError("Error while elaborating %s: %s is not a struct. Available structs: %s" % (net, _struct, self.current_module["structs"].keys()))
+
+                if _field in self.current_module["structs"][_struct]["fields"]:
+                    raise ValueError("Error while elaborating %s: %s is not a field of %s" % (net, _field, _net))
+
+                if self.current_module["nets"][_net]["tmr"]:
+                    leftTMR = True
+
+                if not self.current_module["nets"][_net]["tmr"]:
+                    leftNoTMR = True
+
+            elif net in self.current_module["nets"]:
                 if self.current_module["nets"][net]["tmr"]:
                     leftTMR = True
                 if not self.current_module["nets"][net]["tmr"]:
@@ -1236,6 +1470,7 @@ class TMR(VerilogElaborator):
                     logging.warning("Define %s" % net)
                 else:
                     logging.warning("Unknown net '%s' (TMR may malfunction)" % net)
+
         if leftTMR and leftNoTMR:
             logging.error(
                 "Block contains both type of elements (should and should not be triplicated!) in one expresion. ")
@@ -1274,7 +1509,7 @@ class TMR(VerilogElaborator):
                 break
         return toTMR
 
-    def _addVoterExtended(self, voterInstName, inA, inB, inC, out, tmrError, range, len, group, array_range, array_len, attributes, array_from, array_to, addWires=""):
+    def _addVoterExtended(self, voterInstName, inA, inB, inC, out, tmrError, type, range, len, group, array_range, array_len, attributes, array_from, array_to, addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group] = {}
             logging.info("Creating TMR error group %s" % group)
@@ -1290,6 +1525,7 @@ class TMR(VerilogElaborator):
                 "attributes": attributes,
                 "range": range,
                 "len": len,
+                "type": type,
                 "array_range": array_range,
                 "array_from": array_from,
                 "array_to": array_to,
@@ -1322,6 +1558,7 @@ class TMR(VerilogElaborator):
             array_from = self.current_module["nets"][netID]["array_from"]
             array_to = self.current_module["nets"][netID]["array_to"]
             attributes = self.current_module["nets"][netID]["attributes"]
+            nettype = self.current_module["nets"][netID]["type"]
             self.current_module["voters"][group][voterInstName] = {
                 "inA": inA,
                 "inB": inB,
@@ -1334,6 +1571,7 @@ class TMR(VerilogElaborator):
                 "array_len": array_len,
                 "array_from": array_from,
                 "array_to": array_to,
+                "type": nettype,
                 "len": len,
                 "group": group,
                 "addWires": addWires}
@@ -1380,12 +1618,14 @@ class TMR(VerilogElaborator):
 
     def _addFanouts(self, idList, addWires=""):
         for netId in idList:
-            self._addFanout(netId, addWires=addWires)
+            netname, netfields = self.split_name(netId)
+            self._addFanout(netname, addWires=addWires)
 
     def _addFanoutsIfTmr(self, idList, addWires=""):
         for netId in idList:
-            if not self.current_module["nets"][netId]["tmr"]:
-                self._addFanout(netId, addWires=addWires)
+            netname, netfields = self.split_name(netId)
+            if not self.current_module["nets"][netname]["tmr"]:
+                self._addFanout(netname, addWires=addWires)
 
     def _appendToAllIds(self, t, post):
         if isinstance(t, ParseResults):
@@ -1531,7 +1771,7 @@ class TMR(VerilogElaborator):
                     tmr = False
                     s += " -> do_not_touch:%s" % (str(tmr))
 
-                logging.info(" | net %s : %s (%s)" % (net, str(tmr), s))
+                logging.info(" | module %s net %s : %s (%s)" % (module, net, str(tmr), s))
                 self.modules[module]["nets"][net]["tmr"] = tmr
 
             for inst in self.modules[module]["instances"]:

@@ -83,6 +83,10 @@ if sys.version_info[0] >= 3:
 else:
     from .pyparsing152 import *
     from . import pyparsing152 as pyparsing
+"""
+from pyparsing import *
+import pyparsing
+"""
 
 usePackrat = True
 usePsyco = False
@@ -175,7 +179,7 @@ class VerilogParser:
                            Suppress("]")
                          ).setResultsName("subscrIndxRef")
 
-        subscrIdentifier = Group( identifier +
+        subscrIdentifier = Group( identifier + #Optional( Suppress(".") + identifier.setResultsName("field") ) +
                                   Group( Optional( Group(subscrIndxRef) | Group(subscrRef) ) + Optional( Group(subscrIndxRef) | Group(subscrRef) ) )
                                 ).setResultsName("subscrIdentifier")
         scalarConst = Regex("0|1('[Bb][01xX])?")
@@ -233,6 +237,10 @@ class VerilogParser:
         release    = Keyword("release")
         assign     = Keyword("assign").setResultsName("keyword")
         unique     = Keyword("unique")
+        struct     = Keyword("struct")
+
+        valid_keywords = MatchFirst(map(Keyword, "wire reg logic signed real bool byte shortint int longint bit assign".split()))
+        custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
 
         eventExpr = Forward()
         eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
@@ -241,10 +249,12 @@ class VerilogParser:
             )
         eventControl = Group( "@" + eventExpr ).setName("eventCtrl").setResultsName("eventCtrl")
 
-        delayArg = ( number |
-                     Word(alphanums+"$_") | #identifier |
+        delayArg = ( number ^
+                     Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)") ^
+                     Word(alphanums+"$_") ^ #identifier ^
                      ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" )
                    ).setName("delayArg")
+
         delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")
         delayOrEventControl = delay | eventControl
 
@@ -287,17 +297,19 @@ class VerilogParser:
                                    Suppress(self.semi)
                                   ).setResultsName("localparamDecl")
 
-        self.inputDecl = Group( "input"  + 
+        self.inputDecl = Group( "input"  +
                                 Group(Optional(oneOf("wire reg logic"))) + 
                                 Group(Optional(oneOf("signed real"))) + 
-                                Group(Optional( self.range )).setResultsName("range") + 
+                                Group(Optional( self.range )).setResultsName("range") +
                                 Group(delimitedList( identifier )) + 
                                 Suppress(self.semi) ).setResultsName("input")
+
         self.outputDecl = Group( "output" + Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional(oneOf("signed real"))) + 
                           Group(Optional( self.range )).setResultsName("range") + 
                           Group(delimitedList( identifier )) + 
                           Suppress(self.semi) ).setResultsName("output")
+
         self.inoutDecl  = Group( "inout"  + 
                           Group(Optional(oneOf("wire reg logic"))) + 
                           Group(Optional("signed")) + 
@@ -308,12 +320,24 @@ class VerilogParser:
         
         regIdentifier = Group( identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) )
                                + Group(Optional( "[" + Group(self.expr) + "]" ) ))
-        self.regDecl = Group( oneOf("reg logic")+
+
+        self.regDecl = Group( oneOf("reg logic") +
                               Group(Optional("signed")) +
                               Group(Optional( self.range)).setResultsName("range") +
+                              #Group(ZeroOrMore(self.range)).setResultsName("range") +
                               Group( delimitedList( regIdentifier )) +
                               Suppress(self.semi)
                             ).setName("regDecl").setResultsName("regDecl")
+
+        self.customDecl = Group( custom_type.setResultsName("custom_type") +
+                              Group( delimitedList( identifier )) +
+                              Suppress(self.semi)
+                            ).setName("customDecl").setResultsName("customDecl")
+
+        self.customDeclwAssign = Group( custom_type.setResultsName("custom_type") +
+                                    Group( delimitedList( Group(self.assgnmt) ) ).setResultsName("assignments") +
+                                    Suppress(self.semi)
+                                ).setName("customDeclwAssign").setResultsName("customDeclwAssign")
 
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
         integerDecl = Group( "integer" + Group(delimitedList( regIdentifier )) + Suppress(self.semi) ).setResultsName("integerDecl")
@@ -337,7 +361,9 @@ class VerilogParser:
             self.integerDeclAssgn |
             realDecl |
             timeDecl |
-            eventDecl
+            eventDecl |
+            self.customDecl |
+            self.customDeclwAssign
             )
 
         synopsys=Keyword("synopsys")
@@ -425,7 +451,8 @@ class VerilogParser:
             self.regDecl |
             timeDecl |
             integerDecl |
-            realDecl
+            realDecl |
+            self.customDecl
             ).setResultsName("tfDecl")
 
         lifetime = oneOf("static automatic")
@@ -435,8 +462,6 @@ class VerilogParser:
             Group( ZeroOrMore( self.stmt ) ) +
             "endfunction"
             ).setResultsName("functionDecl")
-
-        inputOutput = oneOf("input output")
 
         netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
 
@@ -467,6 +492,15 @@ class VerilogParser:
                               Group( delimitedList( Group(self.assgnmt) ) ) +
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
+
+        self.structDecl = Group(
+                "typedef struct packed" +
+                Suppress("{") +
+                Group(ZeroOrMore( self.regDecl )).setResultsName("fields") +
+                Suppress ("}") +
+                identifier.setResultsName("id") +
+                Suppress(self.semi)
+        ).setName("structDecl").setResultsName("structDecl")
 
         self.genVarDecl = Group(Keyword("genvar") +
                                 Group(delimitedList(self.expr)) +
@@ -691,10 +725,13 @@ class VerilogParser:
             self.netDecl3 |
             self.netDecl1 |
             self.netDecl2 |
+            self.customDecl |
+            self.customDeclwAssign |
             self.genVarDecl |
             package_import_declaration |
             timeDecl |
             integerDecl |
+            self.structDecl |
             self.integerDeclAssgn |
             realDecl |
             eventDecl |
@@ -757,33 +794,52 @@ class VerilogParser:
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
         self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
-        inputOutput = oneOf("input output inout")
         self.portIn = Group(
-                        Keyword("input") + 
-                        Group(Optional(oneOf("wire reg logic"))) + 
-                        Group(Optional(oneOf("signed real"))) +  
-                        Group(Optional( self.range )).setResultsName("range") + 
+                        Keyword("input") +
+                        (
+                            Group(
+                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
+                                Optional(oneOf("signed real")).setResultsName("attrs") +  
+                                ZeroOrMore( self.range ).setResultsName("packed_range") 
+                            ).setResultsName("standard") ^ Group (
+                                custom_type.setResultsName("custom_type")
+                            ).setResultsName("custom")
+                        ) +
                         Group(identifier).setResultsName("names") +
-                         Group(Optional( self.range )).setResultsName("range") +
-                         Group(Optional(self.array_size))
-                      ).setResultsName("inputHdr")
+                        Group(ZeroOrMore( self.range )).setResultsName("unpacked_range") +
+                        Group(Optional(self.array_size))
+                        ).setResultsName("inputHdr")
+
         self.portOut = Group( 
-                         Keyword("output") + 
-                         Group(Optional(oneOf("wire reg logic"))) + 
-                         Group(Optional(oneOf("signed real"))) +  
-                         Group(Optional( self.range )).setResultsName("range") + 
-                         Group(identifier).setResultsName("names") +
-                         Group(Optional( self.range )).setResultsName("range") +
-                         Group(Optional(self.array_size))
+                        Keyword("output") + 
+                        (
+                            Group(
+                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
+                                Optional(oneOf("signed real")).setResultsName("attrs") +  
+                                ZeroOrMore( self.range ).setResultsName("packed_range") 
+                            ).setResultsName("standard") ^ Group (
+                                custom_type.setResultsName("custom_type")
+                            ).setResultsName("custom")
+                        ) +
+                        Group(identifier).setResultsName("names") +
+                        Group(ZeroOrMore( self.range )).setResultsName("unpacked_range") +
+                        Group(Optional(self.array_size))
                        ).setResultsName("outputHdr")
-        self.portInOut= Group( 
-                          Keyword("inout")  + 
-                          Group(Optional(oneOf("wire reg logic"))) + 
-                          Group(Optional("signed")) + 
-                          Group(Optional( self.range )).setResultsName("range") + 
-                          Group(identifier).setResultsName("names") +
-                         Group(Optional( self.range )).setResultsName("range") +
-                         Group(Optional(self.array_size))
+
+        self.portInOut = Group( 
+                        Keyword("inout")  + 
+                        (
+                            Group(
+                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
+                                Optional(oneOf("signed real")).setResultsName("attrs") +  
+                                ZeroOrMore( self.range ).setResultsName("packed_range") 
+                            ).setResultsName("standard") ^ Group (
+                                custom_type.setResultsName("custom_type")
+                            ).setResultsName("custom")
+                        ) +
+                        Group(identifier).setResultsName("names") +
+                        Group(ZeroOrMore( self.range )).setResultsName("packed_range") +
+                        Group(Optional(self.array_size))
                         ).setResultsName("inoutHdr")
 
         moduleHdr = Group ( oneOf("module macromodule") + 
@@ -793,7 +849,12 @@ class VerilogParser:
                                             Group(Optional( self.range )) + paramAssgnmt) ) + 
                                             Suppress(")") ))+
                             Group(Optional( Suppress("(") +
-                                            Optional( delimitedList( self.portIn | self.portOut | self.portInOut | self.port ) )  +
+                                            Optional( delimitedList(
+                                                    self.portIn ^
+                                                    self.portOut ^
+                                                    self.portInOut ^
+                                                    self.port
+                                            ) )  +
                                             Suppress(")") )).setResultsName("ports") +
                             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
 
@@ -839,7 +900,7 @@ class VerilogParser:
             udpTableDefn +
             "endprimitive" )
 
-        verilogbnf = (OneOrMore( self.module | udp | self.comp_directive ) + StringEnd()).setName("top").setResultsName("top")
+        verilogbnf = (OneOrMore( self.module | udp | self.comp_directive | self.structDecl) + StringEnd()).setName("top").setResultsName("top")
 
         verilogbnf.ignore( cppStyleComment )
 
