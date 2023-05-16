@@ -427,7 +427,8 @@ class TMR(VerilogElaborator):
             if (right, left) in self.voting_nets:
                 vote = True
         if vote:
-            logging.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
+            import math
+            logging.info("TMR voting %s -> %s (bits: %s)" % (right, left, sum([i["len"] for i in self.current_module["nets"][right]["packed_ranges"]])))
             newtokens = ParseResults([], name=tokens.getName())
 
             a = right+self.EXT[0]
@@ -445,12 +446,8 @@ class TMR(VerilogElaborator):
                                        tmrError=netErrorName,
                                        type=self.current_module["nets"][right]["type"],
                                        attributes=self.current_module["nets"][right]["attributes"],
-                                       range=self.current_module["nets"][right]["range"],
-                                       len=self.current_module["nets"][right]["len"],
-                                       array_range=self.current_module["nets"][right]["array_range"],
-                                       array_len=self.current_module["nets"][right]["array_len"],
-                                       array_to=self.current_module["nets"][right]["array_to"],
-                                       array_from=self.current_module["nets"][right]["array_from"],
+                                       packed_ranges=self.current_module["nets"][right]["packed_ranges"],
+                                       unpacked_ranges=self.current_module["nets"][right]["unpacked_ranges"],
                                        group=ext,
                                        addWires="output")
             tokens = newtokens
@@ -492,7 +489,6 @@ class TMR(VerilogElaborator):
         return result
 
     def __triplicate_RegDecl(self, tokens):
-
         tmr = self.checkIfTmrNeeded(tokens)
         ids = self.getLeftRightHandSide(tokens)
 
@@ -657,7 +653,7 @@ class TMR(VerilogElaborator):
             if (right, left) in self.voting_nets:
                 vote = True
         if vote:
-            logging.info("TMR voting %s -> %s (bits:%s)" % (right, left, self.current_module["nets"][right]["len"]))
+            logging.info("TMR voting %s -> %s (bits: %s)" % (right, left, " ".join([i["len"] for i in self.current_module["nets"][right]["packed_ranges"]])))
             newtokens = ParseResults([], name=tokens.getName())
 
             a = right+self.EXT[0]
@@ -675,12 +671,8 @@ class TMR(VerilogElaborator):
                                        tmrError=netErrorName,
                                        type=self.current_module["nets"][right]["type"],
                                        attributes=self.current_module["nets"][right]["attributes"],
-                                       range=self.current_module["nets"][right]["range"],
-                                       len=self.current_module["nets"][right]["len"],
-                                       array_range=self.current_module["nets"][right]["array_range"],
-                                       array_len=self.current_module["nets"][right]["array_len"],
-                                       array_to=self.current_module["nets"][right]["array_to"],
-                                       array_from=self.current_module["nets"][right]["array_from"],
+                                       packed_ranges=self.current_module["nets"][right]["packed_ranges"],
+                                       unpacked_ranges=self.current_module["nets"][right]["unpacked_ranges"],
                                        group=ext,
                                        addWires="output")
             tokens = newtokens
@@ -911,9 +903,10 @@ class TMR(VerilogElaborator):
                     inst = voteNet+"Voter"
                     logging.info("Instializaing voter %s" % inst)
                     net = self.modules[moduleName]["nets"][voteNet]
-                    _range = net["range"]
 
-                    _len = net["len"]
+                    _range = " ".join([i["range"] for i in net["packed_ranges"]])
+                    _len = "(" + " + ".join([i["len"] for i in net["packed_ranges"]]) + ")"
+
                     _out = voteNet+"Voted"
                     _err = voteNet+"TmrError"
                     _a = voteNet+"A"
@@ -1080,7 +1073,7 @@ class TMR(VerilogElaborator):
                         portstr += portName
                     logging.debug(portstr)
                 else:
-                    portName = port.get("names")[0]
+                    portName = port.get("name")[0]
                     if not portName in self.current_module["nets"]:
                         logging.warning("Net '%s' unknown." % portName)
                         continue
@@ -1121,18 +1114,16 @@ class TMR(VerilogElaborator):
                 for voter in sorted(self.current_module["voters"][group]):
                     inst = voter
                     voter = self.current_module["voters"][group][voter]
-                    _range = voter["range"]
-                    _array_range = voter["array_range"]
-                    _array_len = voter["array_len"]
-                    _array_from = voter["array_from"]
-                    _array_to = voter["array_to"]
                     _type = voter["type"]
-                    _len = voter["len"]
                     _out = voter["out"]
                     _err = voter["err"]
                     _a = voter["inA"]
                     _b = voter["inB"]
                     _c = voter["inC"]
+
+                    _range = " ".join([i["range"] for i in voter["packed_ranges"]])
+                    _array_range = " ".join([i["range"] for i in voter["unpacked_ranges"]])
+                    _len = "(" + " + ".join([i["len"] for i in voter["packed_ranges"]]) + ")"
 
                     attributes = voter["attributes"]
                     addWires = voter["addWires"]
@@ -1141,11 +1132,8 @@ class TMR(VerilogElaborator):
                     if _type == "wire":
                         if addWires == "output":
                             logging.debug("Adding output wire %s" % (_out))
-                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire  %s %s %s %s;" %
+                            moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                               (attributes, _range, _out, _array_range))[0])
-                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_a))[0])
-                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_b))[0])
-                            #moduleBody.insert(0,self.vp.netDecl1.parseString("wire %s %s;"%(_range,_c))[0])
                         elif addWires == "input":
                             logging.debug("Adding input wires %s, %s , %s" % (_a, _b, _c))
                             moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
@@ -1181,20 +1169,29 @@ class TMR(VerilogElaborator):
                     else:
                         moduleBody.insert(0, self.vp.netDecl1.parseString("wor %s;" % _err)[0])
 
-                    if _array_range != "":
-                        varname = "gen_%s" % inst
-                        genstr = "genvar %s;" % varname
-                        moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
-                        voterStr = majorityVoterCell + " %s%s (.inA(%s[%s]), .inB(%s[%s]), .inC(%s[%s]), .out(%s[%s]), .tmrErr(%s));" % \
+                    if voter["unpacked_ranges"]:
+                        genstr = "genstr\n"
+
+                        for i, unpacked_range in enumerate(voter["unpacked_ranges"]):
+                            varname = "gen_%s%d" % (inst, i)
+                            genstr = "genvar %s;" % varname
+
+                            moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
+
+                            _start = "((%s>%s) ? %s : %s )" % (unpacked_range["from"], unpacked_range["to"], unpacked_range["to"], unpacked_range["from"])
+                            _stop  = "((%s>%s) ? %s : %s )" % (unpacked_range["from"], unpacked_range["to"], unpacked_range["from"], unpacked_range["to"])
+                            _for   = "for(%s=%s;%s<=%s;%s=%s+1) begin : %s_fanout" % (varname, _start, varname, _stop, varname, varname, varname)
+
+                            genstr += _for + "\n"
+
+                        genstr += majorityVoterCell + " %s%s (.inA(%s[%s]), .inB(%s[%s]), .inC(%s[%s]), .out(%s[%s]), .tmrErr(%s));" % \
                             (width, inst, _a, varname, _b, varname, _c, varname, _out, varname, _err)
-                        _array_start = """((%s>%s) ? %s : %s )""" % (_array_from, _array_to, _array_to, _array_from)
-                        _array_stop = """((%s>%s) ? %s : %s )""" % (_array_from, _array_to, _array_from, _array_to)
-                        genstr = """generate
-                                      for(%s=%s;%s<=%s;%s=%s+1)
-                                        begin : %s_fanout
-                                          %s
-                                        end
-                                      endgenerate""" % (varname, _array_start, varname, _array_stop, varname, varname, varname, voterStr)
+
+                        for i in range(len(voter["unpacked_ranges"])):
+                            genstr += "end\n"
+                        
+                        genstr += "endgenerate"
+
                         moduleBody.append(self.vp.generate.parseString(genstr)[0])
                     else:  # normal voter
                         moduleBody.append(self.vp.moduleInstantiation.parseString(
@@ -1234,26 +1231,27 @@ class TMR(VerilogElaborator):
                 asgnStr += ";"
                 moduleBody.append(self.vp.continuousAssign.parseString(asgnStr)[0])
 
-
-
         for fanout in sorted(self.current_module["fanouts"]):
             inst = fanout
             fanout = self.current_module["fanouts"][inst]
             logging.info("Instializaing fanout %s" % inst)
-            _range = fanout["range"]
-            _array_range = fanout["array_range"]
-            _array_len = fanout["array_len"]
-            _array_from = fanout["array_from"]
-            _array_to = fanout["array_to"]
-            _len = fanout["len"]
             _in = fanout["in"]
             _a = fanout["outA"]
             _b = fanout["outB"]
             _c = fanout["outC"]
+
+            _range = " ".join([i["range"] for i in fanout["packed_ranges"]])
+            _array_range = " ".join([i["range"] for i in fanout["unpacked_ranges"]])
+            _len = "(" + " + ".join([i["len"] for i in voter["packed_ranges"]]) + ")"
+
             addWires = fanout["addWires"]
             attributes = fanout["attributes"]
             if addWires == "output":
                 logging.debug("Adding output wires %s, %s , %s" % (_a, _b, _c))
+                print(_range)
+                print(
+                "wire %s %s %s %s;" %
+                                                                  (attributes, _range, _a, _array_range))
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
                                                                   (attributes, _range, _a, _array_range))[0])
                 moduleBody.insert(0, self.vp.netDecl1.parseString("wire %s %s %s %s;" %
@@ -1273,21 +1271,29 @@ class TMR(VerilogElaborator):
             if "fanout_cell" in self.current_module["constraints"]:
                 fanoutCell = self.current_module["constraints"]["fanout_cell"]
 
-            if _array_range != "":
-                varname = "gen_%s" % inst
-                genstr = "genvar %s;" % varname
-                moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
-                fanoutStr = fanoutCell+" %s%s (.in(%s[%s]), .outA(%s[%s]), .outB(%s[%s]), .outC(%s[%s]));" % \
-                    (width, inst, _in, varname, _a, varname, _b, varname, _c, varname)
-                _array_start = """((%s>%s) ? %s : %s )""" % (_array_from, _array_to, _array_to, _array_from)
-                _array_stop = """((%s>%s) ? %s : %s )""" % (_array_from, _array_to, _array_from, _array_to)
+            if voter["unpacked_ranges"]:
+                genstr = "genstr\n"
 
-                genstr = """generate
-                                  for(%s=%s;%s<=%s;%s=%s+1)
-                                    begin : %s_fanout
-                                      %s
-                                    end
-                                  endgenerate""" % (varname, _array_start, varname, _array_stop, varname, varname, varname, fanoutStr)
+                for i, unpacked_range in enumerate(voter["unpacked_ranges"]):
+                    varname = "gen_%s%d" % (inst, i)
+                    genstr = "genvar %s;" % varname
+
+                    moduleBody.append(self.vp.genVarDecl.parseString(genstr)[0])
+
+                    _start = "((%s>%s) ? %s : %s )" % (unpacked_range["from"], unpacked_range["to"], unpacked_range["to"], unpacked_range["from"])
+                    _stop  = "((%s>%s) ? %s : %s )" % (unpacked_range["from"], unpacked_range["to"], unpacked_range["from"], unpacked_range["to"])
+                    _for   = "for(%s=%s;%s<=%s;%s=%s+1) begin : %s_fanout" % (varname, _start, varname, _stop, varname, varname, varname)
+
+                    genstr += _for + "\n"
+
+                genstr += fanoutCell + " %s%s (.inA(%s[%s]), .inB(%s[%s]), .inC(%s[%s]), .out(%s[%s]), .tmrErr(%s));" % \
+                    (width, inst, _a, varname, _b, varname, _c, varname, _out, varname, _err)
+
+                for i in range(len(voter["unpacked_ranges"])):
+                    genstr += "end\n"
+                
+                genstr += "endgenerate"
+
                 moduleBody.append(self.vp.generate.parseString(genstr)[0])
             else:  # normal fanout
                 moduleBody.append(self.vp.moduleInstantiation.parseString(fanoutCell+" %s%s (.in(%s), .outA(%s), .outB(%s), .outC(%s));" %
@@ -1509,7 +1515,7 @@ class TMR(VerilogElaborator):
                 break
         return toTMR
 
-    def _addVoterExtended(self, voterInstName, inA, inB, inC, out, tmrError, type, range, len, group, array_range, array_len, attributes, array_from, array_to, addWires=""):
+    def _addVoterExtended(self, voterInstName, inA, inB, inC, out, tmrError, type, packed_ranges, unpacked_ranges, group, attributes, addWires=""):
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group] = {}
             logging.info("Creating TMR error group %s" % group)
@@ -1523,19 +1529,14 @@ class TMR(VerilogElaborator):
                 "out": out,
                 "err": tmrError,
                 "attributes": attributes,
-                "range": range,
-                "len": len,
                 "type": type,
-                "array_range": array_range,
-                "array_from": array_from,
-                "array_to": array_to,
-                "array_len": array_len,
+                "packed_ranges": packed_ranges,
+                "unpacked_ranges": unpacked_ranges,
                 "group": group,
                 "addWires": addWires}
             self.__voterPresent = True
 
     def _addVoter(self, netID, group="", addWires=""):
-
         if not group in self.current_module["voters"]:
             self.current_module["voters"][group] = {}
             logging.info("Creating TMR error group %s" % group)
@@ -1551,12 +1552,8 @@ class TMR(VerilogElaborator):
             logging.debug("Adding voter '%s' to group '%s' (simple)" % (voterInstName, group))
             logging.debug("    %s %s %s -> %s & %s" % (inA, inB, inC, nameVoted, netErrorName))
 
-            range = self.current_module["nets"][netID]["range"]
-            len = self.current_module["nets"][netID]["len"]
-            array_range = self.current_module["nets"][netID]["array_range"]
-            array_len = self.current_module["nets"][netID]["array_len"]
-            array_from = self.current_module["nets"][netID]["array_from"]
-            array_to = self.current_module["nets"][netID]["array_to"]
+            packed_ranges = self.current_module["nets"][netID]["packed_ranges"]
+            unpacked_ranges = self.current_module["nets"][netID]["unpacked_ranges"]
             attributes = self.current_module["nets"][netID]["attributes"]
             nettype = self.current_module["nets"][netID]["type"]
             self.current_module["voters"][group][voterInstName] = {
@@ -1565,14 +1562,10 @@ class TMR(VerilogElaborator):
                 "inC": inC,
                 "out": nameVoted,
                 "err": netErrorName,
-                "range": range,
+                "packed_ranges": packed_ranges,
+                "unpacked_ranges": unpacked_ranges,
                 "attributes": attributes,
-                "array_range": array_range,
-                "array_len": array_len,
-                "array_from": array_from,
-                "array_to": array_to,
                 "type": nettype,
-                "len": len,
                 "group": group,
                 "addWires": addWires}
             self.__voterPresent = True
@@ -1593,27 +1586,21 @@ class TMR(VerilogElaborator):
             outA = netID+self.EXT[0]
             outB = netID+self.EXT[1]
             outC = netID+self.EXT[2]
-            range = self.current_module["nets"][netID]["range"]
-            array_range = self.current_module["nets"][netID]["array_range"]
-            array_len = self.current_module["nets"][netID]["array_len"]
-            array_from = self.current_module["nets"][netID]["array_from"]
-            array_to = self.current_module["nets"][netID]["array_to"]
-            len = self.current_module["nets"][netID]["len"]
+            packed_ranges = self.current_module["nets"][netID]["packed_ranges"]
+            unpacked_ranges = self.current_module["nets"][netID]["unpacked_ranges"]
             attributes = self.current_module["nets"][netID]["attributes"]
             logging.debug("Adding fanout %s" % inst)
             logging.debug("    %s -> %s %s %s " % (_in, outA, outB, outC))
-            self.current_module["fanouts"][inst] = {"in": _in,
-                                                    "outA": outA,
-                                                    "outB": outB,
-                                                    "outC": outC,
-                                                    "range": range,
-                                                    "attributes": attributes,
-                                                    "array_range": array_range,
-                                                    "array_len": array_len,
-                                                    "array_from": array_from,
-                                                    "array_to": array_to,
-                                                    "len": len,
-                                                    "addWires": addWires}
+            self.current_module["fanouts"][inst] = {
+                "in": _in,
+                "outA": outA,
+                "outB": outB,
+                "outC": outC,
+                "packed_ranges": packed_ranges,
+                "unpacked_ranges": unpacked_ranges,
+                "attributes": attributes,
+                "addWires": addWires
+            }
             self.__fanoutPresent = True
 
     def _addFanouts(self, idList, addWires=""):
@@ -1697,10 +1684,12 @@ class TMR(VerilogElaborator):
                 s += " -> cmdModule:%s" % (str(tmrErrOut))
             logging.info(" | tmrErrOut : %s (%s)" % (str(tmrErrOut), s))
             if tmrErrOut:
-                self.modules[module]["nets"]["tmrError"] = {"range": "", "len": "1", "tmr": True,
-                                                            "from": "", "to": "", "attributes": "",
-                                                            "array_range": "", "array_len": "",
-                                                            "array_from": "", "array_to": ""}
+                self.modules[module]["nets"]["tmrError"] = {
+                    "tmr": True,
+                    "attributes" : "",
+                    "packed_ranges": [], 
+                    "unpacked_ranges": []
+                }
             self.modules[module]["constraints"]["tmrErrorOut"] = tmrErrOut
 
             s = "false"
@@ -2029,7 +2018,7 @@ class TMR(VerilogElaborator):
             for fanoutInst in self.modules[module]["fanouts"]:
                 fanout = self.modules[module]["fanouts"][fanoutInst]
                 postfix = ""
-                if fanout["len"] != "1":
+                if len(fanout["unpacked_ranges"] + fanout["packed_ranges"]) > 0:
                     postfix = "[*]"
                 ret.append(i+fanout["outA"]+postfix)
                 ret.append(i+fanout["outB"]+postfix)
@@ -2040,7 +2029,7 @@ class TMR(VerilogElaborator):
                 for voterInst in self.modules[module]["voters"][group]:
                     voter = self.modules[module]["voters"][group][voterInst]
                     postfix = ""
-                    if voter["len"] != "1":
+                    if len(voter["unpacked_ranges"] + voter["packed_ranges"]) > 0:
                         postfix = "[*]"
                     ret.append(i+voter["inA"]+postfix)
                     ret.append(i+voter["inB"]+postfix)

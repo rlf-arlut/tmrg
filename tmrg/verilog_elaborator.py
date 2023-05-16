@@ -62,7 +62,6 @@ def resultLine(tokens, sep=""):
         s += tokens
     return s
 
-
 class VerilogElaborator():
     def __init__(self, options, args, cnfgName):
         self.options = options
@@ -139,8 +138,9 @@ class VerilogElaborator():
                     if not netname in self.current_module["nets"]:
                         if not t[0] in self.current_module["params"] and t[0][0] != '`':
                             logging.warning("%s is neither a parameter nor a net. Leaving it as it is" % t[0])
-                        logging.warning("%s is either a parameter or a net. Leaving it as it is" % t[0])
                         return res
+
+                    logging.warning("%s is either a parameter or a net. Leaving it as it is" % t[0])
 
                     if not "dnt" in self.current_module["nets"][netname]:
                         res.add(netname)
@@ -153,7 +153,6 @@ class VerilogElaborator():
 
         if isinstance(t, ParseResults):
             name = str(t.getName()).lower()
-            logging.warning("Processing type %s> %s" % (str(t.getName()), t))
             if len(t) == 0:
                 return res
             if name in ("assgnmt", "nbassgnmt"):
@@ -167,7 +166,7 @@ class VerilogElaborator():
                     logging.error("Output may be incorrect.")
                 res["right"].update(_extractID(t[-1]))
             elif name in ("regdecl"):
-                for tt in t[3]:
+                for tt in t.get("identifiers"):
                     left_id = tt[0]
                     res["left"].add(left_id)
             elif name in ("netdecl1"):
@@ -196,51 +195,23 @@ class VerilogElaborator():
         for reg in tokens[-1]:
             name = reg[0]
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs, "range": _range, "len": _len,  "type": "int"}
+                self.current_module["nets"][name] = {"attributes": _atrs, "packed_ranges": [], "unpacked_ranges": [],  "type": "int"}
 
     def _elaborate_regdecl(self, tokens):
         _atrs = self.vf.format(tokens[1])
-        _range = self.vf.format(tokens[2])
-        _len = self.__getLenStr(tokens[2])
-        _from = self.__getFromStr(tokens[2])
-        _to = self.__getToStr(tokens[2])
+        
+        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
 
-        if _len != "1":
-            details = "(range:%s len:%s)" % (_range, _len)
-        else:
-            details = ""
-
-        for reg in tokens[-1]:
+        for reg in tokens.get("identifiers"):
             name = reg[0]
-            _array_range = ""
-            _array_len = ""
-            _array_from = ""
-            _array_to = ""
-            if len(reg[1]):
-                # this part decodes declarations using range: name [N:M]
-                arrayDec = reg[1]
-                _array_range = self.vf.format(arrayDec)
-                _array_len = self.__getArrayLenStr(arrayDec)
-                _array_from = self.__getArrayFrom(arrayDec)
-                _array_to = self.__getArrayTo(arrayDec)
-            elif len(reg[2]):
-                # this part decodes declarations using size: name [M]
-                _array_len = self.vf.format(reg[2][1])
-                _array_from = 0
-                _array_to = "%s - 1" % (_array_len)
-                _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs,
-                                                     "range": _range,
-                                                     "len": _len,
-                                                     "from": _from,
-                                                     "to": _to,
-                                                     "type": "wire",
-                                                     "array_range": _array_range,
-                                                     "array_len": _array_len,
-                                                     "array_from": _array_from,
-                                                     "array_to": _array_to
-                                                     }
+                self.current_module["nets"][name] = {
+                    "attributes": _atrs,
+                    "type": "wire",
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges": self.__elaborate_unpacked(reg[1])
+                }
 
     def __structdecl(self, tokens):
         fields = tokens.get("fields")
@@ -248,26 +219,22 @@ class VerilogElaborator():
         res = {}
 
         res["fields"] = {}
-        total_size = 0
+        total_size = []
         for field in fields:
-            for reg in field[3]:
-                _range = self.vf.format(field[2])
-                _len = self.__getLenStr(field[2])
-                _from = self.__getFromStr(field[2])
-                _to = self.__getToStr(field[2])
+            packed_ranges = self.__elaborate_packed(field.get("packed_ranges"))
+            size = "(" + " + ".join([i["len"] for i in packed_ranges]) + ")"
 
+            for reg in field.get("identifiers"):
                 res["fields"][reg[0]] = {
                     "atrs": "",
                     "type": field[0],
-                    "range": _range,
-                    "len": _len,
-                    "from": _from,
-                    "to": _to
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges" : self.__elaborate_unpacked(reg[1]),
+                    "size" : size
                 }
-                total_size += int(_len)
+                total_size.append(size)
 
-        res["size"] = total_size
-
+        res["total_size"] = "(" + " + ".join(total_size) + ")"
         return res
 
     def _elaborate_structdecl(self, tokens):
@@ -278,23 +245,21 @@ class VerilogElaborator():
             raise ValueError("Error while elaborating %s: %s is not a defined struct" % (tokens[1], tokens[0]))
 
         _atrs = ""
-        _len = self.current_module["structs"][tokens[0]]["size"]
-        _from = str(int(_len)-1)
-        _range = "["+_from+":0"+"]"
+        _len = self.current_module["structs"][tokens[0]]["total_size"]
+        _range = "["+_len+" -1 :0]"
 
         for name in tokens[-1]:
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {
                     "attributes": _atrs,
-                    "range": _range,
-                    "len": _len,
-                    "from": _from,
-                    "to": "0",
                     "type": str(tokens[0]),
-                    "array_range": "",
-                    "array_len": 0,
-                    "array_from": "0",
-                    "array_to": "0"
+                    "packed_ranges" : [{
+                        "range" : _range,
+                        "len"   : _len,
+                        "from"  : "(" + _len + "-1)",
+                        "to"    : 0
+                    }],
+                    "unpacked_ranges" : []
                 }
 
     def _elaborate_moduleinstantiation(self, tokens):
@@ -308,66 +273,115 @@ class VerilogElaborator():
         for t in tokens[1:]:
             self._elaborate(t)
 
-    def _elaborate_input(self, tokens):
-        _dir = tokens[0]
-        _array_range = ""
-        _array_len = ""
-        _array_from = ""
-        _array_to = ""
+    def __elaborate_packed(self, tokens):
+        packed_ranges = []
 
+        if not tokens:
+            return []
+
+        for r in tokens:
+            _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
+            _from = self.vf.format(r.get("from"))
+            _to   = self.vf.format(r.get("to"))
+
+            if _dir == ":":
+                _len = "(%s + 1)" % (_to)
+                _range = "[ %s %s %s ]" % (_from, _dir, _to)
+            else:
+                _len = "(%s - %s + 1)" % (_from, _to)
+                _range = "[ %s : %s ]" % (_from, _to)
+
+            packed_ranges.append({
+                "range" : _range,
+                "len"   : _len,
+                "from"  : _from,
+                "to"    : _to
+            })
+
+        return packed_ranges
+
+    def __elaborate_unpacked(self, tokens):
+        unpacked_ranges = []
+
+        if not tokens:
+            return []
+
+        for r in tokens:
+            # this part decodes declarations using size: name [M]
+            if r.getName() == "size":
+                print("size:" + "%s" % r[0])
+                _array_len = self.vf.format(r[0])
+                _array_from = 0
+                _array_to = "%s -1" % (_array_len)
+                _array_range = "[%s : %s]" % (_array_from, _array_to)
+
+                unpacked_ranges.append({
+                    "range" : _array_range,
+                    "len"   : _array_len,
+                    "from"  : _array_from,
+                    "to"    : _array_to
+                })
+
+            # this part decodes declarations using range: name [N:M]
+            elif r.getName() == "range":
+                print("range:" + "%s" % r.asDict())
+                _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
+                _from = self.vf.format(r.get("from"))
+                _to   = self.vf.format(r.get("to"))
+
+                if _dir == ":":
+                    _len = "(%s + 1)" % (_to)
+                    _range = "[ %s %s %s ]" % (_from, _dir, _to)
+                else:
+                    _len = "(%s - %s + 1)" % (_from, _to)
+                    _range = "[ %s : %s ]" % (_from, _to)
+
+                unpacked_ranges.append({
+                    "range" : _range,
+                    "len"   : _len,
+                    "from"  : _from,
+                    "to"    : _to
+                })
+            else:
+                raise TypeError("Unsupported unpacked range type: %s" % r.getName())
+
+        return unpacked_ranges
+
+    def __elaborate_generic_port(self, inout, tokens):
+        _atrs = ""
+        packed_ranges = []
         if tokens.get("standard"):
             _atrs  = self.vf.format(tokens.get("standard").get("type1"))
-            _range = self.vf.format(tokens.get("standard").get("packed_range"))
-            _len = self.__getLenStr(tokens.get("standard").get("packed_range"))
+            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
         else:
             _atrs = ""
-            _range = ""
-            _len = "1"
 
-        _array_size = tokens.get("array_size")
-        _unpacked_range = tokens.get("unpacked_range")
-        if _array_size:
-            # this part decodes declarations using size: name [M]
-            _array_len = self.vf.format(array_size[0])
-            _array_from = 0
-            _array_to = "%s - 1" % (_array_len)
-            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        elif _unpacked_range:
-            # this part decodes declarations using range: name [N:M]
-            _array_from = self.vf.format(_unpacked_range[0])
-            _array_to = self.vf.format(_unpacked_range[1])
-            _array_len = self.__getLenStr(_unpacked_range)
-            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+        details = ""
 
-        if _len != "1":
-            details = "(range:%s len:%s)" % (_range, _len)
-        else:
-            details = ""
-
-        for name in tokens.get("names"):
-            self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
-            self.lastANSIPort["net"] = {"attributes": _atrs,
-                                        "range": _range,
-                                        "len": _len,
-                                        "type": "wire" if "standard" in tokens.keys() else tokens.get("custom").get("custom_type")[0],
-                                        "array_len": _array_len,
-                                        "array_range": _array_range,
-                                        "array_from": _array_from,
-                                        "array_to": _array_to}
+        for name in tokens.get("name"):
+            self.lastANSIPort = {
+                "io" : {
+                    "attributes": _atrs,
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges" : self.__elaborate_unpacked(tokens.get("unpacked_ranges")),
+                    "type": inout
+                },
+                "net" : {
+                    "attributes": _atrs,
+                    "type": "wire" if "standard" in tokens.keys() else tokens.get("custom").get("custom_type")[0],
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges" : self.__elaborate_unpacked(tokens.get("unpacked_ranges"))
+                }
+            }
 
             if not name in self.current_module["io"]:
-                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "input"}
+                self.current_module["io"][name] = self.lastANSIPort["io"]
 
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs,
-                                                     "range": _range,
-                                                     "len": _len,
-                                                     "type": "wire" if "standard" in tokens.keys() else tokens.get("custom").get("custom_type")[0],
-                                                     "array_len": _array_len,
-                                                     "array_range": _array_range,
-                                                     "array_from": _array_from,
-                                                     "array_to": _array_to}
+                self.current_module["nets"][name] = self.lastANSIPort["net"]
+
+    def _elaborate_input(self, tokens):
+        self.__elaborate_generic_port("input", tokens)
 
     def _elaborate_inout(self, tokens):
         # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
@@ -386,73 +400,8 @@ class VerilogElaborator():
 
         self._elaborate_inout(tokens)
 
-    def _elaborate_port(self, tokens):
-        if self.current_module["portMode"] == "ANSI":
-            name = tokens[0][0]
-            if not name in self.current_module["nets"]:
-                self.current_module["io"][name] = copy.deepcopy(self.lastANSIPort["io"])
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
-
     def _elaborate_output(self, tokens):
-        _dir = tokens[0]
-        if tokens.get("standard"):
-            _atrs  = self.vf.format(tokens.get("standard").get("type1"))
-            _range = self.vf.format(tokens.get("standard").get("packed_range"))
-            _len = self.__getLenStr(tokens.get("standard").get("packed_range"))
-        else:
-            _atrs = ""
-            _range = ""
-            _len = "1"
-
-        _array_range = ""
-        _array_len = ""
-        _array_from = ""
-        _array_to = ""
-        _array_size = tokens.get("array_size")
-        _unpacked_range = tokens.get("unpacked_range")
-        if _array_size:
-            # this part decodes declarations using size: name [M]
-            _array_len = self.vf.format(_array_size[0])
-            _array_from = 0
-            _array_to = "%s - 1" % (_array_len)
-            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        elif _unpacked_range:
-            # this part decodes declarations using range: name [N:M]
-            _array_from = self.vf.format(_unpacked_range[0])
-            _array_to = self.vf.format(_unpacked_range[1])
-            _array_len = self.__getLenStr(_unpacked_range)
-            _array_range = "[ %s : %s ]" % (_array_from, _array_to)
-        if _len != "1":
-            details = "(range:%s len:%s)" % (_range, _len)
-        else:
-            details = ""
-
-        for name in tokens.get("names"):
-            self.lastANSIPort = {}
-            self.lastANSIPort["io"] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
-            self.lastANSIPort["net"] = {"attributes": _atrs,
-                                        "range": _range,
-                                        "len": _len,
-                                        "type": "wire",
-                                        "array_len": _array_len,
-                                        "array_range": _array_range,
-                                        "array_from": _array_from,
-                                        "array_to": _array_to}
-
-            if not name in self.current_module["io"]:
-                self.current_module["io"][name] = {"attributes": _atrs, "range": _range, "len": _len, "type": "output"}
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs,
-                                                     "range": _range,
-                                                     "len": _len,
-                                                     "type": "wire" if "standard" in tokens.keys() else tokens.get("custom").get("custom_type")[0],
-                                                     "array_len": _array_len,
-                                                     "array_range": _array_range,
-                                                     "array_from": _array_from,
-                                                     "array_to": _array_to}
-            # if not name in  self.current_module["nets"]:
-            #    self.current_module["nets"][name]={"attributes":_atrs,"range":_range, "len":_len,"type":"wire"}
+        self.__elaborate_generic_port("output", tokens)
 
     def _elaborate_outputhdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
@@ -461,35 +410,26 @@ class VerilogElaborator():
 
         self._elaborate_output(tokens)
 
+    def _elaborate_port(self, tokens):
+        if self.current_module["portMode"] == "ANSI":
+            name = tokens[0][0]
+            if not name in self.current_module["nets"]:
+                self.current_module["io"][name] = copy.deepcopy(self.lastANSIPort["io"])
+            if not name in self.current_module["nets"]:
+                self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
+
     def _elaborate_netdecl1(self, tokens):
         _atrs = self.vf.format(tokens[1])
-        _range = self.vf.format(tokens[2])
-        _len = self.__getLenStr(tokens[2])
-        _from = self.__getFromStr(tokens[2])
-        _to = self.__getToStr(tokens[2])
+        packed = self.__elaborate_packed(tokens[2])
         type = tokens[0]
         for net in tokens[4]:
             name = net[0]
-            _array_range = ""
-            _array_len = ""
-            _array_from = ""
-            _array_to = ""
-            if len(net) > 1:
-                arrayDec = net[1]
-                _array_range = self.vf.format(arrayDec)
-                _array_len = self.__getArrayLenStr(arrayDec)
-                _array_from = self.__getArrayFrom(arrayDec)
-                _array_to = self.__getArrayTo(arrayDec)
-            self.current_module["nets"][name] = {"attributes": _atrs,
-                                                 "range": _range,
-                                                 "len": _len,
-                                                 "from": _from,
-                                                 "to": _to,
-                                                 "type": "wire",
-                                                 "array_range": _array_range,
-                                                 "array_len": _array_len,
-                                                 "array_from": _array_from,
-                                                 "array_to": _array_to}
+            self.current_module["nets"][name] = {
+                "attributes": _atrs,
+                "type": "wire",
+                "packed_ranges": packed,
+                "unpacked_ranges": self.__elaborate_unpacked(net[1])
+            }
             if _len != "1":
                 details = "(range:%s len:%s)" % (_range, _len)
             else:
@@ -499,25 +439,13 @@ class VerilogElaborator():
         type = tokens[0]
         name = tokens[1][0]
         _atrs = ""
-        _range = ""
-        _from = ""
-        _array_range = ""
-        _array_len = ""
-        _array_from = ""
-        _array_to = ""
-        _len = ""
-        _to = ""
-        if type!="genvar":
-            self.current_module["nets"][name] = {"attributes": _atrs,
-                                                 "range": _range,
-                                                 "len": _len,
-                                                 "from": _from,
-                                                 "to": _to,
-                                                 "type": type,
-                                                 "array_range": _array_range,
-                                                 "array_len": _array_len,
-                                                 "array_from": _array_from,
-                                                 "array_to": _array_to}
+        if type != "genvar":
+            self.current_module["nets"][name] = {
+                "attributes": _atrs,
+                "type": type,
+                "packed_ranges": [],
+                "unpacked_ranges": []
+            }
 
     def _elaborate_localparamdecl(self, tokens):
         _range = self.vf.format(tokens[1])
@@ -555,10 +483,7 @@ class VerilogElaborator():
 
     def _elaborate_netdecl3(self, tokens):
         _atrs = self.vf.format(tokens[1])
-        _range = self.vf.format(tokens[3])
-        _len = self.__getLenStr(tokens[3])
-        _from = self.__getFromStr(tokens[3])
-        _to = self.__getToStr(tokens[3])
+        packed = self.__elaborate_packed(tokens[3])
 
         for assgmng in tokens[5]:
             ids = self.getLeftRightHandSide(assgmng)
@@ -569,18 +494,15 @@ class VerilogElaborator():
                 for ex in self.EXT:
                     if name == idRight+ex:
                         dnt = True
+
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs,
-                                                     "range": _range,
-                                                     "len": _len,
-                                                     "from": _from,
-                                                     "to": _to,
-                                                     'type': "wire",
-                                                     "array_range": "",
-                                                     "array_len": "",
-                                                     "array_from": "",
-                                                     "array_to": ""
-                                                     }
+                self.current_module["nets"][name] = {
+                    "attributes": _atrs,
+                    "type": "wire",
+                    "packed_ranges" : packed,
+                    "unpacked_ranges" : []
+                }
+
                 if dnt:
                     self.current_module["nets"][name]["dnt"] = True
                     logging.debug("Net %s will not be touched!" % name)
@@ -590,9 +512,8 @@ class VerilogElaborator():
             raise ValueError("Error while elaborating %s: %s is not a defined struct" % (tokens[1], tokens[0]))
 
         _atrs = ""
-        _len = self.current_module["structs"][tokens[0]]["size"]
-        _from = str(int(_len)-1)
-        _range = "["+_from+":0]"
+        _len = self.current_module["structs"][tokens[0]]["total_size"]
+        _range = "["+_len+" -1 :0]"
 
         for assgmng in tokens.get("assignments"):
             ids = self.getLeftRightHandSide(assgmng)
@@ -607,15 +528,14 @@ class VerilogElaborator():
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {
                         "attributes": _atrs,
-                        "range": _range,
-                        "len": _len,
-                        "from": _from,
-                        "to": "0",
+                        "packed_ranges" : [{
+                            "range": _range,
+                            "len": _len,
+                            "from": "(" + _len + "-1)",
+                            "to": "0"
+                        }],
                         "type": str(tokens[0]),
-                        "array_range": "",
-                        "array_len": 0,
-                        "array_from": "0",
-                        "array_to": "0"
+                        "unpacked_ranges" : []
                     }
 
             if dnt:
@@ -819,22 +739,24 @@ class VerilogElaborator():
 
             for k in d:
                 item = d[k]
-                range = item["range"]
-                if "array_range" in item:
-                    array_range = item["array_range"]
-                else:
-                    array_range = ""
+
+                packed_ranges = " ".join([i["range"] for i in item["packed_ranges"]]) if "unpacked_ranges" in item else ""
+                unpacked_ranges = " ".join([i["range"] for i in item["unpacked_ranges"]]) if "unpacked_ranges" in item else ""
+
                 if "attributes" in item:
                     attributes = item["attributes"]
                 else:
                     attributes = ""
+
                 if "tmr" in item:
                     tmr = item["tmr"]
                 else:
                     tmr = "-"
+
                 if "dnt" in item:
                     tmr = "DNT"
-                tab.add_row([k, tmr, range, attributes, array_range])
+
+                tab.add_row([k, tmr, packed_ranges, attributes, unpacked_ranges])
             tab.padding_width = 1  # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
                 logging.info(l)

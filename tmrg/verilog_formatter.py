@@ -79,11 +79,12 @@ class VerilogFormatter:
 
         if tokens.get("standard"):
             spec = self.format(tokens.get("standard").get("kind"))
-            spec += self.format(tokens.get("standard").get("attrs"))
-            spec += self.format(tokens.get("standard").get("packed_range"))
+            spec += self.format(tokens.get("standard").get("attrs")) + " "
+            for r in tokens.get("standard").get("packed_ranges"):
+                spec += self.format(r) + " "
         else:
             spec = self.format(tokens.get("custom").get("custom_type")[0])
-        ports = tokens.get("names")
+        ports = tokens.get("name")
         array = self.format(tokens.get("unpacked_range"))
         array += self.format(tokens.get("array_size"))
         for port in ports:
@@ -107,14 +108,16 @@ class VerilogFormatter:
         label = str(tokens[0])
         attributes = self.format(tokens[1])
 
-        spec = self.format(tokens[2])
-        if spec != "":
-            spec += " "
-        for port in tokens[3]:
-            r = ""
-            if len(port) > 1:
-                r = " "+self.format(port[1:])
-            oStr += "%s %s %s%s%s;\n" % (label, attributes, spec, port[0], r)
+        packed = " "
+        for r in tokens.get("packed_ranges"):
+            packed += self.format(r) + " "
+
+        for port in tokens.get("identifiers"):
+            unpacked = ""
+            for r in port.get("unpacked_ranges"):
+                unpacked += self.format(r)
+
+            oStr += "%s %s %s%s%s;\n" % (label, attributes, packed, port[0], unpacked)
         return oStr
 
     def _format_force(self, tokens, i=""):
@@ -127,17 +130,18 @@ class VerilogFormatter:
         return "%s%s %s;\n" % (i, release, self.format(tokens[1]))
 
     def _format_netDecl3(self, tokens, i=""):
-        print("----------------------------------------------------------------------TRIPLICANING %s", tokens)
         oStr = i
         label = str(tokens[0])
         sign = self.format(tokens[1])
         drives = self.format(tokens[2])
-        spec = self.format(tokens[3])
+
+        spec = " "
+        for r in tokens.get("packed_ranges"):
+            spec += self.format(r) + " "
+
         delay = self.format(tokens[4])
         if drives != "":
             drives += " "
-        if spec != "":
-            spec += " "
         if delay != "":
             delay += " "
         ports = tokens[5]
@@ -147,23 +151,12 @@ class VerilogFormatter:
         return oStr
 
     def _format_customDeclwAssign(self, tokens, i=""):
-        print("----------------------------------------------------------------------TRIPLICANING %s", tokens)
         oStr = i
         label = str(tokens[0])
-        sign = self.format(tokens[1])
-        drives = self.format(tokens[2])
-        spec = self.format(tokens[3])
-        delay = self.format(tokens[4])
-        if drives != "":
-            drives += " "
-        if spec != "":
-            spec += " "
-        if delay != "":
-            delay += " "
-        ports = tokens[5]
-        for port in ports:
-            port_str = self.format(port)
-            oStr += "%s %s%s%s%s%s;\n" % (label, sign, drives, spec, delay, port_str)
+        assignments = tokens[1]
+        for assignment in assignments:
+            assignment_str = self.format(assignment)
+            oStr += "%s %s;\n" % (label, assignment_str)
         return oStr
 
     def _format_realDecl(self, tokens, i=""):
@@ -257,9 +250,15 @@ class VerilogFormatter:
 
     def _format_Range(self, tokens, i=""):
         oStr = "["
-        oStr += self.format(tokens[-2])
-        oStr += ":"
-        oStr += self.format(tokens[-1])
+        oStr += self.format(tokens.get("from"))
+        oStr += tokens.get("dir")
+        oStr += self.format(tokens.get("to"))
+        oStr += "]"
+        return oStr
+
+    def _format_Size(self, tokens, i=""):
+        oStr = "["
+        oStr += self.format(tokens[0])
         oStr += "]"
         return oStr
 
@@ -289,7 +288,6 @@ class VerilogFormatter:
         return oStr
 
     def _format_subscrIdentifier(self, tokens, i=""):
-
         oStr = ""
         for sid in tokens:
             oStr += self.format(sid)
@@ -607,6 +605,12 @@ class VerilogFormatter:
             oStr += "%s %s;\n" % (label, self.format(var))
         return oStr
 
+    def _format_from(self, tokens, i=""):
+        return self._format_Expr(tokens)
+
+    def _format_to(self, tokens, i=""):
+        return self._format_Expr(tokens)
+
     def _format_customDecl(self, tokens, i=""):
         oStr = ""
         label = tokens[0]
@@ -617,14 +621,15 @@ class VerilogFormatter:
     def _format_structDecl(self, tokens, i=""):
         oStr = tokens[0] + " { \n"
 
-        for var in tokens[1]:
-            label = str(var[0])
-            attributes = self.format(var[1])
+        for field in tokens[1]:
+            label = str(field[0])
+            attributes = self.format(field[1])
 
-            spec = self.format(var[2])
-            if spec != "":
-                spec += " "
-            for port in var[3]:
+            spec = " "
+            for r in field.get("packed_ranges"):
+                spec += self.format(r) + " "
+
+            for port in field[3]:
                 r = ""
                 if len(port) > 1:
                     r = " "+self.format(port[1:])
