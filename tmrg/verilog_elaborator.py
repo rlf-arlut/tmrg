@@ -167,7 +167,7 @@ class VerilogElaborator():
                 res["right"].update(_extractID(t[-1]))
             elif name in ("regdecl"):
                 for tt in t.get("identifiers"):
-                    left_id = tt[0]
+                    left_id = tt.get("name")[0]
                     res["left"].add(left_id)
             elif name in ("netdecl1"):
                 for tt in t[4]:
@@ -203,14 +203,14 @@ class VerilogElaborator():
         packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
 
         for reg in tokens.get("identifiers"):
-            name = reg[0]
+            name = reg.get("name")[0]
 
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {
                     "attributes": _atrs,
                     "type": "wire",
                     "packed_ranges" : packed_ranges,
-                    "unpacked_ranges": self.__elaborate_unpacked(reg[1])
+                    "unpacked_ranges": self.__elaborate_unpacked(reg.get("unpacked_ranges"))
                 }
 
     def __structdecl(self, tokens):
@@ -225,11 +225,11 @@ class VerilogElaborator():
             size = "(" + " + ".join([i["len"] for i in packed_ranges]) + ")"
 
             for reg in field.get("identifiers"):
-                res["fields"][reg[0]] = {
+                res["fields"][reg.get("name")[0]] = {
                     "atrs": "",
                     "type": field[0],
                     "packed_ranges" : packed_ranges,
-                    "unpacked_ranges" : self.__elaborate_unpacked(reg[1]),
+                    "unpacked_ranges" : self.__elaborate_unpacked(reg.get("unpacked_ranges")),
                     "size" : size
                 }
                 total_size.append(size)
@@ -238,7 +238,8 @@ class VerilogElaborator():
         return res
 
     def _elaborate_structdecl(self, tokens):
-        self.current_module["structs"][name] = self.__structdecl(tokens)
+        logging.error("assing struct "+tokens.get("name"))
+        self.current_module["structs"][tokens.get("name")] = self.__structdecl(tokens)
 
     def _elaborate_customdecl(self, tokens):
         if tokens[0] not in self.current_module["structs"]:
@@ -347,7 +348,18 @@ class VerilogElaborator():
 
         return unpacked_ranges
 
-    def __elaborate_generic_port(self, inout, tokens):
+    def _get_port_type(self, tokens):
+        _type = "wire"
+        _custom = tokens.get("custom")
+        _standard = tokens.get("standard")
+        if _custom is not None:
+            _type = _custom.get("custom_type")[0]
+        elif _standard is not None:
+            _type = _standard
+
+        return _type
+
+    def __elaborate_generic_port(self, tokens):
         _atrs = ""
         packed_ranges = []
         if tokens.get("standard"):
@@ -358,19 +370,20 @@ class VerilogElaborator():
 
         details = ""
 
-        for name in tokens.get("name"):
+        for identifier in tokens.get("identifiers"):
+            name = identifier.get("name")[0]
             self.lastANSIPort = {
                 "io" : {
                     "attributes": _atrs,
                     "packed_ranges" : packed_ranges,
-                    "unpacked_ranges" : self.__elaborate_unpacked(tokens.get("unpacked_ranges")),
-                    "type": inout
+                    "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges")),
+                    "type": tokens.get("dir")
                 },
                 "net" : {
                     "attributes": _atrs,
-                    "type": "wire" if "standard" in tokens.keys() else tokens.get("custom").get("custom_type")[0],
+                    "type": self._get_port_type(tokens),
                     "packed_ranges" : packed_ranges,
-                    "unpacked_ranges" : self.__elaborate_unpacked(tokens.get("unpacked_ranges"))
+                    "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges"))
                 }
             }
 
@@ -380,35 +393,16 @@ class VerilogElaborator():
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = self.lastANSIPort["net"]
 
-    def _elaborate_input(self, tokens):
-        self.__elaborate_generic_port("input", tokens)
 
-    def _elaborate_inout(self, tokens):
-        # ! TODO ! Fixme ! quick fix, copied from _elaborate_input without rethinkign all the problems it created!
-        self._elaborate_input(tokens)
-
-    def _elaborate_inputhdr(self, tokens):
-        if self.current_module["portMode"] == "non-ANSI":
-            self.current_module["portMode"] = "ANSI"
-            logging.info("Port mode : ANSI")
-        self._elaborate_input(tokens)
-
-    def _elaborate_inouthdr(self, tokens):
+    def _elaborate_porthdr(self, tokens):
         if self.current_module["portMode"] == "non-ANSI":
             self.current_module["portMode"] = "ANSI"
             logging.info("Port mode : ANSI")
 
-        self._elaborate_inout(tokens)
+        self.__elaborate_generic_port(tokens)
 
-    def _elaborate_output(self, tokens):
-        self.__elaborate_generic_port("output", tokens)
-
-    def _elaborate_outputhdr(self, tokens):
-        if self.current_module["portMode"] == "non-ANSI":
-            self.current_module["portMode"] = "ANSI"
-            logging.info("Port mode : ANSI")
-
-        self._elaborate_output(tokens)
+    def _elaborate_portbody(self, tokens):
+        self.__elaborate_generic_port(tokens)
 
     def _elaborate_port(self, tokens):
         if self.current_module["portMode"] == "ANSI":
@@ -419,16 +413,16 @@ class VerilogElaborator():
                 self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
 
     def _elaborate_netdecl1(self, tokens):
-        _atrs = self.vf.format(tokens[1])
-        packed = self.__elaborate_packed(tokens[2])
-        type = tokens[0]
-        for net in tokens[4]:
-            name = net[0]
+        _atrs = self.vf.format(tokens.get("attributes"))
+        packed = self.__elaborate_packed(tokens.get("packed_ranges"))
+        type = tokens.get("kind")
+        for net in tokens.get("identifiers"):
+            name = net.get("name")[0]
             self.current_module["nets"][name] = {
                 "attributes": _atrs,
                 "type": "wire",
                 "packed_ranges": packed,
-                "unpacked_ranges": self.__elaborate_unpacked(net[1])
+                "unpacked_ranges": self.__elaborate_unpacked(net.get("unpacked_ranges"))
             }
             if _len != "1":
                 details = "(range:%s len:%s)" % (_range, _len)
@@ -467,25 +461,11 @@ class VerilogElaborator():
             logging.debug("Parameter %s = %s" % (pname, pval))
             self.current_module["params"][pname] = {"value": pval, "range": _range, "len": _len, "type": "param"}
 
-    """
-    def _elaborate_continuousassign(self, tokens):
-        if _net not in self.current_module["nets"]:
-            raise ValueError("Error while elaborating %s: %s is not defined" % (net, _net))
-
-        _struct = self.current_module["nets"][_net]["type"]
-        
-        if _struct not in self.current_module["structs"]:
-            raise ValueError("Error while elaborating %s: %s is not a defined struct" % (net, _struct))
-
-        if _field in self.current_module["structs"][_struct]:
-            raise ValueError("Error while elaborating %s: %s is not a field of %s" % (net, _field, _net))
-    """
-
     def _elaborate_netdecl3(self, tokens):
-        _atrs = self.vf.format(tokens[1])
-        packed = self.__elaborate_packed(tokens[3])
+        _atrs = self.vf.format(tokens.get("attributes"))
+        packed = self.__elaborate_packed(tokens.get("packed_ranges"))
 
-        for assgmng in tokens[5]:
+        for assgmng in tokens.get("assignments"):
             ids = self.getLeftRightHandSide(assgmng)
             name = assgmng[0][0]
             dnt = False
@@ -848,7 +828,8 @@ class VerilogElaborator():
             tokens = self.files[fname]
             for item in tokens:
                 if item.getName() == "structDecl":
-                    name = item.get("id")
+                    name = item.get("id")[0]
+                    print(name)
                     self.structs[name] = self.__structdecl(item)
 
                 if item.getName() == "module":

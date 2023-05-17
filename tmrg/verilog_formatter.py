@@ -47,21 +47,7 @@ class VerilogFormatter:
         return "[%s]" % self.format(tokens[0])
 
     def _formatIo(self, tokens, i=""):
-        oStr = ""
-        label = str(tokens[0])
-        spec = self.format(tokens[1])
-        if spec != "":
-            spec += " "
-        spec += self.format(tokens[2])
-        if spec != "":
-            spec += " "
-        spec += self.format(tokens[3])
-        if spec != "":
-            spec += " "
-        ports = tokens[4]
-        for port in ports:
-            oStr += "%s %s%s;\n" % (label, spec, port)
-        return oStr
+        return str(tokens[0]) + self._format_RegDecl(tokens)
 
     def _format_Input(self, tokens, i=""):
         return self._formatIo(tokens)
@@ -72,33 +58,37 @@ class VerilogFormatter:
     def _format_Output(self, tokens, i=""):
         return self._formatIo(tokens)
 
-    def _formatIoHdr(self, tokens, i=""):
+    def _formatIoHdr(self, tokens, i="", end=""):
         oStr = ""
         spec = ""
         label = str(tokens[0])
 
         if tokens.get("standard"):
             spec = self.format(tokens.get("standard").get("kind"))
-            spec += self.format(tokens.get("standard").get("attrs")) + " "
+            spec += " "+self.format(tokens.get("standard").get("attrs"))
             for r in tokens.get("standard").get("packed_ranges"):
-                spec += self.format(r) + " "
-        else:
+                spec += " "+self.format(r)
+        elif tokens.get("custom"):
             spec = self.format(tokens.get("custom").get("custom_type")[0])
-        ports = tokens.get("name")
-        array = self.format(tokens.get("unpacked_range"))
-        array += self.format(tokens.get("array_size"))
+        else:
+            spec = "wire"
+
+        ports = tokens.get("identifiers")
         for port in ports:
-            oStr += "%s %s %s %s" % (label, spec, port, array)
+            print(port.asDict())
+            name = port.get("name")[0]
+            array = ""
+            for r in port.get("unpacked_ranges"):
+                array += " "+self.format(r)
+
+            oStr += "%s %s %s%s%s" % (label, spec, name, array, end)
         return oStr
 
-    def _format_inputhdr(self, tokens, i=""):
+    def _format_porthdr(self, tokens, i=""):
         return self._formatIoHdr(tokens)
 
-    def _format_outputhdr(self, tokens, i=""):
-        return self._formatIoHdr(tokens)
-
-    def _format_inouthdr(self, tokens, i=""):
-        return self._formatIoHdr(tokens)
+    def _format_portbody(self, tokens, i=""):
+        return self._formatIoHdr(tokens, end=";\n")
 
     def _format_port(self, tokens, i=""):
         return tokens[0][0]
@@ -131,23 +121,19 @@ class VerilogFormatter:
 
     def _format_netDecl3(self, tokens, i=""):
         oStr = i
-        label = str(tokens[0])
-        sign = self.format(tokens[1])
-        drives = self.format(tokens[2])
+        type = str(tokens.get("kind"))
+        attributes = self.format(tokens.get("attributes"))
 
-        spec = " "
+        packed = " "
         for r in tokens.get("packed_ranges"):
-            spec += self.format(r) + " "
+            packed += self.format(r) + " "
 
-        delay = self.format(tokens[4])
-        if drives != "":
-            drives += " "
-        if delay != "":
-            delay += " "
-        ports = tokens[5]
+        delay = self.format(tokens.get("delay"))
+        ports = tokens.get("assignments")
+
         for port in ports:
             port_str = self.format(port)
-            oStr += "%s %s%s%s%s%s;\n" % (label, sign, drives, spec, delay, port_str)
+            oStr += "%s %s %s%s%s;\n" % (type, attributes, packed, delay, port_str)
         return oStr
 
     def _format_customDeclwAssign(self, tokens, i=""):

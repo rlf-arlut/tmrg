@@ -142,74 +142,6 @@ class VerilogParser:
                   "nounconnected_drive celldefine endcelldefine") + \
             restOfLine ).setName("compilerDirective")
 
-        # primitives
-        self.semi = Literal(";")
-        self.lpar = Literal("(")
-        self.rpar = Literal(")")
-        self.equals = Literal("=")
-        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":True}
-
-        identLead = alphas+"$_"
-        identBody = alphanums+"$_"
-        identifier1 = Regex( r"\.?`?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*").setName("baseIdent")
-        identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
-        identifier = ( identifier1 | identifier2).setResultsName("id")
-
-        hexnums = nums + "abcdefABCDEF" + "_?"
-        base = Regex("[bBoOdDhH]{0,1}").setName("base")
-        signed = Regex("'[sS]?").setName("signed")
-        basedNumber = Combine( Optional( Word(nums + "_") ) + signed + base + Word(hexnums+"xXzZ"),
-                               joinString="", adjacent=False ).setResultsName("basedNumber")
-        number = ( basedNumber | \
-                   Regex(r"[+-]?[0-9]+(\.[0-9_]*)?([0-9_]*)?([Ee][+-]?[0-9_]+)?") \
-                  ).setName("numeric")
-        self.expr = Forward()
-
-        concat = Optional("'")+Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
-        multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
-        funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( Group(self.expr) )) )) + ")").setResultsName("funcCall")
-
-        subscrRef = ( Suppress("[") +
-                      (delimitedList( Group(self.expr), ":" ) )  +
-                      Suppress("]")
-                    ).setResultsName("subscrRef")
-
-        subscrIndxRef =  ( Suppress("[") +
-                           (self.expr + oneOf("+ -") +  ":" + self.expr) +
-                           Suppress("]")
-                         ).setResultsName("subscrIndxRef")
-
-        subscrIdentifier = Group( identifier + #Optional( Suppress(".") + identifier.setResultsName("field") ) +
-                                  Group( ZeroOrMore( Group(subscrIndxRef) | Group(subscrRef) ))
-                                ).setResultsName("subscrIdentifier")
-        scalarConst = Regex("0|1('[Bb][01xX])?")
-        mintypmaxExpr = Group( self.expr + ":" + self.expr + ":" + self.expr ).setName("mintypmax")
-        primary = ( number |
-                    ("(" + mintypmaxExpr + ")" ) |
-                    ( "(" + Group(self.expr) + ")" ).setName("nestedExpr") |
-                    (identifier + "::" + identifier) |
-                    multiConcat |
-                    concat |
-                    dblQuotedString |
-                    funcCall |
-                    subscrIdentifier
-                  ).setResultsName("primary")
-
-        unop  = oneOf( "+  -  !  ~  &  ~&  |  ^|  ^  ~^" ).setName("unop")
-        binop = oneOf( "+  -  *  /  %  ==  !=  ===  !==  &&  "
-                       "||  <  <=  >  >=  &  |  ^  ^~  ~^  >>  << ** <<< >>>" ).setName("binop")
-        inlineIfExpr= Group( Group(primary) + Suppress(Literal("?")) + Group(self.expr) + Suppress(Literal(":")) + Group(self.expr) ).setResultsName("inlineIfExpr")
-
-        cast = (identifier | "(" + self.expr + ")" | number) + "'" + "(" + self.expr + ")"
-        self.expr << (
-                      ( unop + self.expr ) |  # must be first!
-                      inlineIfExpr | cast |
-                      ( primary + Optional( binop + self.expr ) )
-                     )
-
-        self.expr=self.expr.setName("expr").setResultsName("expr")
-        lvalue = subscrIdentifier | concat
-
         # keywords
         if_        = Keyword("if")
         else_      = Keyword("else")
@@ -237,10 +169,98 @@ class VerilogParser:
         release    = Keyword("release")
         assign     = Keyword("assign").setResultsName("keyword")
         unique     = Keyword("unique")
-        struct     = Keyword("struct")
+        wire       = Keyword("wire")
 
-        valid_keywords = MatchFirst(map(Keyword, "wire reg logic signed real bool byte shortint int longint bit assign always always_comb".split()))
+        # Keywords
+        data_2states_types = MatchFirst(map(Keyword, "bit byte shortint int longint".split()))
+        data_4states_types = MatchFirst(map(Keyword, "reg logic integer".split()))
+        data_nonint_types  = MatchFirst(map(Keyword, "string time real shortreal realtime".split()))
+        data_types         = data_2states_types ^ data_4states_types ^ data_nonint_types
+        net_types          = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
+        modifiers          = MatchFirst(map(Keyword, "unsigned signed vectored scalared const".split()))
+        strength           = MatchFirst(map(Keyword, "supply0 supply1 strong strong0 strong1 pull0 pull1 weak weak0 weak1 highz0 highz1 small medium large".split()))
+        reserved_log95     = MatchFirst(map(Keyword, """
+always ifnone rpmos and initial rtran assign inout rtranif0 begin input rtranif1 buf integer scalared bufif0 join small bufif1 large specify case macromodule specparam casex medium strong0 casez module strong1 cmos nand supply0 deassign negedge supply1 default nmos table defparam nor task disable not time edge notif0 tran else notif1 tranif0 end or tranif1 endcase output tri endmodule parameter tri0 endfunction pmos tri1 endprimitive posedge triand endspecify primitive trior endtable pull0 trireg endtask pull1 vectored event pullup wait for pulldown wand force rcmos weak0 forever real weak1 fork realtime while function reg wire highz0 release wor highz1 repeat xnor if rnmos xor
+        """.split()))
+        reserved_log21     = MatchFirst(map(Keyword, """
+automatic incdir pulsestyle_ondetect cell include pulsestyle_onevent config instance endconfig liblist showcancelled endgenerate library generate localparam use genvar noshowcancelled
+        """.split()))
+        reserved_svlog           = MatchFirst(map(Keyword, """
+accept_on export ref alias extends restrict always_comb extern return always_ff final s_always always_latch first_match s_eventually assert foreach s_nexttime assume forkjoin s_until before globals_until_with bind iff sequence bins ignore_bins binsof illegal_bins implies solve break import static inside chandle checker interface struct class intersect super clocking join_any sync_accept_on join_none sync_reject_on constraint let tagged context local this continue throughout cover timeprecision covergroup matches timeunit coverpoint modport type cross new typedef dist nexttime union do null unique endchecker package unique0 endclass packed until endclocking priority until_with endgroup program untypted endinterface property var endpackage protected virtual endprogram pure void endproperty rand wait_order endsequence randc enum randcase wildcard eventually randsequence with expect reject_on within 
+        """.split()))
+        reserved_tmrg = Keyword("__COMP_DIRECTIVE")
+
+        valid_keywords = data_types ^ net_types ^ modifiers ^ strength ^ reserved_log95 ^ reserved_log21 ^ reserved_svlog ^ reserved_tmrg
         custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
+
+        # primitives
+        self.semi = Literal(";")
+        self.lpar = Literal("(")
+        self.rpar = Literal(")")
+        self.equals = Literal("=")
+        self.constraints = {"triplicate":set(),"do_not_triplicate":set(), "default":True, "tmr_error":True}
+
+        identLead = alphas+"$_"
+        identBody = alphanums+"$_"
+        identifier1 = Regex( r"\.?`?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*").setName("baseIdent")
+        identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
+        identifier = (~valid_keywords + (identifier1 | identifier2)).setResultsName("id")
+
+        hexnums = nums + "abcdefABCDEF" + "_?"
+        base = Regex("[bBoOdDhH]{0,1}").setName("base")
+        signed = Regex("'[sS]?").setName("signed")
+        basedNumber = Combine( Optional( Word(nums + "_") ) + signed + base + Word(hexnums+"xXzZ"),
+                               joinString="", adjacent=False ).setResultsName("basedNumber")
+        number = ( basedNumber | \
+                   Regex(r"[+-]?[0-9]+(\.[0-9_]*)?([0-9_]*)?([Ee][+-]?[0-9_]+)?") \
+                  ).setName("numeric")
+        self.expr = Forward()
+
+        concat = Optional("'")+Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
+        multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
+        funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( Group(self.expr) )) )) + ")").setResultsName("funcCall")
+
+        subscrRef = ( Suppress("[") +
+                      (delimitedList( Group(self.expr), ":" ) )  +
+                      Suppress("]")
+                    ).setResultsName("subscrRef")
+
+        subscrIndxRef =  ( Suppress("[") +
+                           (self.expr + oneOf("+ -") +  ":" + self.expr) +
+                           Suppress("]")
+                         ).setResultsName("subscrIndxRef")
+
+        subscrIdentifier = Group( identifier +
+                                  Group( ZeroOrMore( Group(subscrIndxRef) | Group(subscrRef) ))
+                                ).setResultsName("subscrIdentifier")
+
+        scalarConst = Regex("0|1('[Bb][01xX])?")
+        mintypmaxExpr = Group( self.expr + ":" + self.expr + ":" + self.expr ).setName("mintypmax")
+        primary = ( number |
+                    ("(" + mintypmaxExpr + ")" ) |
+                    ( "(" + Group(self.expr) + ")" ).setName("nestedExpr") |
+                    (identifier + "::" + identifier) |
+                    multiConcat |
+                    concat |
+                    dblQuotedString |
+                    funcCall |
+                    subscrIdentifier
+                  ).setResultsName("primary")
+
+        unop  = oneOf( "+  -  !  ~  &  ~&  |  ^|  ^  ~^" ).setName("unop")
+        binop = oneOf( "+  -  *  /  %  ==  !=  ===  !==  &&  "
+                       "||  <  <=  >  >=  &  |  ^  ^~  ~^  >>  << ** <<< >>>" ).setName("binop")
+        inlineIfExpr= Group( Group(primary) + Suppress(Literal("?")) + Group(self.expr) + Suppress(Literal(":")) + Group(self.expr) ).setResultsName("inlineIfExpr")
+
+        cast = (identifier | "(" + self.expr + ")" | number) + "'" + "(" + self.expr + ")"
+        self.expr << (
+                      ( unop + self.expr ) |  # must be first!
+                      inlineIfExpr | cast |
+                      ( primary + Optional( binop + self.expr ) )
+                     )
+
+        self.expr=self.expr.setName("expr").setResultsName("expr")
+        lvalue = subscrIdentifier | concat
 
         eventExpr = Forward()
         eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
@@ -281,66 +301,46 @@ class VerilogParser:
                                     "*)"
                                   ).setResultsName("attribute_instance")
         
-        regIdentifier = Group( identifier.setResultsName("name") + Group(ZeroOrMore(self.range | self.size)).setResultsName("unpacked_ranges"))
+        regIdentifier = Group( identifier.setResultsName("name") + Group(ZeroOrMore(self.range | self.size)).setResultsName("unpacked_ranges")).setResultsName("identifier")
+
+        self.field = Group(Suppress(".") + identifier)
+        regReference  = Group( identifier.setResultsName("name") + ZeroOrMore(self.range | self.size | self.field) ).setResultsName("reg_reference")
         
         parameterDecl      = Group( "parameter" +
-                                    Group(Optional(oneOf("unsigned signed"))) +
-                                    Group(Optional(oneOf("byte shortint int longint bit logic reg integer"))) +
-                                    Group(Optional( self.range )) +
+                                    Group(Optional(modifiers)) +
+                                    Group(Optional(data_types)) +
+                                    Group(Optional(self.range)) +
                                     Group(delimitedList( Group(paramAssgnmt))) +
                                     Suppress(self.semi)
                                   ).setResultsName("paramDecl")
 
         localParameterDecl = Group("localparam" +
-                                   Group(Optional(oneOf("unsigned signed"))) +
-                                   Group(Optional(oneOf("byte shortint int longint bit logic reg integer"))) +
-                                   Group(Optional(self.range )) +
+                                   Group(Optional(modifiers)) +
+                                   Group(Optional(data_types)) +
+                                   Group(Optional(self.range)) +
                                    Group(delimitedList(Group(paramAssgnmt))) +
                                    Suppress(self.semi)
                                   ).setResultsName("localparamDecl")
 
-        self.inputDecl = Group(
-                        Keyword("input") +
-                        (
-                            Group(
-                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
-                                Optional(oneOf("signed real")).setResultsName("attrs") +  
-                                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") 
-                            ).setResultsName("standard") ^ Group (
-                                custom_type.setResultsName("custom_type")
-                            ).setResultsName("custom")
-                        ) + regIdentifier
-                        ).setResultsName("inputHdr")
+        types = Group(
+                    Optional(data_types | net_types).setResultsName("kind") + 
+                    Optional(modifiers).setResultsName("attrs") +  
+                    Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") 
+                ).setResultsName("standard") ^ Group (
+                    custom_type.setResultsName("custom_type")
+                ).setResultsName("custom")
 
-        self.outputDecl = Group( 
-                        Keyword("output") + 
-                        (
-                            Group(
-                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
-                                Optional(oneOf("signed real")).setResultsName("attrs") +  
-                                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") 
-                            ).setResultsName("standard") ^ Group (
-                                custom_type.setResultsName("custom_type")
-                            ).setResultsName("custom")
-                        ) + regIdentifier
-                        ).setResultsName("outputHdr")
+        port = (
+                MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") + (
+                ( types + Group( delimitedList( regIdentifier )).setResultsName("identifiers") ) ^
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+        ))
 
-        self.inoutDecl = Group( 
-                        Keyword("inout")  + 
-                        (
-                            Group(
-                                Optional(oneOf("wire reg logic")).setResultsName("kind") + 
-                                Optional(oneOf("signed real")).setResultsName("attrs") +  
-                                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") 
-                            ).setResultsName("standard") ^ Group (
-                                custom_type.setResultsName("custom_type")
-                            ).setResultsName("custom")
-                        ) + regIdentifier
-                        ).setResultsName("inoutHdr")
+        self.portHdr  = Group(port).setName("portHdr").setResultsName("portHdr")
+        self.portBody = Group(port + Suppress(self.semi) ).setName("portBody").setResultsName("portBody")
 
-
-        self.regDecl = Group( oneOf("reg logic") +
-                              Group(Optional("signed")) +
+        self.regDecl = Group( (net_types | data_types).setResultsName("type") +
+                              Group(Optional(modifiers)).setResultsName("attributes") +
                               Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                               Group( delimitedList( regIdentifier )).setResultsName("identifiers") +
                               Suppress(self.semi)
@@ -363,8 +363,6 @@ class VerilogParser:
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
-        nettype = oneOf("logic wire  tri  tri1  supply0  wand  triand  tri0  supply1  wor  trior  trireg")
-        expandRange = Group(Optional( oneOf("scalared vectored") )) + self.range
         realID = Group(identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
         realDecl = Group( "real" + delimitedList( realID ) + Suppress(self.semi) ).setResultsName("realDecl")
 
@@ -462,9 +460,7 @@ class VerilogParser:
         tfDecl = (
             parameterDecl |
             localParameterDecl |
-            self.inputDecl |
-            self.outputDecl |
-            self.inoutDecl |
+            self.portBody |
             self.regDecl |
             timeDecl |
             integerDecl |
@@ -482,31 +478,24 @@ class VerilogParser:
 
         netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
 
-        self.netDecl1 = Group(nettype +
-                              Group(Optional("signed")) +
-                              Group(ZeroOrMore( Group(expandRange) )).setResultsName("packed_ranges") +
-                              Group(Optional( delay )) +
-                              Group( delimitedList( netIdentifier ) ) +
-                              Suppress(self.semi)
-                             ).setResultsName("netDecl1")
+        self.netDecl1 = Keyword("maiunagioia")
 
 
-        self.netDecl2 = Group("trireg" +
-                              Group(Optional("signed")) +
-                              Group(Optional( chargeStrength )) +
-                              Group(ZeroOrMore( Group(expandRange) )) +
-                              Group(Optional( delay )) +
-                              Group( delimitedList(  identifier ) )+
+        self.netDecl2 = Group(Keyword("trireg").setResultsName("kind") +
+                              Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
+                              Group(ZeroOrMore(strength)).setResultsName("strength") +
+                              Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
+                              Group(Optional( delay )).setResultsName("delay") +
+                              Group( delimitedList(  identifier ) ).setResultsName("identifiers") +
                               Suppress(self.semi)
                               ).setResultsName("netDecl2")
 
 
-        self.netDecl3 = Group(nettype +
-                              Group(Optional("signed")) +
-                              Group(Optional( driveStrength )) +
-                              Group(ZeroOrMore( Group(expandRange) )).setResultsName("packed_ranges") +
-                              Group(Optional( delay )) +
-                              Group( delimitedList( Group(self.assgnmt) ) ) +
+        self.netDecl3 = Group( (data_types | net_types).setResultsName("kind") +
+                              Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
+                              Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
+                              Group(Optional( delay )).setResultsName("delay") +
+                              Group( delimitedList( Group(self.assgnmt) ) ).setResultsName("assignments") +
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
 
@@ -735,9 +724,7 @@ class VerilogParser:
             parameterDecl |
             self.synopsys_directives |
             localParameterDecl |
-            self.inputDecl |
-            self.outputDecl |
-            self.inoutDecl |
+            self.portBody |
             self.regDecl |
             self.netDecl3 |
             self.netDecl1 |
@@ -819,9 +806,7 @@ class VerilogParser:
                                             Suppress(")") ))+
                             Group(Optional( Suppress("(") +
                                             Optional( delimitedList(
-                                                    self.inputDecl ^
-                                                    self.outputDecl ^
-                                                    self.inputDecl ^
+                                                    self.portHdr ^
                                                     self.port
                                             ) )  +
                                             Suppress(")") )).setResultsName("ports") +
@@ -835,7 +820,7 @@ class VerilogParser:
                  Group(Optional(":" + identifier)) ).setName("module").setResultsName("module")
 
 
-        udpDecl = self.outputDecl | self.inputDecl | self.regDecl
+        udpDecl = self.portBody | self.regDecl
         udpInitVal = (Regex("1'[bB][01xX]") | Regex("[01xX]")).setName("udpInitVal")
         udpInitialStmt = Group( "initial" +
             identifier + "=" + udpInitVal + self.semi ).setName("udpInitialStmt")
