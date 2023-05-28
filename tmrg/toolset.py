@@ -20,11 +20,11 @@ TMRG toolset:
 
 
 def generateFromTemplate(outFname, templateFname, values):
-    f = open(templateFname, "r")
+    f = open(templateFname, "r", encoding="utf-8")
     temp = f.read()
     f.close()
 
-    f = open(outFname, "w")
+    f = open(outFname, "w", encoding="utf-8")
     f.write(Template(temp).substitute(values))
     f.close()
 

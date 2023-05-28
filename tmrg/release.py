@@ -4,7 +4,7 @@ from toolset import tmrg_version
 import os
 
 def replaceStrInFile(fname,fromStr,toStr):
-    f=open(fname,"r")
+    f=open(fname, "r", encoding="utf-8")
     logging.info("%s %s->%s"%(fname,fromStr,toStr))
     body=""
     for l in f.readlines():
@@ -12,7 +12,7 @@ def replaceStrInFile(fname,fromStr,toStr):
         body+=nl
     f.close()
 
-    f=open(fname,"w")
+    f=open(fname, "w", encoding="utf-8")
     f.write(body)
     f.close()
 

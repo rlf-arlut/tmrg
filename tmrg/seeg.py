@@ -111,7 +111,7 @@ class SEE(VerilogElaborator):
             if not os.path.isfile(self.options.exlude):
                 logging.warning("File does not exists. Constrains will not be applied.")
             else:
-                f = open(self.options.exlude, "r")
+                f = open(self.options.exlude, "r", encoding="utf-8")
                 toExlude = []
                 for l in f.readlines():
                     if len(l.strip()) == 0:

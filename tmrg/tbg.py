@@ -264,7 +264,7 @@ class TBG(TMR):
             oStr += "endmodule\n"
         if self.options.outputFname != "":
             logging.info("Writing testbench to %s" % self.options.outputFname)
-            f = open(self.options.outputFname, "w")
+            f = open(self.options.outputFname, "w", encoding="utf-8")
             f.write(oStr)
             f.close()
         else:

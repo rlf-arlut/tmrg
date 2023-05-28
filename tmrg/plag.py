@@ -77,7 +77,7 @@ class PLA(VerilogElaborator):
             if not os.path.isfile(self.options.exlude):
                 logging.warning("File does not exists. Constrains will not be applied.")
             else:
-                f = open(self.options.exlude, "r")
+                f = open(self.options.exlude, "r", encoding="utf-8")
                 toExlude = []
                 for l in f.readlines():
                     if len(l.strip()) == 0:
@@ -131,7 +131,7 @@ class PLA(VerilogElaborator):
 
         fname = self.options.ofile
         logging.info("SEE file is stored to '%s'" % fname)
-        f = open(fname, "w")
+        f = open(fname, "w", encoding="utf-8")
         f.write(body)
         f.close()
 
