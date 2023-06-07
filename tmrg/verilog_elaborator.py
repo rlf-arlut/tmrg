@@ -87,7 +87,7 @@ class VerilogElaborator():
         logging.debug("Script path : %s" % self.scriptDir)
 
         # master clonfig file
-        masterCnfg = os.path.join(self.scriptDir, "../etc/%s.cfg" % cnfgName)
+        masterCnfg = os.path.join(self.scriptDir, "etc/%s.cfg" % cnfgName)
         if os.path.exists(masterCnfg):
             logging.debug("Loading master config file from %s" % masterCnfg)
             self.config.read(masterCnfg)

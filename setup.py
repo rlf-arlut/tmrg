@@ -23,6 +23,8 @@ setuptools.setup(
     version="0.1alpha",
     description='TMRG Triple Modular Redundancy Generator',
     author='EP-ESE-ME, CERN',
+    package_data={'tmrg': ['etc/*']},
+    include_package_data=True,
     packages=['tmrg'],
     entry_points={
         'console_scripts': ['tmrg = tmrg.tmrg:main',
