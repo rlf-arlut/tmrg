@@ -204,7 +204,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         identBody = alphanums+"$_"
         identifier1 = Regex( r"\.?`?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*").setName("baseIdent")
         identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
-        identifier = (~valid_keywords + (identifier1 | identifier2)).setResultsName("id")
+        identifier = ~valid_keywords + (identifier1 | identifier2)
 
         hexnums = nums + "abcdefABCDEF" + "_?"
         base = Regex("[bBoOdDhH]{0,1}").setName("base")
@@ -214,27 +214,21 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         number = ( basedNumber | \
                    Regex(r"[+-]?[0-9]+(\.[0-9_]*)?([0-9_]*)?([Ee][+-]?[0-9_]+)?") \
                   ).setName("numeric")
+
+        # Expressions
         self.expr = Forward()
 
+        # References to registers or nets
+        self.range = Group( Suppress("[") + Group(self.expr).setResultsName("expr@from") + Optional(oneOf(": +: -:")).setResultsName("dir") + Group(self.expr).setResultsName("expr@to") + Suppress("]")).setResultsName("range")
+        self.size = Group( Suppress("[") + Group(self.expr) + Suppress("]")).setResultsName("size")
+        self.field = Group(Suppress(".") + identifier)
+        regReference  = Group( Group(identifier).setResultsName("name") + Group(ZeroOrMore(self.range | self.size | self.field)).setResultsName("range_or_field") ).setResultsName("reg_reference")
+
+        # Concatenations
         concat = Optional("'")+Group( Suppress("{") + delimitedList( Group(self.expr) ) + Suppress("}") ).setResultsName("concat")
         multiConcat = Group("{" + self.expr + concat + "}").setName("multiConcat")
         funcCall = Group(identifier + "(" + Group(Optional( Group(delimitedList( Group(self.expr) )) )) + ")").setResultsName("funcCall")
 
-        subscrRef = ( Suppress("[") +
-                      (delimitedList( Group(self.expr), ":" ) )  +
-                      Suppress("]")
-                    ).setResultsName("subscrRef")
-
-        subscrIndxRef =  ( Suppress("[") +
-                           (self.expr + oneOf("+ -") +  ":" + self.expr) +
-                           Suppress("]")
-                         ).setResultsName("subscrIndxRef")
-
-        subscrIdentifier = Group( identifier +
-                                  Group( ZeroOrMore( Group(subscrIndxRef) | Group(subscrRef) ))
-                                ).setResultsName("subscrIdentifier")
-
-        scalarConst = Regex("0|1('[Bb][01xX])?")
         mintypmaxExpr = Group( self.expr + ":" + self.expr + ":" + self.expr ).setName("mintypmax")
         primary = ( number |
                     ("(" + mintypmaxExpr + ")" ) |
@@ -244,7 +238,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                     concat |
                     dblQuotedString |
                     funcCall |
-                    subscrIdentifier
+                    regReference
                   ).setResultsName("primary")
 
         unop  = oneOf( "+  -  !  ~  &  ~&  |  ^|  ^  ~^" ).setName("unop")
@@ -260,15 +254,16 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                      )
 
         self.expr=self.expr.setName("expr").setResultsName("expr")
-        lvalue = subscrIdentifier | concat
 
+        # Events
         eventExpr = Forward()
-        eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( subscrIdentifier|  "(" + subscrIdentifier + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
+        eventTerm = Group ("*" | ( Optional (posedge | negedge) + ( regReference|  "(" + regReference + ")" ))  | ( "(" + eventExpr + ")" )).setResultsName("eventTerm")
         eventExpr << (
             Group( (delimitedList( eventTerm , (or_|",") )).setResultsName("delimitedOrList") )
             )
         eventControl = Group( "@" + eventExpr ).setName("eventCtrl").setResultsName("eventCtrl")
 
+        # Delays
         delayArg = ( number ^
                      Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)") ^
                      Word(alphanums+"$_") ^ #identifier ^
@@ -278,18 +273,17 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         delay = Group( "#" + delayArg ).setName("delay").setResultsName("delay")
         delayOrEventControl = delay | eventControl
 
-        self.assgnmt   = ( lvalue + (oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=") + Group(Optional( delayOrEventControl )).setResultsName("delayOrEventControl") + Group(self.expr)) ).setResultsName( "assgnmt" )
+        # Assignments
+        lvalue = Group(regReference | concat).setResultsName("lvalue")
+        self.assignment   = Group( lvalue + oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=").setResultsName("op") + Optional(Group(delayOrEventControl).setResultsName("delayOrEventControl")) + Group(self.expr).setResultsName("expr@rvalue") ).setResultsName( "assignment" )
 
-        self.assgnmt_with_declaration   = (oneOf("int genvar integer") + self.assgnmt).setResultsName( "assgnmt_with_declaration" )
+        # Simple assignment with declaration (in for loops, for instance)
+        self.assignment_with_declaration = Group(Group(Optional(oneOf("int genvar integer"))).setResultsName("type") + Group(identifier).setResultsName("name") + Suppress("=") + Group(self.expr).setResultsName("expr@rvalue")).setResultsName( "assignment_with_declaration" )
 
-        self.incr_decr   = ( lvalue + oneOf("++ --")).setResultsName( "incr_decr" )
+        self.incr_decr   = Group( regReference + oneOf("++ --")).setResultsName( "incr_decr" )
 
-        self.nbAssgnmt = (( lvalue + Suppress("<=") + Group(Optional( delay)).setResultsName("delay")            + Group(self.expr) ) |
-                          ( lvalue + Suppress("<=") + Group(Optional( eventControl)).setResultsName("eventCtrl") + Group(self.expr) )
-                         ).setResultsName( "nbassgnmt" )
+        self.nbAssgnmt = Group(lvalue + Suppress("<=") + Optional(Group(delayOrEventControl).setResultsName("delayOrEventControl")) + Group(self.expr).setResultsName("expr@rvalue")).setResultsName("nbassignment")
 
-        self.range = Group( Suppress("[") + Group(self.expr).setResultsName("from") + Optional(oneOf(": +: -:")).setResultsName("dir") + Group(self.expr).setResultsName("to") + Suppress("]")).setResultsName("range")
-        self.size = Group( Suppress("[") + Group(self.expr) + Suppress("]")).setResultsName("size")
         paramAssgnmt = Group(  identifier + Group(Optional(self.size|self.range)) + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
         self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
@@ -301,10 +295,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                                     "*)"
                                   ).setResultsName("attribute_instance")
         
-        regIdentifier = Group( identifier.setResultsName("name") + Group(ZeroOrMore(self.range | self.size)).setResultsName("unpacked_ranges")).setResultsName("identifier")
-
-        self.field = Group(Suppress(".") + identifier)
-        regReference  = Group( identifier.setResultsName("name") + ZeroOrMore(self.range | self.size | self.field) ).setResultsName("reg_reference")
+        regIdentifier = Group( Group(identifier).setResultsName("name") + Group(ZeroOrMore(self.range | self.size)).setResultsName("unpacked_ranges")).setResultsName("identifier")
         
         parameterDecl      = Group( "parameter" +
                                     Group(Optional(modifiers)) +
@@ -347,18 +338,32 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                             ).setName("regDecl").setResultsName("regDecl")
 
         self.customDecl = Group( custom_type.setResultsName("custom_type") +
-                              Group( delimitedList( identifier )) +
+                              Group( delimitedList( Group(identifier).setResultsName("name") )).setResultsName("identifiers") +
                               Suppress(self.semi)
                             ).setName("customDecl").setResultsName("customDecl")
 
+        self.netDecl = Group( types + Group( delimitedList( regIdentifier )).setResultsName("identifiers") + Suppress(self.semi)).setResultsName("netDecl")
+
         self.customDeclwAssign = Group( custom_type.setResultsName("custom_type") +
-                                    Group( delimitedList( Group(self.assgnmt) ) ).setResultsName("assignments") +
+                                    Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
                                     Suppress(self.semi)
                                 ).setName("customDeclwAssign").setResultsName("customDeclwAssign")
 
+        self.netDeclWAssignInline = Group(
+                types +
+                Group(Optional( delay )).setResultsName("delay") +
+                Group( delimitedList( self.assignment ) ).setResultsName("assignments")
+                ).setResultsName("netDeclWAssign")
+
+        self.netDeclWAssign = Group(
+                types +
+                Group(Optional( delay )).setResultsName("delay") +
+                Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
+                Suppress(self.semi)).setResultsName("netDeclWAssign")
+
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
         integerDecl = Group( "integer" + Group(delimitedList( regIdentifier )) + Suppress(self.semi) ).setResultsName("integerDecl")
-        self.integerDeclAssgn = Group( "integer" + Group( delimitedList( Group(self.assgnmt) ) ) + Suppress(self.semi) ).setResultsName("integerDeclAssgn")
+        self.integerDeclAssgn = Group( "integer" + Group( delimitedList( self.assignment ) ) + Suppress(self.semi) ).setResultsName("integerDeclAssgn")
         strength0 = oneOf("supply0  strong0  pull0  weak0  highz0")
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
@@ -371,14 +376,14 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         blockDecl = (
             parameterDecl |
             localParameterDecl |
-            self.regDecl |
             integerDecl |
             self.integerDeclAssgn |
             realDecl |
             timeDecl |
             eventDecl |
-            self.customDecl |
-            self.customDeclwAssign
+#            self.regDecl |
+#            self.customDecl |
+            self.netDecl
             )
 
         synopsys=Keyword("synopsys")
@@ -392,7 +397,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                    Group( default + Optional(":") + stmtOrNull ) | \
                    Group(self.directive_synopsys_case)
         condition=Group("(" + self.expr + ")").setResultsName("condition")
-        blockName=Group(identifier).setResultsName("blockName")
+        blockName=identifier.setResultsName("id@blockName")
         self.stmt <<  ( Group( begin  +  ZeroOrMore( self.stmt )  + end ).setName("beginend").setResultsName("beginend") | \
             Group( if_ + condition + stmtOrNull +  else_ + stmtOrNull ).setName("ifelse").setResultsName("ifelse") | \
             Group( if_ + condition + stmtOrNull  ).setName("if").setResultsName("if") |\
@@ -401,22 +406,23 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             Group( forever + self.stmt ).setResultsName("forever") |\
             Group( repeat + "(" + self.expr + ")" + self.stmt ) |\
             Group( while_ + "(" + self.expr + ")" + self.stmt ) |\
-            Group( for_ + Suppress("(") + Group(self.assgnmt|self.assgnmt_with_declaration) + Suppress(self.semi) + Group( self.expr ) + Suppress(self.semi) + Group(self.assgnmt | self.incr_decr) + Suppress(")") + self.stmt ).setResultsName("forstmt") |\
+            Group( for_ + Suppress("(") + Group(self.assignment|self.netDeclWAssignInline).setResultsName("for1") + Suppress(self.semi) + Group( self.expr ).setResultsName("expr@for2") + Suppress(self.semi) + Group(self.assignment | self.incr_decr).setResultsName("for3") + Suppress(")") + Group(self.stmt).setResultsName("stmt") ).setResultsName("forstmt") |\
+            Group( self.incr_decr + self.semi ) |\
             Group( fork + ZeroOrMore( self.stmt ) + join ) |\
             Group( fork + ":" + identifier + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + end ) |\
             Group( wait + "(" + self.expr + ")" + stmtOrNull ) |\
             Group( "->" + identifier + self.semi ) |\
             Group( disable + identifier + self.semi ) |\
-            Group( assign + self.assgnmt + self.semi ).setResultsName("assign") |\
+            Group( assign + self.assignment + self.semi ).setResultsName("assign") |\
             Group( deassign + lvalue + self.semi ) |\
-            Group( force + Group(self.assgnmt) + self.semi ).setResultsName("force") |\
+            Group( force + self.assignment + self.semi ).setResultsName("force") |\
             Group( self.directive_synopsys_case )| \
             Group( release + lvalue + self.semi ).setResultsName("release") |\
             Group( Suppress(begin) + Suppress(Literal(":")) + blockName + ZeroOrMore( blockDecl ) + ZeroOrMore( self.stmt ) + Suppress(end) + Optional(Suppress(Literal(":") + blockName))).setResultsName("beginEndLabel") |\
             self.comp_directive |\
             attribute_instance |
-            Group( Group(self.assgnmt) + Suppress(self.semi) ).setResultsName("assgnmtStm") |\
-            Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbAssgnmt") |\
+            Group( self.assignment + Suppress(self.semi) ).setResultsName("assignmentStm") |\
+            Group( self.nbAssgnmt + Suppress(self.semi) ).setResultsName("nbassignmentStm") |\
             Group( Combine( Optional("$") + identifier ) + Group(Optional( Suppress("(") + delimitedList(self.expr|empty) + Suppress(")") )) + Suppress(self.semi) ).setResultsName("taskEnable") )
             # these  *have* to go at the end of the list!!!
 
@@ -446,7 +452,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         x||= force <assignment> ;
         x||= release <lvalue> ;
         """
-        self.alwaysStmt = Group( oneOf("always always_ff always_comb always_latch") + Group(Optional(eventControl)) + self.stmt ).setName("alwaysStmt").setResultsName("always")
+        self.alwaysStmt = Group( oneOf("always always_ff always_comb always_latch").setResultsName("type") + Optional(eventControl) + self.stmt.setResultsName("statement") ).setName("alwaysStmt").setResultsName("always")
         initialStmt = Group( Keyword("initial") + self.stmt ).setName("initialStmt").setResultsName("initialStmt")
 
         chargeStrength = Group( "(" + oneOf( "small medium large" ) + ")" ).setName("chargeStrength")
@@ -454,18 +460,19 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         self.continuousAssign = Group(  Suppress(assign)
               + Group(Optional( driveStrength )).setResultsName("driveStrength")
               + Group(Optional( delay )).setResultsName("delay")
-              + Group(delimitedList( Group(self.assgnmt) )) + Suppress(self.semi)
+              + Group(delimitedList( self.assignment )).setResultsName("assignments") + Suppress(self.semi)
             ).setResultsName("continuousAssign")
 
         tfDecl = (
             parameterDecl |
             localParameterDecl |
             self.portBody |
-            self.regDecl |
             timeDecl |
             integerDecl |
-            realDecl |
-            self.customDecl
+#            self.regDecl |
+#            self.customDecl |
+            self.netDecl |
+            realDecl
             ).setResultsName("tfDecl")
 
         lifetime = oneOf("static automatic")
@@ -476,10 +483,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             "endfunction"
             ).setResultsName("functionDecl")
 
-        netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
-
         self.netDecl1 = Keyword("maiunagioia")
-
 
         self.netDecl2 = Group(Keyword("trireg").setResultsName("kind") +
                               Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
@@ -495,7 +499,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                               Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
                               Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                               Group(Optional( delay )).setResultsName("delay") +
-                              Group( delimitedList( Group(self.assgnmt) ) ).setResultsName("assignments") +
+                              Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
                               Suppress(self.semi)
                              ).setResultsName("netDecl3")
 
@@ -504,7 +508,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                 Suppress("{") +
                 Group(ZeroOrMore( self.regDecl )).setResultsName("fields") +
                 Suppress ("}") +
-                identifier.setResultsName("id") +
+                Group(identifier).setResultsName("id") +
                 Suppress(self.semi)
         ).setName("structDecl").setResultsName("structDecl")
 
@@ -525,7 +529,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             Group(delimitedList( gateInstance)) +
             Suppress(self.semi) ).setResultsName("gateDecl")
 
-        udpInstance = Group( Group( identifier + Optional(self.range | subscrRef) ) +
+        udpInstance = Group( Group( identifier + Optional(self.range | self.size) ) +
             "(" + Group( delimitedList( self.expr ) ) + ")" )
         udpInstantiation = Group( identifier -
             Optional( driveStrength ) +
@@ -564,29 +568,29 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         specparamDecl = Group( "specparam" + delimitedList( paramAssgnmt ) + self.semi )
 
-        pathDescr1 = Group( "(" + subscrIdentifier + "=>" + subscrIdentifier + ")" )
-        pathDescr2 = Group( "(" + Group( delimitedList( subscrIdentifier ) ) + "*>" +
-                                  Group( delimitedList( subscrIdentifier ) ) + ")" )
-        pathDescr3 = Group( "(" + Group( delimitedList( subscrIdentifier ) ) + "=>" +
-                                  Group( delimitedList( subscrIdentifier ) ) + ")" )
+        pathDescr1 = Group( "(" + regReference + "=>" + regReference + ")" )
+        pathDescr2 = Group( "(" + Group( delimitedList( regReference ) ) + "*>" +
+                                  Group( delimitedList( regReference ) ) + ")" )
+        pathDescr3 = Group( "(" + Group( delimitedList( regReference ) ) + "=>" +
+                                  Group( delimitedList( regReference ) ) + ")" )
         pathDelayValue = Group( ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" ) |
                                  mintypmaxExpr |
                                  self.expr )
         pathDecl = Group( ( pathDescr1 | pathDescr2 | pathDescr3 ) + "=" + pathDelayValue + self.semi ).setName("pathDecl")
 
         portConditionExpr = Forward()
-        portConditionTerm = Optional(unop) + subscrIdentifier
+        portConditionTerm = Optional(unop) + regReference
         portConditionExpr << portConditionTerm + Optional( binop + portConditionExpr )
         polarityOp = oneOf("+ -")
         levelSensitivePathDecl1 = Group(
             if_ + Group("(" + portConditionExpr + ")") +
-            subscrIdentifier + Optional( polarityOp ) + "=>" + subscrIdentifier + "=" +
+            regReference + Optional( polarityOp ) + "=>" + regReference + "=" +
             pathDelayValue +
             self.semi )
         levelSensitivePathDecl2 = Group(
             if_ + Group("(" + portConditionExpr + ")") +
-            self.lpar + Group( delimitedList( subscrIdentifier ) ) + Optional( polarityOp ) + "*>" +
-                Group( delimitedList( subscrIdentifier ) ) + self.rpar + "=" +
+            self.lpar + Group( delimitedList( regReference ) ) + Optional( polarityOp ) + "*>" +
+                Group( delimitedList( regReference ) ) + self.rpar + "=" +
             pathDelayValue +
             self.semi )
         levelSensitivePathDecl = levelSensitivePathDecl1 | levelSensitivePathDecl2
@@ -595,16 +599,16 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         edgeSensitivePathDecl1 = Group(
             Optional( if_ + Group("(" + self.expr + ")") ) +
             self.lpar + Optional( edgeIdentifier ) +
-            subscrIdentifier + "=>" +
-            self.lpar + subscrIdentifier + Optional( polarityOp ) + ":" + self.expr + self.rpar + self.rpar +
+            regReference + "=>" +
+            self.lpar + regReference + Optional( polarityOp ) + ":" + self.expr + self.rpar + self.rpar +
             "=" +
             pathDelayValue +
             self.semi )
         edgeSensitivePathDecl2 = Group(
             Optional( if_ + Group("(" + self.expr + ")") ) +
             self.lpar + Optional( edgeIdentifier ) +
-            subscrIdentifier + "*>" +
-            self.lpar + delimitedList( subscrIdentifier ) + Optional( polarityOp ) + ":" + self.expr + self.rpar + self.rpar +
+            regReference + "*>" +
+            self.lpar + delimitedList( regReference ) + Optional( polarityOp ) + ":" + self.expr + self.rpar + self.rpar +
             "=" +
             pathDelayValue +
             self.semi )
@@ -612,16 +616,17 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         edgeDescr = oneOf("01 10 0x x1 1x x0").setName("edgeDescr")
 
+        scalarConst = Regex("0|1('[Bb][01xX])?")
         timCheckEventControl = Group( posedge | negedge | (edge + "[" + delimitedList( edgeDescr ) + "]" ))
         timCheckCond = Forward()
         timCondBinop = oneOf("== === != !==")
         timCheckCondTerm = ( self.expr + timCondBinop + scalarConst ) | ( Optional("~") + self.expr )
         timCheckCond << ( ( "(" + timCheckCond + ")" ) | timCheckCondTerm )
         timCheckEvent = Group( Optional( timCheckEventControl ) +
-                                subscrIdentifier +
+                                regReference +
                                 Optional( "&&&" + timCheckCond ) )
         timCheckLimit = self.expr
-        controlledTimingCheckEvent = Group( timCheckEventControl + subscrIdentifier +
+        controlledTimingCheckEvent = Group( timCheckEventControl + regReference +
                                             Optional( "&&&" + timCheckCond ) )
         notifyRegister = identifier
 
@@ -710,27 +715,29 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         generate_if_statement =     Group(Suppress(if_) + condition + self.moduleOrGenerateItemOrNamed).setResultsName("generate_if_statement")
 
         generate_module_loop_statement = Group( Suppress(for_) +
-                                                  Suppress("(")  +
-                                                    Group(self.assgnmt|self.assgnmt_with_declaration) +
-                                                  Suppress(self.semi) +
-                                                    Group(self.expr) +
-                                                  Suppress(self.semi) +
-                                                    Group(self.assgnmt | self.incr_decr) +
-                                                  Suppress(")") +
-                                                  generate_module_named_block
-                                               ).setResultsName("generate_module_loop_statement")
+            Suppress("(")  +
+            Group(Optional(self.assignment|self.netDeclWAssignInline)).setResultsName("for1") +
+            Suppress(self.semi) +
+            Group(self.expr).setResultsName("expr@for2") +
+            Suppress(self.semi) +
+            Group(Optional(self.assignment | self.incr_decr)).setResultsName("for3") +
+            Suppress(")") +
+            generate_module_named_block
+        ).setResultsName("generate_module_loop_statement")
 
         self.moduleOrGenerateItem << (
             parameterDecl |
             self.synopsys_directives |
             localParameterDecl |
             self.portBody |
-            self.regDecl |
-            self.netDecl3 |
+#           self.netDecl3 |
             self.netDecl1 |
             self.netDecl2 |
-            self.customDecl |
-            self.customDeclwAssign |
+#            self.regDecl |
+#            self.customDecl |
+            self.netDecl |
+            self.netDeclWAssign |
+#            self.customDeclwAssign |
             self.genVarDecl |
             package_import_declaration |
             timeDecl |
@@ -794,12 +801,12 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         x||= <task>
         x||= <function>
         """
-        portRef = subscrIdentifier
+        portRef = regReference
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
         self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
 
         moduleHdr = Group ( oneOf("module macromodule") + 
-        identifier.setResultsName("moduleName") +
+        identifier.setResultsName("id@moduleName") +
                             Group(Optional( Suppress("#")+Suppress("(") +
                                             delimitedList( Group(Optional(Suppress("parameter"))+ 
                                             Group(Optional( self.range )) + paramAssgnmt) ) + 
@@ -819,6 +826,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                  self.endmodule +
                  Group(Optional(":" + identifier)) ).setName("module").setResultsName("module")
 
+        print(self.module.parseString("module a; t ciao; endmodule").asDict())
 
         udpDecl = self.portBody | self.regDecl
         udpInitVal = (Regex("1'[bB][01xX]") | Regex("[01xX]")).setName("udpInitVal")

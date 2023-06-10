@@ -766,6 +766,7 @@ class ParseResults(object):
         if key in self:
             return self[key]
         else:
+            raise KeyError("Key %s not found in %s" % (key, self.getName()))
             return defaultValue
 
     def insert(self, index, insStr):

@@ -124,23 +124,17 @@ class VerilogElaborator():
                 logging.debug("Found elaborator for %s" % token)
 
     def getLeftRightHandSide(self, t, res=None):
-        if res == None:
-            res = {"left": set(), "right": set()}
-
         def _extractID(t, res=None):
             if res == None:
                 res = set()
             if isinstance(t, ParseResults):
-                name = str(t.getName()).lower()
-                if name == "subscridentifier":
-                    netname, netfield = self.split_name(t[0])
+                if t.getName() == "reg_reference":
+                    netname, netfield = self.split_name(t.get("name")[0])
 
                     if not netname in self.current_module["nets"]:
-                        if not t[0] in self.current_module["params"] and t[0][0] != '`':
+                        if not t[0] in self.current_module["params"] and netname[0] != '`':
                             logging.warning("%s is neither a parameter nor a net. Leaving it as it is" % t[0])
                         return res
-
-                    logging.warning("%s is either a parameter or a net. Leaving it as it is" % t[0])
 
                     if not "dnt" in self.current_module["nets"][netname]:
                         res.add(netname)
@@ -151,37 +145,55 @@ class VerilogElaborator():
                         res = _extractID(t[i], res=res)
             return res
 
-        if isinstance(t, ParseResults):
-            name = str(t.getName()).lower()
-            if len(t) == 0:
-                return res
-            if name in ("assgnmt", "nbassgnmt"):
-                if t[0].getName() == "subscrIdentifier":
-                    left_id = t[0][0]
-                    res["left"].add(left_id)
-                    res["right"].update(_extractID(t[0][1]))
-                else:
-                    logging.error("Unsupported syntax : concatenation on left hand side of the assignment (%s). " %
-                                  str(self.vf.format(t)))
-                    logging.error("Output may be incorrect.")
-                res["right"].update(_extractID(t[-1]))
-            elif name in ("regdecl"):
-                for tt in t.get("identifiers"):
-                    left_id = tt.get("name")[0]
-                    res["left"].add(left_id)
-            elif name in ("netdecl1"):
-                for tt in t[4]:
-                    left_id = tt[0]
-                    res["left"].add(left_id)
-            elif name == "subscridentifier":
-                if t[0] in self.current_module["nets"]:
-                    res["right"].add(t[0])
-                    res = self.getLeftRightHandSide(t[1], res=res)
-                else:
-                    pass
+        # Initialize if needed
+        if res == None:
+            res = {"left": set(), "right": set()}
+
+        # Return empty results if not a ParseResults instance
+        if not isinstance(t, ParseResults):
+            return res
+
+        # Return empty results if there are no tokens
+        if len(t) == 0:
+            return res
+
+        name = str(t.getName()).lower()
+
+        # Assignments
+        if name in ("assignment", "nbassignment"):
+            print("Looking inside assignment/nb")
+            print(t.asDict())
+            lvalue = t.get("lvalue")[0]
+            if lvalue.getName() == "reg_reference":
+                print(lvalue.asDict())
+                res["left"].add(lvalue.get("name")[0])
+                res["right"].update(_extractID(t.get("expr@rvalue")))
             else:
-                for i in range(len(t)):
-                    res = self.getLeftRightHandSide(t[i], res=res)
+                logging.error("Unsupported syntax : %s on left hand side of the assignment (%s). " % (lvalue.getName(), str(self.vf.format(t))))
+                logging.error("Output may be incorrect.")
+
+        # Register declaration with assignment
+        elif name in ("netdecl"):
+            for tt in t.get("identifiers"):
+                res["left"].add(tt.get("name")[0])
+
+        # Net declaration
+        elif name in ("netdecl1"):
+            for tt in t[4]:
+                res["left"].add(tt[0])
+
+        # Register reference
+        elif name == "reg_reference":
+            if t.get("name")[0] in self.current_module["nets"]:
+                res["right"].add(t.get("name")[0])
+                res = self.getLeftRightHandSide(t.get("range_or_field"), res=res)
+            else:
+                pass
+
+        # All else
+        else:
+            for i in range(len(t)):
+                res = self.getLeftRightHandSide(t[i], res=res)
 
         return res
 
@@ -196,22 +208,7 @@ class VerilogElaborator():
             name = reg[0]
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs, "packed_ranges": [], "unpacked_ranges": [],  "type": "int"}
-
-    def _elaborate_regdecl(self, tokens):
-        _atrs = self.vf.format(tokens[1])
-        
-        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
-
-        for reg in tokens.get("identifiers"):
-            name = reg.get("name")[0]
-
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {
-                    "attributes": _atrs,
-                    "type": "wire",
-                    "packed_ranges" : packed_ranges,
-                    "unpacked_ranges": self.__elaborate_unpacked(reg.get("unpacked_ranges"))
-                }
+                logging.debug("integerDecl: Adding net: %s" % self.current_module["nets"][name])
 
     def __structdecl(self, tokens):
         fields = tokens.get("fields")
@@ -222,7 +219,8 @@ class VerilogElaborator():
         total_size = []
         for field in fields:
             packed_ranges = self.__elaborate_packed(field.get("packed_ranges"))
-            size = "(" + " + ".join([i["len"] for i in packed_ranges]) + ")"
+            size = " + ".join([i["len"] for i in packed_ranges])
+            size = "(" + size + ")" if size else "1"
 
             for reg in field.get("identifiers"):
                 res["fields"][reg.get("name")[0]] = {
@@ -238,22 +236,40 @@ class VerilogElaborator():
         return res
 
     def _elaborate_structdecl(self, tokens):
-        logging.error("assing struct "+tokens.get("name"))
         self.current_module["structs"][tokens.get("name")] = self.__structdecl(tokens)
 
-    def _elaborate_customdecl(self, tokens):
+    def backup_elaborate_regdecl(self, tokens):
+        _atrs = self.vf.format(tokens[1])
+        
+        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
+
+        for reg in tokens.get("identifiers"):
+            name = reg.get("name")[0]
+
+            if not name in self.current_module["nets"]:
+                self.current_module["nets"][name] = {
+                    "attributes": _atrs,
+                    "type": "wire",
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges": self.__elaborate_unpacked(reg.get("unpacked_ranges"))
+                }
+                logging.debug("regdecl: Adding net: %s" % self.current_module["nets"][name])
+
+    def backup_elaborate_customdecl(self, tokens):
         if tokens[0] not in self.current_module["structs"]:
             raise ValueError("Error while elaborating %s: %s is not a defined struct" % (tokens[1], tokens[0]))
 
         _atrs = ""
-        _len = self.current_module["structs"][tokens[0]]["total_size"]
+        _type = tokens.get("custom_type")[0]
+        _len = self.current_module["structs"][_type]["total_size"]
         _range = "["+_len+" -1 :0]"
 
-        for name in tokens[-1]:
+        for name in tokens.get("identifiers"):
+            name = name[0]
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {
                     "attributes": _atrs,
-                    "type": str(tokens[0]),
+                    "type": str(_type),
                     "packed_ranges" : [{
                         "range" : _range,
                         "len"   : _len,
@@ -262,6 +278,38 @@ class VerilogElaborator():
                     }],
                     "unpacked_ranges" : []
                 }
+                logging.debug("customdecl: Adding net: %s" % self.current_module["nets"][name])
+
+    def _elaborate_netdecl(self, tokens):
+        _atrs = None
+        _type = None
+        packed_ranges = None
+
+        if "standard" in tokens:
+            _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
+            _type = tokens.get("standard").get("kind")
+            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
+        else:
+            _atrs = ""
+            _type = tokens.get("custom")[0]
+            _len = self.current_module["structs"][_type]["total_size"]
+            packed_ranges = [{
+                "range" : "["+_len+" -1 :0]",
+                "len"   : _len,
+                "from"  : "(" + _len + "-1)",
+                "to"    : 0
+            }]
+
+        for identifier in tokens.get("identifiers"):
+            name = identifier.get("name")[0]
+            if not name in self.current_module["nets"]:
+                self.current_module["nets"][name] = {
+                    "attributes": _atrs,
+                    "type": str(_type),
+                    "packed_ranges" : packed_ranges,
+                    "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges"))
+                }
+                logging.debug("netdecl: Adding net %s: %s" % (name, self.current_module["nets"][name]))
 
     def _elaborate_moduleinstantiation(self, tokens):
         identifier = tokens[0]
@@ -269,6 +317,33 @@ class VerilogElaborator():
         _range = ""
         _len = "1"
         self.current_module["instances"][instance] = {"instance": identifier, "range": _range, "len": _len}
+
+    def _elaborate_reg_reference(self, tokens):
+        print("ELABORATING " + "%s" % tokens)
+        # Check for errors
+        netname = tokens.get("name")[0]
+        if netname not in self.current_module["nets"]:
+            return
+
+        field_parsed = False
+        for field in tokens.get("range_or_field"):
+            # We're only checking that fields exist here
+            if field.getName() != "field":
+                continue
+
+            if field_parsed:
+                raise ValueError("Nested fields are not supported yet.")
+
+            field_parsed = True
+
+            if self.current_module["nets"][netname]["type"] not in self.current_module["structs"]:
+                raise ValueError("Trying to access field %s of %s, which is not a struct" % (netfield, netname))
+
+            fields = self.current_module["structs"][self.current_module["nets"][netname]["type"]]["fields"]
+
+            if field not in fields:
+                raise ValueError("Field %s is not a field of struct %s. Available fields are: %s" % (netfield, netname, fields))
+
 
     def _elaborate_always(self, tokens):
         for t in tokens[1:]:
@@ -282,8 +357,11 @@ class VerilogElaborator():
 
         for r in tokens:
             _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
-            _from = self.vf.format(r.get("from"))
-            _to   = self.vf.format(r.get("to"))
+            print(r.get("expr@from"))
+            _from = self.vf.format(r.get("expr@from"))
+            print(_from)
+            _to   = self.vf.format(r.get("expr@to"))
+            print(_to)
 
             if _dir == ":":
                 _len = "(%s + 1)" % (_to)
@@ -327,8 +405,8 @@ class VerilogElaborator():
             elif r.getName() == "range":
                 print("range:" + "%s" % r.asDict())
                 _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
-                _from = self.vf.format(r.get("from"))
-                _to   = self.vf.format(r.get("to"))
+                _from = self.vf.format(r.get("expr@from"))
+                _to   = self.vf.format(r.get("expr@to"))
 
                 if _dir == ":":
                     _len = "(%s + 1)" % (_to)
@@ -350,21 +428,23 @@ class VerilogElaborator():
 
     def _get_port_type(self, tokens):
         _type = "wire"
-        _custom = tokens.get("custom")
-        _standard = tokens.get("standard")
-        if _custom is not None:
-            _type = _custom.get("custom_type")[0]
-        elif _standard is not None:
-            _type = _standard
 
+        if "custom" in tokens.keys():
+            _type = tokens.get("custom").get("custom_type")[0]
+        elif "standard" in tokens.keys():
+            _s = tokens.get("standard")
+            _type = _s.get("kind")[0] if "kind" in _s else "wire"
+
+        print(" Detected type: %s" % _type)
         return _type
 
     def __elaborate_generic_port(self, tokens):
         _atrs = ""
         packed_ranges = []
-        if tokens.get("standard"):
-            _atrs  = self.vf.format(tokens.get("standard").get("type1"))
-            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
+        if "standard" in tokens.keys():
+            standard = tokens.get("standard")
+            _atrs  = self.vf.format(standard.get("attrs")) if "attrs" in standard.keys() else ""
+            packed_ranges = self.__elaborate_packed(standard.get("packed_ranges")) if "packed_ranges" in standard.keys() else []
         else:
             _atrs = ""
 
@@ -392,6 +472,7 @@ class VerilogElaborator():
 
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = self.lastANSIPort["net"]
+                logging.debug("generic_port: Adding net: %s" % self.current_module["nets"][name])
 
 
     def _elaborate_porthdr(self, tokens):
@@ -411,6 +492,7 @@ class VerilogElaborator():
                 self.current_module["io"][name] = copy.deepcopy(self.lastANSIPort["io"])
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = copy.deepcopy(self.lastANSIPort["net"])
+                logging.debug("port: Adding net: %s" % self.current_module["nets"][name])
 
     def _elaborate_netdecl1(self, tokens):
         _atrs = self.vf.format(tokens.get("attributes"))
@@ -424,22 +506,25 @@ class VerilogElaborator():
                 "packed_ranges": packed,
                 "unpacked_ranges": self.__elaborate_unpacked(net.get("unpacked_ranges"))
             }
+            logging.debug("netdecl1: Adding net: %s" % self.current_module["nets"][name])
             if _len != "1":
                 details = "(range:%s len:%s)" % (_range, _len)
             else:
                 details = ""
 
-    def _elaborate_assgnmt_with_declaration(self, tokens):
-        type = tokens[0]
-        name = tokens[1][0]
-        _atrs = ""
+    def _elaborate_assignment_with_declaration(self, tokens):
+        print(tokens.asDict())
+        print(list(tokens.keys()))
+        type = tokens.get("type") if "type" in tokens.keys() else "wire"
         if type != "genvar":
+            name = self.vf.format(tokens.get("name")[0])
             self.current_module["nets"][name] = {
-                "attributes": _atrs,
+                "attributes": "",
                 "type": type,
                 "packed_ranges": [],
                 "unpacked_ranges": []
             }
+            logging.debug("assignment_with_declaration: Adding net: %s" % self.current_module["nets"][name])
 
     def _elaborate_localparamdecl(self, tokens):
         _range = self.vf.format(tokens[1])
@@ -463,11 +548,12 @@ class VerilogElaborator():
 
     def _elaborate_netdecl3(self, tokens):
         _atrs = self.vf.format(tokens.get("attributes"))
+        _type = tokens.get("kind")[0]
         packed = self.__elaborate_packed(tokens.get("packed_ranges"))
 
-        for assgmng in tokens.get("assignments"):
-            ids = self.getLeftRightHandSide(assgmng)
-            name = assgmng[0][0]
+        for assignment in tokens.get("assignments"):
+            ids = self.getLeftRightHandSide(assignment)
+            name = self.vf.format(assignment.get("lvalue")[0])
             dnt = False
             if len(ids["right"]) != 0:
                 idRight = ids["right"].pop()
@@ -478,10 +564,11 @@ class VerilogElaborator():
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {
                     "attributes": _atrs,
-                    "type": "wire",
+                    "type": _type,
                     "packed_ranges" : packed,
                     "unpacked_ranges" : []
                 }
+                logging.debug("netdecl3: Adding net: %s" % self.current_module["nets"][name])
 
                 if dnt:
                     self.current_module["nets"][name]["dnt"] = True
@@ -495,9 +582,9 @@ class VerilogElaborator():
         _len = self.current_module["structs"][tokens[0]]["total_size"]
         _range = "["+_len+" -1 :0]"
 
-        for assgmng in tokens.get("assignments"):
-            ids = self.getLeftRightHandSide(assgmng)
-            name = assgmng[0][0]
+        for assignment in tokens.get("assignments"):
+            ids = self.getLeftRightHandSide(assignment)
+            name = self.vf.format(assignment.get("lvalue")[0])
             dnt = False
             if len(ids["right"]) != 0:
                 idRight = ids["right"].pop()
@@ -516,6 +603,54 @@ class VerilogElaborator():
                         }],
                         "type": str(tokens[0]),
                         "unpacked_ranges" : []
+                    }
+
+            if dnt:
+                self.current_module["nets"][name]["dnt"] = True
+                logging.debug("Net %s will not be touched!" % name)
+
+    def _elaborate_netDeclWAssign(self, tokens):
+        _atrs = None
+        _type = None
+        packed_ranges = None
+
+        if "standard" in tokens:
+            _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
+            _type = tokens.get("standard").get("kind")
+            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
+        else:
+            _atrs = ""
+            _type = tokens.get("custom")[0]
+            _len = self.current_module["structs"][_type]["total_size"]
+            packed_ranges = [{
+                "range" : "["+_len+" -1 :0]",
+                "len"   : _len,
+                "from"  : "(" + _len + "-1)",
+                "to"    : 0
+            }]
+
+        for assignment in tokens.get("assignments"):
+            ids = self.getLeftRightHandSide(assignment)
+            name = self.vf.format(assignment.get("lvalue")[0])
+            unpacked = []
+            if assignment.get("lvalue")[0].getName() == "reg_reference":
+                range_or_field = assignment.get("lvalue")[0].get("range_or_field")
+                if range_or_field:
+                    logging.warning("Unpacked net declaration with assignment is not supported. TMR may malfunction.")
+
+            dnt = False
+            if len(ids["right"]) != 0:
+                idRight = ids["right"].pop()
+                for ex in self.EXT:
+                    if name == idRight+ex:
+                        dnt = True
+
+            if not name in self.current_module["nets"]:
+                self.current_module["nets"][name] = {
+                        "attributes": _atrs,
+                        "packed_ranges" : packed_ranges,
+                        "type": _type,
+                        "unpacked_ranges" : unpacked
                     }
 
             if dnt:
@@ -583,9 +718,14 @@ class VerilogElaborator():
         :return:
         """
         if isinstance(tokens, ParseResults):
-            name = str(tokens.getName()).lower()
             if len(tokens) == 0:
                 return
+
+            name = str(tokens.getName()).lower()
+            offset = name.find("@")
+            if offset != -1:
+                name = name[0:offset]
+
             logging.debug("[%-20s] len:%2d  str:'%s' >" % (name, len(tokens), str(tokens)[:80]))
             if name in self.elaborator:
                 self.elaborator[name](tokens)
@@ -621,7 +761,7 @@ class VerilogElaborator():
         if self.options.generateBugReport:
             bn = os.path.basename(fname)
             fcopy = os.path.join(self.options.bugReportDir, bn)
-            logging.debug("Coping source file from '%s' to '%s'" % (fname, fcopy))
+            logging.debug("Copying source file from '%s' to '%s'" % (fname, fcopy))
             shutil.copyfile(fname, fcopy)
         tokens = self.vp.parseFile(fname)
         if self.options.stats:
@@ -635,7 +775,7 @@ class VerilogElaborator():
         if self.options.generateBugReport:
             bn = os.path.basename(fname)
             fcopy = os.path.join(self.options.bugReportDir, bn)
-            logging.debug("Coping library file from '%s' to '%s'" % (fname, fcopy))
+            logging.debug("Copying library file from '%s' to '%s'" % (fname, fcopy))
             shutil.copyfile(fname, fcopy)
         tokens = self.vp.parseFile(fname)
         if self.options.stats:
@@ -709,11 +849,12 @@ class VerilogElaborator():
             if len(d) == 0:
                 return
 
-            tab = PrettyTable([dname,  "tmr", "range", "attributes", "array"])
-            tab.min_width[dname] = 50
+            tab = PrettyTable([dname,  "type", "attributes", "range", "array", "tmr"])
+            tab.min_width[dname] = 30
+            tab.min_width["type"] = 10
             tab.min_width["range"] = 20
             tab.min_width["array"] = 20
-            tab.min_width["attributes"] = 20
+            tab.min_width["attributes"] = 10
             tab.min_width["tmr"] = 10
             tab.align[dname] = "l"  # Left align city names
 
@@ -722,6 +863,7 @@ class VerilogElaborator():
 
                 packed_ranges = " ".join([i["range"] for i in item["packed_ranges"]]) if "unpacked_ranges" in item else ""
                 unpacked_ranges = " ".join([i["range"] for i in item["unpacked_ranges"]]) if "unpacked_ranges" in item else ""
+                type = item["type"] if "type" in item else ""
 
                 if "attributes" in item:
                     attributes = item["attributes"]
@@ -736,7 +878,7 @@ class VerilogElaborator():
                 if "dnt" in item:
                     tmr = "DNT"
 
-                tab.add_row([k, tmr, packed_ranges, attributes, unpacked_ranges])
+                tab.add_row([k, type, attributes, packed_ranges, unpacked_ranges, tmr])
             tab.padding_width = 1  # One space between column edges and contents (default)
             for l in str(tab).split("\n"):
                 logging.info(l)
@@ -829,7 +971,6 @@ class VerilogElaborator():
             for item in tokens:
                 if item.getName() == "structDecl":
                     name = item.get("id")[0]
-                    print(name)
                     self.structs[name] = self.__structdecl(item)
 
                 if item.getName() == "module":
@@ -1042,6 +1183,9 @@ class VerilogElaborator():
 
     @staticmethod
     def split_name(name):
+        if not isinstance(name, str):
+            raise TypeError("%s is not a string!" % name)
+
         splitted = name.split(".")
         
         if len(splitted) > 2:

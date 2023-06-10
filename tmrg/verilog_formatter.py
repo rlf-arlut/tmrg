@@ -60,28 +60,32 @@ class VerilogFormatter:
 
     def _formatIoHdr(self, tokens, i="", end=""):
         oStr = ""
-        spec = ""
-        label = str(tokens[0])
+        spec = []
+        dir = str(tokens.get("dir"))
 
-        if tokens.get("standard"):
-            spec = self.format(tokens.get("standard").get("kind"))
-            spec += " "+self.format(tokens.get("standard").get("attrs"))
+        if "standard" in tokens.keys():
+            _standard = tokens.get("standard")
+            if "kind" in _standard.keys():
+                spec.append(self.format(_standard.get("kind")))
+            if "attrs" in _standard.keys():
+                spec.append(self.format(tokens.get("standard").get("attrs")))
             for r in tokens.get("standard").get("packed_ranges"):
-                spec += " "+self.format(r)
+                spec.append(self.format(r))
         elif tokens.get("custom"):
-            spec = self.format(tokens.get("custom").get("custom_type")[0])
+            spec = [self.format(tokens.get("custom").get("custom_type")[0])]
         else:
-            spec = "wire"
+            spec = ["wire"]
+
+        spec = " ".join(spec)
 
         ports = tokens.get("identifiers")
         for port in ports:
-            print(port.asDict())
             name = port.get("name")[0]
             array = ""
             for r in port.get("unpacked_ranges"):
                 array += " "+self.format(r)
 
-            oStr += "%s %s %s%s%s" % (label, spec, name, array, end)
+            oStr += "%s %s %s%s%s" % (dir, spec, name, array, end)
         return oStr
 
     def _format_porthdr(self, tokens, i=""):
@@ -93,27 +97,10 @@ class VerilogFormatter:
     def _format_port(self, tokens, i=""):
         return tokens[0][0]
 
-    def _format_RegDecl(self, tokens, i=""):
-        oStr = ""
-        label = str(tokens[0])
-        attributes = self.format(tokens[1])
-
-        packed = " "
-        for r in tokens.get("packed_ranges"):
-            packed += self.format(r) + " "
-
-        for port in tokens.get("identifiers"):
-            unpacked = ""
-            for r in port.get("unpacked_ranges"):
-                unpacked += self.format(r)
-
-            oStr += "%s %s %s%s%s;\n" % (label, attributes, packed, port[0], unpacked)
-        return oStr
-
     def _format_force(self, tokens, i=""):
         force = str(tokens[0])
-        assgnmt = self._format_assgnmt(tokens[1])
-        return "%s%s %s;\n" % (i, force, assgnmt)
+        assignment = self._format_assignment(tokens[1])
+        return "%s%s %s;\n" % (i, force, assignment)
 
     def _format_release(self, tokens, i=""):
         release = str(tokens[0])
@@ -136,12 +123,29 @@ class VerilogFormatter:
             oStr += "%s %s %s%s%s;\n" % (type, attributes, packed, delay, port_str)
         return oStr
 
+    def _format_netdeclwassign(self, tokens, i=""):
+        oStr = ""
+        label = ""
+        if "standard" in tokens.keys():
+            label = tokens.get("standard").get("kind")
+            if "attrs" in tokens.get("standard"):
+                label += " " + tokens.get("standard").get("attrs")
+
+            for r in tokens.get("standard").get("packed_ranges"):
+                label += " " + self.format(r)
+        else:
+            label = tokens.get("custom").get("custom_type")[0]
+
+        for assignment in tokens.get("assignments"):
+            assignment_str = self._format_assignment(assignment)
+            oStr += "%s %s;\n" % (label, assignment_str)
+        return oStr
+
     def _format_customDeclwAssign(self, tokens, i=""):
         oStr = i
-        label = str(tokens[0])
-        assignments = tokens[1]
-        for assignment in assignments:
-            assignment_str = self.format(assignment)
+        label = str(tokens.get("custom_type")[0])
+        for assignment in tokens.get("assignments"):
+            assignment_str = self._format_assignment(assignment)
             oStr += "%s %s;\n" % (label, assignment_str)
         return oStr
 
@@ -199,11 +203,11 @@ class VerilogFormatter:
         return oStr
 
     def _format_generate_module_loop_statement(self, tokens, i=""):
-        genvar_decl_assignment = self.format(tokens[0])
-        genvar_cond = self.format(tokens[1])
-        genvar_assignment = self.format(tokens[2])
+        genvar_decl_assignment = self.format(tokens.get("for1")[0]).replace("\n", " ")
+        genvar_cond = self.format(tokens.get("expr@for2"))
+        genvar_assignment = self.format(tokens.get("for3")[0])
         oStr = i+"for(%s;%s;%s)\n" % (genvar_decl_assignment, genvar_cond, genvar_assignment)
-        oStr += self.format(tokens[3], i=i+"\t")
+        oStr += self.format(tokens.get("generate_module_named_block"), i=i+"\t")
         return oStr
 
     def _format_generate_if_statement(self, tokens, i=""):
@@ -236,9 +240,9 @@ class VerilogFormatter:
 
     def _format_Range(self, tokens, i=""):
         oStr = "["
-        oStr += self.format(tokens.get("from"))
-        oStr += tokens.get("dir")
-        oStr += self.format(tokens.get("to"))
+        oStr += self.format(tokens[0])
+        oStr += tokens[1]
+        oStr += self.format(tokens[2])
         oStr += "]"
         return oStr
 
@@ -248,35 +252,26 @@ class VerilogFormatter:
         oStr += "]"
         return oStr
 
+    def _format_Field(self, tokens, i=""):
+        return "." + tokens[0]
+
     def _format_Always(self, tokens, i=""):
-        oStr = "\n"+i + "%s %s\n" % (self.format(tokens[0]), self.format(tokens[1]))
-        oStr += i+"\t%s\n" % self.format(tokens[2], i+"\t")
+        print("Formatting always: %s" % tokens.asDict())
+
+        oStr = "\n"+i + "%s" % self.format(tokens.get("type"))
+        if "eventCtrl" in tokens:
+            oStr += " %s" % self.format(tokens.get("eventCtrl"))
+
+        oStr += "\n" + i + "\t%s\n" % self.format(tokens.get("statement"), i+"\t")
+
         return oStr
 
-    def _format_subscrRef(self, tokens, i=""):
-        if len(tokens) == 0:
-            return ""
-        oStr = "["
-        sep = ""
-        for t in tokens:
-            oStr += sep+self.format(t, i)
-            sep += ":"
-        oStr += "]"
-        return oStr
+    def _format_reg_reference(self, tokens, i=""):
+        oStr = tokens.get("name")[0]
 
-    def _format_subscrIndxRef(self, tokens, i=""):
-        if len(tokens) == 0:
-            return ""
-        oStr = "["
-        for t in tokens:
-            oStr += self.format(t, i)
-        oStr += "]"
-        return oStr
-
-    def _format_subscrIdentifier(self, tokens, i=""):
-        oStr = ""
-        for sid in tokens:
+        for sid in tokens[1]:
             oStr += self.format(sid)
+
         return oStr
 
     def _format_BeginEnd(self, tokens, i=""):
@@ -515,13 +510,15 @@ class VerilogFormatter:
         oStr += "endmodule%s\n\n" % (endmodule_label)
         return oStr
 
-    def _format_NbAssgnmt(self, tokens, i=""):
-        lval = self.format(tokens[0])
-        delay = self.format(tokens[1])
-        if delay != "":
-            delay += " "
-        expr = self.format(tokens[2])
-        oStr = "%s <= %s%s;" % (lval, delay, expr)
+    def _format_nbassignment(self, tokens, i=""):
+        lval = self.format(tokens.get("lvalue")[0])
+        doec = ""
+        if "delayOrEventControl" in tokens:
+            doec = " " + self.format(tokens.get("delayOrEventControl")[0])
+            print("ZZZ " + doec)
+
+        expr = self.format(tokens.get("expr@rvalue"))
+        oStr = "%s <= %s%s;" % (lval, doec, expr)
 
         return oStr
 
@@ -576,10 +573,6 @@ class VerilogFormatter:
     def _format_localparamdecl(self, tokens, i=""):
         return self._format_paramdecl(tokens)
 
-    def _format_delayOrEventControl(self, tokens, i=""):
-        oStr = ""
-        return oStr
-
     def _format_blockName(self, tokens, i=""):
         oStr = tokens[0]
         return oStr
@@ -597,31 +590,72 @@ class VerilogFormatter:
     def _format_to(self, tokens, i=""):
         return self._format_Expr(tokens)
 
+    def _format_RegDecl(self, tokens, i=""):
+        oStr = ""
+        label = str(tokens.get("type"))
+        attributes = self.format(tokens.get("attributes"))
+
+        packed = " "
+        for r in tokens.get("packed_ranges"):
+            packed += self.format(r) + " "
+
+        for port in tokens.get("identifiers"):
+            unpacked = ""
+            for r in port.get("unpacked_ranges"):
+                unpacked += self.format(r)
+
+            oStr += "%s %s %s%s%s;\n" % (label, attributes, packed, port.get("name")[0], unpacked)
+        return oStr
+
     def _format_customDecl(self, tokens, i=""):
         oStr = ""
-        label = tokens[0]
-        for var in tokens[1]:
-            oStr += "%s %s;\n" % (label, self.format(var))
+        label = tokens.get("custom_type")[0]
+        for var in tokens.get("identifiers"):
+            oStr += "%s %s;\n" % (label, self.format(var[0]))
+        return oStr
+
+    def _format_netdecl(self, tokens, i=""):
+        oStr = ""
+        label = ""
+        if "standard" in tokens.keys():
+            label = tokens.get("standard").get("kind")
+            if "attrs" in tokens.get("standard"):
+                label += " " + tokens.get("standard").get("attrs")
+
+            for r in tokens.get("standard").get("packed_ranges"):
+                label += " " + self.format(r)
+        else:
+            label = tokens.get("custom").get("custom_type")[0]
+
+        label += " "
+
+        for port in tokens.get("identifiers"):
+            unpacked = ""
+            for r in port.get("unpacked_ranges"):
+                unpacked += " " + self.format(r)
+
+            oStr += "%s%s%s;\n" % (label, port.get("name")[0], unpacked)
         return oStr
 
     def _format_structDecl(self, tokens, i=""):
         oStr = tokens[0] + " { \n"
 
         for field in tokens[1]:
-            label = str(field[0])
-            attributes = self.format(field[1])
+            label = str(field.get("type"))
+            attributes = self.format(field.get("attributes"))
 
             spec = " "
             for r in field.get("packed_ranges"):
                 spec += self.format(r) + " "
 
-            for port in field[3]:
-                r = ""
-                if len(port) > 1:
-                    r = " "+self.format(port[1:])
-                oStr += "    %s %s %s%s%s;\n" % (label, attributes, spec, port[0], r)
+            for port in field.get("identifiers"):
+                r = self.format(port.get("name")[0])
+                if "unpacked_ranges" in port.keys():
+                    r += self.format(port.get("unpacked_ranges"))
 
-        oStr += "} " + tokens[2] + ";\n"
+                oStr += "    %s %s %s %s;\n" % (label, attributes, spec, r)
+
+        oStr += "} " + tokens.get("id")[0] + ";\n"
 
         return oStr
 
@@ -632,31 +666,42 @@ class VerilogFormatter:
             oStr += "%s %s = %s;\n" % (label, self.format(assigment[0]), self.format(assigment[-1]))
         return oStr
 
-    def _format_assgnmtStm(self, tokens, i=""):
+    def _format_assignmentStm(self, tokens, i=""):
         oStr = self.format(tokens[0])+";"
         return oStr
 
-    def _format_assgnmt(self, tokens, i=""):
-        oStr = ""
-        lvalue = self.format(tokens[0])
-        assign = tokens[1]
-        delayOrEventControl = self.format(tokens[2])+" "
-        expr = self.format(tokens[3])
-        oStr = "%s %s %s%s" % (lvalue, assign, delayOrEventControl, expr)
+    def _format_nbassignmentStm(self, tokens, i=""):
+        return self.format(tokens[0])
+
+    def _format_assignment(self, tokens, i=""):
+        lvalue = self.format(tokens.get("lvalue")[0])
+        assign = tokens.get("op")
+
+        doec = ""
+        if "delayOrEventControl" in tokens:
+            doec = " " + self.format(tokens.get("delayOrEventControl")[0])
+
+        expr = self.format(tokens.get("expr@rvalue"))
+        oStr = "%s %s%s %s" % (lvalue, assign, doec, expr)
         return oStr
 
-    def _format_assgnmt_with_declaration(self, tokens, i=""):
-        return tokens[0] + " " + self._format_assgnmt(tokens[1:])
+    def _format_assignment_with_declaration(self, tokens, i=""):
+        return tokens.get("type") + " " + tokens.get("name")[0] + " = " + self.format(tokens.get("expr@rvalue"))
 
     def _format_incr_decr(self, tokens, i=""):
-        return self.format(tokens[0]) + " " + tokens[1]
+        return self.format(tokens[0]) + tokens[1]
 
     def _format_forstmt(self, tokens, i=""):
-        e1 = self.format(tokens[1])
-        e2 = self.format(tokens[2])
-        e3 = self.format(tokens[3])
-        s = self.format(tokens[4], i=i+"\t")
-        oStr = "for(%s;%s;%s)\n%s\t%s" % (e1, e2, e3, i, s)
+        decl_assignment = self.format(tokens.get("for1")[0]).replace("\n", " ")
+        cond = self.format(tokens.get("expr@for2"))
+        assignment = self.format(tokens.get("for3")[0])
+        stmt = tokens.get("stmt")[0]
+
+        oStr = "for(%s; %s; %s)\n" % (decl_assignment, cond, assignment)
+        if stmt.getName().startswith("beginend"):
+            oStr += i+self.format(stmt, i)
+        else:
+            oStr += i+"\t"+self.format(stmt, i=i+"\t")
         return oStr
 
     def _format_driveStrength(self, tokens, i=""):
@@ -679,15 +724,17 @@ class VerilogFormatter:
 
     def _format_continuousAssign(self, tokens, i=""):
         oStr = i
-        driveStrength = self.format(tokens[0])
+        driveStrength = self.format(tokens.get("driveStrength"))
         if driveStrength:
             driveStrength += " "
-        delay = self.format(tokens[1])
+        delay = self.format(tokens.get("delay"))
         if delay:
             delay += " "
-        for asg in tokens[2]:
+
+        for asg in tokens.get("assignments"):
             asg_str = self.format(asg)
             oStr += "assign %s%s%s;\n" % (driveStrength, delay, asg_str)
+
         return oStr
 
     def _format_net3(self, tokens, i=""):
@@ -758,12 +805,15 @@ class VerilogFormatter:
         self.trace = False
 
     def format(self, tokens, i=""):
-        self.trace = 0
+        self.trace = 1
         outStr = ""
         if tokens == None:
             return ""
         if isinstance(tokens, ParseResults):
             name = str(tokens.getName()).lower()
+            offset = name.find("@")
+            if offset != -1:
+                name = name[0:offset]
             if self.trace:
                 print("[%-20s] len:%2d  str:'%s' >" % (name, len(tokens), str(tokens)[:80]))
             if name != "moduleargs" and len(tokens) == 0:
