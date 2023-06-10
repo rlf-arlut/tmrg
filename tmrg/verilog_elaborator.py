@@ -283,12 +283,12 @@ class VerilogElaborator():
     def _elaborate_netdecl(self, tokens):
         _atrs = None
         _type = None
-        packed_ranges = None
+        packed_ranges = []
 
         if "standard" in tokens:
             _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
-            _type = tokens.get("standard").get("kind")
-            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
+            _type = tokens.get("standard").get("kind")[0]
+            packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
         else:
             _atrs = ""
             _type = tokens.get("custom")[0]
@@ -298,7 +298,7 @@ class VerilogElaborator():
                 "len"   : _len,
                 "from"  : "(" + _len + "-1)",
                 "to"    : 0
-            }]
+            }] + self.__elaborate_packed(tokens.get("packed_ranges"))
 
         for identifier in tokens.get("identifiers"):
             name = identifier.get("name")[0]
@@ -357,11 +357,8 @@ class VerilogElaborator():
 
         for r in tokens:
             _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
-            print(r.get("expr@from"))
             _from = self.vf.format(r.get("expr@from"))
-            print(_from)
             _to   = self.vf.format(r.get("expr@to"))
-            print(_to)
 
             if _dir == ":":
                 _len = "(%s + 1)" % (_to)
@@ -497,7 +494,7 @@ class VerilogElaborator():
     def _elaborate_netdecl1(self, tokens):
         _atrs = self.vf.format(tokens.get("attributes"))
         packed = self.__elaborate_packed(tokens.get("packed_ranges"))
-        type = tokens.get("kind")
+        type = tokens.get("kind")[0]
         for net in tokens.get("identifiers"):
             name = net.get("name")[0]
             self.current_module["nets"][name] = {
@@ -612,12 +609,12 @@ class VerilogElaborator():
     def _elaborate_netDeclWAssign(self, tokens):
         _atrs = None
         _type = None
-        packed_ranges = None
+        packed_ranges = []
 
         if "standard" in tokens:
             _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
-            _type = tokens.get("standard").get("kind")
-            packed_ranges = self.__elaborate_packed(tokens.get("standard").get("packed_ranges"))
+            _type = tokens.get("standard").get("kind")[0]
+            packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
         else:
             _atrs = ""
             _type = tokens.get("custom")[0]
@@ -861,7 +858,9 @@ class VerilogElaborator():
             for k in d:
                 item = d[k]
 
-                packed_ranges = " ".join([i["range"] for i in item["packed_ranges"]]) if "unpacked_ranges" in item else ""
+                print(k)
+                print(item)
+                packed_ranges = " ".join([i["range"] for i in item["packed_ranges"]]) if "packed_ranges" in item else ""
                 unpacked_ranges = " ".join([i["range"] for i in item["unpacked_ranges"]]) if "unpacked_ranges" in item else ""
                 type = item["type"] if "type" in item else ""
 

@@ -175,7 +175,7 @@ class VerilogParser:
         data_2states_types = MatchFirst(map(Keyword, "bit byte shortint int longint".split()))
         data_4states_types = MatchFirst(map(Keyword, "reg logic integer".split()))
         data_nonint_types  = MatchFirst(map(Keyword, "string time real shortreal realtime".split()))
-        data_types         = data_2states_types ^ data_4states_types ^ data_nonint_types
+        data_types         = data_2states_types | data_4states_types | data_nonint_types
         net_types          = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
         modifiers          = MatchFirst(map(Keyword, "unsigned signed vectored scalared const".split()))
         strength           = MatchFirst(map(Keyword, "supply0 supply1 strong strong0 strong1 pull0 pull1 weak weak0 weak1 highz0 highz1 small medium large".split()))
@@ -190,7 +190,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         """.split()))
         reserved_tmrg = Keyword("__COMP_DIRECTIVE")
 
-        valid_keywords = data_types ^ net_types ^ modifiers ^ strength ^ reserved_log95 ^ reserved_log21 ^ reserved_svlog ^ reserved_tmrg
+        valid_keywords = data_types | net_types | modifiers | strength | reserved_log95 | reserved_log21 | reserved_svlog | reserved_tmrg
         custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
 
         # primitives
@@ -221,7 +221,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         # References to registers or nets
         self.range = Group( Suppress("[") + Group(self.expr).setResultsName("expr@from") + Optional(oneOf(": +: -:")).setResultsName("dir") + Group(self.expr).setResultsName("expr@to") + Suppress("]")).setResultsName("range")
         self.size = Group( Suppress("[") + Group(self.expr) + Suppress("]")).setResultsName("size")
-        self.field = Group(Suppress(".") + identifier)
+        self.field = Group(Suppress(".") + identifier).setResultsName("field_ref")
         regReference  = Group( Group(identifier).setResultsName("name") + Group(ZeroOrMore(self.range | self.size | self.field)).setResultsName("range_or_field") ).setResultsName("reg_reference")
 
         # Concatenations
@@ -264,9 +264,9 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         eventControl = Group( "@" + eventExpr ).setName("eventCtrl").setResultsName("eventCtrl")
 
         # Delays
-        delayArg = ( number ^
-                     Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)") ^
-                     Word(alphanums+"$_") ^ #identifier ^
+        delayArg = ( number |
+                     Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)") |
+                     Word(alphanums+"$_") | #identifier ^
                      ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" )
                    ).setName("delayArg")
 
@@ -314,18 +314,18 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                                   ).setResultsName("localparamDecl")
 
         types = Group(
-                    Optional(data_types | net_types).setResultsName("kind") + 
-                    Optional(modifiers).setResultsName("attrs") +  
-                    Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") 
-                ).setResultsName("standard") ^ Group (
+                    Group(data_types | net_types).setResultsName("kind") + 
+                    Optional(modifiers).setResultsName("attrs")
+                ).setResultsName("standard") | Group (
                     custom_type.setResultsName("custom_type")
                 ).setResultsName("custom")
 
         port = (
-                MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") + (
-                ( types + Group( delimitedList( regIdentifier )).setResultsName("identifiers") ) ^
+                MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") +
+                Optional(types) +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group( delimitedList( regIdentifier )).setResultsName("identifiers")
-        ))
+        )
 
         self.portHdr  = Group(port).setName("portHdr").setResultsName("portHdr")
         self.portBody = Group(port + Suppress(self.semi) ).setName("portBody").setResultsName("portBody")
@@ -342,7 +342,12 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                               Suppress(self.semi)
                             ).setName("customDecl").setResultsName("customDecl")
 
-        self.netDecl = Group( types + Group( delimitedList( regIdentifier )).setResultsName("identifiers") + Suppress(self.semi)).setResultsName("netDecl")
+        self.netDecl = Group(
+                types +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers") +
+                Suppress(self.semi)
+        ).setResultsName("netDecl")
 
         self.customDeclwAssign = Group( custom_type.setResultsName("custom_type") +
                                     Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
@@ -351,12 +356,14 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         self.netDeclWAssignInline = Group(
                 types +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group(Optional( delay )).setResultsName("delay") +
                 Group( delimitedList( self.assignment ) ).setResultsName("assignments")
                 ).setResultsName("netDeclWAssign")
 
         self.netDeclWAssign = Group(
                 types +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group(Optional( delay )).setResultsName("delay") +
                 Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
                 Suppress(self.semi)).setResultsName("netDeclWAssign")

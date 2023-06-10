@@ -66,10 +66,10 @@ class VerilogFormatter:
         if "standard" in tokens.keys():
             _standard = tokens.get("standard")
             if "kind" in _standard.keys():
-                spec.append(self.format(_standard.get("kind")))
+                spec.append(_standard.get("kind")[0])
             if "attrs" in _standard.keys():
                 spec.append(self.format(tokens.get("standard").get("attrs")))
-            for r in tokens.get("standard").get("packed_ranges"):
+            for r in tokens.get("packed_ranges"):
                 spec.append(self.format(r))
         elif tokens.get("custom"):
             spec = [self.format(tokens.get("custom").get("custom_type")[0])]
@@ -127,11 +127,11 @@ class VerilogFormatter:
         oStr = ""
         label = ""
         if "standard" in tokens.keys():
-            label = tokens.get("standard").get("kind")
+            label = tokens.get("standard").get("kind")[0]
             if "attrs" in tokens.get("standard"):
                 label += " " + tokens.get("standard").get("attrs")
 
-            for r in tokens.get("standard").get("packed_ranges"):
+            for r in tokens.get("packed_ranges"):
                 label += " " + self.format(r)
         else:
             label = tokens.get("custom").get("custom_type")[0]
@@ -273,6 +273,9 @@ class VerilogFormatter:
             oStr += self.format(sid)
 
         return oStr
+
+    def _format_field_ref(self, tokens, i=""):
+        return "."+tokens[0]
 
     def _format_BeginEnd(self, tokens, i=""):
         oStr = "begin\n"
@@ -615,20 +618,20 @@ class VerilogFormatter:
         return oStr
 
     def _format_netdecl(self, tokens, i=""):
-        oStr = ""
         label = ""
         if "standard" in tokens.keys():
-            label = tokens.get("standard").get("kind")
+            label = tokens.get("standard").get("kind")[0]
             if "attrs" in tokens.get("standard"):
                 label += " " + tokens.get("standard").get("attrs")
-
-            for r in tokens.get("standard").get("packed_ranges"):
-                label += " " + self.format(r)
         else:
             label = tokens.get("custom").get("custom_type")[0]
 
+        for r in tokens.get("packed_ranges"):
+            label += " " + self.format(r)
+
         label += " "
 
+        oStr = ""
         for port in tokens.get("identifiers"):
             unpacked = ""
             for r in port.get("unpacked_ranges"):
