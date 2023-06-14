@@ -207,7 +207,7 @@ class VerilogElaborator():
         for reg in tokens[-1]:
             name = reg[0]
             if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {"attributes": _atrs, "packed_ranges": [], "unpacked_ranges": [],  "type": "int"}
+                self.current_module["nets"][name] = {"attributes": _atrs, "packed_ranges": [], "unpacked_ranges": [],  "type": "int", "is_custom_type" : False}
                 logging.debug("integerDecl: Adding net: %s" % self.current_module["nets"][name])
 
     def __structdecl(self, tokens):
@@ -285,6 +285,7 @@ class VerilogElaborator():
         _type = None
         packed_ranges = []
 
+        custom = False
         if "standard" in tokens:
             _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
             _type = tokens.get("standard").get("kind")[0]
@@ -299,6 +300,7 @@ class VerilogElaborator():
                 "from"  : "(" + _len + "-1)",
                 "to"    : 0
             }] + self.__elaborate_packed(tokens.get("packed_ranges"))
+            custom = True
 
         for identifier in tokens.get("identifiers"):
             name = identifier.get("name")[0]
@@ -307,16 +309,19 @@ class VerilogElaborator():
                     "attributes": _atrs,
                     "type": str(_type),
                     "packed_ranges" : packed_ranges,
-                    "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges"))
+                    "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges")),
+                    "is_custom_type" : custom
                 }
                 logging.debug("netdecl: Adding net %s: %s" % (name, self.current_module["nets"][name]))
 
     def _elaborate_moduleinstantiation(self, tokens):
-        identifier = tokens[0]
-        instance = tokens[2][0][0][0]
+        identifier = tokens.get("moduleName")[0]
+        instances = [i[0][0] for i in tokens.get("moduleInstances")]
         _range = ""
         _len = "1"
-        self.current_module["instances"][instance] = {"instance": identifier, "range": _range, "len": _len}
+
+        for inst in instances:
+            self.current_module["instances"][inst] = {"instance": identifier, "range": _range, "len": _len}
 
     def _elaborate_reg_reference(self, tokens):
         print("ELABORATING " + "%s" % tokens)
@@ -360,11 +365,11 @@ class VerilogElaborator():
             _from = self.vf.format(r.get("expr@from"))
             _to   = self.vf.format(r.get("expr@to"))
 
-            if _dir == ":":
+            if _dir != ":":
                 _len = "(%s + 1)" % (_to)
                 _range = "[ %s %s %s ]" % (_from, _dir, _to)
             else:
-                _len = "(%s - %s + 1)" % (_from, _to)
+                _len = "($abs(%s-%s) + 1)" % (_from, _to)
                 _range = "[ %s : %s ]" % (_from, _to)
 
             packed_ranges.append({
@@ -385,7 +390,6 @@ class VerilogElaborator():
         for r in tokens:
             # this part decodes declarations using size: name [M]
             if r.getName() == "size":
-                print("size:" + "%s" % r[0])
                 _array_len = self.vf.format(r[0])
                 _array_from = 0
                 _array_to = "%s -1" % (_array_len)
@@ -405,11 +409,11 @@ class VerilogElaborator():
                 _from = self.vf.format(r.get("expr@from"))
                 _to   = self.vf.format(r.get("expr@to"))
 
-                if _dir == ":":
+                if _dir != ":":
                     _len = "(%s + 1)" % (_to)
                     _range = "[ %s %s %s ]" % (_from, _dir, _to)
                 else:
-                    _len = "(%s - %s + 1)" % (_from, _to)
+                    _len = "($abs(%s-%s) + 1)" % (_from, _to)
                     _range = "[ %s : %s ]" % (_from, _to)
 
                 unpacked_ranges.append({
@@ -425,30 +429,31 @@ class VerilogElaborator():
 
     def _get_port_type(self, tokens):
         _type = "wire"
+        custom = False
 
         if "custom" in tokens.keys():
             _type = tokens.get("custom").get("custom_type")[0]
+            custom = True
         elif "standard" in tokens.keys():
             _s = tokens.get("standard")
             _type = _s.get("kind")[0] if "kind" in _s else "wire"
 
-        print(" Detected type: %s" % _type)
-        return _type
+        return custom, _type
 
     def __elaborate_generic_port(self, tokens):
         _atrs = ""
-        packed_ranges = []
         if "standard" in tokens.keys():
             standard = tokens.get("standard")
             _atrs  = self.vf.format(standard.get("attrs")) if "attrs" in standard.keys() else ""
-            packed_ranges = self.__elaborate_packed(standard.get("packed_ranges")) if "packed_ranges" in standard.keys() else []
         else:
             _atrs = ""
 
+        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges")) if "packed_ranges" in tokens.keys() else []
         details = ""
 
         for identifier in tokens.get("identifiers"):
             name = identifier.get("name")[0]
+            is_custom, type = self._get_port_type(tokens)
             self.lastANSIPort = {
                 "io" : {
                     "attributes": _atrs,
@@ -458,7 +463,8 @@ class VerilogElaborator():
                 },
                 "net" : {
                     "attributes": _atrs,
-                    "type": self._get_port_type(tokens),
+                    "type": type,
+                    "is_custom_type": is_custom,
                     "packed_ranges" : packed_ranges,
                     "unpacked_ranges" : self.__elaborate_unpacked(identifier.get("unpacked_ranges"))
                 }
@@ -510,8 +516,6 @@ class VerilogElaborator():
                 details = ""
 
     def _elaborate_assignment_with_declaration(self, tokens):
-        print(tokens.asDict())
-        print(list(tokens.keys()))
         type = tokens.get("type") if "type" in tokens.keys() else "wire"
         if type != "genvar":
             name = self.vf.format(tokens.get("name")[0])
@@ -611,6 +615,7 @@ class VerilogElaborator():
         _type = None
         packed_ranges = []
 
+        custom = False
         if "standard" in tokens:
             _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
             _type = tokens.get("standard").get("kind")[0]
@@ -624,7 +629,8 @@ class VerilogElaborator():
                 "len"   : _len,
                 "from"  : "(" + _len + "-1)",
                 "to"    : 0
-            }]
+            }] + self.__elaborate_unpacked(tokens.get("packed_ranges"))
+            custom = True
 
         for assignment in tokens.get("assignments"):
             ids = self.getLeftRightHandSide(assignment)
@@ -647,7 +653,8 @@ class VerilogElaborator():
                         "attributes": _atrs,
                         "packed_ranges" : packed_ranges,
                         "type": _type,
-                        "unpacked_ranges" : unpacked
+                        "unpacked_ranges" : unpacked,
+                        "is_custom_type" : custom
                     }
 
             if dnt:
@@ -846,11 +853,11 @@ class VerilogElaborator():
             if len(d) == 0:
                 return
 
-            tab = PrettyTable([dname,  "type", "attributes", "range", "array", "tmr"])
+            tab = PrettyTable([dname,  "type", "attributes", "packed range", "unpacked_range", "tmr"])
             tab.min_width[dname] = 30
             tab.min_width["type"] = 10
-            tab.min_width["range"] = 20
-            tab.min_width["array"] = 20
+            tab.min_width["packed range"] = 20
+            tab.min_width["unpacked range"] = 20
             tab.min_width["attributes"] = 10
             tab.min_width["tmr"] = 10
             tab.align[dname] = "l"  # Left align city names
@@ -858,8 +865,6 @@ class VerilogElaborator():
             for k in d:
                 item = d[k]
 
-                print(k)
-                print(item)
                 packed_ranges = " ".join([i["range"] for i in item["packed_ranges"]]) if "packed_ranges" in item else ""
                 unpacked_ranges = " ".join([i["range"] for i in item["unpacked_ranges"]]) if "unpacked_ranges" in item else ""
                 type = item["type"] if "type" in item else ""
@@ -884,6 +889,9 @@ class VerilogElaborator():
 
         logging.info("")
         logging.info("Module:%s (dnt:%s)" % (module["name"], module["constraints"]["dnt"]))
+        logging.info("Constraints:")
+        for k in module["constraints"]:
+            logging.info("    %s: %s" % (k, module["constraints"][k]))
         printDict(module["nets"],    "Nets")
         printDict(module["instances"], "Instantiations")
         if "params" in module:
@@ -1028,8 +1036,7 @@ class VerilogElaborator():
                 logging.debug("= "*50)
                 logging.info("Module %s (%s)" % (moduleName, fname))
                 logging.debug("= "*50)
-                self.current_module = {"instances": {}, "nets": {}, "name": moduleName, "io": {}, "constraints": {}, "instantiated": 0,
-                        "file": fname, "fanouts": {}, "voters": {}, "lib": fname, "portMode": "non-ANSI", "params": {}, "structs" : self.structs}
+                self.current_module = {"instances": {}, "nets": {}, "name": moduleName, "io": {}, "constraints": {}, "instantiated": 0, "file": fname, "fanouts": {}, "voters": {}, "lib": fname, "portMode": "non-ANSI", "params": {}, "structs" : self.structs}
 
                 for param in moduleParams:
                     pname = param[0]

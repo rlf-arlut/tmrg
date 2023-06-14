@@ -71,10 +71,8 @@ class VerilogFormatter:
                 spec.append(self.format(tokens.get("standard").get("attrs")))
             for r in tokens.get("packed_ranges"):
                 spec.append(self.format(r))
-        elif tokens.get("custom"):
+        elif "custom" in tokens:
             spec = [self.format(tokens.get("custom").get("custom_type")[0])]
-        else:
-            spec = ["wire"]
 
         spec = " ".join(spec)
 
@@ -123,7 +121,7 @@ class VerilogFormatter:
             oStr += "%s %s %s%s%s;\n" % (type, attributes, packed, delay, port_str)
         return oStr
 
-    def _format_netdeclwassign(self, tokens, i=""):
+    def _format_netdeclwassign(self, tokens, i="", ending=";\n"):
         oStr = ""
         label = ""
         if "standard" in tokens.keys():
@@ -138,7 +136,7 @@ class VerilogFormatter:
 
         for assignment in tokens.get("assignments"):
             assignment_str = self._format_assignment(assignment)
-            oStr += "%s %s;\n" % (label, assignment_str)
+            oStr += "%s %s%s" % (label, assignment_str, ending)
         return oStr
 
     def _format_customDeclwAssign(self, tokens, i=""):
@@ -187,6 +185,14 @@ class VerilogFormatter:
         genvar = str(tokens[0])
         expr = self.format(tokens[1:])
         oStr = genvar+" "+expr+";\n"
+        return oStr
+
+    def _format_genVarDeclInline(self, tokens, i=""):
+        oStr = i+"genvar "+tokens.get("name")[0]
+
+        if "expr@rvalue" in tokens.keys():
+            oStr += " = " + self.format(tokens.get("expr@rvalue"))
+
         return oStr
 
     def _format_namedPortConnection(self, tokens, i=""):
@@ -457,13 +463,13 @@ class VerilogFormatter:
 
     def _format_moduleInstantiation(self, tokens, i=""):
         ostr = ""
-        identifier = self.format(tokens[0])
+        identifier = tokens.get("moduleName")[0]
         if len(tokens) > 2:
             parameterValueAssignment = self.format(tokens[1], i=i+"\t")
-            modulesList = tokens[2]
         else:
             parameterValueAssignment = ""
-            modulesList = tokens[1]
+
+        modulesList = tokens.get("moduleInstances")
 
         for modIns in modulesList:
             modInsStr = self.format(modIns, i=i+"\t")
@@ -695,7 +701,14 @@ class VerilogFormatter:
         return self.format(tokens[0]) + tokens[1]
 
     def _format_forstmt(self, tokens, i=""):
-        decl_assignment = self.format(tokens.get("for1")[0]).replace("\n", " ")
+        for1 = tokens.get("for1")[0]
+
+        # If netDeclWAssign, remove newline and ;
+        if for1.getName() == "netDeclWAssign":
+            decl_assignment = self._format_netdeclwassign(for1, ending="")
+        else:
+            decl_assignment = self.format(for1)
+
         cond = self.format(tokens.get("expr@for2"))
         assignment = self.format(tokens.get("for3")[0])
         stmt = tokens.get("stmt")[0]

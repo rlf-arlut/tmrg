@@ -175,8 +175,8 @@ class VerilogParser:
         data_2states_types = MatchFirst(map(Keyword, "bit byte shortint int longint".split()))
         data_4states_types = MatchFirst(map(Keyword, "reg logic integer".split()))
         data_nonint_types  = MatchFirst(map(Keyword, "string time real shortreal realtime".split()))
-        data_types         = data_2states_types | data_4states_types | data_nonint_types
-        net_types          = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
+        self.data_types         = data_2states_types | data_4states_types | data_nonint_types
+        self.net_types          = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
         modifiers          = MatchFirst(map(Keyword, "unsigned signed vectored scalared const".split()))
         strength           = MatchFirst(map(Keyword, "supply0 supply1 strong strong0 strong1 pull0 pull1 weak weak0 weak1 highz0 highz1 small medium large".split()))
         reserved_log95     = MatchFirst(map(Keyword, """
@@ -190,7 +190,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         """.split()))
         reserved_tmrg = Keyword("__COMP_DIRECTIVE")
 
-        valid_keywords = data_types | net_types | modifiers | strength | reserved_log95 | reserved_log21 | reserved_svlog | reserved_tmrg
+        valid_keywords = self.data_types | self.net_types | modifiers | strength | reserved_log95 | reserved_log21 | reserved_svlog | reserved_tmrg
         custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
 
         # primitives
@@ -264,8 +264,9 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         eventControl = Group( "@" + eventExpr ).setName("eventCtrl").setResultsName("eventCtrl")
 
         # Delays
-        delayArg = ( number |
-                     Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)") |
+        delayArg = ( 
+                     Regex(r"[0-9]+(\.[0-9]+)?(fs|ps|ns|us|ms|s)?") |
+                     number |
                      Word(alphanums+"$_") | #identifier ^
                      ( "(" + Group( delimitedList( mintypmaxExpr | self.expr ) ) + ")" )
                    ).setName("delayArg")
@@ -276,9 +277,6 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         # Assignments
         lvalue = Group(regReference | concat).setResultsName("lvalue")
         self.assignment   = Group( lvalue + oneOf("= += -= |= ^= &= *= /= <<= >>= <<<= >>>= %=").setResultsName("op") + Optional(Group(delayOrEventControl).setResultsName("delayOrEventControl")) + Group(self.expr).setResultsName("expr@rvalue") ).setResultsName( "assignment" )
-
-        # Simple assignment with declaration (in for loops, for instance)
-        self.assignment_with_declaration = Group(Group(Optional(oneOf("int genvar integer"))).setResultsName("type") + Group(identifier).setResultsName("name") + Suppress("=") + Group(self.expr).setResultsName("expr@rvalue")).setResultsName( "assignment_with_declaration" )
 
         self.incr_decr   = Group( regReference + oneOf("++ --")).setResultsName( "incr_decr" )
 
@@ -299,7 +297,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         
         parameterDecl      = Group( "parameter" +
                                     Group(Optional(modifiers)) +
-                                    Group(Optional(data_types)) +
+                                    Group(Optional(self.data_types)) +
                                     Group(Optional(self.range)) +
                                     Group(delimitedList( Group(paramAssgnmt))) +
                                     Suppress(self.semi)
@@ -307,30 +305,36 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         localParameterDecl = Group("localparam" +
                                    Group(Optional(modifiers)) +
-                                   Group(Optional(data_types)) +
+                                   Group(Optional(self.data_types)) +
                                    Group(Optional(self.range)) +
                                    Group(delimitedList(Group(paramAssgnmt))) +
                                    Suppress(self.semi)
                                   ).setResultsName("localparamDecl")
 
         types = Group(
-                    Group(data_types | net_types).setResultsName("kind") + 
+                    Group(self.data_types | self.net_types).setResultsName("kind") + 
                     Optional(modifiers).setResultsName("attrs")
                 ).setResultsName("standard") | Group (
                     custom_type.setResultsName("custom_type")
                 ).setResultsName("custom")
 
         port = (
-                MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") +
-                Optional(types) +
-                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
-                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+            MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") +
+            (
+                (
+                    types +
+                    Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
+                    Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+                ) | (
+                    Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+                )
+            )
         )
 
         self.portHdr  = Group(port).setName("portHdr").setResultsName("portHdr")
         self.portBody = Group(port + Suppress(self.semi) ).setName("portBody").setResultsName("portBody")
 
-        self.regDecl = Group( (net_types | data_types).setResultsName("type") +
+        self.regDecl = Group( (self.net_types | self.data_types).setResultsName("type") +
                               Group(Optional(modifiers)).setResultsName("attributes") +
                               Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                               Group( delimitedList( regIdentifier )).setResultsName("identifiers") +
@@ -502,7 +506,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                               ).setResultsName("netDecl2")
 
 
-        self.netDecl3 = Group( (data_types | net_types).setResultsName("kind") +
+        self.netDecl3 = Group( (self.data_types | self.net_types).setResultsName("kind") +
                               Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
                               Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                               Group(Optional( delay )).setResultsName("delay") +
@@ -523,6 +527,9 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                                 Group(delimitedList(self.expr)) +
                                 Suppress(self.semi)
                                ).setResultsName("genVarDecl")
+
+        # Simple assignment with declaration (in for loops, for instance)
+        self.genVarDeclInline = Group(Keyword("genvar") + Group(identifier).setResultsName("name") + Optional(Suppress("=") + Group(self.expr).setResultsName("expr@rvalue"))).setResultsName( "genVarDeclInline" )
 
         gateType = oneOf("and  nand  or  nor xor  xnor buf  bufif0 bufif1 "
                          "not  notif0 notif1  pulldown pullup nmos  rnmos "
@@ -555,15 +562,15 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                                          ).setResultsName("parameterValueAssignment")
 
         moduleArgs = Group( Suppress("(") +
-                            Optional(delimitedList(self.namedPortConnection | Group(self.expr))) +
+                            Optional(delimitedList(self.namedPortConnection | Group(self.expr).setResultsName("expr@unnamedPortConnection"))) +
                             Suppress(")")
                           ).setResultsName("moduleArgs")
 
         moduleInstance = Group( Group ( identifier + Group(Optional(self.range)).setResultsName("range") ) + moduleArgs ).setResultsName("moduleInstance")
 
-        self.moduleInstantiation = Group( identifier +
+        self.moduleInstantiation = Group( Group(identifier).setResultsName("moduleName") +
                                           Group(Optional( parameterValueAssignment )) +
-                                          Group(delimitedList( moduleInstance )).setResultsName("moduleInstantiation") +
+                                          Group(delimitedList( moduleInstance )).setResultsName("moduleInstances") +
                                           Suppress(self.semi)
                                         ).setResultsName("moduleInstantiation")
 
@@ -711,7 +718,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         self.moduleOrGenerateItem = Forward()
         generate_module_named_block = Group(Suppress("begin") +
                                             Group(Optional(":" + identifier)) +
-                                            OneOrMore(self.moduleOrGenerateItem) +
+                                            ZeroOrMore(self.moduleOrGenerateItem) +
                                             Suppress("end") +
                                             Group(Optional(":" + identifier))
                                             ).setResultsName("generate_module_named_block")
@@ -723,7 +730,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         generate_module_loop_statement = Group( Suppress(for_) +
             Suppress("(")  +
-            Group(Optional(self.assignment|self.netDeclWAssignInline)).setResultsName("for1") +
+            Group(Optional(self.assignment|self.netDeclWAssignInline|self.genVarDeclInline)).setResultsName("for1") +
             Suppress(self.semi) +
             Group(self.expr).setResultsName("expr@for2") +
             Suppress(self.semi) +
@@ -810,21 +817,21 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         """
         portRef = regReference
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
-        self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ) ).setResultsName("port")
+        self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ).setResultsName("explicitConn") ).setResultsName("port")
 
         moduleHdr = Group ( oneOf("module macromodule") + 
-        identifier.setResultsName("id@moduleName") +
-                            Group(Optional( Suppress("#")+Suppress("(") +
-                                            delimitedList( Group(Optional(Suppress("parameter"))+ 
-                                            Group(Optional( self.range )) + paramAssgnmt) ) + 
-                                            Suppress(")") ))+
-                            Group(Optional( Suppress("(") +
-                                            Optional( delimitedList(
-                                                    self.portHdr ^
-                                                    self.port
-                                            ) )  +
-                                            Suppress(")") )).setResultsName("ports") +
-                            Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
+                identifier.setResultsName("id@moduleName") +
+                Group(Optional( Suppress("#")+Suppress("(") +
+                    delimitedList( Group(Optional(Suppress("parameter"))+ 
+                    Group(Optional( self.range )) + paramAssgnmt) ) + 
+                    Suppress(")") ))+
+                Group(Optional( Suppress("(") +
+                    Optional( delimitedList(
+                    self.portHdr ^
+                    self.port
+                    ) )  +
+                Suppress(")") )).setResultsName("ports") +
+            Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
 
         self.endmodule=Keyword("endmodule").setResultsName("endModule")
 
@@ -832,8 +839,6 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
                  self.endmodule +
                  Group(Optional(":" + identifier)) ).setName("module").setResultsName("module")
-
-        print(self.module.parseString("module a; t ciao; endmodule").asDict())
 
         udpDecl = self.portBody | self.regDecl
         udpInitVal = (Regex("1'[bB][01xX]") | Regex("[01xX]")).setName("udpInitVal")
