@@ -438,7 +438,8 @@ class VerilogParser:
 
         inputOutput = oneOf("input output")
 
-        netIdentifier = Group( identifier + Optional(Group( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) ))
+        netIdentifier = Group( identifier + Group(Optional( "[" + Group(self.expr) + ":" + Group(self.expr) + "]" ) )
+                                          + Group(Optional( "[" + Group(self.expr) + "]" ) ))
 
         self.netDecl1 = Group(nettype +
                               Group(Optional("signed")) +
