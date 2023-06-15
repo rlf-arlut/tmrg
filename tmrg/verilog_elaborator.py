@@ -490,12 +490,20 @@ class VerilogElaborator():
             _array_len = ""
             _array_from = ""
             _array_to = ""
-            if len(net) > 1:
+            if len(net[1]):
+                # this part decodes declarations using range: name [N:M]
                 arrayDec = net[1]
                 _array_range = self.vf.format(arrayDec)
                 _array_len = self.__getArrayLenStr(arrayDec)
                 _array_from = self.__getArrayFrom(arrayDec)
                 _array_to = self.__getArrayTo(arrayDec)
+            elif len(net[2]):
+                # this part decodes declarations using size: name [M]
+                _array_len = self.vf.format(net[2][1])
+                _array_from = 0
+                _array_to = "%s - 1" % (_array_len)
+                _array_range = "[ %s : %s ]" % (_array_from, _array_to)
+
             self.current_module["nets"][name] = {"attributes": _atrs,
                                                  "range": _range,
                                                  "len": _len,
@@ -555,13 +563,31 @@ class VerilogElaborator():
             logging.debug("Parameter %s = %s" % (pname, pval))
             self.current_module["params"][pname] = {"value": pval, "range": _range, "len": _len, "type": "param"}
 
+    def __getArrayLenStrNet(self, toks):
+        rangeLen = "%s - %s + 1" % (self.vf.format(toks[2]), self.vf.format(toks[1]))
+        try:
+            rangeInt = eval(rangeLen)
+            rangeLen = "%d" % rangeInt
+        except:
+            pass
+        return rangeLen
+
+    def __getArrayFromNet(self, toks):
+        return "%s" % (self.vf.format(toks[2]))
+
+    def __getArrayToNet(self, toks):
+        return "%s" % (self.vf.format(toks[1]))
+        
     def _elaborate_netdecl3(self, tokens):
         _atrs = self.vf.format(tokens[1])
         _range = self.vf.format(tokens[3])
         _len = self.__getLenStr(tokens[3])
         _from = self.__getFromStr(tokens[3])
         _to = self.__getToStr(tokens[3])
-
+        _array_range = ""
+        _array_len = ""
+        _array_from = ""
+        _array_to = ""
         for assgmng in tokens[5]:
             ids = self.getLeftRightHandSide(assgmng)
             name = assgmng[0][0]
@@ -571,6 +597,14 @@ class VerilogElaborator():
                 for ex in self.EXT:
                     if name == idRight+ex:
                         dnt = True
+            if len(tokens[3]) > 1:
+                arrayDec = tokens[3]
+                _array_range = self.vf.format(arrayDec)
+
+                _array_len = self.__getArrayLenStrNet(arrayDec)
+                _array_from = self.__getArrayFromNet(arrayDec)
+                _array_to = self.__getArrayToNet(arrayDec)
+
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = {"attributes": _atrs,
                                                      "range": _range,
@@ -578,10 +612,10 @@ class VerilogElaborator():
                                                      "from": _from,
                                                      "to": _to,
                                                      'type': 'wire',
-                                                     "array_range": "",
-                                                     "array_len": "",
-                                                     "array_from": "",
-                                                     "array_to": ""
+                                                     "array_range": _array_range,
+                                                     "array_len": _array_len,
+                                                     "array_from": _array_from,
+                                                     "array_to": _array_to,
                                                      }
                 if dnt:
                     self.current_module["nets"][name]["dnt"] = True

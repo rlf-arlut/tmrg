@@ -52,6 +52,7 @@ A [template](#[template]) is available at the end with the different sections.
 - [Issue 64](https://gitlab.cern.ch/tmrg/tmrg/-/issues/64): Add integer type for inline assignment
 - [Issue 67](https://gitlab.cern.ch/tmrg/tmrg/-/issues/67): Add support for label after end statement
 - [Issue 56](https://gitlab.cern.ch/tmrg/tmrg/-/issues/56): TBG does not correctly recognises unpacked arrays as ports
+- [Issue 70](https://gitlab.cern.ch/tmrg/tmrg/-/issues/70): TMRG Broken fanout for unpacked arrays
 
 ### Deprecated
 

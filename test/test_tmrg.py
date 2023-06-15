@@ -237,6 +237,7 @@ class TestTmrgOnSingleSystemVerilogFile():
             "systemverilog/package_import_width.sv",
             "systemverilog/rhs_trucation.sv",
             "systemverilog/issue_59.sv",
+            "systemverilog/unpacked_array_fanout.sv",
             "systemverilog/blocking_procedural_assignment_andequal.sv",
             "systemverilog/blocking_procedural_assignment_divideequal.sv",
             "systemverilog/blocking_procedural_assignment_equal.sv",
