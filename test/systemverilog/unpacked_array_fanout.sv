@@ -5,12 +5,16 @@ module mymod #(parameter M=2)
   // tmrg default triplicate
   // tmrg do_not_triplicate d q
   logic ru1 [0:M-1];
-  wire ru2 [0:M-1] = ru1; // tmrg do_not_triplicate ru2
-  logic ru3 [0:M-1];
-  
+//  wire ru2a [0:M-1] = ru1; // tmrg do_not_triplicate ru2
+  wire ru2b [0:M-1]; // tmrg do_not_triplicate ru2
+  assign rub2 = ru1;
+  logic ru3a [0:M-1];
+  logic ru3b [0:M-1];
+
   always @(posedge clock) begin
     ru1 <= d;
-    ru3 <= ru2;
+//    ru3a <= ru2a;
+    ru3b <= ru2b;
   end
 
   logic [0:M-1] rp1;
