@@ -1310,7 +1310,7 @@ class TMR(VerilogElaborator):
             newports = ParseResults([], name=ports.getName())
             for port in ports:
                 if port.getName() == "port":
-                    portName = port[0][0]
+                    portName = port.get("reg_reference").get("name")[0] if "reg_reference" in port else port[0][0][0]
                     if not portName in self.current_module["nets"]:
                         logging.warning("Net '%s' unknown." % portName)
                         continue

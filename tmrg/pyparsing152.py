@@ -385,6 +385,7 @@ class ParseResults(object):
         if key in self:
             return self[key]
         else:
+            raise KeyError("Key %s not found in %s" % (key, self.getName()))
             return defaultValue
 
     def insert( self, index, insStr ):
@@ -493,6 +494,8 @@ class ParseResults(object):
         return ret
 
     def deepcopy( self ):
+        import pickle
+        return pickle.loads(pickle.dumps(self))
         """kulis. Returns a new copy of a ParseResults object (not references!)"""
         def naiveCopy(tokens):
             if isinstance(tokens, ParseResults):

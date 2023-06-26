@@ -172,26 +172,31 @@ class VerilogParser:
         wire       = Keyword("wire")
 
         # Keywords
+        directions         = MatchFirst(map(Keyword, "input output inout".split()))
         data_2states_types = MatchFirst(map(Keyword, "bit byte shortint int longint".split()))
         data_4states_types = MatchFirst(map(Keyword, "reg logic integer".split()))
         data_nonint_types  = MatchFirst(map(Keyword, "string time real shortreal realtime".split()))
-        self.data_types         = data_2states_types | data_4states_types | data_nonint_types
-        self.net_types          = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
+        self.data_types    = data_2states_types | data_4states_types | data_nonint_types
+        self.net_types     = MatchFirst(map(Keyword, "wire supply0 supply1 tri triand trior tri0 tri1 wand wor".split()))
+        self.gate_types    = MatchFirst(map(Keyword, "and nand or nor xor xnor buf bufif0 bufif1 not notif0 notif1 pulldown pullup nmos rnmos pmos rpmos cmos rcmos tran rtran tranif0 rtranif0 tranif1 rtranif1"))
         modifiers          = MatchFirst(map(Keyword, "unsigned signed vectored scalared const".split()))
         strength           = MatchFirst(map(Keyword, "supply0 supply1 strong strong0 strong1 pull0 pull1 weak weak0 weak1 highz0 highz1 small medium large".split()))
-        reserved_log95     = MatchFirst(map(Keyword, """
-always ifnone rpmos and initial rtran assign inout rtranif0 begin input rtranif1 buf integer scalared bufif0 join small bufif1 large specify case macromodule specparam casex medium strong0 casez module strong1 cmos nand supply0 deassign negedge supply1 default nmos table defparam nor task disable not time edge notif0 tran else notif1 tranif0 end or tranif1 endcase output tri endmodule parameter tri0 endfunction pmos tri1 endprimitive posedge triand endspecify primitive trior endtable pull0 trireg endtask pull1 vectored event pullup wait for pulldown wand force rcmos weak0 forever real weak1 fork realtime while function reg wire highz0 release wor highz1 repeat xnor if rnmos xor
-        """.split()))
-        reserved_log21     = MatchFirst(map(Keyword, """
-automatic incdir pulsestyle_ondetect cell include pulsestyle_onevent config instance endconfig liblist showcancelled endgenerate library generate localparam use genvar noshowcancelled
-        """.split()))
-        reserved_svlog           = MatchFirst(map(Keyword, """
-accept_on export ref alias extends restrict always_comb extern return always_ff final s_always always_latch first_match s_eventually assert foreach s_nexttime assume forkjoin s_until before globals_until_with bind iff sequence bins ignore_bins binsof illegal_bins implies solve break import static inside chandle checker interface struct class intersect super clocking join_any sync_accept_on join_none sync_reject_on constraint let tagged context local this continue throughout cover timeprecision covergroup matches timeunit coverpoint modport type cross new typedef dist nexttime union do null unique endchecker package unique0 endclass packed until endclocking priority until_with endgroup program untypted endinterface property var endpackage protected virtual endprogram pure void endproperty rand wait_order endsequence randc enum randcase wildcard eventually randsequence with expect reject_on within 
+        unsupported_log95  = MatchFirst(map(Keyword, "ifnone".split()))
+        unsupported_log21  = MatchFirst(map(Keyword, "incdir pulsestyle_ondetect cell pulsestyle_onevent config instance endconfig liblist showcancelled library use noshowcancelled".split()))
+        unsupported_svlog  = MatchFirst(map(Keyword, """
+accept_on export ref alias extends restrict extern final s_always first_match s_eventually assert foreach s_nexttime assume forkjoin s_until before globals_until_with bind iff sequence bins ignore_bins binsof illegal_bins implies solve break import inside chandle checker interface class intersect super clocking join_any sync_accept_on join_none sync_reject_on constraint let tagged context local this throughout cover timeprecision covergroup matches timeunit coverpoint modport type cross new dist nexttime union do null unique endchecker package unique0 endclass packed until endclocking priority until_with endgroup program untypted endinterface property var endpackage protected virtual endprogram pure void endproperty rand wait_order endsequence randc enum randcase wildcard eventually randsequence with expect reject_on within 
         """.split()))
         reserved_tmrg = Keyword("__COMP_DIRECTIVE")
 
-        valid_keywords = self.data_types | self.net_types | modifiers | strength | reserved_log95 | reserved_log21 | reserved_svlog | reserved_tmrg
+        valid_keywords = directions | self.data_types | self.net_types | modifiers | strength | unsupported_log95 | unsupported_log21 | unsupported_svlog | reserved_tmrg
         custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
+
+        types = Group (
+                Group(self.data_types | self.net_types).setResultsName("kind") + 
+                Optional(modifiers).setResultsName("attrs")
+            ).setResultsName("standard") | Group (
+                custom_type.setResultsName("custom_type")
+            ).setResultsName("custom")
 
         # primitives
         self.semi = Literal(";")
@@ -204,7 +209,8 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         identBody = alphanums+"$_"
         identifier1 = Regex( r"\.?`?["+identLead+"]["+identBody+"]*(\.["+identLead+"]["+identBody+"]*)*").setName("baseIdent")
         identifier2 = Regex(r"\\\S+").setParseAction(lambda t:t[0][1:]).setName("escapedIdent")
-        identifier = ~valid_keywords + (identifier1 | identifier2)
+        #identifier = ~valid_keywords + (identifier1 | identifier2)
+        identifier = ~(directions | self.data_types | self.net_types) + (identifier1 | identifier2)
 
         hexnums = nums + "abcdefABCDEF" + "_?"
         base = Regex("[bBoOdDhH]{0,1}").setName("base")
@@ -311,25 +317,32 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                                    Suppress(self.semi)
                                   ).setResultsName("localparamDecl")
 
-        types = Group(
-                    Group(self.data_types | self.net_types).setResultsName("kind") + 
-                    Optional(modifiers).setResultsName("attrs")
-                ).setResultsName("standard") | Group (
-                    custom_type.setResultsName("custom_type")
-                ).setResultsName("custom")
+        """
+        apaterno: This is not working unfortunately. Had to switch to a more verbose formulation
 
         port = (
-            MatchFirst(map(Keyword, "input output inout".split())).setResultsName("dir") +
-            (
-                (
+            directions.setResultsName("dir") + (
+                Optional(
                     types +
-                    Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
-                    Group( delimitedList( regIdentifier )).setResultsName("identifiers")
-                ) | (
-                    Group( delimitedList( regIdentifier )).setResultsName("identifiers")
-                )
+                    Group(ZeroOrMore(self.range)).setResultsName("packed_ranges")
+                ) +
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
             )
         )
+        """
+        port = (
+            directions.setResultsName("dir") + delimitedList(
+            (
+                Group(self.data_types | self.net_types).setResultsName("kind") + 
+                Optional(modifiers).setResultsName("attrs") +
+                Optional(Group(ZeroOrMore(self.range)).setResultsName("packed_ranges")) +
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+            ) | (
+                custom_type.setResultsName("custom_type") +
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+            ) |
+                Group( delimitedList( regIdentifier )).setResultsName("identifiers")
+        ))
 
         self.portHdr  = Group(port).setName("portHdr").setResultsName("portHdr")
         self.portBody = Group(port + Suppress(self.semi) ).setName("portBody").setResultsName("portBody")
@@ -341,22 +354,12 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
                               Suppress(self.semi)
                             ).setName("regDecl").setResultsName("regDecl")
 
-        self.customDecl = Group( custom_type.setResultsName("custom_type") +
-                              Group( delimitedList( Group(identifier).setResultsName("name") )).setResultsName("identifiers") +
-                              Suppress(self.semi)
-                            ).setName("customDecl").setResultsName("customDecl")
-
         self.netDecl = Group(
                 types +
                 Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group( delimitedList( regIdentifier )).setResultsName("identifiers") +
                 Suppress(self.semi)
         ).setResultsName("netDecl")
-
-        self.customDeclwAssign = Group( custom_type.setResultsName("custom_type") +
-                                    Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
-                                    Suppress(self.semi)
-                                ).setName("customDeclwAssign").setResultsName("customDeclwAssign")
 
         self.netDeclWAssignInline = Group(
                 types +
@@ -392,8 +395,6 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             realDecl |
             timeDecl |
             eventDecl |
-#            self.regDecl |
-#            self.customDecl |
             self.netDecl
             )
 
@@ -480,8 +481,6 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             self.portBody |
             timeDecl |
             integerDecl |
-#            self.regDecl |
-#            self.customDecl |
             self.netDecl |
             realDecl
             ).setResultsName("tfDecl")
@@ -744,14 +743,9 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
             self.synopsys_directives |
             localParameterDecl |
             self.portBody |
-#           self.netDecl3 |
-            self.netDecl1 |
             self.netDecl2 |
-#            self.regDecl |
-#            self.customDecl |
             self.netDecl |
             self.netDeclWAssign |
-#            self.customDeclwAssign |
             self.genVarDecl |
             package_import_declaration |
             timeDecl |
@@ -791,7 +785,7 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
 
         self.generate = Group( Suppress(Keyword("generate")) + generate_body  + Suppress(Keyword("endgenerate"))).setResultsName("generate")
 
-        self.moduleItem= self.generate | self.moduleOrGenerateItem
+        self.moduleItem = self.generate | self.moduleOrGenerateItem
 
         """  All possible moduleItems, from Verilog grammar spec
         x::= <parameter_declaration>
@@ -819,23 +813,35 @@ accept_on export ref alias extends restrict always_comb extern return always_ff 
         portExpr = portRef | Group( "{" + delimitedList( portRef ) + "}" )
         self.port = Group(portExpr | Group( ( "." + identifier + "(" + portExpr + ")" ) ).setResultsName("explicitConn") ).setResultsName("port")
 
+        portlist = Group(Optional(
+            Suppress("(") +
+            Optional(
+                delimitedList(self.portHdr) | # ANSI
+                delimitedList(self.port)      # Non-ANSI
+            ) +
+            Suppress(")")
+        )).setResultsName("ports")
+
         moduleHdr = Group ( oneOf("module macromodule") + 
-                identifier.setResultsName("id@moduleName") +
-                Group(Optional( Suppress("#")+Suppress("(") +
-                    delimitedList( Group(Optional(Suppress("parameter"))+ 
-                    Group(Optional( self.range )) + paramAssgnmt) ) + 
-                    Suppress(")") ))+
-                Group(Optional( Suppress("(") +
-                    Optional( delimitedList(
-                    self.portHdr ^
-                    self.port
-                    ) )  +
-                Suppress(")") )).setResultsName("ports") +
+            identifier.setResultsName("id@moduleName") +
+            Group(Optional(
+                Suppress("#")+
+                Suppress("(") +
+                delimitedList(
+                    Group(
+                        Optional(Suppress("parameter")) + 
+                        Group(Optional( self.range )) +
+                        paramAssgnmt
+                    )
+                ) + 
+                Suppress(")")
+            )) +
+            portlist +
             Suppress(self.semi) ).setName("moduleHdr").setResultsName("moduleHdr")
 
-        self.endmodule=Keyword("endmodule").setResultsName("endModule")
+        self.endmodule = Keyword("endmodule").setResultsName("endModule")
 
-        self.module = Group(  moduleHdr +
+        self.module = Group( moduleHdr +
                  Group( ZeroOrMore( self.moduleItem ) ).setResultsName("moduleBody") +
                  self.endmodule +
                  Group(Optional(":" + identifier)) ).setName("module").setResultsName("module")

@@ -475,7 +475,7 @@ class VerilogElaborator():
 
             if not name in self.current_module["nets"]:
                 self.current_module["nets"][name] = self.lastANSIPort["net"]
-                logging.debug("generic_port: Adding net: %s" % self.current_module["nets"][name])
+                logging.debug("generic_port: Adding net %s: %s" % (name, self.current_module["nets"][name]))
 
 
     def _elaborate_porthdr(self, tokens):
