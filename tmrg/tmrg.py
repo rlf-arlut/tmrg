@@ -1329,7 +1329,15 @@ class TMR(VerilogElaborator):
                         portstr += portName
                     logging.debug(portstr)
                 else:
-                    for identifier in port.get("identifiers"):
+                    _identifiers = None
+                    if "standard" in port:
+                        _identifiers = port.get("standard").get("identifiers")
+                    elif "custom" in port:
+                        _identifiers = port.get("custom").get("identifiers")
+                    else:
+                        _identifiers = port.get("identifiers")
+
+                    for identifier in _identifiers:
                         portName = identifier.get("name")[0]
                         if not portName in self.current_module["nets"]:
                             logging.warning("Net '%s' unknown." % portName)
@@ -1438,7 +1446,7 @@ class TMR(VerilogElaborator):
 
                         for i in range(len(voter["unpacked_ranges"])):
                             genstr += "end\n"
-                        
+
                         genstr += "endgenerate"
 
                         moduleBody.append(self.vp.generate.parseString(genstr)[0])
@@ -1541,7 +1549,7 @@ class TMR(VerilogElaborator):
 
                 for i in range(len(fanout["unpacked_ranges"])):
                     genstr += "end\n"
-                
+
                 genstr += "endgenerate"
 
                 moduleBody.append(self.vp.generate.parseString(genstr)[0])
@@ -1779,7 +1787,7 @@ class TMR(VerilogElaborator):
                     raise ValueError("Error while elaborating %s: %s is not defined" % (net, _net))
 
                 _struct = self.current_module["nets"][_net]["type"]
-                
+
                 if _struct not in self.current_module["structs"]:
                     raise ValueError("Error while elaborating %s: %s is not a struct. Available structs: %s" % (net, _struct, self.current_module["structs"].keys()))
 
@@ -2609,7 +2617,7 @@ def tracefunc(frame, event, arg, indent=[0]):
 
             if frame.f_code.co_name not in tracefunc.last:
                 return
-            
+
             if frame.f_code.co_name not in tracefunc.stats:
                 tracefunc.stats[frame.f_code.co_name] = 0
 

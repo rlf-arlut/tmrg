@@ -332,15 +332,16 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
         """
         port = (
             directions.setResultsName("dir") + delimitedList(
-            (
+            Group(
                 Group(self.data_types | self.net_types).setResultsName("kind") + 
                 Optional(modifiers).setResultsName("attrs") +
-                Optional(Group(ZeroOrMore(self.range)).setResultsName("packed_ranges")) +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group( delimitedList( regIdentifier )).setResultsName("identifiers")
-            ) | (
+            ).setResultsName("standard") | Group(
                 custom_type.setResultsName("custom_type") +
+                Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
                 Group( delimitedList( regIdentifier )).setResultsName("identifiers")
-            ) |
+            ).setResultsName("custom") |
                 Group( delimitedList( regIdentifier )).setResultsName("identifiers")
         ))
 
@@ -376,23 +377,17 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
                 Suppress(self.semi)).setResultsName("netDeclWAssign")
 
         timeDecl = Group( "time" + delimitedList( regIdentifier ) + self.semi ).setResultsName("timeDecl")
-        integerDecl = Group( "integer" + Group(delimitedList( regIdentifier )) + Suppress(self.semi) ).setResultsName("integerDecl")
-        self.integerDeclAssgn = Group( "integer" + Group( delimitedList( self.assignment ) ) + Suppress(self.semi) ).setResultsName("integerDeclAssgn")
         strength0 = oneOf("supply0  strong0  pull0  weak0  highz0")
         strength1 = oneOf("supply1  strong1  pull1  weak1  highz1")
         driveStrength = Group( "(" + ( ( strength0 + "," + strength1 ) |
                                        ( strength1 + "," + strength0 ) ) + ")" ).setName("driveStrength").setResultsName("driveStrength")
         realID = Group(identifier + Group(Optional( "[" + Group(self.expr) + oneOf(": +:") + Group(self.expr) + "]" ) ))
-        realDecl = Group( "real" + delimitedList( realID ) + Suppress(self.semi) ).setResultsName("realDecl")
 
         eventDecl = Group( "event" + delimitedList( identifier ) + self.semi )
 
         blockDecl = (
             parameterDecl |
             localParameterDecl |
-            integerDecl |
-            self.integerDeclAssgn |
-            realDecl |
             timeDecl |
             eventDecl |
             self.netDecl
@@ -480,9 +475,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             localParameterDecl |
             self.portBody |
             timeDecl |
-            integerDecl |
-            self.netDecl |
-            realDecl
+            self.netDecl
             ).setResultsName("tfDecl")
 
         lifetime = oneOf("static automatic")
@@ -493,8 +486,6 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             "endfunction"
             ).setResultsName("functionDecl")
 
-        self.netDecl1 = Keyword("maiunagioia")
-
         self.netDecl2 = Group(Keyword("trireg").setResultsName("kind") +
                               Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
                               Group(ZeroOrMore(strength)).setResultsName("strength") +
@@ -503,15 +494,6 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
                               Group( delimitedList(  identifier ) ).setResultsName("identifiers") +
                               Suppress(self.semi)
                               ).setResultsName("netDecl2")
-
-
-        self.netDecl3 = Group( (self.data_types | self.net_types).setResultsName("kind") +
-                              Group(ZeroOrMore(modifiers)).setResultsName("attributes") +
-                              Group(ZeroOrMore(self.range)).setResultsName("packed_ranges") +
-                              Group(Optional( delay )).setResultsName("delay") +
-                              Group( delimitedList( self.assignment ) ).setResultsName("assignments") +
-                              Suppress(self.semi)
-                             ).setResultsName("netDecl3")
 
         self.structDecl = Group(
                 "typedef struct packed" +
@@ -743,25 +725,22 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             self.synopsys_directives |
             localParameterDecl |
             self.portBody |
+            self.continuousAssign |
             self.netDecl2 |
-            self.netDecl |
-            self.netDeclWAssign |
             self.genVarDecl |
             package_import_declaration |
             timeDecl |
-            integerDecl |
-            self.structDecl |
-            self.integerDeclAssgn |
-            realDecl |
             eventDecl |
+            self.structDecl |
             self.gateDecl |
             parameterOverride |
-            self.continuousAssign |
             specifyBlock |
             initialStmt |
             self.alwaysStmt |
             task |
             functionDecl |
+            self.netDecl |
+            self.netDeclWAssign |
             self.directive_doNotTriplicate |
             self.directive_triplicate |
             self.directive_default |

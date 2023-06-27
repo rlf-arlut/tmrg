@@ -69,15 +69,22 @@ class VerilogFormatter:
                 spec.append(_standard.get("kind")[0])
             if "attrs" in _standard.keys():
                 spec.append(self.format(tokens.get("standard").get("attrs")))
-            for r in tokens.get("packed_ranges"):
+            for r in tokens.get("standard").get("packed_ranges"):
                 spec.append(self.format(r))
         elif "custom" in tokens:
             spec = [self.format(tokens.get("custom").get("custom_type")[0])]
 
         spec = " ".join(spec)
 
-        ports = tokens.get("identifiers")
-        for port in ports:
+        _identifiers = None
+        if "standard" in tokens:
+            _identifiers = tokens.get("standard").get("identifiers")
+        elif "custom" in tokens:
+            _identifiers = tokens.get("custom").get("identifiers")
+        else:
+            _identifiers = tokens.get("identifiers")
+
+        for port in _identifiers:
             name = port.get("name")[0]
             array = ""
             for r in port.get("unpacked_ranges"):

@@ -161,8 +161,6 @@ class VerilogElaborator():
 
         # Assignments
         if name in ("assignment", "nbassignment"):
-            print("Looking inside assignment/nb")
-            print(t.asDict())
             lvalue = t.get("lvalue")[0]
             if lvalue.getName() == "reg_reference":
                 print(lvalue.asDict())
@@ -442,16 +440,24 @@ class VerilogElaborator():
 
     def __elaborate_generic_port(self, tokens):
         _atrs = ""
+        _identifiers = None
+        packed_ranges = []
         if "standard" in tokens.keys():
             standard = tokens.get("standard")
             _atrs  = self.vf.format(standard.get("attrs")) if "attrs" in standard.keys() else ""
+            _identifiers = standard.get("identifiers")
+            packed_ranges = self.__elaborate_packed(standard.get("packed_ranges"))
         else:
             _atrs = ""
+            if "custom" in tokens.keys():
+                _identifiers = tokens.get("custom").get("identifiers")
+                packed_ranges = self.__elaborate_packed(tokens.get("custom").get("packed_ranges"))
+            else:
+                _identifiers = tokens.get("identifiers")
 
-        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges")) if "packed_ranges" in tokens.keys() else []
         details = ""
 
-        for identifier in tokens.get("identifiers"):
+        for identifier in _identifiers:
             name = identifier.get("name")[0]
             is_custom, type = self._get_port_type(tokens)
             self.lastANSIPort = {
