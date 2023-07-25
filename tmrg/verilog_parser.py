@@ -397,9 +397,10 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             )
 
         synopsys=Keyword(self.forbidden_char+"synopsys")
-        self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
+        self.directive_synopsys_translate = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys_translate")
+        self.directive_synopsys_ff        = Group( synopsys + oneOf("async_set_reset async_set_reset_local async_set_reset_local_all sync_set_reset sync_set_reset_local sync_set_reset_local_all ") + ((Suppress('"') + Group(OneOrMore(identifier)).setResultsName("identifiers") + Suppress('"')) | (Group(OneOrMore(identifier)).setResultsName("identifiers"))) + Suppress(self.semi)).setResultsName("directive_synopsys_ff")
         self.directive_synopsys_case   = Group( synopsys + OneOrMore( Keyword("full_case") | Keyword("parallel_case") )  + Suppress(self.semi)).setResultsName("directive_synopsys_case")
-        self.synopsys_directives = self.directive_synopsys |  self.directive_synopsys_case
+        self.synopsys_directives = self.directive_synopsys_translate | self.directive_synopsys_ff | self.directive_synopsys_case
 
         self.stmt = Forward().setName("stmt").setResultsName("stmt")
         stmtOrNull = self.stmt | self.semi

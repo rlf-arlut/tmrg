@@ -765,8 +765,11 @@ class VerilogFormatter:
         oStr = "initial\n\t%s\n" % self.format(tokens[1], i+"\t")
         return oStr
 
-    def _format_directive_synopsys(self, tokens, i=""):
-        return "// "+" ".join(tokens)+"\n"
+    def _format_directive_synopsys_translate(self, tokens, i=""):
+        return "//synopsys " + " ".join(tokens[1:])+"\n"
+
+    def _format_directive_synopsys_ff(self, tokens, i=""):
+        return "//synopsys " + tokens[1] + ' "' + " ".join([i[0] for i in tokens.get("identifiers")]) + '"' + "\n"
 
     def _format_directive_synopsys_case(self, tokens, i=""):
         return "// "+" ".join(tokens[0])+"\n"
