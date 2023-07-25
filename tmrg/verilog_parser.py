@@ -186,7 +186,10 @@ class VerilogParser:
         unsupported_svlog  = MatchFirst(map(Keyword, """
 accept_on export ref alias extends restrict extern final s_always first_match s_eventually assert foreach s_nexttime assume forkjoin s_until before globals_until_with bind iff sequence bins ignore_bins binsof illegal_bins implies solve break import inside chandle checker interface class intersect super clocking join_any sync_accept_on join_none sync_reject_on constraint let tagged context local this throughout cover timeprecision covergroup matches timeunit coverpoint modport type cross new dist nexttime union do null unique endchecker package unique0 endclass packed until endclocking priority until_with endgroup program untypted endinterface property var endpackage protected virtual endprogram pure void endproperty rand wait_order endsequence randc enum randcase wildcard eventually randsequence with expect reject_on within 
         """.split()))
-        reserved_tmrg = Keyword("__COMP_DIRECTIVE")
+
+
+        self.forbidden_char = "¤"
+        reserved_tmrg = Keyword(self.forbidden_char+"__COMP_DIRECTIVE")
 
         valid_keywords = directions | self.data_types | self.net_types | modifiers | strength | unsupported_log95 | unsupported_log21 | unsupported_svlog | reserved_tmrg
         custom_type = ~valid_keywords + Word(alphas + '_', alphanums + '_')
@@ -290,7 +293,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
 
         paramAssgnmt = Group(  identifier + Group(Optional(self.size|self.range)) + Suppress("=") + Group(self.expr) ).setResultsName("paramAssgnmt")
 
-        self.comp_directive = Group(Suppress("__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
+        self.comp_directive = Group(Suppress(self.forbidden_char+"__COMP_DIRECTIVE") + CharsNotIn(";") + Suppress(self.semi)).setResultsName("comp_directive")
 
         attr_spec = Group(identifier + Optional("=" + self.expr)).setResultsName("attr_spec")
 
@@ -393,7 +396,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             self.netDecl
             )
 
-        synopsys=Keyword("synopsys")
+        synopsys=Keyword(self.forbidden_char+"synopsys")
         self.directive_synopsys        = Group( synopsys + oneOf("translate_off translate_on") + Suppress(self.semi)).setResultsName("directive_synopsys")
         self.directive_synopsys_case   = Group( synopsys + OneOrMore( Keyword("full_case") | Keyword("parallel_case") )  + Suppress(self.semi)).setResultsName("directive_synopsys_case")
         self.synopsys_directives = self.directive_synopsys |  self.directive_synopsys_case
@@ -667,7 +670,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
             sdpd
             )
 
-        tmrg=Suppress("tmrg")
+        tmrg=Suppress(self.forbidden_char+"tmrg")
 
         self.directive_doNotTriplicate  = Group( tmrg + Suppress("do_not_triplicate") + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_do_not_triplicate")
         self.directive_triplicate       = Group( tmrg + Suppress("triplicate")        + OneOrMore(identifier)                + Suppress(self.semi)).setResultsName("directive_triplicate")
@@ -868,13 +871,13 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
         self.tmrgDirective = (Suppress('//') + "tmrg" + restOfLine).setResultsName("directive")
         def tmrgDirectiveAction(toks):
             toks=map(str.strip,toks)
-            return " ".join(toks)+ ";"
+            return self.forbidden_char+" ".join(toks)+ ";"
         self.tmrgDirective.setParseAction(tmrgDirectiveAction)
 
         self.synopsysDirective = (Suppress('//') + "synopsys" + restOfLine).setResultsName("synopsysDirective")
         def synopsysDirectiveAction(toks):
             toks=map(str.strip,toks)
-            return " ".join(toks)+ ";"
+            return self.forbidden_char+" ".join(toks)+ ";"
         self.synopsysDirective.setParseAction(synopsysDirectiveAction)
 
         self.compDirective = (Suppress('`') + oneOf("define undef include elsif else endif timescale ifdef ifndef resetall celldefine endcelldefine default_nettype")+ restOfLine).setResultsName("compDirective")
@@ -900,7 +903,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
                             found=True
                     if not found:
                         logging.warning("File '%s' not found" % (fname))
-            return "__COMP_DIRECTIVE "+" ".join(toks)+ ";"
+            return self.forbidden_char+"__COMP_DIRECTIVE "+" ".join(toks)+ ";"
         self.compDirective.setParseAction(compDirectiveAction)
 
 

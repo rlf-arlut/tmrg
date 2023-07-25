@@ -362,9 +362,11 @@ class TMR(VerilogElaborator):
         logging.debug("      TMR  :"+str(tmr))
 
         if not tmr:
+            logging.info("Adding voters, if needed, for signals: " + " ".join(ids["right"]))
             self._addVotersIfTmr(ids["right"], group="", addWires="output")
             return tokens
 
+        logging.info("Adding fanouts, if needed, for signals: " + " ".join(ids["right"]))
         self._addFanoutsIfTmr(ids["right"], addWires="output")
         result = []
         for i in self.EXT:
@@ -377,122 +379,6 @@ class TMR(VerilogElaborator):
             self.smartreplace(cpy, i)
             result.append(cpy)
 
-        return result
-
-    def __triplicate_NetDecl3(self, tokens):
-        ids = self.getLeftRightHandSide(tokens)
-        tmr = self.shouldTriplicate(ids)
-        vote = False
-
-        left = tokens.get("assignments")[0][0][0][0][0]
-        right = self.vf.format(tokens.get("assignments")[0][3][0])
-
-        logging.debug("[net declaration with assigment]")
-        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
-        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
-        logging.debug("      TMR  :"+str(tmr))
-
-        # check if this is explicit fanout
-        eFanout = False
-        for ext in self.EXT:
-            if left == right+ext:
-                eFanout = True
-
-        if eFanout:
-            logging.info("Removing declaration of '%s' (it comes from a fanout of %s)" % (left, right))
-            return ParseResults([], name=tokens.getName())
-
-        # check if this is part of explicit voter
-        eVoter = False
-        eGroup = ""
-        eNet = ""
-        for net in self.current_module["nets"]:
-            for ext in self.EXT:
-                if net+ext == left:
-                    eVoter = True
-                    eGroup = ext
-                    eNet = net
-        if eVoter:
-            logging.info("Explicit fanin '%s' part of '%s' (group %s)" % (left, eNet, eGroup))
-            for name in list(ids["right"]):
-                self._addVoter(name, "", addWires="output")
-            return tokens
-        eFanin = False
-        for ext in self.EXT:
-            if left+ext == right:
-                eFanin = True
-        if eFanin:
-            logging.info("Removing declaration of '%s' (it was declared for fanin)" % (left))
-            return ParseResults([], name=tokens.getName())
-
-        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-        # commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
-        if left.lower().find("tmrerror") >= 0:
-            if left == "tmrError":
-                logging.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
-                return []
-
-            # Remove TmrError nets declaration
-            if left.endswith("TmrError"):
-                original_name = left[:-8]
-
-                if original_name in self.current_module["nets"]:
-                    logging.info("Removing declaration of %s" % (left))
-                    return []
-
-            # Remove tmrError instance declaration
-            if left.endswith("tmrError"):
-                original_name = left[:-8]
-
-                if original_name in self.current_module["instances"]:
-                    logging.info("Removing declaration of %s" % (left))
-                    return []
-
-        if len(self.voting_nets):
-            if (right, left) in self.voting_nets:
-                vote = True
-        if vote:
-            import math
-            logging.info("TMR voting %s -> %s (bits: %s)" % (right, left, " ".join([i["len"] for i in self.current_module["nets"][right]["packed_ranges"]])))
-            newtokens = ParseResults([], name=tokens.getName())
-
-            a = right+self.EXT[0]
-            b = right+self.EXT[1]
-            c = right+self.EXT[2]
-            for ext in self.EXT:
-                voterInstName = "%sVoter%s" % (right, ext)
-                name_voted = "%s%s" % (left, ext)
-                netErrorName = "%sTmrError%s" % (right, ext)
-                self._addVoterExtended(voterInstName=voterInstName,
-                                       inA=a,
-                                       inB=b,
-                                       inC=c,
-                                       out=name_voted,
-                                       tmrError=netErrorName,
-                                       type=self.current_module["nets"][right]["type"],
-                                       attributes=self.current_module["nets"][right]["attributes"],
-                                       packed_ranges=self.current_module["nets"][right]["packed_ranges"],
-                                       unpacked_ranges=self.current_module["nets"][right]["unpacked_ranges"],
-                                       group=ext,
-                                       addWires="output")
-            tokens = newtokens
-            return tokens
-        # in any other case, triplicate right hand side
-        result = []
-        if not tmr:
-            self._addVotersIfTmr(ids["right"], group="", addWires="output")
-            return tokens
-        self._addFanoutsIfTmr(ids["right"], addWires="output")
-
-        for i in self.EXT:
-            cpy = tokens.deepcopy()
-            """
-            for name in list(ids["right"])+list(ids["left"]):
-                _to_name = self._append_tmr(name, i)
-                self.replace(cpy, name, _to_name)
-            """
-            self.smartreplace(cpy, i)
-            result.append(cpy)
         return result
 
     def __triplicate_NetDecl1(self, tokens):
@@ -515,35 +401,6 @@ class TMR(VerilogElaborator):
             result.append(cpy)
 
         return result
-
-    def __triplicate_RegDecl(self, tokens):
-        ids = self.getLeftRightHandSide(tokens)
-        tmr = self.shouldTriplicate(ids)
-
-        logging.debug("[reg block]")
-        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
-        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
-        logging.debug("      TMR  :"+str(tmr))
-        if not tmr:
-            return tokens
-
-        result = []
-        for i in self.EXT:
-            cpy = tokens.deepcopy()
-            for name in list(ids["right"])+list(ids["left"]):
-                _to_name = self._append_tmr(name, i)
-                self.replace(cpy, name, _to_name)
-            result.append(cpy)
-
-        return result
-
-    """
-    def __triplicate_StructDecl(self, tokens):
-        logging.debug("[struct dec]")
-        logging.debug("      left : "+str(tokens[-1]))
-        print(tokens)
-        return tokens
-    """
 
     def __triplicate_integerDecl(self, tokens):
         #        print tokens
@@ -643,122 +500,6 @@ class TMR(VerilogElaborator):
             return result
         else:
             return tokens
-
-    def __triplicate_customDeclwAssign(self, tokens):
-        ids = self.getLeftRightHandSide(tokens)
-        tmr = self.shouldTriplicate(ids)
-        vote = False
-
-        left = tokens[1][0][0][0][0][0]
-        right = self.vf.format(tokens[1][0][3][0])
-
-        logging.debug("[custom declaration with assigment]")
-        logging.debug("      Left :"+" ".join(sorted(ids["left"])))
-        logging.debug("      Right:"+" ".join(sorted(ids["right"])))
-        logging.debug("      TMR  :"+str(tmr))
-
-        # check if this is explicit fanout
-        eFanout = False
-        for ext in self.EXT:
-            if left == right+ext:
-                eFanout = True
-
-        if eFanout:
-            logging.info("Removing declaration of '%s' (it comes from a fanout of %s)" % (left, right))
-            return ParseResults([], name=tokens.getName())
-
-        # check if this is part of explicit voter
-        eVoter = False
-        eGroup = ""
-        eNet = ""
-        for net in self.current_module["nets"]:
-            for ext in self.EXT:
-                if net+ext == left:
-                    eVoter = True
-                    eGroup = ext
-                    eNet = net
-        if eVoter:
-            logging.info("Explicit fanin '%s' part of '%s' (group %s)" % (left, eNet, eGroup))
-            for name in list(ids["right"]):
-                self._addVoter(name, "", addWires="output")
-            return tokens
-        eFanin = False
-        for ext in self.EXT:
-            if left+ext == right:
-                eFanin = True
-        if eFanin:
-            logging.info("Removing declaration of '%s' (it was declared for fanin)" % (left))
-            return ParseResults([], name=tokens.getName())
-
-        # FIX ME !!!!!!!!!! quick and dirty !!!!!!
-        # commented to allow access to specific tmrerror signals ! # and "tmrError" in self.current_module["nets"]:
-        if left.lower().find("tmrerror") >= 0:
-            if left == "tmrError":
-                logging.info("Removing declaration of '%s' (%s)" % (left, str(tokens)))
-                return []
-
-            # Remove TmrError nets declaration
-            if left.endswith("TmrError"):
-                original_name = left[:-8]
-
-                if original_name in self.current_module["nets"]:
-                    logging.info("Removing declaration of %s" % (left))
-                    return []
-
-            # Remove tmrError instance declaration
-            if left.endswith("tmrError"):
-                original_name = left[:-8]
-
-                if original_name in self.current_module["instances"]:
-                    logging.info("Removing declaration of %s" % (left))
-                    return []
-
-        if len(self.voting_nets):
-            if (right, left) in self.voting_nets:
-                vote = True
-        if vote:
-            logging.info("TMR voting %s -> %s (bits: %s)" % (right, left, " ".join([i["len"] for i in self.current_module["nets"][right]["packed_ranges"]])))
-            newtokens = ParseResults([], name=tokens.getName())
-
-            a = right+self.EXT[0]
-            b = right+self.EXT[1]
-            c = right+self.EXT[2]
-            for ext in self.EXT:
-                voterInstName = "%sVoter%s" % (right, ext)
-                name_voted = "%s%s" % (left, ext)
-                netErrorName = "%sTmrError%s" % (right, ext)
-                self._addVoterExtended(voterInstName=voterInstName,
-                                       inA=a,
-                                       inB=b,
-                                       inC=c,
-                                       out=name_voted,
-                                       tmrError=netErrorName,
-                                       type=self.current_module["nets"][right]["type"],
-                                       is_custom_type=self.current_module["nets"][right]["is_custom_type"],
-                                       attributes=self.current_module["nets"][right]["attributes"],
-                                       packed_ranges=self.current_module["nets"][right]["packed_ranges"],
-                                       unpacked_ranges=self.current_module["nets"][right]["unpacked_ranges"],
-                                       group=ext,
-                                       addWires="output")
-            tokens = newtokens
-            return tokens
-        # in any other case, triplicate right hand side
-        result = []
-        if not tmr:
-            self._addVotersIfTmr(ids["right"], group="", addWires="output")
-            return tokens
-        self._addFanoutsIfTmr(ids["right"], addWires="output")
-
-        for i in self.EXT:
-            cpy = tokens.deepcopy()
-            """
-            for name in list(ids["right"])+list(ids["left"]):
-                _to_name = self._append_tmr(name, i)
-                self.replace(cpy, name, _to_name)
-            """
-            self.smartreplace(cpy, i)
-            result.append(cpy)
-        return result
 
     def __triplicate_netDeclWAssign(self, tokens):
         ids = self.getLeftRightHandSide(tokens)
@@ -861,8 +602,11 @@ class TMR(VerilogElaborator):
         # in any other case, triplicate right hand side
         result = []
         if not tmr:
+            logging.info("Adding voters, if needed, for signals: " + " ".join(ids["right"]))
             self._addVotersIfTmr(ids["right"], group="", addWires="output")
             return tokens
+
+        logging.info("Adding fanouts, if needed, for signals: " + " ".join(ids["right"]))
         self._addFanoutsIfTmr(ids["right"], addWires="output")
 
         for i in self.EXT:
@@ -1310,7 +1054,7 @@ class TMR(VerilogElaborator):
             newports = ParseResults([], name=ports.getName())
             for port in ports:
                 if port.getName() == "port":
-                    portName = port.get("reg_reference").get("name")[0] if "reg_reference" in port else port[0][0][0]
+                    portName = port[0][0]
                     if not portName in self.current_module["nets"]:
                         logging.warning("Net '%s' unknown." % portName)
                         continue
@@ -1748,21 +1492,29 @@ class TMR(VerilogElaborator):
             netname, netfield = self.split_name(net)
 
             if netname not in self.current_module["nets"]:
-                logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "False"))
-                if len(net) and net[0] == '`':
-                    logging.warning("Define %s" % net)
+                if net in self.current_module["params"]:
+                    logging.debug("SHOULDTRIPLICATE Found parameter %s. Ignoring." % net)
+
+                elif netname[0] == '`':
+                    logging.debug("SHOULDTRIPLICATE Found macro %s. Ignoring." % net)
+
+                elif netname in self.current_module["instances"]:
+                    # TODO: This could - in principle - be triplicateable.
+                    logging.debug("SHOULDTRIPLICATE Found instance name %s. Assuming %s is a hierarchical reference. Ignoring." % (netname, net))
+
                 else:
-                    logging.warning("Unknown net '%s' (TMR may malfunction)" % net)
+                    logging.warning("%s cannot be recognized as neither parameter, macro, or hierarchical reference. Leaving it untouched." % net)
 
-            if self.current_module["nets"][netname]["tmr"]:
-                logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "True"))
-                leftTMR = True
+            else:
+                if self.current_module["nets"][netname]["tmr"]:
+                    logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "True"))
+                    leftTMR = True
 
-            if not self.current_module["nets"][netname]["tmr"]:
-                logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "False"))
-                leftNoTMR = True
+                if not self.current_module["nets"][netname]["tmr"]:
+                    logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "False"))
+                    leftNoTMR = True
 
-            logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "Default"))
+                logging.debug("SHOULDTRIPLICATE Found net %s. Triplicate: %s" % (netname, "Default"))
 
         if leftTMR and leftNoTMR:
             logging.error("Block contains both type of elements (should and should not be triplicated!) in one expression.")
@@ -1770,53 +1522,6 @@ class TMR(VerilogElaborator):
             logging.error("Elements: %s" % (" ".join(sorted(ids["left"]))))
             return False
 
-        return leftTMR
-
-    def checkIfTmrNeeded(self, t):
-        res = self.getLeftRightHandSide(t)
-        leftTMR = False
-        leftNoTMR = False
-        for net in res["left"]:
-            # Check if struct
-            pointpos = net.find('.')
-            if pointpos != -1:
-                _field = net[pointpos:]
-                _net = net[0:pointpos]
-
-                if _net not in self.current_module["nets"]:
-                    raise ValueError("Error while elaborating %s: %s is not defined" % (net, _net))
-
-                _struct = self.current_module["nets"][_net]["type"]
-
-                if _struct not in self.current_module["structs"]:
-                    raise ValueError("Error while elaborating %s: %s is not a struct. Available structs: %s" % (net, _struct, self.current_module["structs"].keys()))
-
-                if _field in self.current_module["structs"][_struct]["fields"]:
-                    raise ValueError("Error while elaborating %s: %s is not a field of %s" % (net, _field, _net))
-
-                if self.current_module["nets"][_net]["tmr"]:
-                    leftTMR = True
-
-                if not self.current_module["nets"][_net]["tmr"]:
-                    leftNoTMR = True
-
-            elif net in self.current_module["nets"]:
-                if self.current_module["nets"][net]["tmr"]:
-                    leftTMR = True
-                if not self.current_module["nets"][net]["tmr"]:
-                    leftNoTMR = True
-            else:
-                if len(net) and net[0] == '`':
-                    logging.warning("Define %s" % net)
-                else:
-                    logging.warning("Unknown net '%s' (TMR may malfunction)" % net)
-
-        if leftTMR and leftNoTMR:
-            logging.error(
-                "Block contains both type of elements (should and should not be triplicated!) in one expresion. ")
-            logging.error("This request will not be properly processed!")
-            logging.error("Elements: %s" % (" ".join(sorted(res["left"]))))
-            return False
         return leftTMR
 
     def tmrNbAssgnmt(self, t):

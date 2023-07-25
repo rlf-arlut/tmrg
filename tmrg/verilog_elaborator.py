@@ -129,11 +129,23 @@ class VerilogElaborator():
                 res = set()
             if isinstance(t, ParseResults):
                 if t.getName() == "reg_reference":
-                    netname, netfield = self.split_name(t.get("name")[0])
+                    fullname = t.get("name")[0]
+                    netname, netfields = self.split_name(fullname)
 
                     if not netname in self.current_module["nets"]:
-                        if not t[0] in self.current_module["params"] and netname[0] != '`':
-                            logging.warning("%s is neither a parameter nor a net. Leaving it as it is" % t[0])
+                        if fullname in self.current_module["params"]:
+                            logging.debug("%s is a parameter. Leaving it untouched." % fullname)
+
+                        elif netname[0] == '`':
+                            logging.debug("%s is a macro. Leaving it untouched." % fullname)
+
+                        elif netname in self.current_module["instances"]:
+                            # TODO: This could - in principle - be triplicateable.
+                            logging.debug("%s is an instance name. Assuming %s is a hierarchical reference. Leaving it untouched." % (netname, fullname))
+
+                        else:
+                            logging.warning("%s cannot be recognized as neither parameter, macro, or hierarchical reference. Leaving it untouched." % fullname)
+
                         return res
 
                     if not "dnt" in self.current_module["nets"][netname]:
@@ -163,7 +175,6 @@ class VerilogElaborator():
         if name in ("assignment", "nbassignment"):
             lvalue = t.get("lvalue")[0]
             if lvalue.getName() == "reg_reference":
-                print(lvalue.asDict())
                 res["left"].add(lvalue.get("name")[0])
                 res["right"].update(_extractID(t.get("expr@rvalue")))
             else:
@@ -291,6 +302,10 @@ class VerilogElaborator():
         else:
             _atrs = ""
             _type = tokens.get("custom")[0]
+
+            if _type not in self.current_module["structs"]:
+                raise TypeError("Unknown net type `%s`. Cannot proceed!" % _type)
+
             _len = self.current_module["structs"][_type]["total_size"]
             packed_ranges = [{
                 "range" : "["+_len+" -1 :0]",
@@ -322,7 +337,6 @@ class VerilogElaborator():
             self.current_module["instances"][inst] = {"instance": identifier, "range": _range, "len": _len}
 
     def _elaborate_reg_reference(self, tokens):
-        print("ELABORATING " + "%s" % tokens)
         # Check for errors
         netname = tokens.get("name")[0]
         if netname not in self.current_module["nets"]:
@@ -340,12 +354,12 @@ class VerilogElaborator():
             field_parsed = True
 
             if self.current_module["nets"][netname]["type"] not in self.current_module["structs"]:
-                raise ValueError("Trying to access field %s of %s, which is not a struct" % (netfield, netname))
+                raise ValueError("Trying to access field %s of %s, which is not a struct" % (field, netname))
 
             fields = self.current_module["structs"][self.current_module["nets"][netname]["type"]]["fields"]
 
             if field not in fields:
-                raise ValueError("Field %s is not a field of struct %s. Available fields are: %s" % (netfield, netname, fields))
+                raise ValueError("Field %s is not a field of struct %s. Available fields are: %s" % (field, netname, fields))
 
 
     def _elaborate_always(self, tokens):
@@ -367,7 +381,7 @@ class VerilogElaborator():
                 _len = "(%s + 1)" % (_to)
                 _range = "[ %s %s %s ]" % (_from, _dir, _to)
             else:
-                _len = "($abs(%s-%s) + 1)" % (_from, _to)
+                _len = "(((%s>%s) ? (%s-%s) : (%s-%s)) + 1)" % (_from, _to, _from, _to, _to, _from)
                 _range = "[ %s : %s ]" % (_from, _to)
 
             packed_ranges.append({
@@ -402,7 +416,6 @@ class VerilogElaborator():
 
             # this part decodes declarations using range: name [N:M]
             elif r.getName() == "range":
-                print("range:" + "%s" % r.asDict())
                 _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
                 _from = self.vf.format(r.get("expr@from"))
                 _to   = self.vf.format(r.get("expr@to"))
@@ -411,7 +424,7 @@ class VerilogElaborator():
                     _len = "(%s + 1)" % (_to)
                     _range = "[ %s %s %s ]" % (_from, _dir, _to)
                 else:
-                    _len = "($abs(%s-%s) + 1)" % (_from, _to)
+                    _len = "(((%s>%s) ? (%s-%s) : (%s-%s)) + 1)" % (_from, _to, _from, _to, _to, _from)
                     _range = "[ %s : %s ]" % (_from, _to)
 
                 unpacked_ranges.append({
@@ -1199,11 +1212,8 @@ class VerilogElaborator():
             raise TypeError("%s is not a string!" % name)
 
         splitted = name.split(".")
-        
-        if len(splitted) > 2:
-            raise ValueError("Cannot elaborate %s: going further than 1st hierarchy for structs is not yet supported" % name)
 
-        return (splitted[0], splitted[1] if len(splitted) > 1 else None)
+        return (splitted[0], splitted[1:] if len(splitted) > 1 else None)
 
     def showSummary(self):
         for module in sorted(self.modules):

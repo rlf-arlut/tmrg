@@ -269,8 +269,6 @@ class VerilogFormatter:
         return "." + tokens[0]
 
     def _format_Always(self, tokens, i=""):
-        print("Formatting always: %s" % tokens.asDict())
-
         oStr = "\n"+i + "%s" % self.format(tokens.get("type"))
         if "eventCtrl" in tokens:
             oStr += " %s" % self.format(tokens.get("eventCtrl"))
@@ -531,7 +529,6 @@ class VerilogFormatter:
         doec = ""
         if "delayOrEventControl" in tokens:
             doec = " " + self.format(tokens.get("delayOrEventControl")[0])
-            print("ZZZ " + doec)
 
         expr = self.format(tokens.get("expr@rvalue"))
         oStr = "%s <= %s%s;" % (lval, doec, expr)
