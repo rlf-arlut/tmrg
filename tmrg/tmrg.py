@@ -220,6 +220,27 @@ class TMR(VerilogElaborator):
     def __triplicate_directive_default(self, tokens):
         return []
 
+    def __triplicate_directive_synopsys_ff(self, tokens, i=""):
+        newtokens = ParseResults([], name="identifiers")
+
+        for original in tokens.get("identifiers").asList():
+            if original not in self.current_module["nets"]:
+                logging.warning("Synopsys directive %s references net %s, which doesn't exist. Leaving it as it is." % (tokens[0], original))
+                newtokens.append(original)
+                continue
+
+            if not self.current_module["nets"][original]["tmr"]:
+                newtokens.append(original)
+                continue
+
+            else:
+                for i in self.EXT:
+                    newtokens.append(original + i)
+
+        tokens['identifiers'] = newtokens
+
+        return tokens
+
     def __triplicate_directive_triplicate(self, tokens):
         return []
 
@@ -1313,7 +1334,6 @@ class TMR(VerilogElaborator):
                 logging.warning("Signal '%s' is connected to fanout input and voter output." % (_in))
                 logging.warning("Probably the resulting code does not reflect the design intent.")
                 logging.warning("Please consider upgrading tmrg directives.")
-
 
         paramPos = 0
         for i, item in enumerate(moduleBody):

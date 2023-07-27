@@ -769,7 +769,7 @@ class VerilogFormatter:
         return "//synopsys " + " ".join(tokens[1:])+"\n"
 
     def _format_directive_synopsys_ff(self, tokens, i=""):
-        return "//synopsys " + tokens[1] + ' "' + " ".join([i[0] for i in tokens.get("identifiers")]) + '"' + "\n"
+        return "\n".join("//synopsys " + tokens[1] + ' ' + i for i in tokens.get("identifiers").asList()) + "\n"
 
     def _format_directive_synopsys_case(self, tokens, i=""):
         return "// "+" ".join(tokens[0])+"\n"
@@ -828,7 +828,7 @@ class VerilogFormatter:
         self.trace = False
 
     def format(self, tokens, i=""):
-        self.trace = 1
+        self.trace = 0
         outStr = ""
         if tokens == None:
             return ""

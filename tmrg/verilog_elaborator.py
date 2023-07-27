@@ -1213,7 +1213,7 @@ class VerilogElaborator():
 
         splitted = name.split(".")
 
-        return (splitted[0], splitted[1:] if len(splitted) > 1 else None)
+        return (splitted[0], ".".join(splitted[1:]) if len(splitted) > 1 else None)
 
     def showSummary(self):
         for module in sorted(self.modules):
