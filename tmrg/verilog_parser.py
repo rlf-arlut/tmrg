@@ -77,6 +77,7 @@ import logging
 import textwrap
 import os
 
+"""
 if sys.version_info[0] >= 3:
     from .pyparsing241 import *
     from . import pyparsing241 as pyparsing
@@ -86,7 +87,6 @@ else:
 """
 from pyparsing import *
 import pyparsing
-"""
 
 usePackrat = True
 usePsyco = False
@@ -502,7 +502,7 @@ accept_on export ref alias extends restrict extern final s_always first_match s_
         self.structDecl = Group(
                 "typedef struct packed" +
                 Suppress("{") +
-                Group(ZeroOrMore( self.regDecl )).setResultsName("fields") +
+                Group(ZeroOrMore( self.netDecl )).setResultsName("fields") +
                 Suppress ("}") +
                 Group(identifier).setResultsName("id") +
                 Suppress(self.semi)

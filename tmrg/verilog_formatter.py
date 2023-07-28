@@ -1,11 +1,11 @@
 import sys
+"""
 if sys.version_info[0] >= 3:
     from .pyparsing241 import *
 else:
     from .pyparsing152 import *
 """
 from pyparsing import *
-"""
 
 class VerilogFormatter:
     formater = {}
@@ -654,19 +654,22 @@ class VerilogFormatter:
         oStr = tokens[0] + " { \n"
 
         for field in tokens[1]:
-            label = str(field.get("type"))
-            attributes = self.format(field.get("attributes"))
+            if "standard" in field.keys():
+                label = field.get("standard").get("kind")[0]
+                if "attrs" in field.get("standard"):
+                    label += " " + field.get("standard").get("attrs")
+            else:
+                label = field.get("custom").get("custom_type")[0]
 
-            spec = " "
             for r in field.get("packed_ranges"):
-                spec += self.format(r) + " "
+                label += " " + self.format(r)
 
             for port in field.get("identifiers"):
                 r = self.format(port.get("name")[0])
                 if "unpacked_ranges" in port.keys():
                     r += self.format(port.get("unpacked_ranges"))
 
-                oStr += "    %s %s %s %s;\n" % (label, attributes, spec, r)
+                oStr += "    %s %s;\n" % (label, r)
 
         oStr += "} " + tokens.get("id")[0] + ";\n"
 
@@ -828,10 +831,10 @@ class VerilogFormatter:
         self.trace = False
 
     def format(self, tokens, i=""):
-        self.trace = 0
         outStr = ""
         if tokens == None:
             return ""
+
         if isinstance(tokens, ParseResults):
             name = str(tokens.getName()).lower()
             offset = name.find("@")

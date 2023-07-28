@@ -35,6 +35,16 @@ from optparse import *
 from .verilog_elaborator import *
 from .toolset import *
 
+def mul(l):
+    if not l:
+        return 0
+
+    r = 1
+    for i in l:
+        r *= l
+
+    return r
+
 
 def tmr_reg_list(tokens):
     newtokens = ParseResults([], name=tokens.getName())
@@ -511,11 +521,6 @@ class TMR(VerilogElaborator):
         if len(toTMR):
             for i in self.EXT:
                 cpy = tokens.deepcopy()
-                """
-                for name in toTMR:
-                    _to_name = self._append_tmr(name, i)
-                    self.replace(cpy, name, _to_name)
-                """
                 self.smartreplace(cpy, i)
                 result.append(cpy)
             return result
@@ -565,7 +570,7 @@ class TMR(VerilogElaborator):
                 return ParseResults([], name=tokens.getName())
 
             if len(self.voting_nets) and (right, left) in self.voting_nets:
-                bits = " ".join([i["len"] for i in self.current_module["nets"][right]["packed_ranges"]])
+                bits = " ".join([str(i["len"]) for i in self.current_module["nets"][right]["packed_ranges"]])
                 logging.info("TMR voting %s -> %s (bits: %s)" % (right, left, bits))
                 newtokens = ParseResults([], name=tokens.getName())
 
@@ -1149,10 +1154,17 @@ class TMR(VerilogElaborator):
                     _b = voter["inB"]
                     _c = voter["inC"]
 
-                    _type = "wire" if voter["is_custom_type"] else voter["type"]
-                    __range_start = 1 if voter["is_custom_type"] else 0
-                    _range = " ".join([i["range"] for i in voter["packed_ranges"][__range_start:]])
-                    _len = "(" + " * ".join(["(" + i["len"] + ")" for i in voter["packed_ranges"]]) + ")" if _range else "1"
+                    _type = "wire"
+                    if voter["is_custom_type"]:
+                        _type += " " + voter["type"]
+
+                    _range = " ".join([i["range"] for i in voter["packed_ranges"]])
+
+                    _type_size = self.current_module["structs"][voter["type"]]["total_size"] if voter["is_custom_type"] else LinearExpression(1)
+                    _range_size = mul([LinearExpression(i["len"]) for i in voter["packed_ranges"]])
+
+                    _size = _type_size * _range_size if _range_size else _type_size
+
                     _arange = " ".join([i["range"] for i in voter["unpacked_ranges"]])
 
                     if _range:
@@ -1177,8 +1189,8 @@ class TMR(VerilogElaborator):
                         moduleBody.insert(0, self.vp.netDecl.parseString("%s %s%s%s;" % (_type, _range, _c, _arange))[0])
 
                     width = ""
-                    if _len != "1":
-                        width += "#(.WIDTH(%s)) " % _len
+                    if _size != 1:
+                        width += "#(.WIDTH(%s)) " % _size
 
                     majorityVoterCell = "majorityVoter"+self.options.common_cells_postfix
                     if "majority_voter_cell" in self.current_module["constraints"]:

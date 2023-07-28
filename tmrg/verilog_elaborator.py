@@ -37,10 +37,230 @@ from .verilog_parser import *
 from .verilog_formatter import VerilogFormatter
 from .prettytable import PrettyTable
 
+def pickle_deepcopy(self):
+    import pickle
+    return pickle.loads(pickle.dumps(self))
+
+ParseResults.deepcopy = pickle_deepcopy
+
+class LinearExpression:
+    def __init__(self, value):
+        self.to_add = 0
+
+        if value == "" or value is None:
+            self.value = None
+            return self
+
+        try:
+            value_int = int(value)
+        except (TypeError, ValueError):
+            try:
+                self.value = str(value)
+            except TypeError:
+                raise TypeError("Unable to convert value of type `%s` to string")
+
+            self.is_int = False
+        else:
+            self.value = value_int
+            self.is_int = True
+
+    def __str__(self):
+        if self.is_int:
+            return str(self.value)
+        
+        if self.to_add != 0:
+            return "(%s %s %d)" % (self.value, "+" if self.to_add > 0 else "-", abs(self.to_add))
+
+        return self.value
+
+    def __repr__(self):
+        return str(self)
+
+    def __int__(self):
+        if self.is_int:
+            return self.value
+        else:
+            raise TypeError("Unable to convert `%s` to int!" % self.value)
+
+    def __iadd__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            self.value += other.value
+            return self
+
+        if self.is_int:
+            self.to_add = other.to_add + self.value
+            self.value = other.value
+            self.is_int = False
+            return self
+
+        if other.is_int:
+            self.to_add += other.value
+            return self
+
+        self.value += " + " + other.value
+        self.to_add += other.to_add
+        return self
+
+    def __add__(self, other):
+        copy = LinearExpression(self.value)
+        copy.to_add = self.to_add
+        copy += other
+        return copy
+
+    def __radd__(self, other):
+        return self.__add__(other)
+
+    def __isub__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            self.value -= other.value
+            return self
+
+        if self.is_int:
+            self.to_add = other.to_add - self.value
+            self.value = other.value
+            self.is_int = False
+            return self
+
+        if other.is_int:
+            self.to_add -= other.value
+            return self
+
+        self.value += " - " + other.value
+        self.to_add += other.to_add
+        return self
+
+    def __sub__(self, other):
+        copy = LinearExpression(self.value)
+        copy.to_add = self.to_add
+        copy -= other
+        return copy
+
+    def __rsub__(self, other):
+        return self.__sub__(other)
+
+    def __imul__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            self.value *= other.value
+            return self
+
+        self.value = "( " + str(self) + " * " + str(other) + " )"
+        self.to_add = 0
+        self.is_int = False
+
+        return self
+
+    def __mul__(self, other):
+        copy = LinearExpression(self.value)
+        copy.to_add = self.to_add
+        copy *= other
+        return copy
+
+    def __rmul__(self, other):
+        return self.__mul__(other)
+
+    def __truediv__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return LinearExpression( self.value / other.value )
+
+        return LinearExpression( "( " + str(self) + " / " + str(other) + " )" )
+
+    def __floordiv__(self, other):
+        return self.__truediv__(other)
+
+    def __pow__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return LinearExpression( self.value ** other.value )
+
+        return LinearExpression( "( " + str(self) + " ** " + str(other) + " )" )
+
+    def __abs__(self):
+        if self.is_int:
+            return LinearExpression( abs(self.value))
+
+        return LinearExpression( "( (" + self.value + ">0) ? " + self.value + " : -" + self.value + " )" )
+
+    def __le__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return self.value <= other.value
+
+        raise TypeError("Cannot compare non-integer types.")
+
+    def __lt__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return self.value < other.value
+
+        raise TypeError("Cannot compare non-integer types.")
+
+    def __eq__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        eq_value = self.value == other.value
+
+        if self.is_int and other.is_int:
+            return eq_value
+
+        if not self.is_int and not other.is_int:
+            return eq_value and (self.to_add == other.to_add)
+
+        raise TypeError("Cannot compare non-integer types.")
+
+    def __ne__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        ne_value = self.value != other.value
+
+        if self.is_int and other.is_int:
+            return ne_value
+
+        if not self.is_int and not other.is_int:
+            return ne_value or (self.to_add != other.to_add)
+
+        raise TypeError("Cannot compare non-integer types.")
+
+    def __ge__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return self.value >= other.value
+
+        raise TypeError("Cannot compare non-integer types.")
+
+    def __gt__(self, other):
+        if not isinstance(other, LinearExpression):
+            other = LinearExpression(other)
+
+        if self.is_int and other.is_int:
+            return self.value > other.value
+
+        raise TypeError("Cannot compare non-integer types.")
+
 class ErrorMessage(BaseException):
     def __init__(self, s):
         BaseException.__init__(self, s)
-
 
 def readFile(fname):
     if os.path.isfile(fname):
@@ -51,7 +271,6 @@ def readFile(fname):
     else:
         logging.error("File '%s' does not exists" % fname)
         return ""
-
 
 def resultLine(tokens, sep=""):
     s = ""
@@ -209,7 +428,7 @@ class VerilogElaborator():
     def _elaborate_integerDecl(self, tokens):
         _atrs = ""
         _range = ""
-        _len = "1"
+        _len = LinearExpression(1)
 
         details = ""
 
@@ -225,69 +444,62 @@ class VerilogElaborator():
         res = {}
 
         res["fields"] = {}
-        total_size = []
+        total_size = LinearExpression(0)
         for field in fields:
-            packed_ranges = self.__elaborate_packed(field.get("packed_ranges"))
-            size = " + ".join([i["len"] for i in packed_ranges])
-            size = "(" + size + ")" if size else "1"
+            _atrs = None
+            _type = None
+
+            if "standard" in field:
+                _atrs = field.get("standard").get("attrs") if "attrs" in field else ""
+                _type = field.get("standard").get("kind")[0]
+                packed_ranges = self.__elaborate_packed(field.get("packed_ranges"))
+            else:
+                _atrs = ""
+                _type = field.get("custom")[0]
+
+                _structs = None
+                if hasattr(self, "current_module"):
+                    _structs = self.current_module["structs"]
+                else:
+                    _structs = self.structs
+
+                if _type not in _structs:
+                    raise TypeError("Unknown net type `%s`. Cannot proceed!" % _type)
+
+                _len = _structs[_type]["total_size"]
+                _from = _len - 1
+                _range = "[%s:0]" % _len
+
+                packed_ranges = [{
+                    "range" : _range,
+                    "len"   : _len,
+                    "from"  : _from,
+                    "to"    : LinearExpression(0)
+                }] + self.__elaborate_packed(field.get("packed_ranges"))
+                custom = True
+
+            size = LinearExpression(1)
+            for prange in packed_ranges:
+                size *= prange["len"]
 
             for reg in field.get("identifiers"):
                 res["fields"][reg.get("name")[0]] = {
-                    "atrs": "",
+                    "atrs": _atrs,
                     "type": field[0],
                     "packed_ranges" : packed_ranges,
                     "unpacked_ranges" : self.__elaborate_unpacked(reg.get("unpacked_ranges")),
                     "size" : size
                 }
-                total_size.append(size)
 
-        res["total_size"] = "(" + " + ".join(total_size) + ")"
+                total_size += size
+
+        res["total_size"] = total_size
         return res
 
     def _elaborate_structdecl(self, tokens):
         self.current_module["structs"][tokens.get("name")] = self.__structdecl(tokens)
-
-    def backup_elaborate_regdecl(self, tokens):
-        _atrs = self.vf.format(tokens[1])
-        
-        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
-
-        for reg in tokens.get("identifiers"):
-            name = reg.get("name")[0]
-
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {
-                    "attributes": _atrs,
-                    "type": "wire",
-                    "packed_ranges" : packed_ranges,
-                    "unpacked_ranges": self.__elaborate_unpacked(reg.get("unpacked_ranges"))
-                }
-                logging.debug("regdecl: Adding net: %s" % self.current_module["nets"][name])
-
-    def backup_elaborate_customdecl(self, tokens):
-        if tokens[0] not in self.current_module["structs"]:
-            raise ValueError("Error while elaborating %s: %s is not a defined struct" % (tokens[1], tokens[0]))
-
-        _atrs = ""
-        _type = tokens.get("custom_type")[0]
-        _len = self.current_module["structs"][_type]["total_size"]
-        _range = "["+_len+" -1 :0]"
-
-        for name in tokens.get("identifiers"):
-            name = name[0]
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {
-                    "attributes": _atrs,
-                    "type": str(_type),
-                    "packed_ranges" : [{
-                        "range" : _range,
-                        "len"   : _len,
-                        "from"  : "(" + _len + "-1)",
-                        "to"    : 0
-                    }],
-                    "unpacked_ranges" : []
-                }
-                logging.debug("customdecl: Adding net: %s" % self.current_module["nets"][name])
+        logging.warning("Elaborating a new structure: %s" % tokens.get("name"))
+        logging.warning(self.current_module["structs"][tokens.get("name")])
 
     def _elaborate_netdecl(self, tokens):
         _atrs = None
@@ -306,14 +518,9 @@ class VerilogElaborator():
             if _type not in self.current_module["structs"]:
                 raise TypeError("Unknown net type `%s`. Cannot proceed!" % _type)
 
-            _len = self.current_module["structs"][_type]["total_size"]
-            packed_ranges = [{
-                "range" : "["+_len+" -1 :0]",
-                "len"   : _len,
-                "from"  : "(" + _len + "-1)",
-                "to"    : 0
-            }] + self.__elaborate_packed(tokens.get("packed_ranges"))
             custom = True
+
+        packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
 
         for identifier in tokens.get("identifiers"):
             name = identifier.get("name")[0]
@@ -361,7 +568,6 @@ class VerilogElaborator():
             if field not in fields:
                 raise ValueError("Field %s is not a field of struct %s. Available fields are: %s" % (field, netname, fields))
 
-
     def _elaborate_always(self, tokens):
         for t in tokens[1:]:
             self._elaborate(t)
@@ -374,14 +580,14 @@ class VerilogElaborator():
 
         for r in tokens:
             _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
-            _from = self.vf.format(r.get("expr@from"))
-            _to   = self.vf.format(r.get("expr@to"))
+            _from = LinearExpression(self.vf.format(r.get("expr@from")))
+            _to   = LinearExpression(self.vf.format(r.get("expr@to")))
 
             if _dir != ":":
-                _len = "(%s + 1)" % (_to)
-                _range = "[ %s %s %s ]" % (_from, _dir, _to)
+                _len = _to_int+1
+                _range = "[ %s %s %s ]" % (_from, r.get("dir"), _to)
             else:
-                _len = "(((%s>%s) ? (%s-%s) : (%s-%s)) + 1)" % (_from, _to, _from, _to, _to, _from)
+                _len = abs(_from - _to) + 1
                 _range = "[ %s : %s ]" % (_from, _to)
 
             packed_ranges.append({
@@ -417,14 +623,14 @@ class VerilogElaborator():
             # this part decodes declarations using range: name [N:M]
             elif r.getName() == "range":
                 _dir  = r.get("dir")[0] ;# First character out of ": -: +:" is ": - +"
-                _from = self.vf.format(r.get("expr@from"))
-                _to   = self.vf.format(r.get("expr@to"))
+                _from = LinearExpression(self.vf.format(r.get("expr@from")))
+                _to   = LinearExpression(self.vf.format(r.get("expr@to")))
 
                 if _dir != ":":
-                    _len = "(%s + 1)" % (_to)
-                    _range = "[ %s %s %s ]" % (_from, _dir, _to)
+                    _len = _to_int+1
+                    _range = "[ %s %s %s ]" % (_from, r.get("dir"), _to)
                 else:
-                    _len = "(((%s>%s) ? (%s-%s) : (%s-%s)) + 1)" % (_from, _to, _from, _to, _to, _from)
+                    _len = abs(_from - _to) + 1
                     _range = "[ %s : %s ]" % (_from, _to)
 
                 unpacked_ranges.append({
@@ -566,69 +772,6 @@ class VerilogElaborator():
             logging.debug("Parameter %s = %s" % (pname, pval))
             self.current_module["params"][pname] = {"value": pval, "range": _range, "len": _len, "type": "param"}
 
-    def _elaborate_netdecl3(self, tokens):
-        _atrs = self.vf.format(tokens.get("attributes"))
-        _type = tokens.get("kind")[0]
-        packed = self.__elaborate_packed(tokens.get("packed_ranges"))
-
-        for assignment in tokens.get("assignments"):
-            ids = self.getLeftRightHandSide(assignment)
-            name = self.vf.format(assignment.get("lvalue")[0])
-            dnt = False
-            if len(ids["right"]) != 0:
-                idRight = ids["right"].pop()
-                for ex in self.EXT:
-                    if name == idRight+ex:
-                        dnt = True
-
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {
-                    "attributes": _atrs,
-                    "type": _type,
-                    "packed_ranges" : packed,
-                    "unpacked_ranges" : []
-                }
-                logging.debug("netdecl3: Adding net: %s" % self.current_module["nets"][name])
-
-                if dnt:
-                    self.current_module["nets"][name]["dnt"] = True
-                    logging.debug("Net %s will not be touched!" % name)
-
-    def _elaborate_customDeclwAssign(self, tokens):
-        if tokens[0] not in self.current_module["structs"]:
-            raise ValueError("Error while elaborating %s: %s is not a defined struct" % (tokens[1], tokens[0]))
-
-        _atrs = ""
-        _len = self.current_module["structs"][tokens[0]]["total_size"]
-        _range = "["+_len+" -1 :0]"
-
-        for assignment in tokens.get("assignments"):
-            ids = self.getLeftRightHandSide(assignment)
-            name = self.vf.format(assignment.get("lvalue")[0])
-            dnt = False
-            if len(ids["right"]) != 0:
-                idRight = ids["right"].pop()
-                for ex in self.EXT:
-                    if name == idRight+ex:
-                        dnt = True
-
-            if not name in self.current_module["nets"]:
-                self.current_module["nets"][name] = {
-                        "attributes": _atrs,
-                        "packed_ranges" : [{
-                            "range": _range,
-                            "len": _len,
-                            "from": "(" + _len + "-1)",
-                            "to": "0"
-                        }],
-                        "type": str(tokens[0]),
-                        "unpacked_ranges" : []
-                    }
-
-            if dnt:
-                self.current_module["nets"][name]["dnt"] = True
-                logging.debug("Net %s will not be touched!" % name)
-
     def _elaborate_netDeclWAssign(self, tokens):
         _atrs = None
         _type = None
@@ -638,18 +781,12 @@ class VerilogElaborator():
         if "standard" in tokens:
             _atrs = tokens.get("standard").get("attrs") if "attrs" in tokens else ""
             _type = tokens.get("standard").get("kind")[0]
-            packed_ranges = self.__elaborate_packed(tokens.get("packed_ranges"))
         else:
             _atrs = ""
             _type = tokens.get("custom")[0]
-            _len = self.current_module["structs"][_type]["total_size"]
-            packed_ranges = [{
-                "range" : "["+_len+" -1 :0]",
-                "len"   : _len,
-                "from"  : "(" + _len + "-1)",
-                "to"    : 0
-            }] + self.__elaborate_unpacked(tokens.get("packed_ranges"))
             custom = True
+
+        packed_ranges = self.__elaborate_unpacked(tokens.get("packed_ranges"))
 
         for assignment in tokens.get("assignments"):
             ids = self.getLeftRightHandSide(assignment)
@@ -812,21 +949,10 @@ class VerilogElaborator():
         if not toks or len(toks) < 2:
             return "1"
 
-        left = self.vf.format(toks[-2])
-        right = self.vf.format(toks[-1])
-        onlyInt = "abs((%s) - (%s))" % (left, right)
-        try:
-            onlyIntEval = eval(onlyInt)
-            return "%d" % (onlyIntEval+1)
-        except:
-            pass
-        rangeLen = "((%s) > (%s)) ? ((%s) - (%s) + 1) : ((%s) - (%s) + 1) " % (left, right, left, right, right, left)
-        try:
-            rangeInt = eval(rangeLen)
-            rangeLen = "%d" % rangeInt
-        except:
-            pass
-        return rangeLen
+        _from = LinearExpression(self.vf.format(toks[-2]))
+        _to   = LinearExpression(self.vf.format(toks[-1]))
+
+        return abs(_from - _to) + 1
 
     def __getFromStr(self, toks):
         fromStr = ""
@@ -998,6 +1124,8 @@ class VerilogElaborator():
                 if item.getName() == "structDecl":
                     name = item.get("id")[0]
                     self.structs[name] = self.__structdecl(item)
+                    logging.warning("Elaborating a new structure: %s" % name)
+                    logging.warning(self.structs[name])
 
                 if item.getName() == "module":
                     moduleHdr = item[0]
